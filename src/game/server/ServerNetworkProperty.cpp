@@ -134,6 +134,9 @@ void CServerNetworkProperty::MarkForDeletion()
 
 bool CServerNetworkProperty::IsMarkedForDeletion() const
 {
+	if ( !m_pOuter )
+		return false;
+
 	return ( m_pOuter->GetEFlags() & EFL_KILLME ) != 0;
 }
 
@@ -303,6 +306,3 @@ void CServerNetworkProperty::FireEvent()
 		m_bPendingStateChange = false;
 	}
 }
-
-
-

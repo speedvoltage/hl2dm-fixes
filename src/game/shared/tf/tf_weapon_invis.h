@@ -46,7 +46,6 @@ public:
 	virtual bool	Deploy( void );
 
 	virtual void	HideThink( void );
-			void	CheckHideTime();
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
 
 	virtual int		GetWeaponID( void ) const						{ return TF_WEAPON_INVIS; }
@@ -60,7 +59,6 @@ public:
 
 	virtual void	SetWeaponVisible( bool visible );
 
-	virtual void	ItemPostFrame( void );
 	virtual void	ItemBusyFrame( void );
 
 	int				GetInvisType( void ) { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, set_weapon_mode ); return iMode; };
@@ -83,7 +81,6 @@ public:
 #endif
 
 private:
-	float			m_flHideTime;
 
 	CTFWeaponInvis( const CTFWeaponInvis & ) {}
 };

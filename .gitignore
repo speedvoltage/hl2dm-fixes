@@ -502,3 +502,18 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/src/game/server/baseviewmodel.cpp.old
+/src/game/server/hl2mp/hl2mp_changename.cpp
+/src/game/server/hl2mp/hl2mp_changename.h
+/src/game/server/mp3soundduration.cpp
+/src/game/server/mp3soundduration.h
+/src/game/server/nextmap.cpp
+/src/game/server/nextmap.h
+/src/game/server/rockthevote.cpp
+/src/game/server/rockthevote.h
+/src/game/server/topmenu.h
+/src/game/server/topmenu_builder.cpp
+/src/game/server/topmenu_builder.h
+/src/game/shared/Sprite.cpp.old
+/src/game/shared/beam_shared.cpp.old
+/src/game/shared/hl2mp/weapon_rpg.h.veryold

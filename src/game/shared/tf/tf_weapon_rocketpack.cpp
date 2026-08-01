@@ -13,7 +13,6 @@
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
 #include "c_rope.h"
-#include "prediction.h"
 // Server specific.
 #else
 #include "tf_player.h"
@@ -48,10 +47,7 @@ END_NETWORK_TABLE()
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CTFRocketPack )
 	DEFINE_PRED_FIELD( m_flInitLaunchTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flLaunchTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flToggleEndTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flRefireTime, FIELD_FLOAT, 0 ),
-	DEFINE_PRED_FIELD( m_bLaunchedFromGround, FIELD_BOOLEAN, 0 ),
 END_PREDICTION_DATA()
 #endif // CLIENT_DLL
 
@@ -70,7 +66,7 @@ ConVar tf_rocketpack_impact_push_min( "tf_rocketpack_impact_push_min", "100", FC
 ConVar tf_rocketpack_impact_push_max( "tf_rocketpack_impact_push_max", "300", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_HIDDEN );
 ConVar tf_rocketpack_launch_push( "tf_rocketpack_launch_push", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_HIDDEN );
 
-#if defined( GAME_DLL ) || defined( STAGING_ONLY )
+#ifdef GAME_DLL
 #define TF_ROCKETPACK_PASSENGER_DELAY_LAUNCH 0.2f
 #endif // GAME_DLL
 
@@ -215,13 +211,10 @@ bool CTFRocketPack::InitiateLaunch( void )
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 	if ( !pOwner->m_Shared.IsRocketPackReady() )
 	{
-		// note: this is never reached
-#ifdef CLIENT_DLL
-		if ( prediction->IsFirstTimePredicted() )
-		{
-			pOwner->EmitSound( "Weapon_RocketPack.BoostersNotReady" );
-		}
-#endif
+#ifdef GAME_DLL
+		CPVSFilter filter( WorldSpaceCenter() );
+		pOwner->EmitSound( filter, entindex(), "Weapon_RocketPack.BoostersNotReady" );
+#endif // GAME_DLL
 		return false;
 	}
 
@@ -231,18 +224,16 @@ bool CTFRocketPack::InitiateLaunch( void )
 		return false;
 	}
 
-#ifdef CLIENT_DLL
-	if ( prediction->IsFirstTimePredicted() )
-#endif
+#ifdef GAME_DLL
+	if ( pOwner->m_Shared.IsLoser() )
 	{
-		CPASAttenuationFilter filter( pOwner );
-		filter.UsePredictionRules();
-		pOwner->EmitSound(
-			filter,
-			entindex(),
-			pOwner->m_Shared.IsLoser() ? "Weapon_RocketPack.BoostersNotReady" : "Weapon_RocketPack.BoostersCharge"
-		);
+		pOwner->EmitSound( "Weapon_RocketPack.BoostersNotReady" );
 	}
+	else
+	{
+		pOwner->EmitSound( "Weapon_RocketPack.BoostersCharge" );
+	}
+#endif // GAME_DLL
 
 	m_flInitLaunchTime = gpGlobals->curtime;
 
@@ -378,6 +369,7 @@ bool CTFRocketPack::ShouldDraw()
 
 #endif // CLIENT_DLL
 
+#ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -392,7 +384,7 @@ Vector CTFRocketPack::CalcRocketForceFromPlayer( CTFPlayer *pPlayer )
 	const float flVertPushScale = ( bOnGround ) ? 0.7f : 0.25f;	// Less vertical force while airborne
 
 	Vector vecForward, vecRight;
-	QAngle angAim = pPlayer->EyeAngles();
+	QAngle angAim = ( bOnGround ) ? pPlayer->GetAbsAngles() : pPlayer->EyeAngles();
 	AngleVectors( angAim, &vecForward, &vecRight, NULL );
 	bool bNone = !( pPlayer->m_nButtons & IN_FORWARD ) &&
 		!( pPlayer->m_nButtons & IN_BACK ) /* &&
@@ -476,6 +468,7 @@ void CTFRocketPack::RocketLaunchPlayer( CTFPlayer *pPlayer, const Vector& vecFor
 
 	pPlayer->ApplyAbsVelocityImpulse( vecForce );
 }
+#endif // GAME_DLL
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -489,6 +482,7 @@ bool CTFRocketPack::PreLaunch( void )
 	pOwner->DoAnimationEvent( PLAYERANIMEVENT_CUSTOM, ACT_MP_ATTACK_STAND_PRIMARYFIRE );
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 
+#ifdef GAME_DLL
 	// Negate any fall
 	Vector vecVel = pOwner->GetAbsVelocity();
 	if ( vecVel.z < 0.f )
@@ -502,15 +496,14 @@ bool CTFRocketPack::PreLaunch( void )
 	pOwner->ApplyAbsVelocityImpulse( vForward );
 	pOwner->m_Shared.AddCond( TF_COND_PARACHUTE_ACTIVE );
 
-#ifdef GAME_DLL
 	const Vector &vecOrigin = pOwner->GetAbsOrigin();
 	CPVSFilter filter( vecOrigin );
 	TE_TFParticleEffect( filter, 0.f, "heavy_ring_of_fire", vecOrigin, vec3_angle );
 	DispatchParticleEffect( "rocketjump_smoke", PATTACH_POINT_FOLLOW, pOwner, "foot_L" );
 	DispatchParticleEffect( "rocketjump_smoke", PATTACH_POINT_FOLLOW, pOwner, "foot_R" );
-#endif // GAME_DLL
 
 	m_flLaunchTime = gpGlobals->curtime + tf_rocketpack_launch_delay.GetFloat();
+#endif // GAME_DLL
 
 	return true;
 }
@@ -526,20 +519,16 @@ bool CTFRocketPack::Launch( void )
 
 	pOwner->StopSound( "Weapon_LooseCannon.Charge" );
 
+#ifdef GAME_DLL
 	m_flLaunchTime = 0.f;
 	pOwner->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
 
-#ifdef CLIENT_DLL
-	Vector m_vecLaunchDir;
-#endif
 	// Launch
 	m_vecLaunchDir = CalcRocketForceFromPlayer( pOwner );
 	RocketLaunchPlayer( pOwner, m_vecLaunchDir, false );
 
-
-#ifdef GAME_DLL
+	
 	SetContextThink( &CTFRocketPack::PassengerDelayLaunchThink, gpGlobals->curtime + TF_ROCKETPACK_PASSENGER_DELAY_LAUNCH, "PassengerDelayLaunchThink" );
-#endif
 	
 	m_flRefireTime = gpGlobals->curtime + 0.5f;
 
@@ -547,7 +536,6 @@ bool CTFRocketPack::Launch( void )
 		pOwner->m_Shared.SetRocketPackCharge( pOwner->m_Shared.GetRocketPackCharge() - tf_rocketpack_cost.GetFloat() );
 	}
 
-#ifdef GAME_DLL
 	// Knock-back nearby enemies
 	float flRadius = 150.f;
 	CUtlVector< CTFPlayer* > vecPushedPlayers;
@@ -606,7 +594,6 @@ bool CTFRocketPack::Launch( void )
 	}
 
 	CPASAttenuationFilter filter( pOwner );
-	filter.UsePredictionRules();
 	pOwner->EmitSound( filter, pOwner->entindex(), "Weapon_RocketPack.BoostersFire" );
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent( "rocketpack_launch" );
@@ -623,12 +610,7 @@ bool CTFRocketPack::Launch( void )
 		DispatchParticleEffect( ROCKET_PACK_LAUNCH_EFFECT, PATTACH_POINT_FOLLOW, pWearable, "charge_LA" );
 		DispatchParticleEffect( ROCKET_PACK_LAUNCH_EFFECT, PATTACH_POINT_FOLLOW, pWearable, "charge_RA" );
 	}
-#else
-	if ( prediction->IsFirstTimePredicted() )
-	{
-		pOwner->EmitSound( "Weapon_RocketPack.BoostersFire" );
-	}
-#endif // CLIENT_DLL
+#endif // GAME_DLL
 
 	return true;
 }
@@ -766,7 +748,7 @@ void CTFRocketPack::ItemPostFrame( void )
 		{
 			ResetTransition();
 #ifdef CLIENT_DLL
-			if ( pOwner == C_TFPlayer::GetLocalTFPlayer() && prediction->IsFirstTimePredicted() )
+			if ( pOwner == C_TFPlayer::GetLocalTFPlayer() )
 			{
 				pOwner->EmitSound( "Weapon_RocketPack.BoostersReady" );
 			}
@@ -775,7 +757,7 @@ void CTFRocketPack::ItemPostFrame( void )
 		else if ( pOwner->m_afButtonPressed & IN_ATTACK2 )
 		{
 #ifdef CLIENT_DLL
-			if ( pOwner == C_TFPlayer::GetLocalTFPlayer() && prediction->IsFirstTimePredicted() )
+			if ( pOwner == C_TFPlayer::GetLocalTFPlayer() )
 			{
 				pOwner->EmitSound( "Player.DenyWeaponSelection" );
 			}
@@ -859,21 +841,14 @@ const CEconItemView *CTFRocketPack::GetTauntItem() const
 //-----------------------------------------------------------------------------
 bool CTFRocketPack::Deploy( void )
 {
+#ifdef GAME_DLL
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 	if ( pOwner )
 	{
-#ifdef CLIENT_DLL
-		if ( prediction->IsFirstTimePredicted() )
-#endif
-		{
-			CPASAttenuationFilter filter( pOwner );
-			filter.UsePredictionRules();
-			EmitSound( filter, entindex(), "Weapon_RocketPack.BoostersExtend" );
-		}
-#ifdef GAME_DLL
+		EmitSound( "Weapon_RocketPack.BoostersExtend" );
 		SetEnabled( true );
-#endif
 	}
+#endif // GAME_DLL
 
 	return BaseClass::Deploy();
 }
@@ -886,21 +861,14 @@ void CTFRocketPack::StartHolsterAnim( void )
 {
 	BaseClass::StartHolsterAnim();
 
+#ifdef GAME_DLL
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 	if ( pOwner )
 	{
-#ifdef CLIENT_DLL
-		if ( prediction->IsFirstTimePredicted() )
-#endif
-		{
-			CPASAttenuationFilter filter( pOwner );
-			filter.UsePredictionRules();
-			EmitSound( filter, entindex(), "Weapon_RocketPack.BoostersRetract" );
-		}
-#ifdef GAME_DLL
+		EmitSound( "Weapon_RocketPack.BoostersRetract" );
 		SetEnabled( false );
-#endif
 	}
+#endif // GAME_DLL
 }
 
 
@@ -922,7 +890,7 @@ void CTFRocketPack::OnResourceMeterFilled()
 {
 #ifdef CLIENT_DLL
 	CBasePlayer *pPlayer = GetPlayerOwner();
-	if ( pPlayer->IsLocalPlayer() && prediction->IsFirstTimePredicted() )
+	if ( pPlayer->IsLocalPlayer() )
 	{
 		pPlayer->EmitSound( "TFPlayer.ReCharged" );
 	}

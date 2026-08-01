@@ -1095,11 +1095,6 @@ void CTFMinigun::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternio
 //-----------------------------------------------------------------------------
 void CTFMinigun::UpdateBarrelMovement()
 {
-	if ( prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
-	{
-		return;
-	}
-
 	if ( m_flBarrelCurrentVelocity != m_flBarrelTargetVelocity )
 	{
 		float flBarrelAcceleration = CanHolsterWhileSpinning() ? 0.5f : 0.1f;

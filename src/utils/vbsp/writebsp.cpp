@@ -406,7 +406,6 @@ int FindOrCreateOrigFace( face_t *f )
     return index;
 }
 
-
 /*
 ==================
 EmitFace
@@ -433,8 +432,7 @@ void EmitFace( face_t *f, qboolean onNode )
 		return;
 
 	// don't emit NODRAW faces for runtime
-	if (
-		( texinfo[ f->texinfo ].flags & SURF_NODRAW ) )
+	if ( texinfo[f->texinfo].flags & SURF_NODRAW )
 	{
 		// keep NODRAW terrain surfaces though
 		if ( f->dispinfo == -1 )
@@ -455,7 +453,6 @@ void EmitFace( face_t *f, qboolean onNode )
 	// Save the correlation between dfaces and faces -- since dfaces doesnt have worldcraft face id
 	dfaceids.AddToTail();
 	dfaceids[numfaces].hammerfaceid = f->originalface->id;
-
 
 	numfaces++;
 
@@ -1259,10 +1256,8 @@ void EndBSPFile (void)
 	Overlay_EmitOverlayFaces();
 	OverlayTransition_EmitOverlayFaces();
 
-	{
-		// phys collision needs dispinfo to operate (needs to generate phys collision for displacement surfs)
-		EmitPhysCollision();
-	}
+	// phys collision needs dispinfo to operate (needs to generate phys collision for displacement surfs)
+	EmitPhysCollision();
 
 	// We can't calculate this properly until vvis (since we need vis to do this), so we set
 	// to zero everywhere by default.
@@ -1279,7 +1274,6 @@ void EndBSPFile (void)
 
 	// Make sure that we have a water lod control eneity if we have water in the map.
 	EnsurePresenceOfWaterLODControlEntity();
-
 
 	// Doing this here because stuff about may filter out entities
 	UnparseEntities ();

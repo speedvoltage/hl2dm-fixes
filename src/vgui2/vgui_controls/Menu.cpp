@@ -2386,15 +2386,16 @@ int Menu::GetCurrentlyHighlightedItem()
 // Purpose: Respond to cursor entering a menuItem.
 //-----------------------------------------------------------------------------
 // 
-// Josh: Slightly annoying, but need to completely ensure compatibility with the SDK + GameUI interactions.
+// Josh: Slightly annoying, but need to completely ensure compatiblity with the SDK + GameUI interactions.
 #ifdef PLATFORM_64BITS
 void Menu::OnCursorEnteredMenuItem( vgui::Panel* VPanel )
+{
+	VPANEL menuItem = (VPANEL) VPanel;
 #else
 void Menu::OnCursorEnteredMenuItem(int VPanel)
-#endif
 {
 	VPANEL menuItem = (VPANEL)VPanel;
-
+#endif
 	// if we are in mouse mode
 	if (m_iInputMode == MOUSE)
 	{
@@ -2418,12 +2419,13 @@ void Menu::OnCursorEnteredMenuItem(int VPanel)
 //-----------------------------------------------------------------------------
 #ifdef PLATFORM_64BITS
 void Menu::OnCursorExitedMenuItem( vgui::Panel* VPanel )
-#else
-void Menu::OnCursorExitedMenuItem( int VPanel )
-#endif
 {
 	VPANEL menuItem = (VPANEL) VPanel;
-
+#else
+void Menu::OnCursorExitedMenuItem( int VPanel )
+{
+	VPANEL menuItem = (VPANEL) VPanel;
+#endif
 	// only care if we are in mouse mode
 	if (m_iInputMode == MOUSE)
 	{

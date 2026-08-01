@@ -654,7 +654,19 @@ void CTFCompoundBow::SetArrowAlight( bool bAlight )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFCompoundBow::OwnerCanJump( void )
+void CTFCompoundBow::SetInternalChargeBeginTime( float flChargeBeginTime )
 {
-	return GetInternalChargeBeginTime() == 0.f;
+#ifdef GAME_DLL
+	float flCurrentChargeBeginTime = GetInternalChargeBeginTime();
+	if ( flCurrentChargeBeginTime == 0.f && flChargeBeginTime > 0.f )
+	{
+		DisableJump();
+	}
+	else if ( flCurrentChargeBeginTime > 0.f && flChargeBeginTime == 0.f )
+	{
+		EnableJump();
+	}
+#endif // GAME_DLL
+
+	BaseClass::SetInternalChargeBeginTime( flChargeBeginTime );
 }

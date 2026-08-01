@@ -646,14 +646,15 @@ void CPhysicsProp::HandleAnyCollisionInteractions( int index, gamevcollisioneven
 
 void CBreakableProp::StickAtPosition( const Vector &stickPosition, const Vector &savePosition, const QAngle &saveAngles )
 {
-	if ( !VPhysicsGetObject()->IsMotionEnabled() )
+	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
+	if ( !pPhysicsObject || !pPhysicsObject->IsMotionEnabled() )
 		return;
 
 	EmitSound("Metal.SawbladeStick");
 	Teleport( &stickPosition, NULL, NULL );
 	SetEnableMotionPosition( savePosition, saveAngles );  // this uses hierarchy, so it must be set after teleport
 
-	VPhysicsGetObject()->EnableMotion( false );
+	pPhysicsObject->EnableMotion( false );
 	AddSpawnFlags( SF_PHYSPROP_ENABLE_ON_PHYSCANNON );
 	SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 }

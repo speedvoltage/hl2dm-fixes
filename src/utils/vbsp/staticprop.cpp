@@ -569,7 +569,6 @@ static void SetLumpData( )
 
 void EmitStaticProps()
 {
-
 	CreateInterfaceFn physicsFactory = GetPhysicsFactory();
 	if ( physicsFactory )
 	{

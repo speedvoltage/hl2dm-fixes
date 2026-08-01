@@ -516,6 +516,9 @@ bool CPhysBox::CreateVPhysics()
 	}
 
 	vcollide_t *pVCollide = modelinfo->GetVCollide( GetModelIndex() );
+	if ( !pVCollide )
+		return false;
+
 	PhysGetMassCenterOverride( this, pVCollide, tmpSolid );
 	PhysSolidOverride( tmpSolid, m_iszOverrideScript );
 	if ( tmpSolid.params.rotdamping < 1.0f && ShouldDampRotation(pVCollide->solids[0]) )
@@ -633,7 +636,8 @@ int CPhysBox::DrawDebugTextOverlays(void)
 //-----------------------------------------------------------------------------
 void CPhysBox::InputWake( inputdata_t &inputdata )
 {
-	VPhysicsGetObject()->Wake();
+	if ( VPhysicsGetObject() )
+		VPhysicsGetObject()->Wake();
 }
 
 //-----------------------------------------------------------------------------
@@ -642,7 +646,8 @@ void CPhysBox::InputWake( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CPhysBox::InputSleep( inputdata_t &inputdata )
 {
-	VPhysicsGetObject()->Sleep();
+	if ( VPhysicsGetObject() )
+		VPhysicsGetObject()->Sleep();
 }
 
 //-----------------------------------------------------------------------------
@@ -705,7 +710,8 @@ void CPhysBox::InputForceDrop( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CPhysBox::Move( const Vector &direction )
 {
-	VPhysicsGetObject()->ApplyForceCenter( direction );
+	if ( VPhysicsGetObject() )
+		VPhysicsGetObject()->ApplyForceCenter( direction );
 }
 
 // Update the visible representation of the physic system's representation of this object

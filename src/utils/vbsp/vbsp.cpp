@@ -84,7 +84,6 @@ int			entity_num;
 
 node_t		*block_nodes[BLOCKS_SPACE+2][BLOCKS_SPACE+2];
 
-
 //-----------------------------------------------------------------------------
 // Assign occluder areas (must happen *after* the world model is processed)
 //-----------------------------------------------------------------------------
@@ -202,10 +201,8 @@ ProcessWorldModel
 ============
 */
 void SplitSubdividedFaces( node_t *headnode ); // garymcthack
-void ProcessSubModel(); // fwd decl
 void ProcessWorldModel (void)
 {
-
 	entity_t	*e;
 	tree_t		*tree = NULL;
 	qboolean	leaked;
@@ -395,49 +392,32 @@ void ProcessSubModel( )
 
 	mins[0] = mins[1] = mins[2] = MIN_COORD_INTEGER;
 	maxs[0] = maxs[1] = maxs[2] = MAX_COORD_INTEGER;
-	int nDetailScreen = FULL_DETAIL;
-	list = MakeBspBrushList( start, end, mins, maxs, nDetailScreen );
+	list = MakeBspBrushList (start, end, mins, maxs, FULL_DETAIL);
 
 	if (!nocsg)
 		list = ChopBrushes (list);
 	tree = BrushBSP (list, mins, maxs);
 	
 	// This would wind up crashing the engine because we'd have a negative leaf index in dmodel_t::headnode.
-	if ( ( tree->headnode->planenum == PLANENUM_LEAF ) 
-		)
+	if ( tree->headnode->planenum == PLANENUM_LEAF )
 	{
 		const char *pClassName = ValueForKey( e, "classname" );
 		const char *pTargetName = ValueForKey( e, "targetname" );
 		Error( "bmodel %d has no head node (class '%s', targetname '%s')", entity_num, pClassName, pTargetName );
 	}
 
-	{
-		MakeTreePortals(tree);
-	}
+	MakeTreePortals (tree);
 	
 #if DEBUG_BRUSHMODEL
 	if ( entity_num == DEBUG_BRUSHMODEL )
 		WriteGLView( tree, "tree_all" );
 #endif
 
-	MarkVisibleSides( tree, start, end, nDetailScreen );
+	MarkVisibleSides (tree, start, end, FULL_DETAIL);
 	MakeFaces (tree->headnode);
 
-	if ( nDetailScreen == NO_DETAIL )
-	{
-		face_t* pLeafFaceList = NULL;
-		if ( !nodetail )
-		{
-			pLeafFaceList = MergeDetailTree( tree, start, end );
-		}
-		pLeafFaceList = FixTjuncs( tree->headnode, pLeafFaceList );
-		WriteBSP( tree->headnode, pLeafFaceList );
-	}
-	else
-	{
-		FixTjuncs( tree->headnode, NULL );
-		WriteBSP( tree->headnode, NULL );
-	}
+	FixTjuncs( tree->headnode, NULL );
+	WriteBSP( tree->headnode, NULL );
 	
 #if DEBUG_BRUSHMODEL
 	if ( entity_num == DEBUG_BRUSHMODEL )
@@ -674,9 +654,7 @@ static void EmitOccluderBrushes()
 		occluderData.polycount = g_OccluderPolyData.Count() - occluderData.firstpoly;
 
 		// Mark this brush as not having brush geometry so it won't be re-emitted with a brush model
-		{
-			entities[ entity_num ].numbrushes = 0;
-		}
+		entities[entity_num].numbrushes = 0;
 	}
 
 	FreeTree( pOccluderTree );
@@ -781,6 +759,7 @@ void FixupOnlyEntsOccluderEntities()
 	}
 }
 
+
 void MarkNoDynamicShadowSides()
 {
 	for ( int iSide=0; iSide < g_MainMap->nummapbrushsides; iSide++ )
@@ -857,7 +836,6 @@ void ProcessModels (void)
 		entity_t *pEntity = &entities[entity_num];
 		if ( !pEntity->numbrushes )
 			continue;
-
 
 		qprintf ("############### model %i ###############\n", nummodels);
 

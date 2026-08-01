@@ -531,7 +531,6 @@ void ClientModeTFNormal::Shutdown()
 	{
 		RemoveFilesInPath( "materials/temp" );
 		RemoveFilesInPath( "download/user_custom" );
-		RemoveFilesInPath( "sound/temp" );
 	}
 
 	DestroyStatsSummaryPanel();

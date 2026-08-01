@@ -1,0 +1,65 @@
+#!/bin/bash
+set -euo pipefail
+
+script=$(readlink -f -- "$0")
+pushd "$(dirname -- "$script")" > /dev/null
+
+source sdk_container
+run_in_sniper "$@"
+
+export VPC_NINJA_BUILD_MODE="release"
+target_platform="linux64"
+build_mode_set=0
+target_platform_set=0
+
+if [ "$#" -gt 2 ]; then
+	echo "Usage: $0 [debug|release] [x86|x64]"
+	exit 1
+fi
+
+for argument in "$@"; do
+	case "$argument" in
+		debug|release)
+			if [ "$build_mode_set" -ne 0 ]; then
+				echo "Usage: $0 [debug|release] [x86|x64]"
+				exit 1
+			fi
+			export VPC_NINJA_BUILD_MODE="$argument"
+			build_mode_set=1
+			;;
+		x86|linux32)
+			if [ "$target_platform_set" -ne 0 ]; then
+				echo "Usage: $0 [debug|release] [x86|x64]"
+				exit 1
+			fi
+			target_platform="linux32"
+			target_platform_set=1
+			;;
+		x64|linux64)
+			if [ "$target_platform_set" -ne 0 ]; then
+				echo "Usage: $0 [debug|release] [x86|x64]"
+				exit 1
+			fi
+			target_platform="linux64"
+			target_platform_set=1
+			;;
+		*)
+			echo "Usage: $0 [debug|release] [x86|x64]"
+			exit 1
+			;;
+	esac
+done
+
+if [ "$target_platform" = "linux32" ]; then
+	export PATH="$PWD/devtools/bin/linux32:$PATH"
+fi
+
+solution_out="_vpc_/ninja/sdk_hl2mp_dedicated_${target_platform}_${VPC_NINJA_BUILD_MODE}"
+
+if [[ ! -e "$solution_out.ninja" ]]; then
+	devtools/bin/vpc /hl2mp "/$target_platform" /ninja /define:SOURCESDK /define:DEDICATED +dedicated /mksln "$solution_out"
+fi
+
+ninja -f "$solution_out.ninja" -j"$(nproc)"
+
+popd > /dev/null

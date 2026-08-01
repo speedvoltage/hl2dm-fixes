@@ -372,6 +372,7 @@ CCommand::CCommand( int nArgC, const char **ppArgV )
 			*pSBuf++ = ' ';
 		}
 	}
+	*pSBuf = 0;
 }
 
 void CCommand::Reset()

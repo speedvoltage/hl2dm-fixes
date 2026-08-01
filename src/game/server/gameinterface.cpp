@@ -24,6 +24,7 @@
 #include "ai_networkmanager.h"
 #include "ndebugoverlay.h"
 #include "ivoiceserver.h"
+#include <math.h>
 #include <stdarg.h>
 #include "movehelper_server.h"
 #include "networkstringtable_gamedll.h"
@@ -90,6 +91,13 @@
 #include "serverbenchmark_base.h"
 #include "querycache.h"
 #include "player_voice_listener.h"
+
+#if defined( LINUX ) && !defined( PLATFORM_64BITS )
+extern "C" float __acosf_finite( float value )
+{
+	return acosf( value );
+}
+#endif
 
 #ifdef TF_DLL
 #include "gc_clientsystem.h"
@@ -1405,7 +1413,9 @@ void CServerGameDLL::LevelShutdown( void )
 	// otherwise we leak them constantly on changelevel in the
 	// particle precache stringtable list.
 	g_pParticleSystemMgr->UncacheAllParticleSystems();
+#if !defined( LINUX ) || defined( PLATFORM_64BITS )
 	g_pParticleSystemMgr->RecreateDictionary();
+#endif
 
 	g_nCurrentChapterIndex = -1;
 
@@ -3435,8 +3445,13 @@ class CServerDLLSharedAppSystems : public IServerDLLSharedAppSystems
 public:
 	CServerDLLSharedAppSystems()
 	{
+#if defined( LINUX ) && defined( DEDICATED )
+		AddAppSystem( "soundemittersystem_srv.so", SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
+		AddAppSystem( "scenefilecache_srv.so", SCENE_FILE_CACHE_INTERFACE_VERSION );
+#else
 		AddAppSystem( "soundemittersystem" DLL_EXT_STRING, SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
 		AddAppSystem( "scenefilecache" DLL_EXT_STRING, SCENE_FILE_CACHE_INTERFACE_VERSION );
+#endif
 	}
 
 	virtual int	Count()

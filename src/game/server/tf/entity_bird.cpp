@@ -88,7 +88,7 @@ void CEntityBird::SpawnRandomBirds( void )
 	if ( !pszMapName || !pszMapName[0] )
 		return;
 
-	KeyValuesAD pFileKV( "birds" );
+	KeyValues *pFileKV = new KeyValues( "birds" );
 	if ( !pFileKV->LoadFromFile( g_pFullFileSystem, "scripts/birds.txt", "MOD" ) )
 		return;
 
@@ -139,6 +139,8 @@ void CEntityBird::SpawnRandomBirds( void )
 			}
 		}
 	}
+
+	pFileKV->deleteThis();
 }
 
 

@@ -64,6 +64,9 @@ bool CBaseFilter::PassesDamageFilterImpl( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CBaseFilter::InputTestActivator( inputdata_t &inputdata )
 {
+	if ( !inputdata.pActivator )
+		return;
+
 	if ( PassesFilter( inputdata.pCaller, inputdata.pActivator ) )
 	{
 		m_OnPass.FireOutput( inputdata.pActivator, this );

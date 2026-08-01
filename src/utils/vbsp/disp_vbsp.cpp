@@ -518,7 +518,6 @@ void SnapRemainingVertsToSurface( CCoreDispInfo **ppListBase, ddispinfo_t *pBSPD
 
 void EmitDispLMAlphaAndNeighbors()
 {
-
 	int i;
 
 	Msg( "Finding displacement neighbors...\n" );

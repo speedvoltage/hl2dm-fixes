@@ -18,14 +18,19 @@ void Pickup_ForcePlayerToDropThisObject( CBaseEntity *pTarget )
 		return;
 
 	IPhysicsObject *pPhysics = pTarget->VPhysicsGetObject();
-	
-	if ( pPhysics == NULL )
+
+	if ( pPhysics == NULL || !( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD ) )
 		return;
 
-	if ( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( !pPlayer )
+			continue;
+
 		pPlayer->ForceDropOfCarriedPhysObjects( pTarget );
+		if ( !( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD ) )
+			return;
 	}
 }
 
@@ -172,4 +177,3 @@ bool Pickup_ShouldPuntUseLaunchForces( CBaseEntity *pObject, PhysGunForce_t reas
 	}
 	return false;
 }
-

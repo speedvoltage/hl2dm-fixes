@@ -279,7 +279,7 @@ void CTFPowerupBottle::ReapplyProvision( void )
 					// Refill weapon clips
 					for ( int i = 0; i < MAX_WEAPONS; i++ )
 					{
-						CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( pTFPlayer->GetWeapon( i ) );
+						CBaseCombatWeapon *pWeapon = pTFPlayer->GetWeapon(i);
 						if ( !pWeapon )
 							continue;
 
@@ -287,8 +287,7 @@ void CTFPowerupBottle::ReapplyProvision( void )
 						if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 						{
 							if ( ( pWeapon->UsesPrimaryAmmo() && !pWeapon->HasPrimaryAmmo() ) ||
-								 ( pWeapon->UsesSecondaryAmmo() && !pWeapon->HasSecondaryAmmo() ) ||
-								 ( pWeapon->IsEnergyWeapon() && !pWeapon->Energy_HasEnergy() ) )
+								( pWeapon->UsesSecondaryAmmo() && !pWeapon->HasSecondaryAmmo() ) )
 							{
 								pTFPlayer->AwardAchievement( ACHIEVEMENT_TF_MVM_USE_AMMO_BOTTLE ); 
 							}
@@ -298,7 +297,7 @@ void CTFPowerupBottle::ReapplyProvision( void )
 
 						if ( iShareBottle && pHealTarget )
 						{
-							CTFWeaponBase *pPatientWeapon = dynamic_cast<CTFWeaponBase *>( pHealTarget->GetWeapon( i ) );
+							CBaseCombatWeapon *pPatientWeapon = pHealTarget->GetWeapon(i);
 							if ( !pPatientWeapon )
 								continue;
 
