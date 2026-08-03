@@ -866,6 +866,9 @@ void CBasePlayer::DeathSound( const CTakeDamageInfo &info )
 
 int CBasePlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
+	if ( !IsAlive() )
+		return 0;
+
 	// clear out any damage types we healed.
 	// UNDONE: generic health should not heal any
 	// UNDONE: time-based damage
@@ -1754,7 +1757,10 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 {
 	// NOT GIBBED, RUN THIS CODE
 
-	DeathSound( info );
+	if ( !IsDisconnecting() )
+	{
+		DeathSound( info );
+	}
 
 	// The dead body rolls out of the vehicle.
 	if ( IsInAVehicle() )
@@ -2137,6 +2143,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	}
 	
 	StopAnimation();
+	Extinguish();
 
 	IncrementInterpolationFrame();
 	m_flPlaybackRate = 0.0;
@@ -2888,6 +2895,21 @@ bool CBasePlayer::CanPickupObject( CBaseEntity *pObject, float massLimit, float 
 float CBasePlayer::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 {
 	return 0;
+}
+
+CBasePlayer *UTIL_GetPlayerHoldingEntity( CBaseEntity *pEntity )
+{
+	if ( !pEntity )
+		return NULL;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( pPlayer && pPlayer->IsHoldingEntity( pEntity ) )
+			return pPlayer;
+	}
+
+	return NULL;
 }
 
 
@@ -6089,13 +6111,16 @@ void CBasePlayer::ImpulseCommands( )
 
 			pWeapon = GetActiveWeapon();
 			
-			if( pWeapon->IsEffectActive( EF_NODRAW ) )
+			if ( pWeapon )
 			{
-				pWeapon->Deploy();
-			}
-			else
-			{
-				pWeapon->Holster();
+				if ( pWeapon->IsEffectActive( EF_NODRAW ) )
+				{
+					pWeapon->Deploy();
+				}
+				else
+				{
+					pWeapon->Holster();
+				}
 			}
 		}
 		break;
@@ -7759,6 +7784,7 @@ class CStripWeapons : public CPointEntity
 public:
 	void InputStripWeapons(inputdata_t &data);
 	void InputStripWeaponsAndSuit(inputdata_t &data);
+	void InputStripWeaponsAfterPhysicsDrop(inputdata_t &data);
 
 	void StripWeapons(inputdata_t &data, bool stripSuit);
 	DECLARE_DATADESC();
@@ -7769,6 +7795,7 @@ LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons );
 BEGIN_DATADESC( CStripWeapons )
 	DEFINE_INPUTFUNC( FIELD_VOID, "Strip", InputStripWeapons ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StripWeaponsAndSuit", InputStripWeaponsAndSuit ),
+	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "_StripWeaponsAfterPhysicsDrop", InputStripWeaponsAfterPhysicsDrop ),
 END_DATADESC()
 	
 BEGIN_ENT_SCRIPTDESC( CBasePlayer, CBaseCombatCharacter, "The player entity." )
@@ -7794,6 +7821,16 @@ void CStripWeapons::InputStripWeaponsAndSuit(inputdata_t &data)
 	StripWeapons(data, true);
 }
 
+void CStripWeapons::InputStripWeaponsAfterPhysicsDrop(inputdata_t &data)
+{
+	CBasePlayer *pPlayer = ToBasePlayer( data.pActivator );
+	if ( !pPlayer )
+		return;
+
+	pPlayer->ForceDropOfCarriedPhysObjects();
+	pPlayer->RemoveAllItems( data.value.Bool() );
+}
+
 void CStripWeapons::StripWeapons(inputdata_t &data, bool stripSuit)
 {
 	CBasePlayer *pPlayer = NULL;
@@ -7809,7 +7846,10 @@ void CStripWeapons::StripWeapons(inputdata_t &data, bool stripSuit)
 
 	if ( pPlayer )
 	{
-		pPlayer->RemoveAllItems( stripSuit );
+		variant_t value;
+		value.SetBool( stripSuit );
+		pPlayer->ForceDropOfCarriedPhysObjects();
+		g_EventQueue.AddEvent( this, "_StripWeaponsAfterPhysicsDrop", value, TICK_INTERVAL, pPlayer, this );
 	}
 }
 
@@ -8777,37 +8817,30 @@ void CBasePlayer::DeactivateMovementConstraint( )
 //-----------------------------------------------------------------------------
 bool CBasePlayer::ArePlayerTalkMessagesAvailable( void )
 {
-	// How long since we last tried to chat?
 	float flTimeElapsedSinceLastMsg = gpGlobals->curtime - m_fLastPlayerTalkAttemptTime;
 	m_fLastPlayerTalkAttemptTime = gpGlobals->curtime;
 
-	// The max messages we can have available
-	// Tier 1 is for short-term spam
 	float flTotalBucketSizeTier1 = sv_chat_bucket_size_tier1.GetFloat();	
-	// rate at which we gain new messages, this slows if we continue to try to spam messages
-	float flSecondsPerMessageTier1 = sv_chat_seconds_per_msg_tier1.GetFloat() - MIN( 0.0f, m_flPlayerTalkAvailableMessagesTier1 );
-
-	// We'll count partial counts of accruing message throughout, as it'll be more consistent
+	float flSecondsPerMessageTier1 = sv_chat_seconds_per_msg_tier1.GetFloat();
 	float flMessagesGainedTier1 = MAX( 0, flTimeElapsedSinceLastMsg / flSecondsPerMessageTier1 );
+	m_flPlayerTalkAvailableMessagesTier1 = MIN( flTotalBucketSizeTier1, m_flPlayerTalkAvailableMessagesTier1 + flMessagesGainedTier1 );
 
-	// But we will allow the counter to go negative, so if you keep trying to spam you have to work your way out of a hole.
-	m_flPlayerTalkAvailableMessagesTier1 = MAX( -2.5f, MIN( flTotalBucketSizeTier1, m_flPlayerTalkAvailableMessagesTier1 + flMessagesGainedTier1 ) - 1.0f ); 
-
-	// Tier2 is for curbing longer-term consistent spamming
-	// We'll only allow the long term bucket to accrue if we're not currently in a spammy state
 	if ( m_flPlayerTalkAvailableMessagesTier1 > 0 )
 	{
 		float flTotalBucketSizeTier2 = sv_chat_bucket_size_tier2.GetFloat();
 		float flSecondsPerMessageTier2 = sv_chat_seconds_per_msg_tier2.GetFloat();
 
 		float flMessagesGainedTier2 = MAX( 0, flTimeElapsedSinceLastMsg / flSecondsPerMessageTier2 );
-		m_flPlayerTalkAvailableMessagesTier2 = MAX( 0, MIN( flTotalBucketSizeTier2, m_flPlayerTalkAvailableMessagesTier2 + flMessagesGainedTier2 ) - 1.0f );
-		//Msg( "Elapsed : %f2  Gained : %f2 / %f2 \n", flTimeElapsedSinceLastMsg, flMessagesGainedTier1, flMessagesGainedTier2 );
+		m_flPlayerTalkAvailableMessagesTier2 = MIN( flTotalBucketSizeTier2, m_flPlayerTalkAvailableMessagesTier2 + flMessagesGainedTier2 );
 	}
 
-	//Msg( "Remaining Msgs : %f2 / %f2\n", m_flPlayerTalkAvailableMessagesTier1, m_flPlayerTalkAvailableMessagesTier2 );
+	return m_flPlayerTalkAvailableMessagesTier1 >= 1.0f && m_flPlayerTalkAvailableMessagesTier2 >= 1.0f;
+}
 
-	return m_flPlayerTalkAvailableMessagesTier1 > 1.0f && m_flPlayerTalkAvailableMessagesTier2 > 1.0f;
+void CBasePlayer::ConsumePlayerTalkMessage()
+{
+	m_flPlayerTalkAvailableMessagesTier1 = MAX( 0.0f, m_flPlayerTalkAvailableMessagesTier1 - 1.0f );
+	m_flPlayerTalkAvailableMessagesTier2 = MAX( 0.0f, m_flPlayerTalkAvailableMessagesTier2 - 1.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -8817,11 +8850,10 @@ bool CBasePlayer::CanPlayerTalk()
 {
 	const float talk_interval = 0.66; // min time between say commands from a client
 
-	bool bRateLimitAllowed = LastTimePlayerTalked() + talk_interval < gpGlobals->curtime;
+	if ( LastTimePlayerTalked() + talk_interval >= gpGlobals->curtime )
+		return false;
 
-	bool bTokenBucketLimitAllowed = ArePlayerTalkMessagesAvailable();
-
-	return bRateLimitAllowed && bTokenBucketLimitAllowed;
+	return ArePlayerTalkMessagesAvailable();
 }
 
 //-----------------------------------------------------------------------------
@@ -9611,7 +9643,10 @@ void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 	}
 	else
 	{
-		gamestats->Event_PlayerSuicide( this );
+		if ( !IsDisconnecting() )
+		{
+			gamestats->Event_PlayerSuicide( this );
+		}
 	}
 }
 
@@ -9685,4 +9720,3 @@ void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruc
 	return ( void * )pVarData;
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
-

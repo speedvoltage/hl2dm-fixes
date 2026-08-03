@@ -665,6 +665,9 @@ void CGamePlayerEquip::EquipPlayer( CBaseEntity *pEntity )
 
 void CGamePlayerEquip::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
+	if ( !pActivator )
+		return;
+
 	EquipPlayer( pActivator );
 }
 
@@ -732,5 +735,4 @@ void CGamePlayerTeam::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 		UTIL_Remove( this );
 	}
 }
-
 

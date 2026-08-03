@@ -2776,6 +2776,10 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 	CBasePlayer *player = ( CBasePlayer * )CBaseEntity::Instance( pEdict );
 	if ( player )
 	{
+#ifdef HL2MP
+		player->ForceDropOfCarriedPhysObjects( NULL );
+#endif
+
 		if ( !g_fGameOver )
 		{
 			player->SetMaxSpeed( 0.0f );
@@ -3445,13 +3449,13 @@ class CServerDLLSharedAppSystems : public IServerDLLSharedAppSystems
 public:
 	CServerDLLSharedAppSystems()
 	{
-#if defined( LINUX ) && defined( DEDICATED )
-		AddAppSystem( "soundemittersystem_srv.so", SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
-		AddAppSystem( "scenefilecache_srv.so", SCENE_FILE_CACHE_INTERFACE_VERSION );
-#else
+	#if defined( LINUX ) && defined( SWDS )
+		AddAppSystem( "soundemittersystem_srv" DLL_EXT_STRING, SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
+		AddAppSystem( "scenefilecache_srv" DLL_EXT_STRING, SCENE_FILE_CACHE_INTERFACE_VERSION );
+	#else
 		AddAppSystem( "soundemittersystem" DLL_EXT_STRING, SOUNDEMITTERSYSTEM_INTERFACE_VERSION );
 		AddAppSystem( "scenefilecache" DLL_EXT_STRING, SCENE_FILE_CACHE_INTERFACE_VERSION );
-#endif
+	#endif
 	}
 
 	virtual int	Count()

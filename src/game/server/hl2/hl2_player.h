@@ -171,6 +171,7 @@ public:
 	bool IsSprinting( void ) { return m_fIsSprinting; }
 	bool CanSprint( void );
 	void EnableSprint( bool bEnable);
+	bool IsNewSprinting() const { return m_HL2Local.m_bNewSprinting; }
 
 	bool CanZoom( CBaseEntity *pRequester );
 	void ToggleZoom(void);

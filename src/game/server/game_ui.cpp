@@ -258,9 +258,16 @@ void CGameUI::Think( void )
 	CBasePlayer *pPlayer = m_player;
 
 	// If player is gone, stop thinking
-	if (pPlayer == NULL)
+	if ( pPlayer == NULL )
 	{
 		SetNextThink( TICK_NEVER_THINK );
+		return;
+	}
+
+	if ( !pPlayer->IsAlive() )
+	{
+		pPlayer->RemoveFlag( FL_ONTRAIN );
+		Deactivate( pPlayer );
 		return;
 	}
 

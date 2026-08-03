@@ -146,11 +146,18 @@ bool CWeaponShotgun::StartReload( void )
 
 	SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
 
+	CBasePlayer *pPlayer = ToBasePlayer( pOwner );
+	if ( pPlayer )
+	{
+		pPlayer->SetAnimation( PLAYER_RELOAD );
+	}
+
 	// Make shotgun shell visible
 	SetBodygroup(1,0);
 
-	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
+	pOwner->m_flNextAttack = flSequenceEndTime;
+	m_flNextPrimaryAttack = flSequenceEndTime;
 
 	m_bInReload = true;
 	return true;
@@ -573,6 +580,7 @@ CWeaponShotgun::CWeaponShotgun( void )
 	m_bNeedPump		= false;
 	m_bDelayedFire1 = false;
 	m_bDelayedFire2 = false;
+	m_bDelayedReload = false;
 
 	m_fMinRange1		= 0.0;
 	m_fMaxRange1		= 500;
@@ -585,13 +593,18 @@ CWeaponShotgun::CWeaponShotgun( void )
 //-----------------------------------------------------------------------------
 void CWeaponShotgun::ItemHolsterFrame( void )
 {
-	// Must be player held
-	if ( GetOwner() && GetOwner()->IsPlayer() == false )
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if ( pOwner == NULL || !pOwner->IsPlayer() )
 		return;
 
-	// We can't be active
-	if ( GetOwner()->GetActiveWeapon() == this )
+	if ( pOwner->GetActiveWeapon() == this )
 		return;
+
+	m_bInReload = false;
+	m_bDelayedFire1 = false;
+	m_bDelayedFire2 = false;
+	m_bDelayedReload = false;
+	SetBodygroup( 1, 1 );
 
 	// If it's been longer than three seconds, reload
 	if ( ( gpGlobals->curtime - m_flHolsterTime ) > sk_auto_reload_time.GetFloat() )
@@ -599,16 +612,13 @@ void CWeaponShotgun::ItemHolsterFrame( void )
 		// Reset the timer
 		m_flHolsterTime = gpGlobals->curtime;
 	
-		if ( GetOwner() == NULL )
-			return;
-
 		if ( m_iClip1 == GetMaxClip1() )
 			return;
 
 		// Just load the clip with no animations
-		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
+		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), pOwner->GetAmmoCount( GetPrimaryAmmoType() ) );
 		
-		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
+		pOwner->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;
 	}
 }

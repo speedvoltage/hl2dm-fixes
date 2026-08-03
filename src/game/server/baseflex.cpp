@@ -2201,8 +2201,8 @@ void CBaseFlex::DoBodyLean( void )
 		{
 			m_vecPrevVelocity = vecDelta;
 			float decay =  ExponentialDecay( 0.5, 0.1, dt );
-			m_vecShift = m_vecLean * decay;
-			m_vecLean = m_vecShift * decay;
+			m_vecShift *= decay;
+			m_vecLean *= decay;
  		}
 
 		m_vecPrevOrigin = vecOrigin;
@@ -2838,4 +2838,3 @@ BEGIN_BYTESWAP_DATADESC( flexweight_t )
 	DEFINE_FIELD( weight, FIELD_FLOAT ),
 	DEFINE_FIELD( influence, FIELD_FLOAT ),
 END_BYTESWAP_DATADESC()
-

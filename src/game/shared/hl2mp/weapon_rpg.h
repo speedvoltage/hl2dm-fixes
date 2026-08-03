@@ -27,7 +27,7 @@
 
 class CWeaponRPG;
 class CLaserDot;
-class RocketTrail;
+class DustTrail;
  
 //###########################################################################
 //	>> CMissile		(missile launcher class is below this one!)
@@ -48,6 +48,7 @@ public:
 	
 	void	Spawn( void );
 	void	Precache( void );
+	void	UpdateOnRemove( void ) OVERRIDE;
 	void	MissileTouch( CBaseEntity *pOther );
 	void	Explode( void );
 	void	ShotDown( void );
@@ -81,7 +82,7 @@ protected:
 	// Gets the shooting position 
 	void GetShootPosition( CLaserDot *pLaserDot, Vector *pShootPosition );
 
-	CHandle<RocketTrail>	m_hRocketTrail;
+	CHandle<DustTrail>		m_hRocketTrail;
 	float					m_flAugerTime;		// Amount of time to auger before blowing up anyway
 	float					m_flMarkDeadTime;
 	float					m_flDamage;
@@ -190,7 +191,7 @@ public:
 	bool	WeaponShouldBeLowered( void );
 	bool	Lower( void );
 
-	bool	CanHolster( void );
+	bool	CanHolster( void ) const;
 
 	virtual void Drop( const Vector &vecVelocity );
 

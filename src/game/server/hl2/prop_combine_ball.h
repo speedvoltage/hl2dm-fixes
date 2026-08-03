@@ -36,6 +36,7 @@ public:
 	virtual void Spawn();
 	virtual void UpdateOnRemove();
 	void StopLoopingSounds();
+	bool OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason ) OVERRIDE;
 
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	virtual void OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason );

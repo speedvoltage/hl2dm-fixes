@@ -117,7 +117,7 @@ END_SEND_TABLE()
 //-----------------------------------------------------------------------------
 CEnvProjectedTexture::CEnvProjectedTexture( void )
 {
-	m_bState = true;
+	m_bState = false;
 	m_flLightFOV = 45.0f;
 	m_bEnableShadows = false;
 	m_bLightOnlyTarget = false;

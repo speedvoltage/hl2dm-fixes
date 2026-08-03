@@ -877,6 +877,9 @@ void CItem_AmmoCrate::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 	if ( pPlayer == NULL )
 		return;
 
+	if ( !pPlayer->IsAlive() )
+		return;
+
 	m_OnUsed.FireOutput( pActivator, this );
 
 	int iSequence = LookupSequence( "Open" );
@@ -929,7 +932,7 @@ int CItem_AmmoCrate::OnTakeDamage( const CTakeDamageInfo &info )
 	{
 		CBaseCombatWeapon *weapon = player->GetActiveWeapon();
 
-		if (weapon && !stricmp(weapon->GetName(), "weapon_crowbar"))
+		if ( weapon && !stricmp( weapon->GetName(), "weapon_crowbar" ) && ( info.GetDamageType() & DMG_CLUB ) )
 		{
 			// play the normal use sound
 			player->EmitSound( "HL2Player.Use" );
@@ -1036,4 +1039,3 @@ void CItem_AmmoCrate::InputKill( inputdata_t &data )
 {
 	UTIL_Remove( this );
 }
-

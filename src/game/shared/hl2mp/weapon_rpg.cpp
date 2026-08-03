@@ -153,6 +153,21 @@ CMissile::~CMissile()
 {
 }
 
+void CMissile::UpdateOnRemove( void )
+{
+	if ( m_hRocketTrail )
+	{
+		Vector vecTrailOrigin = m_hRocketTrail->GetAbsOrigin();
+		m_hRocketTrail->StopFollowingEntity();
+		m_hRocketTrail->SetAbsOrigin( vecTrailOrigin );
+		m_hRocketTrail->SetEmit( false );
+		m_hRocketTrail->SetLifetime( m_hRocketTrail->m_ParticleLifetime );
+		m_hRocketTrail = NULL;
+	}
+
+	BaseClass::UpdateOnRemove();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -253,7 +268,6 @@ void CMissile::DumbFire( void )
 
 	SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize( this, vec3_origin, vec3_origin );
-
 	EmitSound( "Missile.Ignite" );
 
 	// Smoke trail.
@@ -335,11 +349,6 @@ void CMissile::ShotDown( void )
 
 	DispatchEffect( "RPGShotDown", data );
 
-	if ( m_hRocketTrail != NULL )
-	{
-		m_hRocketTrail->m_bDamaged = true;
-	}
-
 	SetThink( &CMissile::AugerThink );
 	SetNextThink( gpGlobals->curtime );
 	m_flAugerTime = gpGlobals->curtime + 1.5f;
@@ -386,12 +395,6 @@ void CMissile::Explode( void )
 		DoExplosion();
 	}
 
-	if( m_hRocketTrail )
-	{
-		m_hRocketTrail->SetLifetime(0.1f);
-		m_hRocketTrail = NULL;
-	}
-
 	if ( m_hOwner != NULL )
 	{
 		m_hOwner->NotifyRocketDied();
@@ -425,22 +428,22 @@ void CMissile::CreateSmokeTrail( void )
 	if ( m_hRocketTrail )
 		return;
 
-	// Smoke trail.
-	if ( (m_hRocketTrail = RocketTrail::CreateRocketTrail()) != NULL )
+	m_hRocketTrail = DustTrail::CreateDustTrail();
+	if ( m_hRocketTrail )
 	{
-		m_hRocketTrail->m_Opacity = 0.2f;
-		m_hRocketTrail->m_SpawnRate = 100;
-		m_hRocketTrail->m_ParticleLifetime = 0.5f;
-		m_hRocketTrail->m_StartColor.Init( 0.65f, 0.65f , 0.65f );
-		m_hRocketTrail->m_EndColor.Init( 0.0, 0.0, 0.0 );
-		m_hRocketTrail->m_StartSize = 8;
-		m_hRocketTrail->m_EndSize = 32;
+		m_hRocketTrail->m_SpawnRate = 200;
+		m_hRocketTrail->m_ParticleLifetime = 1.0f;
+		m_hRocketTrail->m_Color.GetForModify().Init( 0.65f, 0.65f, 0.65f );
+		m_hRocketTrail->m_StartSize = 32;
+		m_hRocketTrail->m_EndSize = 64;
 		m_hRocketTrail->m_SpawnRadius = 4;
-		m_hRocketTrail->m_MinSpeed = 2;
-		m_hRocketTrail->m_MaxSpeed = 16;
-		
-		m_hRocketTrail->SetLifetime( 999 );
-		m_hRocketTrail->FollowEntity( this, "0" );
+		m_hRocketTrail->m_MinSpeed = 4;
+		m_hRocketTrail->m_MaxSpeed = 24;
+		m_hRocketTrail->m_MinDirectedSpeed = 4;
+		m_hRocketTrail->m_MaxDirectedSpeed = 24;
+		m_hRocketTrail->m_Opacity = 0.3f;
+		m_hRocketTrail->SetLifetime( -1 );
+		m_hRocketTrail->FollowEntity( this );
 	}
 }
 
@@ -453,6 +456,7 @@ void CMissile::IgniteThink( void )
 	SetMoveType( MOVETYPE_FLY );
 	SetModel("models/weapons/w_missile.mdl");
 	UTIL_SetSize( this, vec3_origin, vec3_origin );
+	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );
  	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	//TODO: Play opening sound
@@ -962,10 +966,6 @@ void CAPCMissile::AugerDelay( float flDelay )
 
 void CAPCMissile::AugerStartThink()
 {
-	if ( m_hRocketTrail != NULL )
-	{
-		m_hRocketTrail->m_bDamaged = true;
-	}
 	m_flAugerTime = gpGlobals->curtime + random->RandomFloat( 1.0f, 2.0f );
 	SetThink( &CAPCMissile::AugerThink );
 	SetNextThink( gpGlobals->curtime );
@@ -1635,7 +1635,7 @@ bool CWeaponRPG::Deploy( void )
 	return BaseClass::Deploy();
 }
 
-bool CWeaponRPG::CanHolster( void )
+bool CWeaponRPG::CanHolster( void ) const
 {
 	//Can't have an active missile out
 	if ( m_hMissile != NULL )
@@ -1666,6 +1666,7 @@ void CWeaponRPG::StartGuiding( void )
 	m_bGuiding = true;
 
 #ifndef CLIENT_DLL
+	CDisablePredictionFiltering disablePred;
 	WeaponSound(SPECIAL1);
 
 	CreateLaserPointer();
@@ -1682,6 +1683,7 @@ void CWeaponRPG::StopGuiding( void )
 
 #ifndef CLIENT_DLL
 
+	CDisablePredictionFiltering disablePred;
 	WeaponSound( SPECIAL2 );
 
 	// Kill the dot completely
@@ -1795,7 +1797,7 @@ void CWeaponRPG::CreateLaserPointer( void )
 	if ( pOwner == NULL )
 		return;
 
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+	if ( m_hMissile == NULL && pOwner->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
 		return;
 
 	m_hLaserDot = CLaserDot::Create( GetAbsOrigin(), GetOwner() );
@@ -1833,7 +1835,10 @@ bool CWeaponRPG::Reload( void )
 
 	WeaponSound( RELOAD );
 	
-	SendWeaponAnim( ACT_VM_RELOAD );
+	if ( pOwner->GetActiveWeapon() == this )
+	{
+		SendWeaponAnim( ACT_VM_RELOAD );
+	}
 
 	return true;
 }

@@ -769,6 +769,14 @@ void CPropCombineBall::SetBallAsLaunched( void )
 	WhizSoundThink();
 }
 
+bool CPropCombineBall::OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
+{
+	if ( m_bHeld && pPhysGunUser != GetOwnerEntity() )
+		return false;
+
+	return CDefaultPlayerPickupVPhysics::OnAttemptPhysGunPickup( pPhysGunUser, reason );
+}
+
 //-----------------------------------------------------------------------------
 // Lighten the mass so it's zippy toget to the gun
 //-----------------------------------------------------------------------------

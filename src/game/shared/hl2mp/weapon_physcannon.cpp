@@ -798,6 +798,12 @@ void CPlayerPickupController::Use( CBaseEntity *pActivator, CBaseEntity *pCaller
 			return;
 		}
 
+		if ( !pPhys )
+		{
+			Shutdown();
+			return;
+		}
+
 #if STRESS_TEST
 		vphysics_objectstress_t stress;
 		CalculateObjectStress( pPhys, pAttached, &stress );
@@ -1128,14 +1134,14 @@ void CWeaponPhysCannon::Drop( const Vector &vecVelocity )
 	ForceDrop();
 
 #ifndef CLIENT_DLL
-	UTIL_Remove( this );
+	Delete();
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CWeaponPhysCannon::CanHolster( void ) 
+bool CWeaponPhysCannon::CanHolster( void ) const
 { 
 	//Don't holster this weapon if we're holding onto something
 	if ( m_bActive )
@@ -1461,6 +1467,7 @@ void CWeaponPhysCannon::PrimaryAttack( void )
 			{
 				// We can't punt this yet
 				DryFire();
+				m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 				return;
 			}
 		}
@@ -1592,7 +1599,7 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 			break;
 
 		case OBJECT_NOT_FOUND:
-			m_flNextSecondaryAttack = gpGlobals->curtime + 0.1f;
+			m_flNextSecondaryAttack = gpGlobals->curtime + TICK_INTERVAL;
 			CloseElements();
 			break;
 
@@ -1796,7 +1803,7 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	// If we're too far, simply start to pull the object towards us
 	Vector	pullDir = start - pEntity->WorldSpaceCenter();
 	VectorNormalize( pullDir );
-	pullDir *= physcannon_pullforce.GetFloat();
+	pullDir *= physcannon_pullforce.GetFloat() * ( TICK_INTERVAL / 0.1f );
 	
 	float mass = PhysGetEntityMass( pEntity );
 	if ( mass < 50.0f )
@@ -2006,20 +2013,13 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	if ( m_bActive == false )
 		return;
 
-	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( GetOwner() );
-	if( pOwner != NULL )
-	{
-		pOwner->EnableSprint( true );
-		pOwner->SetMaxSpeed( hl2_normspeed.GetFloat() );
-	}
-
 	CBaseEntity *pObject = m_grabController.GetAttached();
 
 	m_grabController.DetachEntity( wasLaunched );
 
 	if ( pObject != NULL )
 	{
-		Pickup_OnPhysGunDrop( pObject, pOwner, wasLaunched ? LAUNCHED_BY_CANNON : DROPPED_BY_CANNON );
+		Pickup_OnPhysGunDrop( pObject, GetPlayerOwner(), wasLaunched ? LAUNCHED_BY_CANNON : DROPPED_BY_CANNON );
 	}
 	
 	if ( pObject && m_bResetOwnerEntity == true )
@@ -2337,7 +2337,7 @@ void CWeaponPhysCannon::ItemPostFrame()
 		}
 	}
 	
-	if (( pOwner->m_nButtons & IN_ATTACK2 ) == 0 )
+	if ( ( pOwner->m_nButtons & IN_ATTACK2 ) == 0 && CanPerformSecondaryAttack() )
 	{
 		m_nAttack2Debounce = 0;
 	}

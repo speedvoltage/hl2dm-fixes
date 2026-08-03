@@ -408,7 +408,7 @@ bool CBaseEntity::KeyValue( const char *szKeyName, const char *szValue )
 		}
 
 		// Do this so inherited classes looking for 'angles' don't have to bother with 'angle'
-		return KeyValue( szKeyName, szBuf );
+		return KeyValue( "angles", szBuf );
 	}
 
 	// NOTE: Have to do these separate because they set two values instead of one
@@ -1685,6 +1685,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 #if defined( HL2MP ) && defined( GAME_DLL )
 	int iEffectSeed = iSeed;
+	int iBuckshotAmmoType = pAmmoDef->Index( "Buckshot" );
 #endif
 	//-----------------------------------------------------
 	// Set up our shot manipulator.
@@ -1727,6 +1728,26 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 #endif
 
 
+#if defined( HL2MP ) && defined( GAME_DLL )
+		if ( IsPlayer() && info.m_iAmmoType == iBuckshotAmmoType )
+		{
+			trace_t trHull;
+			trace_t trRay;
+			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -1.5f, -1.5f, -1.5f ), Vector( 1.5f, 1.5f, 1.5f ), MASK_SHOT, &traceFilter, &trHull );
+			AI_TraceLine( info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &trRay );
+
+			if ( trRay.fraction < 1.0f && trRay.hitgroup == HITGROUP_HEAD &&
+				( trHull.fraction >= trRay.fraction || trHull.m_pEnt == trRay.m_pEnt ) )
+			{
+				tr = trRay;
+			}
+			else
+			{
+				tr = trHull.fraction < trRay.fraction ? trHull : trRay;
+			}
+		}
+		else
+#endif
 		if( IsPlayer() && info.m_iShots > 1 && iShot % 2 )
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
@@ -1796,6 +1817,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		if ( bStartedInWater )
 		{
 #ifdef GAME_DLL
+			CDisablePredictionFiltering disablePred;
 			Vector vBubbleStart = info.m_vecSrc;
 			Vector vBubbleEnd = tr.endpos;
 
@@ -2040,7 +2062,9 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 //-----------------------------------------------------------------------------
 bool CBaseEntity::ShouldDrawUnderwaterBulletBubbles()
 {
-#if defined( HL2_DLL ) && defined( GAME_DLL )
+#if defined( HL2MP ) && defined( GAME_DLL )
+	return GetWaterLevel() == 3;
+#elif defined( HL2_DLL ) && defined( GAME_DLL )
 	CBaseEntity *pPlayer = ( gpGlobals->maxClients == 1 ) ? UTIL_GetLocalPlayer() : NULL;
 	return pPlayer && (pPlayer->GetWaterLevel() == 3);
 #else
@@ -2083,6 +2107,7 @@ bool CBaseEntity::HandleShotImpactingWater( const FireBulletsInfo_t &info,
 #ifdef GAME_DLL
 	if ( ShouldDrawUnderwaterBulletBubbles() )
 	{
+		CDisablePredictionFiltering disablePred;
 		CWaterBullet *pWaterBullet = ( CWaterBullet * )CreateEntityByName( "waterbullet" );
 		if ( pWaterBullet )
 		{

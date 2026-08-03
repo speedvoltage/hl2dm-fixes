@@ -84,6 +84,9 @@ LINK_ENTITY_TO_CLASS( weapon_hl2mp_base, CWeaponHL2MPBase );
 #ifdef GAME_DLL
 
 	BEGIN_DATADESC( CWeaponHL2MPBase )
+		DEFINE_FIELD( m_vOriginalSpawnOrigin, FIELD_VECTOR ),
+		DEFINE_FIELD( m_vOriginalSpawnAngles, FIELD_VECTOR ),
+		DEFINE_FIELD( m_bOriginalSpawnLocationSet, FIELD_BOOLEAN ),
 
 	END_DATADESC()
 
@@ -98,6 +101,9 @@ CWeaponHL2MPBase::CWeaponHL2MPBase()
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
 
 	m_flNextResetCheckTime = 0.0f;
+	m_vOriginalSpawnOrigin.Init();
+	m_vOriginalSpawnAngles.Init();
+	m_bOriginalSpawnLocationSet = false;
 }
 
 
@@ -187,14 +193,16 @@ void CWeaponHL2MPBase::Materialize( void )
 
 	if ( HasSpawnFlags( SF_NORESPAWN ) == false )
 	{
-		if ( GetOriginalSpawnOrigin() == vec3_origin )
+		if ( !m_bOriginalSpawnLocationSet )
 		{
 			m_vOriginalSpawnOrigin = GetAbsOrigin();
 			m_vOriginalSpawnAngles = GetAbsAngles();
+			m_bOriginalSpawnLocationSet = true;
 		}
 	}
 
 	SetPickupTouch();
+	SetOwnerEntity( NULL );
 
 	SetThink (NULL);
 }
@@ -204,6 +212,20 @@ int CWeaponHL2MPBase::ObjectCaps()
 	return BaseClass::ObjectCaps() & ~FCAP_IMPULSE_USE;
 }
 
+#endif
+
+#ifdef GAME_DLL
+void CWeaponHL2MPBase::FallThink( void )
+{
+	if ( !HasSpawnFlags( SF_NORESPAWN ) && !m_bOriginalSpawnLocationSet )
+	{
+		m_vOriginalSpawnOrigin = GetAbsOrigin();
+		m_vOriginalSpawnAngles = GetAbsAngles();
+		m_bOriginalSpawnLocationSet = true;
+	}
+
+	BaseClass::FallThink();
+}
 #endif
 
 void CWeaponHL2MPBase::FallInit( void )
@@ -262,7 +284,7 @@ void CWeaponHL2MPBase::FallInit( void )
 
 	SetPickupTouch();
 	
-	SetThink( &CBaseCombatWeapon::FallThink );
+	SetThink( &CWeaponHL2MPBase::FallThink );
 
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
@@ -327,4 +349,3 @@ void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &c
 }
 
 #endif
-

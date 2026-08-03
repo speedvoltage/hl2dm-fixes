@@ -28,7 +28,7 @@ BEGIN_DATADESC( CSatchelCharge )
 	DEFINE_FIELD( m_flNextBounceSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_bInAir, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_vLastPosition, FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_pMyWeaponSLAM, FIELD_CLASSPTR ),
+	DEFINE_FIELD( m_hMyWeaponSLAM, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bIsAttached, FIELD_BOOLEAN ),
 
 	// Function Pointers
@@ -124,6 +124,21 @@ void CSatchelCharge::InputExplode( inputdata_t &inputdata )
 	UTIL_Remove( this );
 }
 
+void CSatchelCharge::UpdateOnRemove( void )
+{
+	m_bIsLive = false;
+
+	CWeapon_SLAM *pSLAM = m_hMyWeaponSLAM.Get();
+	if ( pSLAM && !pSLAM->AnyUndetonatedCharges() )
+	{
+		pSLAM->m_bDetonatorArmed = false;
+		pSLAM->m_bNeedDetonatorHolster = true;
+		pSLAM->SetWeaponIdleTime( gpGlobals->curtime );
+	}
+
+	BaseClass::UpdateOnRemove();
+}
+
 
 void CSatchelCharge::SatchelThink( void )
 {
@@ -204,7 +219,7 @@ void CSatchelCharge::BounceSound( void )
 CSatchelCharge::CSatchelCharge(void)
 {
 	m_vLastPosition.Init();
-	m_pMyWeaponSLAM = NULL;
+	m_hMyWeaponSLAM = NULL;
 }
 
 CSatchelCharge::~CSatchelCharge(void)

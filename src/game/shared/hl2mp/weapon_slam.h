@@ -61,7 +61,7 @@ public:
 	void				ItemPostFrame( void );	
 	bool				Reload( void );
 	void				SetSlamState( int newState );
-	bool				CanAttachSLAM(void);		// In position where can attach SLAM?
+	bool				CanAttachSLAM( trace_t *pTrace = NULL );		// In position where can attach SLAM?
 	bool				AnyUndetonatedCharges(void);
 	void				StartTripmineAttach( void );
 	void				TripmineAttach( void );
@@ -74,6 +74,8 @@ public:
 	void				SatchelAttach( void );
 	bool				Deploy( void );
 	bool				Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
+	void				Equip( CBaseCombatCharacter *pOwner );
+	void				Drop( const Vector &vecVelocity );
 
 	const CUtlVector< CBaseEntity* > &GetSatchelVector();
 

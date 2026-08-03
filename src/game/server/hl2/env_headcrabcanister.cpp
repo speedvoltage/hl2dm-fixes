@@ -966,6 +966,17 @@ void CEnvHeadcrabCanister::HeadcrabCanisterWorldThink( void )
 	Vector vecEndPosition;
 	QAngle vecEndAngles;
 	m_Shared.GetPositionAtTime( flTime, vecEndPosition, vecEndAngles );
+	Vector vecFallbackPosition = GetAbsOrigin();
+	QAngle vecFallbackAngles = GetAbsAngles();
+
+	for ( int i = 0; i < 3; ++i )
+	{
+		if ( IS_NAN( vecEndPosition[i] ) )
+			vecEndPosition[i] = vecFallbackPosition[i];
+
+		if ( IS_NAN( vecEndAngles[i] ) )
+			vecEndAngles[i] = vecFallbackAngles[i];
+	}
 
 	if ( !m_bIncomingSoundStarted && !HasSpawnFlags( SF_NO_IMPACT_SOUND ) )
 	{

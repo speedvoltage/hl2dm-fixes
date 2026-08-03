@@ -13,6 +13,7 @@
 	#include "c_hl2mp_player.h"
 #else
 	#include "hl2mp_player.h"
+	#include "te_effect_dispatch.h"
 #endif
 
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
@@ -33,6 +34,9 @@ public:
 	CWeapon357( void );
 
 	void	PrimaryAttack( void );
+#ifndef CLIENT_DLL
+	void	Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+#endif
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
@@ -133,17 +137,6 @@ void CWeapon357::PrimaryAttack( void )
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets( info );
 
-	//Disorient the player
-	QAngle angles = pPlayer->GetLocalAngles();
-
-	angles.x += random->RandomInt( -1, 1 );
-	angles.y += random->RandomInt( -1, 1 );
-	angles.z = 0;
-
-#ifndef CLIENT_DLL
-	pPlayer->SnapEyeAngles( angles );
-#endif
-
 	pPlayer->ViewPunch( QAngle( -8, random->RandomFloat( -2, 2 ), 0 ) );
 
 	if ( !m_iClip1 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
@@ -152,3 +145,47 @@ void CWeapon357::PrimaryAttack( void )
 		pPlayer->SetSuitUpdate( "!HEV_AMO0", FALSE, 0 ); 
 	}
 }
+
+#ifndef CLIENT_DLL
+void CWeapon357::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
+{
+	if ( pEvent->event != EVENT_WEAPON_RELOAD )
+	{
+		BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
+		return;
+	}
+
+	CBasePlayer *pOwner = ToBasePlayer( pOperator );
+	if ( !pOwner )
+		return;
+
+	Vector vecForward;
+	Vector vecRight;
+	Vector vecUp;
+	pOwner->EyeVectors( &vecForward, &vecRight, &vecUp );
+
+	Vector vecOrigin;
+	QAngle vecAttachmentAngles;
+	if ( !GetAttachment( "muzzle", vecOrigin, vecAttachmentAngles ) )
+	{
+		vecOrigin = pOwner->Weapon_ShootPosition() + vecForward * 8.0f;
+	}
+
+	vecOrigin -= vecForward * 8.0f;
+	vecOrigin += vecRight * 2.0f;
+	vecOrigin -= vecUp * 2.0f;
+
+	CDisablePredictionFiltering disablePred;
+	for ( int i = 0; i < 6; ++i )
+	{
+		Vector vecEjectDirection = vecRight + vecUp * random->RandomFloat( 0.5f, 1.0f ) + vecForward * random->RandomFloat( -0.2f, 0.2f );
+		VectorNormalize( vecEjectDirection );
+
+		CEffectData data;
+		data.m_vOrigin = vecOrigin + RandomVector( -1.0f, 1.0f );
+		VectorAngles( vecEjectDirection, data.m_vAngles );
+		data.m_nEntIndex = entindex();
+		DispatchEffect( "ShellEject", data );
+	}
+}
+#endif

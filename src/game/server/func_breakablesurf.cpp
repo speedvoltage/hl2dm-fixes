@@ -241,6 +241,8 @@ void CBreakableSurface::Precache(void)
 		PrecacheMaterial( "models/brokenglass/glassbroken_03d" );
 	}
 
+	PrecacheScriptSound( m_nSurfaceType == SHATTERSURFACE_TILE ? "Breakable.Concrete" : "Glass.Break" );
+
 	BaseClass::Precache();
 }
 
@@ -609,7 +611,7 @@ void CBreakableSurface::Die( CBaseEntity *pBreaker, const Vector &vAttackDir )
 		return;
 
 	// Play a break sound
-	PhysBreakSound( this, VPhysicsGetObject(), GetAbsOrigin() );
+	EmitSound( m_nSurfaceType == SHATTERSURFACE_TILE ? "Breakable.Concrete" : "Glass.Break" );
 
 	m_bIsBroken = true;
 	m_iHealth = 0.0f;
@@ -1292,4 +1294,3 @@ void CBreakableSurface::VPhysicsCollision( int index, gamevcollisionevent_t *pEv
 	}
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
-

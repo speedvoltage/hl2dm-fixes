@@ -282,6 +282,15 @@ void CHL2MPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 #ifndef CLIENT_DLL
 	if ( IsIntermission() )
 		return;
+
+	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pVictim );
+	if ( pHL2MPPlayer && pHL2MPPlayer->IsTeamChangeDeath() )
+	{
+		DeathNotice( pVictim, info );
+		FireTargets( "game_playerdie", pVictim, pVictim, USE_TOGGLE, 0 );
+		return;
+	}
+
 	BaseClass::PlayerKilled( pVictim, info );
 #endif
 }
@@ -448,13 +457,26 @@ Vector CHL2MPRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
 #ifndef CLIENT_DLL
 	CWeaponHL2MPBase *pHL2Weapon = dynamic_cast< CWeaponHL2MPBase*>( pWeapon );
 
-	if ( pHL2Weapon )
+	if ( pHL2Weapon && pHL2Weapon->HasOriginalSpawnLocation() )
 	{
 		return pHL2Weapon->GetOriginalSpawnOrigin();
 	}
 #endif
 	
 	return pWeapon->GetAbsOrigin();
+}
+
+QAngle CHL2MPRules::DefaultWeaponRespawnAngle( CBaseCombatWeapon *pWeapon )
+{
+#ifndef CLIENT_DLL
+	CWeaponHL2MPBase *pHL2Weapon = dynamic_cast< CWeaponHL2MPBase * >( pWeapon );
+	if ( pHL2Weapon && pHL2Weapon->HasOriginalSpawnLocation() )
+	{
+		return pHL2Weapon->GetOriginalSpawnAngles();
+	}
+#endif
+
+	return pWeapon->GetAbsAngles();
 }
 
 #ifndef CLIENT_DLL
@@ -720,6 +742,10 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 			killer_weapon_name += 5;
 		}
 		else if ( strstr( killer_weapon_name, "physics" ) )
+		{
+			killer_weapon_name = "physics";
+		}
+		else if ( strstr( killer_weapon_name, "physbox" ) )
 		{
 			killer_weapon_name = "physics";
 		}

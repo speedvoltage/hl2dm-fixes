@@ -6563,6 +6563,10 @@ void CAI_BaseNPC::SetupVPhysicsHull()
 	if ( GetMoveType() == MOVETYPE_VPHYSICS || GetMoveType() == MOVETYPE_NONE )
 		return;
 
+	CStudioHdr *pStudioHdr = GetModelPtr();
+	if ( !pStudioHdr )
+		return;
+
 	if ( VPhysicsGetObject() )
 	{
 		// Disable collisions to get 
@@ -6573,7 +6577,7 @@ void CAI_BaseNPC::SetupVPhysicsHull()
 	IPhysicsObject *pPhysObj = VPhysicsGetObject();
 	if ( pPhysObj )
 	{
-		float mass = Studio_GetMass(GetModelPtr());
+		float mass = Studio_GetMass( pStudioHdr );
 		if ( mass > 0 )
 		{
 			pPhysObj->SetMass( mass );
@@ -6586,7 +6590,8 @@ void CAI_BaseNPC::SetupVPhysicsHull()
 #endif
 		IPhysicsShadowController *pController = pPhysObj->GetShadowController();
 		float avgsize = (WorldAlignSize().x + WorldAlignSize().y) * 0.5;
-		pController->SetTeleportDistance( avgsize * 0.5 );
+		if ( pController )
+			pController->SetTeleportDistance( avgsize * 0.5 );
 		m_bCheckContacts = true;
 	}
 }

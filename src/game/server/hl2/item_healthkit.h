@@ -19,6 +19,7 @@ public:
 	bool KeyValue(  const char *szKeyName, const char *szValue );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() | m_iCaps; }
+	virtual void UpdateOnRemove( void );
 
     int GetJuice() const { return m_iJuice; }
 
@@ -58,6 +59,7 @@ public:
 	bool KeyValue(  const char *szKeyName, const char *szValue );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual int	ObjectCaps( void ) { return BaseClass::ObjectCaps() | m_iCaps; }
+	virtual void UpdateOnRemove( void );
 
     int GetJuice() const { return m_iJuice; }
 

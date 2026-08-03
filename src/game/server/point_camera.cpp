@@ -51,6 +51,7 @@ CPointCamera::CPointCamera()
 	
 	m_bFogEnable = false;
 	m_bFogRadial = false;
+	m_bitsTransmitPlayers.SetAll();
 
 	g_PointCameraList.Insert( this );
 }
@@ -80,14 +81,30 @@ void CPointCamera::Spawn( void )
 //-----------------------------------------------------------------------------
 int CPointCamera::UpdateTransmitState()
 {
-	if ( m_bActive )
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
+	return SetTransmitState( FL_EDICT_FULLCHECK );
+}
+
+int CPointCamera::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	if ( !m_bActive || !pInfo || !pInfo->m_pClientEnt )
+		return FL_EDICT_DONTSEND;
+
+	int nPlayerIndex = pInfo->m_pClientEnt->m_EdictIndex;
+	if ( nPlayerIndex <= 0 || nPlayerIndex > MAX_PLAYERS )
+		return FL_EDICT_DONTSEND;
+
+	return m_bitsTransmitPlayers.IsBitSet( nPlayerIndex - 1 ) ? FL_EDICT_ALWAYS : FL_EDICT_DONTSEND;
+}
+
+void CPointCamera::TransmitToPlayer( int nPlayerIndex, bool bTransmit )
+{
+	if ( nPlayerIndex <= 0 || nPlayerIndex > MAX_PLAYERS )
+		return;
+
+	if ( bTransmit )
+		m_bitsTransmitPlayers.Set( nPlayerIndex - 1 );
 	else
-	{
-		return SetTransmitState( FL_EDICT_DONTSEND );
-	}
+		m_bitsTransmitPlayers.Clear( nPlayerIndex - 1 );
 }
 
 

@@ -167,6 +167,10 @@ void CBaseHL2MPBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity )
 		if ( this->PlayFleshyHittySoundOnHit() )
 			WeaponSound( MELEE_HIT );
 	}
+	else
+	{
+		WeaponSound( MELEE_HIT_WORLD );
+	}
 
 	// Apply an impact effect
 	ImpactEffect( traceHit );
@@ -335,14 +339,13 @@ void CBaseHL2MPBludgeonWeapon::Swing( int bIsSecondary )
 		}
 	}
 
-	WeaponSound( SINGLE );
-
 	// -------------------------
 	//	Miss
 	// -------------------------
 	if ( traceHit.fraction == 1.0f )
 	{
 		nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
+		WeaponSound( SINGLE );
 
 		// We want to test the first swing again
 		Vector testEnd = swingStart + forward * GetRange();

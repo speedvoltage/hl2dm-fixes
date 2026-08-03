@@ -1833,7 +1833,7 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 		if ( gameFlags & FVPHYSICS_PLAYER_HELD )
 		{
 			// if the player is holding the object, use it's real mass (player holding reduced the mass)
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+			CBasePlayer *pPlayer = UTIL_GetPlayerHoldingEntity( this );
 			if ( pPlayer )
 			{
 				float mass = pPlayer->GetHeldObjectMass( VPhysicsGetObject() );

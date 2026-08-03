@@ -923,7 +923,7 @@ bool CRagdollProp::TestCollision( const Ray_t &ray, unsigned int mask, trace_t& 
 
 void CRagdollProp::Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity )
 {
-	if ( !m_ragdoll.list[0].pObject )
+	if ( m_ragdoll.listCount <= 0 || !m_ragdoll.list[0].pObject )
 		return;
 
 	// newAngles is a relative transform for the entity
@@ -959,6 +959,9 @@ void CRagdollProp::Teleport( const Vector *newPosition, const QAngle *newAngles,
 	
 	for ( int i = 1; i < m_ragdoll.listCount; i++ )
 	{
+		if ( !m_ragdoll.list[i].pObject )
+			continue;
+
 		matrix3x4_t matrix, newMatrix;
 		m_ragdoll.list[i].pObject->GetPositionMatrix( &matrix );
 		ConcatTransforms( xform, matrix, newMatrix );

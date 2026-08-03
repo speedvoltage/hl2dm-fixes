@@ -29,6 +29,20 @@ ConVar  mapcyclefile( "mapcyclefile", "mapcycle.txt", FCVAR_NONE, "Name of the .
 ConVar  servercfgfile( "servercfgfile","server.cfg" );
 ConVar  lservercfgfile( "lservercfgfile","listenserver.cfg" );
 
+static void FlashlightChanged( IConVar *pConVar, const char *pOldString, float flOldValue )
+{
+	ConVarRef flashlightVar( pConVar );
+	if ( !flashlightVar.IsValid() || flashlightVar.GetBool() )
+		return;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( pPlayer && pPlayer->FlashlightIsOn() )
+			pPlayer->FlashlightTurnOff();
+	}
+}
+
 // multiplayer server rules
 ConVar	teamplay( "mp_teamplay","0", FCVAR_NOTIFY );
 ConVar	falldamage( "mp_falldamage","0", FCVAR_NOTIFY );
@@ -38,7 +52,7 @@ ConVar	footsteps( "mp_footsteps","1", FCVAR_NOTIFY );
 #ifdef CSTRIKE
 ConVar	flashlight( "mp_flashlight","1", FCVAR_NOTIFY );
 #else
-ConVar	flashlight( "mp_flashlight","0", FCVAR_NOTIFY );
+ConVar	flashlight( "mp_flashlight","0", FCVAR_NOTIFY, 0, FlashlightChanged );
 #endif
 ConVar	aimcrosshair( "mp_autocrosshair","1", FCVAR_NOTIFY );
 ConVar	decalfrequency( "decalfrequency","10", FCVAR_NOTIFY );
@@ -108,4 +122,3 @@ void InitializeCvars( void )
 
 	g_pDeveloper	= cvar->FindVar( "developer" );
 }
-

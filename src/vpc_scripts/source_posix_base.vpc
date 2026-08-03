@@ -73,11 +73,11 @@ $Project
 
 	$Folder	"Link Libraries"
 	{
-		$ImpLib "$LIBPUBLIC\tier0"		[!$IS_LIB_PROJECT && !($LINUXALL && $DEDICATED && $HL2MP_SERVER)]
-		$ImpLib "$LIBPUBLIC\tier0_srv"	[!$IS_LIB_PROJECT && $LINUXALL && $DEDICATED && $HL2MP_SERVER]
+		$ImpLib "$LIBPUBLIC\tier0"		[!$IS_LIB_PROJECT && !($LINUX32 && $HL2MP_SERVER)]
+		$ImpLib "$LIBPUBLIC\tier0_srv"	[!$IS_LIB_PROJECT && $LINUX32 && $HL2MP_SERVER]
 		$Lib	"$LIBPUBLIC\tier1"		[!$IS_LIB_PROJECT]
-		$ImpLib "$LIBPUBLIC\vstdlib"	[!$IS_LIB_PROJECT && !($LINUXALL && $DEDICATED && $HL2MP_SERVER)]
-		$ImpLib "$LIBPUBLIC\vstdlib_srv"	[!$IS_LIB_PROJECT && $LINUXALL && $DEDICATED && $HL2MP_SERVER]
+		$ImpLib "$LIBPUBLIC\vstdlib"	[!$IS_LIB_PROJECT && !($LINUX32 && $HL2MP_SERVER)]
+		$ImpLib "$LIBPUBLIC\vstdlib_srv"	[!$IS_LIB_PROJECT && $LINUX32 && $HL2MP_SERVER]
 	}
 }
 	

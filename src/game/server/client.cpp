@@ -302,8 +302,18 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
-			continue;
+		if ( teamonly )
+		{
+			if ( g_pGameRules->IsTeamplay() )
+			{
+				if ( g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+					continue;
+			}
+			else if ( pPlayer && pPlayer->GetTeamNumber() != client->GetTeamNumber() )
+			{
+				continue;
+			}
+		}
 
 		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )
 			continue;
@@ -376,6 +386,12 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		event->SetString("text", p );
 		event->SetInt("priority", 1 );	// HLTV event priority, not transmitted
 		gameeventmanager->FireEvent( event, true );
+	}
+
+	if ( pPlayer )
+	{
+		pPlayer->ConsumePlayerTalkMessage();
+		pPlayer->NotePlayerTalked();
 	}
 }
 
@@ -848,7 +864,6 @@ CON_COMMAND( say, "Display player message" )
 		if ( pPlayer->CanPlayerTalk() )
 		{
 			Host_Say( pPlayer->edict(), args, 0 );
-			pPlayer->NotePlayerTalked();
 		}
 	}
 	// This will result in a "console" say.  Ignore anything from
@@ -872,7 +887,6 @@ CON_COMMAND( say_team, "Display player message to team" )
 		if ( pPlayer->CanPlayerTalk() )
 		{
 			Host_Say( pPlayer->edict(), args, 1 );
-			pPlayer->NotePlayerTalked();
 		}
 	}
 }
@@ -1052,13 +1066,13 @@ void CC_Player_PhysSwap( void )
 
 		if ( pWeapon )
 		{
-			// Tell the client to stop selecting weapons
-			engine->ClientCommand( UTIL_GetCommandClient()->edict(), "cancelselect" );
-
 			const char *strWeaponName = pWeapon->GetName();
 
 			if ( !Q_stricmp( strWeaponName, "weapon_physcannon" ) )
 			{
+				if ( PhysCannonGetHeldEntity( pWeapon ) != NULL )
+					return;
+
 				PhysCannonForceDrop( pWeapon, NULL );
 				pPlayer->SelectLastItem();
 			}

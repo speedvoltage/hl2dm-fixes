@@ -99,6 +99,7 @@ IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CHL2MP_Player )
+	DEFINE_INPUTFUNC( FIELD_VOID, "_FinishSpectatorTransition", InputFinishSpectatorTransition ),
 END_DATADESC()
 
 BEGIN_ENT_SCRIPTDESC( CHL2MP_Player, CHL2_Player, "Half-Life 2: Deathmatch Player" )
@@ -153,6 +154,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
     m_bEnterObserver = false;
 	m_bReady = false;
+	m_bTeamChangeDeath = false;
 
 	BaseClass::ChangeTeam( 0 );
 	
@@ -416,25 +418,13 @@ void CHL2MP_Player::PickupObject( CBaseEntity* pObject, bool bLimitMassAndSize )
 
 void CHL2MP_Player::SetPlayerTeamModel( void )
 {
-	const char *szModelName = NULL;
-	szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
-
-	int modelIndex = modelinfo->GetModelIndex( szModelName );
-
-	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false )
-	{
-		szModelName = "models/Combine_Soldier.mdl";
-		m_iModelType = TEAM_COMBINE;
-
-		char szReturnString[512];
-
-		Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", szModelName );
-		engine->ClientCommand ( edict(), szReturnString );
-	}
+	const char *pszRequestedModel = engine->GetClientConVarValue( engine->IndexOfEdict( edict() ), "cl_playermodel" );
+	const char *szModelName = pszRequestedModel;
+	bool bValidModel = szModelName && ValidatePlayerModel( szModelName ) && modelinfo->GetModelIndex( szModelName ) != -1;
 
 	if ( GetTeamNumber() == TEAM_COMBINE )
 	{
-		if ( Q_stristr( szModelName, "models/human") )
+		if ( !bValidModel || Q_stristr( szModelName, "models/human") )
 		{
 			int nHeads = ARRAYSIZE( g_ppszRandomCombineModels );
 		
@@ -446,7 +436,7 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 	}
 	else if ( GetTeamNumber() == TEAM_REBELS )
 	{
-		if ( !Q_stristr( szModelName, "models/human") )
+		if ( !bValidModel || !Q_stristr( szModelName, "models/human") )
 		{
 			int nHeads = ARRAYSIZE( g_ppszRandomCitizenModels );
 
@@ -455,6 +445,18 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 		}
 
 		m_iModelType = TEAM_REBELS;
+	}
+	else if ( !bValidModel )
+	{
+		szModelName = g_ppszRandomCombineModels[0];
+		m_iModelType = TEAM_COMBINE;
+	}
+
+	if ( !pszRequestedModel || Q_stricmp( pszRequestedModel, szModelName ) )
+	{
+		char szReturnString[512];
+		Q_snprintf( szReturnString, sizeof( szReturnString ), "cl_playermodel %s\n", szModelName );
+		engine->ClientCommand( edict(), szReturnString );
 	}
 	
 	SetModel( szModelName );
@@ -966,23 +968,43 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 		return;
 	}*/
 
-	bool bKill = false;
-
 	if ( HL2MPRules()->IsTeamplay() != true && iTeam != TEAM_SPECTATOR )
 	{
 		//don't let them try to join combine or rebels during deathmatch.
 		iTeam = TEAM_UNASSIGNED;
 	}
 
-	if ( HL2MPRules()->IsTeamplay() == true )
-	{
-		if ( iTeam != GetTeamNumber() && GetTeamNumber() != TEAM_UNASSIGNED )
-		{
-			bKill = true;
-		}
-	}
+	bool bTeamChanged = iTeam != GetTeamNumber();
+	bool bWasSpectator = GetTeamNumber() == TEAM_SPECTATOR;
+	bool bKill = bTeamChanged && HL2MPRules()->IsTeamplay() && GetTeamNumber() != TEAM_UNASSIGNED && IsAlive();
+	g_EventQueue.CancelEventOn( this, "_FinishSpectatorTransition" );
 
-	BaseClass::ChangeTeam( iTeam );
+	if ( bTeamChanged )
+	{
+		ClearZoomOwner();
+		DetonateTripmines();
+		ClearUseEntity();
+		ForceDropOfCarriedPhysObjects( NULL );
+
+		if ( FlashlightIsOn() )
+		{
+			FlashlightTurnOff();
+		}
+
+		if ( IsInAVehicle() )
+		{
+			LeaveVehicle();
+		}
+
+		if ( bKill )
+		{
+			m_bTeamChangeDeath = true;
+			CommitSuicide( false, true );
+			m_bTeamChangeDeath = false;
+		}
+
+		BaseClass::ChangeTeam( iTeam );
+	}
 
 	m_flNextTeamChangeTime = gpGlobals->curtime + TEAM_CHANGE_INTERVAL;
 
@@ -995,17 +1017,34 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 		SetPlayerModel();
 	}
 
+	if ( bWasSpectator && iTeam != TEAM_SPECTATOR )
+	{
+		// The spectator inventory strip normally ran on the previous tick. If
+		// both team changes arrived in one tick, finish it before giving the
+		// new spawn its default items.
+		ForceDropOfCarriedPhysObjects( NULL );
+		RemoveAllItems( true );
+		StopObserverMode();
+		State_Transition( STATE_ACTIVE );
+		Spawn();
+		return;
+	}
+
 	if ( iTeam == TEAM_SPECTATOR )
 	{
-		RemoveAllItems( true );
-
 		State_Transition( STATE_OBSERVER_MODE );
+		g_EventQueue.AddEvent( this, "_FinishSpectatorTransition", TICK_INTERVAL, this, this );
 	}
 
-	if ( bKill == true )
-	{
-		CommitSuicide();
-	}
+}
+
+void CHL2MP_Player::InputFinishSpectatorTransition( inputdata_t &data )
+{
+	if ( GetTeamNumber() != TEAM_SPECTATOR )
+		return;
+
+	ForceDropOfCarriedPhysObjects( NULL );
+	RemoveAllItems( true );
 }
 
 bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
@@ -1027,12 +1066,10 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 
 		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
 		{
-			m_fNextSuicideTime = gpGlobals->curtime;	// allow the suicide to work
-
-			CommitSuicide();
-
-			// add 1 to frags to balance out the 1 subtracted for killing yourself
-			IncrementFragCount( 1 );
+			m_fNextSuicideTime = gpGlobals->curtime;
+			m_bTeamChangeDeath = true;
+			CommitSuicide( false, true );
+			m_bTeamChangeDeath = false;
 		}
 
 		ChangeTeam( TEAM_SPECTATOR );
@@ -1257,7 +1294,7 @@ void CHL2MP_Player::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecT
 
 		if ( GetActiveWeapon() == pGrenade )
 		{
-			if ( ( m_nButtons & IN_ATTACK ) || (m_nButtons & IN_ATTACK2) )
+			if ( ( ( m_nButtons & IN_ATTACK ) || ( m_nButtons & IN_ATTACK2 ) ) && !IsAlive() )
 			{
 				DropPrimedFragGrenade( this, pGrenade );
 				return;
@@ -1282,22 +1319,28 @@ int CHL2MP_Player::GetMaxAmmo( int iAmmoIndex ) const
 void CHL2MP_Player::DetonateTripmines( void )
 {
 	CBaseEntity *pEntity = NULL;
+	bool bDetonated = false;
 
 	while ((pEntity = gEntList.FindEntityByClassname( pEntity, "npc_satchel" )) != NULL)
 	{
 		CSatchelCharge *pSatchel = dynamic_cast<CSatchelCharge *>(pEntity);
-		if (pSatchel->m_bIsLive && pSatchel->GetThrower() == this )
+		if ( pSatchel && pSatchel->m_bIsLive && pSatchel->GetThrower() == this )
 		{
 			g_EventQueue.AddEvent( pSatchel, "Explode", 0.20, this, this );
+			bDetonated = true;
 		}
 	}
 
-	// Play sound for pressing the detonator
-	EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	if ( bDetonated )
+	{
+		EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	}
 }
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 {
+	ForceDropOfCarriedPhysObjects( NULL );
+
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
@@ -1320,18 +1363,23 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	CBaseEntity *pAttacker = info.GetAttacker();
-
-	if ( pAttacker )
+	if ( HL2MPRules()->IsTeamplay() && !m_bTeamChangeDeath )
 	{
-		int iScoreToAdd = 1;
+		CBaseEntity *pAttacker = info.GetAttacker();
+		CTeam *pVictimTeam = GetTeam();
 
-		if ( pAttacker == this )
+		if ( pAttacker && pAttacker != this && pAttacker->GetTeamNumber() != TEAM_UNASSIGNED && !pAttacker->InSameTeam( this ) )
 		{
-			iScoreToAdd = -1;
+			CTeam *pAttackerTeam = pAttacker->GetTeam();
+			if ( pAttackerTeam )
+			{
+				pAttackerTeam->AddScore( 1 );
+			}
 		}
-
-		GetGlobalTeam( pAttacker->GetTeamNumber() )->AddScore( iScoreToAdd );
+		else if ( pVictimTeam )
+		{
+			pVictimTeam->AddScore( -1 );
+		}
 	}
 
 	FlashlightTurnOff();

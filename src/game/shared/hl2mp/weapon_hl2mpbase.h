@@ -45,6 +45,7 @@ public:
 
 		void Materialize( void );
 		virtual	int	ObjectCaps( void );
+		virtual void FallThink( void );
 	#endif
 
 	// All predicted weapons need to implement and return true
@@ -80,6 +81,7 @@ public:
 
 	Vector	GetOriginalSpawnOrigin( void ) { return m_vOriginalSpawnOrigin;	}
 	QAngle	GetOriginalSpawnAngles( void ) { return m_vOriginalSpawnAngles;	}
+	bool HasOriginalSpawnLocation( void ) const { return m_bOriginalSpawnLocationSet; }
 
 private:
 
@@ -87,6 +89,7 @@ private:
 
 	Vector m_vOriginalSpawnOrigin;
 	QAngle m_vOriginalSpawnAngles;
+	bool m_bOriginalSpawnLocationSet;
 };
 
 

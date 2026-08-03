@@ -2288,8 +2288,10 @@ void CCollisionEvent::AddTouchEvent( CBaseEntity *pEntity0, CBaseEntity *pEntity
 
 void CCollisionEvent::AddDamageEvent( CBaseEntity *pEntity, const CTakeDamageInfo &info, IPhysicsObject *pInflictorPhysics, bool bRestoreVelocity, const Vector &savedVel, const AngularImpulse &savedAngVel )
 {
-	if ( pEntity->IsMarkedForDeletion() )
+	if ( !pEntity || pEntity->IsMarkedForDeletion() )
 		return;
+
+	IPhysicsObject *pEntityPhysics = pEntity->VPhysicsGetObject();
 
 	int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
 	if ( !( info.GetDamageType() & (DMG_BURN | DMG_DROWN | iTimeBasedDamage | DMG_PREVENT_PHYSICS_FORCE) ) )
@@ -2303,14 +2305,14 @@ void CCollisionEvent::AddDamageEvent( CBaseEntity *pEntity, const CTakeDamageInf
 	event.info = info;
 	event.pInflictorPhysics = pInflictorPhysics;
 	event.bRestoreVelocity = bRestoreVelocity;
-	if ( !pInflictorPhysics || !pInflictorPhysics->IsMoveable() )
+	if ( !pEntityPhysics || !pInflictorPhysics || !pInflictorPhysics->IsMoveable() )
 	{
 		event.bRestoreVelocity = false;
 	}
 
 	if ( event.bRestoreVelocity )
 	{
-		float otherMass = pEntity->VPhysicsGetObject()->GetMass();
+		float otherMass = pEntityPhysics->GetMass();
 		int inflictorIndex = FindDamageInflictor(pInflictorPhysics);
 		if ( inflictorIndex >= 0 )
 		{
@@ -2930,4 +2932,3 @@ void DumpCollideToGlView( CPhysCollide *pCollide, const Vector &origin, const QA
 	physcollision->DestroyDebugMesh( vertCount, outVerts );
 }
 #endif
-

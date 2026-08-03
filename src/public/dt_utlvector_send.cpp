@@ -101,12 +101,19 @@ void SendProxy_UtlVectorLength(
 	CUtlVector<int> *pUtlVec = (CUtlVector<int>*)((char*)pStruct + pExtra->m_Offset);
 	
 	// Don't let them overflow the buffer because they might expect that to get transmitted to the client.
-	pOut->m_Int = pUtlVec->Count();
-	if ( pOut->m_Int > pExtra->m_nMaxElements )
+	int nCount = pUtlVec->Count();
+	if ( nCount < 0 )
 	{
 		Assert( false );
-		pOut->m_Int = pExtra->m_nMaxElements;
+		nCount = 0;
 	}
+	else if ( nCount > pExtra->m_nMaxElements )
+	{
+		Assert( false );
+		nCount = pExtra->m_nMaxElements;
+	}
+
+	pOut->m_Int = nCount;
 }
 
 

@@ -501,7 +501,7 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 
 	bool bJustPressedSpeed = !!( nChangedButtons & IN_SPEED );
 
-	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) );
+	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) && !( mv->m_nButtons & IN_DUCK ) );
 	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
 
 	bool bSprinting = m_HL2Local.m_bNewSprinting;
@@ -529,6 +529,26 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 		}
 	}
 
+	if ( mv->m_nButtons & IN_DUCK )
+	{
+		bSprinting = false;
+	}
+	else if ( m_Local.m_bDucked && !m_Local.m_bDucking )
+	{
+		bSprinting = false;
+	}
+	else if ( m_Local.m_bDucking )
+	{
+		if ( bWantSprint && m_HL2Local.m_flSuitPower >= 10.0f )
+		{
+			bSprinting = true;
+		}
+		else
+		{
+			bSprinting = false;
+		}
+	}
+
 	if ( m_HL2Local.m_flSuitPower < 0.01 )
 	{
 		bSprinting = false;
@@ -546,6 +566,11 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 	}
 
 	if ( bWantWalking )
+	{
+		bSprinting = false;
+	}
+
+	if ( GetWaterLevel() == 3 )
 	{
 		bSprinting = false;
 	}
@@ -576,9 +601,10 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 
 void CHL2_Player::ReduceTimers( CMoveData *mv )
 {
+	bool bPlayerMoving = mv->m_vecVelocity.LengthSqr() >= 0.01f;
 	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED;
 
-	if ( bSprinting )
+	if ( bSprinting && bPlayerMoving )
 	{
 		SuitPower_AddDevice( SuitDeviceSprint );
 	}
@@ -1780,6 +1806,7 @@ void CHL2_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs,
 			if ( pPointCamera )
 			{
 				pPointCamera->SetActive( true );
+				pPointCamera->TransmitToPlayer( entindex(), true );
 			}
 			engine->AddOriginToPVS( vecOrigin );
 		}
@@ -2647,13 +2674,23 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 	// If I was dry on ammo for my best weapon and justed picked up ammo for it,
 	// autoswitch to my best weapon now.
 	//
-	if (bCheckAutoSwitch)
+	bool bAutoSwitch = true;
+	if ( !IsBot() )
 	{
-		CBaseCombatWeapon *pWeapon = g_pGameRules->GetNextBestWeapon(this, GetActiveWeapon());
+		const char *pAutoSwitch = engine->GetClientConVarValue( entindex(), "cl_autowepswitch" );
+		if ( pAutoSwitch && pAutoSwitch[0] )
+		{
+			bAutoSwitch = atoi( pAutoSwitch ) != 0;
+		}
+	}
+
+	if ( bCheckAutoSwitch && bAutoSwitch )
+	{
+		CBaseCombatWeapon *pWeapon = g_pGameRules->GetNextBestWeapon( this, GetActiveWeapon() );
 
 		if ( pWeapon && pWeapon->GetPrimaryAmmoType() == nAmmoIndex )
 		{
-			SwitchToNextBestWeapon(GetActiveWeapon());
+			SwitchToNextBestWeapon( GetActiveWeapon() );
 		}
 	}
 
@@ -3176,7 +3213,8 @@ void CHL2_Player::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 //-----------------------------------------------------------------------------
 bool CHL2_Player::IsHoldingEntity( CBaseEntity *pEnt )
 {
-	return PlayerPickupControllerIsHoldingEntity( m_hUseEntity, pEnt );
+	return PlayerPickupControllerIsHoldingEntity( m_hUseEntity, pEnt ) ||
+		PhysCannonGetHeldEntity( GetActiveWeapon() ) == pEnt;
 }
 
 float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
@@ -3752,6 +3790,9 @@ const impactdamagetable_t &CHL2_Player::GetPhysicsImpactDamageTable()
 //-----------------------------------------------------------------------------
 void CHL2_Player::Splash( void )
 {
+	if ( IsObserver() || !IsAlive() )
+		return;
+
 	CEffectData data;
 	data.m_fFlags = 0;
 	data.m_vOrigin = GetAbsOrigin();

@@ -9,6 +9,7 @@
 #include "hl2_player.h"
 #include "saverestore_utlvector.h"
 #include "triggers.h"
+#include "eventqueue.h"
 
 //-----------------------------------------------------------------------------
 // Weapon-dissolve trigger; all weapons in this field (sans the physcannon) are destroyed!
@@ -205,11 +206,15 @@ Vector CTriggerWeaponDissolve::GetConduitPoint( CBaseEntity *pTarget )
 	// Find the nearest conduit to the target
 	for ( int i = 0; i < m_pConduitPoints.Count(); i++ )
 	{
-		testDist = ( m_pConduitPoints[i]->GetAbsOrigin() - pTarget->GetAbsOrigin() ).LengthSqr();
+		CBaseEntity *pConduit = m_pConduitPoints[i];
+		if ( !pConduit )
+			continue;
+
+		testDist = ( pConduit->GetAbsOrigin() - pTarget->GetAbsOrigin() ).LengthSqr();
 
 		if ( testDist < nearDist )
 		{
-			bestPoint = m_pConduitPoints[i]->GetAbsOrigin();
+			bestPoint = pConduit->GetAbsOrigin();
 			nearDist = testDist;
 		}
 	}
@@ -222,12 +227,21 @@ Vector CTriggerWeaponDissolve::GetConduitPoint( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 void CTriggerWeaponDissolve::DissolveThink( void )
 {
+	for ( int i = m_pWeapons.Count() - 1; i >= 0; --i )
+	{
+		if ( !m_pWeapons[i] )
+			m_pWeapons.Remove( i );
+	}
+
 	int	numWeapons = m_pWeapons.Count();
 
 	// Dissolve all the items within the volume
 	for ( int i = 0; i < numWeapons; i++ )
 	{
 		CBaseCombatWeapon *pWeapon = m_pWeapons[i];
+		if ( !pWeapon )
+			continue;
+
 		Vector vecConduit = GetConduitPoint( pWeapon );
 		
 		// The physcannon upgrades when this happens
@@ -242,7 +256,9 @@ void CTriggerWeaponDissolve::DissolveThink( void )
 			// All conduits send power to the weapon
 			for ( int i = 0; i < m_pConduitPoints.Count(); i++ )
 			{
-				CreateBeam( m_pConduitPoints[i]->GetAbsOrigin(), pWeapon, 4.0f );
+				CBaseEntity *pConduit = m_pConduitPoints[i];
+				if ( pConduit )
+					CreateBeam( pConduit->GetAbsOrigin(), pWeapon, 4.0f );
 			}
 
 			PhysCannonBeginUpgrade( pWeapon );
@@ -299,6 +315,7 @@ class CTriggerWeaponStrip : public CTriggerMultiple
 public:
 	void StartTouch(CBaseEntity *pOther);
 	void EndTouch(CBaseEntity *pOther);
+	void InputStripWeaponsAfterPhysicsDrop( inputdata_t &data );
 
 private:
 	bool m_bKillWeapons;
@@ -312,6 +329,7 @@ LINK_ENTITY_TO_CLASS( trigger_weapon_strip, CTriggerWeaponStrip );
 
 BEGIN_DATADESC( CTriggerWeaponStrip )
 	DEFINE_KEYFIELD( m_bKillWeapons,	FIELD_BOOLEAN, "KillWeapons" ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "_StripWeaponsAfterPhysicsDrop", InputStripWeaponsAfterPhysicsDrop ),
 END_DATADESC()
 
 
@@ -326,7 +344,29 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 		return;
 
 	CBaseCombatCharacter *pCharacter = pOther->MyCombatCharacterPointer();
-	
+	if ( !pCharacter )
+		return;
+
+	if ( !m_bKillWeapons && !pCharacter->IsAllowedToPickupWeapons() )
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer( pCharacter );
+	if ( pPlayer )
+		pPlayer->ForceDropOfCarriedPhysObjects();
+
+	g_EventQueue.AddEvent( this, "_StripWeaponsAfterPhysicsDrop", TICK_INTERVAL, pCharacter, this );
+}
+
+void CTriggerWeaponStrip::InputStripWeaponsAfterPhysicsDrop( inputdata_t &data )
+{
+	CBaseCombatCharacter *pCharacter = data.pActivator ? data.pActivator->MyCombatCharacterPointer() : NULL;
+	if ( !pCharacter )
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer( pCharacter );
+	if ( pPlayer )
+		pPlayer->ForceDropOfCarriedPhysObjects();
+
 	if ( m_bKillWeapons )
 	{
 		for ( int i = 0 ; i < pCharacter->WeaponCount(); ++i )
@@ -341,19 +381,16 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 		return;
 	}
 
-	// Strip the player of his weapons
-	if ( pCharacter && pCharacter->IsAllowedToPickupWeapons() )
+	CBaseCombatWeapon *pBugbait = pCharacter->Weapon_OwnsThisType( "weapon_bugbait" );
+	if ( pBugbait )
 	{
-		CBaseCombatWeapon *pBugbait = pCharacter->Weapon_OwnsThisType( "weapon_bugbait" );
-		if ( pBugbait )
-		{
-			pCharacter->Weapon_Drop( pBugbait );
-			UTIL_Remove( pBugbait );
-		}
-
-		pCharacter->Weapon_DropAll( true );
-		pCharacter->SetPreventWeaponPickup( true );
+		pCharacter->Weapon_Drop( pBugbait );
+		UTIL_Remove( pBugbait );
 	}
+
+	pCharacter->Weapon_DropAll( true );
+	if ( IsTouching( pCharacter ) )
+		pCharacter->SetPreventWeaponPickup( true );
 }
 
 //-----------------------------------------------------------------------------

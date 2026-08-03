@@ -62,6 +62,8 @@ void CEntityFlame::UpdateOnRemove()
 	// which kills me. Make sure to stop the burning sound.
 	if ( m_bPlayingSound )
 	{
+		StopSound( "General.BurningFlesh" );
+		StopSound( "General.BurningObject" );
 		EmitSound( "General.StopBurning" );
 		m_bPlayingSound = false;
 	}

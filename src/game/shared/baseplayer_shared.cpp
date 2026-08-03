@@ -505,6 +505,9 @@ surfacedata_t *CBasePlayer::GetLadderSurface( const Vector &origin )
 
 void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity )
 {
+	if ( !IsAlive() || GetTeamNumber() == TEAM_SPECTATOR )
+		return;
+
 	bool bWalking;
 	float fvol;
 	Vector knee;
@@ -846,7 +849,18 @@ bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 	{
 		if ( pLastWeapon && Weapon_ShouldSetLast( pLastWeapon, GetActiveWeapon() ) )
 		{
-			Weapon_SetLast( pLastWeapon->GetLastWeapon() );
+			CBaseCombatWeapon *pNewLastWeapon = pLastWeapon->GetLastWeapon();
+			if ( pLastWeapon->ClassMatches( "weapon_frag" ) && !pLastWeapon->HasPrimaryAmmo() )
+			{
+				pNewLastWeapon = Weapon_OwnsThisType( "weapon_crowbar" );
+				if ( !pNewLastWeapon )
+					pNewLastWeapon = Weapon_OwnsThisType( "weapon_stunstick" );
+
+				if ( !pNewLastWeapon )
+					pNewLastWeapon = pLastWeapon->GetLastWeapon();
+			}
+
+			Weapon_SetLast( pNewLastWeapon );
 		}
 
 		CBaseViewModel *pViewModel = GetViewModel( viewmodelindex );
@@ -2095,4 +2109,3 @@ bool fogparams_t::operator !=( const fogparams_t& other ) const
 
 	return false;
 }
-

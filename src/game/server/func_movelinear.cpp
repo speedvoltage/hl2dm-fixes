@@ -84,9 +84,9 @@ void CFuncMoveLinear::Spawn( void )
 		m_flMoveDistance = DotProductAbs( m_vecMoveDir, vecOBB ) - m_flLip;
 	}
 
-	m_vecPosition1 = GetAbsOrigin() - (m_vecMoveDir * m_flMoveDistance * m_flStartPosition);
+	m_vecPosition1 = GetLocalOrigin() - (m_vecMoveDir * m_flMoveDistance * m_flStartPosition);
 	m_vecPosition2 = m_vecPosition1 + (m_vecMoveDir * m_flMoveDistance);
-	m_vecFinalDest = GetAbsOrigin();
+	m_vecFinalDest = GetLocalOrigin();
 
 	SetTouch( NULL );
 
@@ -256,11 +256,11 @@ void CFuncMoveLinear::MoveDone( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 	BaseClass::MoveDone();
 
-	if ( GetAbsOrigin() == m_vecPosition2 )
+	if ( GetLocalOrigin() == m_vecPosition2 )
 	{
 		m_OnFullyOpen.FireOutput( this, this );
 	}
-	else if ( GetAbsOrigin() == m_vecPosition1 )
+	else if ( GetLocalOrigin() == m_vecPosition1 )
 	{
 		m_OnFullyClosed.FireOutput( this, this );
 	}
@@ -362,7 +362,7 @@ void CFuncMoveLinear::InputSetSpeed( inputdata_t &inputdata )
 	m_flSpeed = inputdata.value.Float();
 
 	// FIXME: This is a little questionable.  Do we want to fix the speed, or let it continue on at the old speed?
-	float flDistToGoalSqr = ( m_vecFinalDest - GetAbsOrigin() ).LengthSqr();
+	float flDistToGoalSqr = ( m_vecFinalDest - GetLocalOrigin() ).LengthSqr();
 	if ( flDistToGoalSqr > Square( FLT_EPSILON ) )
 	{
 		// NOTE: We do NOT want to call sound functions here, just vanilla position changes

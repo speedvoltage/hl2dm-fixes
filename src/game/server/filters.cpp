@@ -375,7 +375,10 @@ protected:
 
 	bool PassesDamageFilterImpl(const CTakeDamageInfo &info)
 	{
-	 	return info.GetDamageType() == m_iDamageType;
+		if ( m_iDamageType == DMG_GENERIC )
+			return info.GetDamageType() == DMG_GENERIC;
+
+		return ( info.GetDamageType() & m_iDamageType ) == m_iDamageType;
 	}
 
 	int m_iDamageType;

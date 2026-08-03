@@ -178,6 +178,9 @@ inline int CFourWheelVehiclePhysics::GetSpeed() const
 
 inline int CFourWheelVehiclePhysics::GetMaxSpeed() const
 {
+	if ( !m_pVehicle )
+		return 0;
+
 	return INS2MPH(m_pVehicle->GetVehicleParams().engine.maxSpeed);
 }
 

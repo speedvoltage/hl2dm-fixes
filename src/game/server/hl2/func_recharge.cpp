@@ -42,6 +42,7 @@ public:
 	bool KeyValue( const char *szKeyName, const char *szValue );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	virtual int	ObjectCaps( void ) { return (BaseClass::ObjectCaps() | FCAP_CONTINUOUS_USE); }
+	virtual void UpdateOnRemove( void );
 
 private:
 	void InputRecharge( inputdata_t &inputdata );
@@ -329,6 +330,16 @@ void CRecharge::Off(void)
 	}
 }
 
+void CRecharge::UpdateOnRemove( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "SuitRecharge.ChargingLoop" );
+	}
+
+	BaseClass::UpdateOnRemove();
+}
+
 
 //NEW
 class CNewRecharge : public CBaseAnimating
@@ -346,6 +357,7 @@ public:
 	virtual int	ObjectCaps( void ) { return (BaseClass::ObjectCaps() | m_iCaps ); }
 
 	void SetInitialCharge( void );
+	virtual void UpdateOnRemove( void );
 
 private:
 	void InputRecharge( inputdata_t &inputdata );
@@ -774,4 +786,14 @@ void CNewRecharge::Off(void)
 			SetThink( NULL );
 		}
 	}
+}
+
+void CNewRecharge::UpdateOnRemove( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "SuitRecharge.ChargingLoop" );
+	}
+
+	BaseClass::UpdateOnRemove();
 }

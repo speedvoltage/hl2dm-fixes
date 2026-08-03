@@ -293,7 +293,7 @@ LINK_ENTITY_TO_CLASS( func_conveyor, CFuncConveyor );
 BEGIN_DATADESC( CFuncConveyor )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "ToggleDirection", InputToggleDirection ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "SetSpeed", InputSetSpeed ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetSpeed", InputSetSpeed ),
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
 	DEFINE_FIELD( m_flConveyorSpeed, FIELD_FLOAT ),
@@ -420,6 +420,7 @@ public:
 	void Blocked( CBaseEntity *pOther );
 	void SetTargetSpeed( float flSpeed );
 	void UpdateSpeed( float flNewSpeed );
+	virtual void StopLoopingSounds( void );
 	
 	int	 DrawDebugTextOverlays(void);
 
@@ -763,6 +764,16 @@ void CFuncRotating::Spawn( )
 #endif
 }
 
+void CFuncRotating::StopLoopingSounds( void )
+{
+	if ( m_NoiseRunning != NULL_STRING )
+	{
+		StopSound( entindex(), CHAN_STATIC, STRING( m_NoiseRunning ) );
+	}
+
+	BaseClass::StopLoopingSounds();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1097,6 +1108,19 @@ void CFuncRotating::ReverseMove( void )
 void CFuncRotating::RotateMove( void )
 {
 	SetMoveDoneTime( 10 );
+
+	QAngle normalizedAngles = GetLocalAngles();
+
+	if ( m_vecMoveAng.x )
+		normalizedAngles.x = AngleNormalize( normalizedAngles.x );
+
+	if ( m_vecMoveAng.y )
+		normalizedAngles.y = AngleNormalize( normalizedAngles.y );
+
+	if ( m_vecMoveAng.z )
+		normalizedAngles.z = AngleNormalize( normalizedAngles.z );
+
+	SetLocalAngles( normalizedAngles );
 
 	if ( m_bStopAtStartPos )
 	{

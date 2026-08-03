@@ -335,14 +335,10 @@ float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, co
 
 	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
-		if ( gpGlobals->maxClients == 1 )
+		CBasePlayer *pPlayer = UTIL_GetPlayerHoldingEntity( pEvent->pEntities[otherIndex] );
+		if ( pPlayer )
 		{
-			// if the player is holding the object, use it's real mass (player holding reduced the mass)
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-			if ( pPlayer )
-			{
-				otherMass = pPlayer->GetHeldObjectMass( pEvent->pObjects[otherIndex] );
-			}
+			otherMass = pPlayer->GetHeldObjectMass( pEvent->pObjects[otherIndex] );
 		}
 	}
 
@@ -438,17 +434,13 @@ float CalculatePhysicsImpactDamage( int index, gamevcollisionevent_t *pEvent, co
 	}
 	else if ( pEvent->pObjects[index]->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
-		if ( gpGlobals->maxClients == 1 )
+		CBasePlayer *pPlayer = UTIL_GetPlayerHoldingEntity( pEvent->pEntities[index] );
+		if ( pPlayer )
 		{
-			// if the player is holding the object, use it's real mass (player holding reduced the mass)
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-			if ( pPlayer )
+			float mass = pPlayer->GetHeldObjectMass( pEvent->pObjects[index] );
+			if ( mass > 0 )
 			{
-				float mass = pPlayer->GetHeldObjectMass( pEvent->pObjects[index] );
-				if ( mass > 0 )
-				{
-					invMass = 1.0f / mass;
-				}
+				invMass = 1.0f / mass;
 			}
 		}
 	}

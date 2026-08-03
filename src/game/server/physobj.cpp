@@ -516,7 +516,7 @@ bool CPhysBox::CreateVPhysics()
 	}
 
 	vcollide_t *pVCollide = modelinfo->GetVCollide( GetModelIndex() );
-	if ( !pVCollide )
+	if ( !pVCollide || pVCollide->solidCount <= 0 || !pVCollide->solids || !pVCollide->solids[0] )
 		return false;
 
 	PhysGetMassCenterOverride( this, pVCollide, tmpSolid );
@@ -526,6 +526,8 @@ bool CPhysBox::CreateVPhysics()
 		tmpSolid.params.rotdamping = 1.0f;
 	}
 	IPhysicsObject *pPhysics = VPhysicsInitNormal( GetSolid(), GetSolidFlags(), true, &tmpSolid );
+	if ( !pPhysics )
+		return false;
 
 	if ( m_damageType == 1 )
 	{
@@ -1565,11 +1567,19 @@ CPhysMagnet::~CPhysMagnet( void )
 //-----------------------------------------------------------------------------
 void CPhysMagnet::Spawn( void )
 {
+	const char *pModelName = STRING( GetModelName() );
+	if ( !pModelName || !pModelName[0] )
+	{
+		Warning( "%s at %.0f, %.0f, %.0f is missing its model\n", GetClassname(), GetAbsOrigin().x, GetAbsOrigin().y, GetAbsOrigin().z );
+		UTIL_Remove( this );
+		return;
+	}
+
 	Precache();
 
 	SetMoveType( MOVETYPE_NONE );
 	SetSolid( SOLID_VPHYSICS );
-	SetModel( STRING( GetModelName() ) );
+	SetModel( pModelName );
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 
@@ -1580,17 +1590,22 @@ void CPhysMagnet::Spawn( void )
 		tmpSolid.params.mass *= m_massScale;
 	}
 	PhysSolidOverride( tmpSolid, m_iszOverrideScript );
-	VPhysicsInitNormal( GetSolid(), GetSolidFlags(), true, &tmpSolid );
+	IPhysicsObject *pPhysics = VPhysicsInitNormal( GetSolid(), GetSolidFlags(), true, &tmpSolid );
+	if ( !pPhysics )
+	{
+		UTIL_Remove( this );
+		return;
+	}
 
 	// Wake it up if not asleep
 	if ( !HasSpawnFlags(SF_MAGNET_ASLEEP) )
 	{
-		VPhysicsGetObject()->Wake();
+		pPhysics->Wake();
 	}
 
 	if ( HasSpawnFlags(SF_MAGNET_MOTIONDISABLED) )
 	{
-		VPhysicsGetObject()->EnableMotion( false );
+		pPhysics->EnableMotion( false );
 	}
 
 	m_bActive = true;

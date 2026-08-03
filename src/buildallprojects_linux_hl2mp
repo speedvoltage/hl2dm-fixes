@@ -54,10 +54,10 @@ if [ "$target_platform" = "linux32" ]; then
 	export PATH="$PWD/devtools/bin/linux32:$PATH"
 fi
 
-solution_out="_vpc_/ninja/sdk_hl2mp_dedicated_${target_platform}_${VPC_NINJA_BUILD_MODE}"
+solution_out="_vpc_/ninja/sdk_hl2mp_${target_platform}_${VPC_NINJA_BUILD_MODE}"
 
 if [[ ! -e "$solution_out.ninja" ]]; then
-	devtools/bin/vpc /hl2mp "/$target_platform" /ninja /define:SOURCESDK /define:DEDICATED +dedicated /mksln "$solution_out"
+	devtools/bin/vpc /hl2mp "/$target_platform" /ninja /define:SOURCESDK +dedicated /mksln "$solution_out"
 fi
 
 ninja -f "$solution_out.ninja" -j"$(nproc)"

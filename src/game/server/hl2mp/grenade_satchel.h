@@ -30,6 +30,7 @@ public:
 	void			BounceSound( void );
 	void			SatchelTouch( CBaseEntity *pOther );
 	void			SatchelThink( void );
+	void			UpdateOnRemove( void );
 	
 	// Input handlers
 	void			InputExplode( inputdata_t &inputdata );
@@ -39,7 +40,7 @@ public:
 	Vector			m_vLastPosition;
 
 public:
-	CWeapon_SLAM*	m_pMyWeaponSLAM;	// Who shot me..
+	CHandle< CWeapon_SLAM > m_hMyWeaponSLAM;
 	bool			m_bIsAttached;
 	void			Deactivate( void );
 

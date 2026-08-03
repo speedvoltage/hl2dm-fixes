@@ -41,6 +41,7 @@
 #include "physics_collisionevent.h"
 #include "gamestats.h"
 #include "vehicle_base.h"
+#include "usermessages.h"
 
 #ifdef TF_DLL
 #include "nav_mesh/tf_nav_mesh.h"
@@ -1730,12 +1731,19 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 
 	if ( m_iszBreakModelMessage != NULL_STRING )
 	{
-		CPVSFilter filter( GetAbsOrigin() );
-		UserMessageBegin( filter, STRING( m_iszBreakModelMessage ) );
-		WRITE_SHORT( GetModelIndex() );
-		WRITE_VEC3COORD( GetAbsOrigin() );
-		WRITE_ANGLES( GetAbsAngles() );
-		MessageEnd();
+		if ( usermessages->LookupUserMessage( STRING( m_iszBreakModelMessage ) ) == -1 )
+		{
+			Warning( "CBreakableProp::Break invalid break model message: (%s)\n", STRING( m_iszBreakModelMessage ) );
+		}
+		else
+		{
+			CPVSFilter filter( GetAbsOrigin() );
+			UserMessageBegin( filter, STRING( m_iszBreakModelMessage ) );
+			WRITE_SHORT( GetModelIndex() );
+			WRITE_VEC3COORD( GetAbsOrigin() );
+			WRITE_ANGLES( GetAbsAngles() );
+			MessageEnd();
+		}
 
 #ifndef HL2MP
 		UTIL_Remove( this );
@@ -2576,6 +2584,7 @@ bool CPhysicsProp::CreateVPhysics()
 		SetSolid( SOLID_NONE );
 		SetMoveType( MOVETYPE_NONE );
 		Warning("ERROR!: Can't create physics object for %s\n", STRING( GetModelName() ) );
+		return false;
 	}
 	else
 	{
@@ -2742,6 +2751,13 @@ void CPhysicsProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 			SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS );
 		}
 	}
+
+	if ( pPhysicsObject && ( pPhysicsObject->GetGameFlags() & FVPHYSICS_WAS_THROWN ) )
+	{
+		PhysClearGameFlags( pPhysicsObject, FVPHYSICS_WAS_THROWN );
+	}
+
+	m_bFirstCollisionAfterLaunch = false;
 
 	m_OnPhysGunPickup.FireOutput( pPhysGunUser, this );
 

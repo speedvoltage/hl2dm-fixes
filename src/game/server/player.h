@@ -566,6 +566,7 @@ public:
 	// mass/size limit set to zero for none
 	static bool				CanPickupObject( CBaseEntity *pObject, float massLimit, float sizeLimit );
 	virtual void			PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize = true ) {}
+	virtual bool			IsHoldingEntity( CBaseEntity *pEntity ) { return false; }
 	virtual void			ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldindThis = NULL ) {}
 	virtual float			GetHeldObjectMass( IPhysicsObject *pHeldObject );
 
@@ -777,6 +778,7 @@ public:
 	void	NotePlayerTalked() { m_fLastPlayerTalkTime = gpGlobals->curtime; }
 	float	LastTimePlayerTalked() const { return m_fLastPlayerTalkTime; }
 	bool	ArePlayerTalkMessagesAvailable();
+	void	ConsumePlayerTalkMessage();
 
 	void	DisableButtons( int nButtons );
 	void	EnableButtons( int nButtons );
@@ -1608,5 +1610,6 @@ enum
 
 class CSendProxyRecipients;
 void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID );
+CBasePlayer *UTIL_GetPlayerHoldingEntity( CBaseEntity *pEntity );
 
 #endif // PLAYER_H

@@ -22,8 +22,8 @@ public:
 
 	CEnvScreenOverlay();
 
-	// Always transmit to clients
 	virtual int UpdateTransmitState();
+	virtual int ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual void Spawn( void );
 	virtual void Precache( void );
 
@@ -31,14 +31,23 @@ public:
 	void	InputStopOverlay( inputdata_t &inputdata );
 	void	InputSwitchOverlay( inputdata_t &inputdata );
 
-	void	SetActive( bool bActive ) { m_bIsActive = bActive; }
-	
 protected:
+	CBasePlayer *GetActivatorPlayer( const inputdata_t &inputdata );
+	CEnvScreenOverlay *FindPlayerProxy( CBasePlayer *pPlayer );
+	CEnvScreenOverlay *GetPlayerProxy( CBasePlayer *pPlayer );
+	void CopyOverlayData( CEnvScreenOverlay *pSource );
+	void StartOverlay();
+	void StartPendingOverlay();
+
 	CNetworkArray( string_t, m_iszOverlayNames, MAX_SCREEN_OVERLAYS );
 	CNetworkArray( float, m_flOverlayTimes, MAX_SCREEN_OVERLAYS );
 	CNetworkVar( float, m_flStartTime );
 	CNetworkVar( int, m_iDesiredOverlay );
 	CNetworkVar( bool, m_bIsActive );
+	bool m_bIsProxy;
+	bool m_bPendingStart;
+	EHANDLE m_hTargetPlayer;
+	EHANDLE m_hController;
 };
 
 LINK_ENTITY_TO_CLASS( env_screenoverlay, CEnvScreenOverlay );
@@ -74,6 +83,11 @@ BEGIN_DATADESC( CEnvScreenOverlay )
 	DEFINE_FIELD( m_iDesiredOverlay, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flStartTime, FIELD_TIME ),
 	DEFINE_FIELD( m_bIsActive, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bIsProxy, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bPendingStart, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_hTargetPlayer, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hController, FIELD_EHANDLE ),
+	DEFINE_FUNCTION( StartPendingOverlay ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartOverlays", InputStartOverlay ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StopOverlays", InputStopOverlay ),
@@ -99,6 +113,11 @@ CEnvScreenOverlay::CEnvScreenOverlay( void )
 	m_flStartTime = 0;
 	m_iDesiredOverlay = 0;
 	m_bIsActive = false;
+	m_bIsProxy = false;
+	m_bPendingStart = false;
+	m_hTargetPlayer = NULL;
+	m_hController = NULL;
+	AddEFlags( EFL_FORCE_CHECK_TRANSMIT );
 }
 
 //-----------------------------------------------------------------------------
@@ -106,7 +125,10 @@ CEnvScreenOverlay::CEnvScreenOverlay( void )
 //-----------------------------------------------------------------------------
 void CEnvScreenOverlay::Spawn( void )
 {
-	Precache();
+	if ( !m_bIsProxy )
+	{
+		Precache();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -135,31 +157,126 @@ void CEnvScreenOverlay::InputStartOverlay( inputdata_t &inputdata )
 		return;
 	}
 
-	m_flStartTime = gpGlobals->curtime;
-	m_bIsActive = true;
+	CBasePlayer *pPlayer = GetActivatorPlayer( inputdata );
+	if ( !pPlayer )
+		return;
 
-	// Turn off any other screen overlays out there
-	CBaseEntity *pEnt = NULL;
-	while ( (pEnt = gEntList.FindEntityByClassname( pEnt, "env_screenoverlay" )) != NULL )
+	CEnvScreenOverlay *pProxy = GetPlayerProxy( pPlayer );
+	if ( !pProxy )
+		return;
+
+	bool bNeedsStop = pProxy->m_bIsActive || pProxy->m_bPendingStart;
+	bool bSameController = pProxy->m_hController.Get() == this;
+	pProxy->CopyOverlayData( this );
+	pProxy->m_hController = this;
+	if ( !bSameController )
 	{
-		if ( pEnt != this )
-		{
-			CEnvScreenOverlay *pOverlay = assert_cast<CEnvScreenOverlay*>(pEnt);
-			pOverlay->SetActive( false );
-		}
+		pProxy->m_iDesiredOverlay = m_iDesiredOverlay;
+	}
+
+	if ( bNeedsStop )
+	{
+		pProxy->m_flStartTime = -1;
+		pProxy->m_bIsActive = false;
+		pProxy->m_bPendingStart = true;
+		pProxy->SetThink( &CEnvScreenOverlay::StartPendingOverlay );
+		pProxy->SetNextThink( gpGlobals->curtime + 0.1f );
+	}
+	else
+	{
+		pProxy->StartOverlay();
 	}
 }
 
 int CEnvScreenOverlay::UpdateTransmitState()
 {
-	return SetTransmitState( FL_EDICT_ALWAYS );
+	return SetTransmitState( FL_EDICT_FULLCHECK );
 }
 
+int CEnvScreenOverlay::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	if ( !m_bIsProxy || !m_hTargetPlayer || !pInfo || !pInfo->m_pClientEnt )
+		return FL_EDICT_DONTSEND;
+
+	return pInfo->m_pClientEnt == m_hTargetPlayer->edict() ? FL_EDICT_ALWAYS : FL_EDICT_DONTSEND;
+}
+
+CBasePlayer *CEnvScreenOverlay::GetActivatorPlayer( const inputdata_t &inputdata )
+{
+	if ( !inputdata.pActivator || !inputdata.pActivator->IsPlayer() )
+		return NULL;
+
+	return static_cast<CBasePlayer *>( inputdata.pActivator );
+}
+
+CEnvScreenOverlay *CEnvScreenOverlay::FindPlayerProxy( CBasePlayer *pPlayer )
+{
+	CBaseEntity *pEntity = NULL;
+	while ( ( pEntity = gEntList.FindEntityByClassname( pEntity, "env_screenoverlay" ) ) != NULL )
+	{
+		CEnvScreenOverlay *pOverlay = assert_cast<CEnvScreenOverlay *>( pEntity );
+		if ( pOverlay->m_bIsProxy && pOverlay->m_hTargetPlayer.Get() == pPlayer )
+			return pOverlay;
+	}
+
+	return NULL;
+}
+
+CEnvScreenOverlay *CEnvScreenOverlay::GetPlayerProxy( CBasePlayer *pPlayer )
+{
+	CEnvScreenOverlay *pProxy = FindPlayerProxy( pPlayer );
+	if ( pProxy )
+		return pProxy;
+
+	pProxy = assert_cast<CEnvScreenOverlay *>( CreateEntityByName( "env_screenoverlay" ) );
+	if ( !pProxy )
+		return NULL;
+
+	pProxy->m_bIsProxy = true;
+	pProxy->m_hTargetPlayer = pPlayer;
+	if ( DispatchSpawn( pProxy ) < 0 )
+		return NULL;
+
+	return pProxy;
+}
+
+void CEnvScreenOverlay::CopyOverlayData( CEnvScreenOverlay *pSource )
+{
+	for ( int i = 0; i < MAX_SCREEN_OVERLAYS; ++i )
+	{
+		m_iszOverlayNames.Set( i, pSource->m_iszOverlayNames[i] );
+		m_flOverlayTimes.Set( i, pSource->m_flOverlayTimes[i] );
+	}
+}
+
+void CEnvScreenOverlay::StartOverlay()
+{
+	m_bPendingStart = false;
+	m_flStartTime = gpGlobals->curtime;
+	m_bIsActive = true;
+	SetThink( NULL );
+}
+
+void CEnvScreenOverlay::StartPendingOverlay()
+{
+	if ( !m_hTargetPlayer || !m_hController )
+	{
+		m_bPendingStart = false;
+		SetThink( NULL );
+		return;
+	}
+
+	StartOverlay();
+}
 
 void CEnvScreenOverlay::InputSwitchOverlay( inputdata_t &inputdata )
 {
 	int iNewOverlay = inputdata.value.Int() - 1;
-	iNewOverlay = abs( iNewOverlay );
+	if ( iNewOverlay < 0 || iNewOverlay >= MAX_SCREEN_OVERLAYS )
+	{
+		Warning("env_screenoverlay %s received an invalid overlay index.\n", STRING(GetEntityName()) );
+		return;
+	}
 
 	if ( m_iszOverlayNames[iNewOverlay] == NULL_STRING )
 	{
@@ -167,8 +284,13 @@ void CEnvScreenOverlay::InputSwitchOverlay( inputdata_t &inputdata )
 		return;
 	}
 
-	m_iDesiredOverlay = iNewOverlay;
-	m_flStartTime = gpGlobals->curtime;
+	CBasePlayer *pPlayer = GetActivatorPlayer( inputdata );
+	CEnvScreenOverlay *pProxy = pPlayer ? FindPlayerProxy( pPlayer ) : NULL;
+	if ( !pProxy || pProxy->m_hController.Get() != this )
+		return;
+
+	pProxy->m_iDesiredOverlay = iNewOverlay;
+	pProxy->m_flStartTime = gpGlobals->curtime;
 }
 
 void CEnvScreenOverlay::InputStopOverlay( inputdata_t &inputdata )
@@ -179,8 +301,15 @@ void CEnvScreenOverlay::InputStopOverlay( inputdata_t &inputdata )
 		return;
 	}
 
-	m_flStartTime = -1;
-	m_bIsActive = false; 
+	CBasePlayer *pPlayer = GetActivatorPlayer( inputdata );
+	CEnvScreenOverlay *pProxy = pPlayer ? FindPlayerProxy( pPlayer ) : NULL;
+	if ( !pProxy || pProxy->m_hController.Get() != this )
+		return;
+
+	pProxy->m_bPendingStart = false;
+	pProxy->SetThink( NULL );
+	pProxy->m_flStartTime = -1;
+	pProxy->m_bIsActive = false;
 }
 
 // ====================================================================================

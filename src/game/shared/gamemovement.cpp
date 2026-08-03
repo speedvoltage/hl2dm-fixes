@@ -18,6 +18,10 @@
 #include "prediction.h"
 #endif
 
+#if defined( HL2MP ) && !defined( CLIENT_DLL )
+#include "hl2_player.h"
+#endif
+
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 	#include "hl_movedata.h"
 #endif
@@ -4204,9 +4208,6 @@ void CGameMovement::FinishUnDuckJump( trace_t &trace )
 //-----------------------------------------------------------------------------
 void CGameMovement::FinishDuck( void )
 {
-	if ( player->GetFlags() & FL_DUCKING )
-		return;
-
 	player->AddFlag( FL_DUCKING );
 	player->m_Local.m_bDucked = true;
 	player->m_Local.m_bDucking = false;
@@ -4362,8 +4363,18 @@ void CGameMovement::Duck( void )
 	if ( IsDead() )
 		return;
 
-	// Slow down ducked players.
+#if defined( HL2MP ) && !defined( CLIENT_DLL )
+	CHL2_Player *pHL2Player = dynamic_cast< CHL2_Player * >( player );
+	bool bUnduckingIntoSprint = pHL2Player && pHL2Player->IsNewSprinting() &&
+		player->m_Local.m_bDucking && !( mv->m_nButtons & IN_DUCK );
+
+	if ( !bUnduckingIntoSprint )
+	{
+		HandleDuckingSpeedCrop();
+	}
+#else
 	HandleDuckingSpeedCrop();
+#endif
 
 	// If the player is holding down the duck button, the player is in duck transition, ducking, or duck-jumping.
 	bool bFirstTimePredicted = true; // Assumes we never rerun commands on the server.
@@ -4940,4 +4951,3 @@ void  CGameMovement::TryTouchGround( const Vector& start, const Vector& end, con
 	ray.Init( start, end, mins, maxs );
 	UTIL_TraceRay( ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm );
 }
-

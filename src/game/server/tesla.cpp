@@ -89,6 +89,25 @@ void CTesla::Activate()
 {
 	BaseClass::Activate();
 
+	m_NumBeams[0] = clamp( m_NumBeams[0], 0, 127 );
+	m_NumBeams[1] = clamp( m_NumBeams[1], 0, 127 );
+	m_flRadius = MAX( m_flRadius, 0.0f );
+	m_flThickness[0] = MAX( m_flThickness[0], 0.0f );
+	m_flThickness[1] = MAX( m_flThickness[1], 0.0f );
+	m_flTimeVisible[0] = MAX( m_flTimeVisible[0], 0.0f );
+	m_flTimeVisible[1] = MAX( m_flTimeVisible[1], 0.0f );
+	m_flArcInterval[0] = MAX( m_flArcInterval[0], 0.0f );
+	m_flArcInterval[1] = MAX( m_flArcInterval[1], 0.0f );
+
+	if ( m_NumBeams[0] > m_NumBeams[1] )
+		V_swap( m_NumBeams[0], m_NumBeams[1] );
+	if ( m_flThickness[0] > m_flThickness[1] )
+		V_swap( m_flThickness[0], m_flThickness[1] );
+	if ( m_flTimeVisible[0] > m_flTimeVisible[1] )
+		V_swap( m_flTimeVisible[0], m_flTimeVisible[1] );
+	if ( m_flArcInterval[0] > m_flArcInterval[1] )
+		V_swap( m_flArcInterval[0], m_flArcInterval[1] );
+
 	SetThink( &CTesla::ShootArcThink );
 	SetupForNextArc();
 }
@@ -99,7 +118,10 @@ void CTesla::Precache()
 	PrecacheModel( STRING(m_iszSpriteName.Get()) );
 	BaseClass::Precache();
 
-	PrecacheScriptSound( STRING( m_SoundName.Get() ) );
+	if ( m_SoundName.Get() != NULL_STRING )
+	{
+		PrecacheScriptSound( STRING( m_SoundName.Get() ) );
+	}
 }
 
 
@@ -139,10 +161,12 @@ void CTesla::ShootArcThink()
 
 void CTesla::DoSpark()
 {
+	CBaseEntity *pEnt = GetSourceEntity();
+	if ( !pEnt )
+		return;
+
 	// Shoot out an arc.
 	EntityMessageBegin( this );
-
-		CBaseEntity *pEnt = GetSourceEntity();
 		
 		WRITE_VEC3COORD( pEnt->GetAbsOrigin() );
 		WRITE_SHORT( pEnt->entindex() );
@@ -177,4 +201,3 @@ void CTesla::InputTurnOff( inputdata_t &inputdata )
 	m_bOn = false;
 	SetupForNextArc();
 }
-

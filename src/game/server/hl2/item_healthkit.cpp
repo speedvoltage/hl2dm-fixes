@@ -361,6 +361,16 @@ void CWallHealth::Recharge(void)
 	SetThink( NULL );
 }
 
+void CWallHealth::UpdateOnRemove( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "WallHealth.LoopingContinueCharge" );
+	}
+
+	BaseClass::UpdateOnRemove();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -672,3 +682,12 @@ void CNewWallHealth::Off(void)
 	}
 }
 
+void CNewWallHealth::UpdateOnRemove( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "WallHealth.LoopingContinueCharge" );
+	}
+
+	BaseClass::UpdateOnRemove();
+}

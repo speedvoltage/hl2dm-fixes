@@ -16,6 +16,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define TRIPMINE_BEAM_MAX_LENGTH 32768.0f
+
 extern const char* g_pModelNameLaser;
 
 ConVar    sk_plr_dmg_tripmine		( "sk_plr_dmg_tripmine","0");
@@ -31,9 +33,13 @@ BEGIN_DATADESC( CTripmineGrenade )
 	DEFINE_FIELD( m_vecDir,		FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecEnd,		FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_flBeamLength, FIELD_FLOAT ),
-	DEFINE_FIELD( m_pBeam,		FIELD_CLASSPTR ),
+	DEFINE_FIELD( m_hBeam,		FIELD_EHANDLE ),
 	DEFINE_FIELD( m_posOwner,		FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_angleOwner,	FIELD_VECTOR ),
+	DEFINE_FIELD( m_hAttachedObject, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_vecAttachedPosition, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_angAttachedAngles, FIELD_VECTOR ),
+	DEFINE_FIELD( m_bAttachedToEntity, FIELD_BOOLEAN ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC( WarningThink ),
@@ -47,8 +53,14 @@ CTripmineGrenade::CTripmineGrenade()
 {
 	m_vecDir.Init();
 	m_vecEnd.Init();
+	m_flBeamLength = 0.0f;
 	m_posOwner.Init();
 	m_angleOwner.Init();
+	m_hBeam = NULL;
+	m_hAttachedObject = NULL;
+	m_vecAttachedPosition.Init();
+	m_angAttachedAngles.Init();
+	m_bAttachedToEntity = false;
 }
 
 void CTripmineGrenade::Spawn( void )
@@ -59,8 +71,11 @@ void CTripmineGrenade::Spawn( void )
 	SetSolid( SOLID_BBOX );
 	SetModel( "models/Weapons/w_slam.mdl" );
 
-    IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, true );
-	pObject->EnableMotion( false );
+	IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags(), true );
+	if ( pObject )
+	{
+		pObject->EnableMotion( false );
+	}
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 
 	SetCycle( 0.0f );
@@ -90,7 +105,7 @@ void CTripmineGrenade::Spawn( void )
 	angles.x -= 90;
 
 	AngleVectors( angles, &m_vecDir );
-	m_vecEnd = GetAbsOrigin() + m_vecDir * 2048;
+	m_vecEnd = GetAbsOrigin() + m_vecDir * TRIPMINE_BEAM_MAX_LENGTH;
 
 	AddEffects( EF_NOSHADOW );
 }
@@ -115,6 +130,17 @@ void CTripmineGrenade::WarningThink( void  )
 
 void CTripmineGrenade::PowerupThink( void  )
 {
+	CBaseEntity *pAttachedObject = m_hAttachedObject.Get();
+	if ( m_bAttachedToEntity &&
+		( !pAttachedObject ||
+		!VectorsAreEqual( m_vecAttachedPosition, pAttachedObject->GetAbsOrigin(), 1.0f ) ||
+		!QAnglesAreEqual( m_angAttachedAngles, pAttachedObject->GetAbsAngles(), 1.0f ) ) )
+	{
+		m_iHealth = 0;
+		Event_Killed( CTakeDamageInfo( (CBaseEntity *)m_hOwner, this, 100, GIB_NORMAL ) );
+		return;
+	}
+
 	if (gpGlobals->curtime > m_flPowerUp)
 	{
 		MakeBeam( );
@@ -123,6 +149,7 @@ void CTripmineGrenade::PowerupThink( void  )
 
 		// play enabled sound
 		EmitSound( "TripmineGrenade.Activate" );
+		return;
 	}
 	SetNextThink( gpGlobals->curtime + 0.1f );
 }
@@ -130,10 +157,10 @@ void CTripmineGrenade::PowerupThink( void  )
 
 void CTripmineGrenade::KillBeam( void )
 {
-	if ( m_pBeam )
+	if ( m_hBeam )
 	{
-		UTIL_Remove( m_pBeam );
-		m_pBeam = NULL;
+		UTIL_Remove( m_hBeam );
+		m_hBeam = NULL;
 	}
 }
 
@@ -144,25 +171,19 @@ void CTripmineGrenade::MakeBeam( void )
 
 	UTIL_TraceLine( GetAbsOrigin(), m_vecEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
-	m_flBeamLength = tr.fraction;
-
-
-
 	// If I hit a living thing, send the beam through me so it turns on briefly
 	// and then blows the living thing up
 	CBaseEntity *pEntity = tr.m_pEnt;
 	CBaseCombatCharacter *pBCC  = ToBaseCombatCharacter( pEntity );
 
-	// Draw length is not the beam length if entity is in the way
-	float drawLength = tr.fraction;
 	if (pBCC)
 	{
 		SetOwnerEntity( pBCC );
 		UTIL_TraceLine( GetAbsOrigin(), m_vecEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-		m_flBeamLength = tr.fraction;
 		SetOwnerEntity( NULL );
-		
 	}
+
+	m_flBeamLength = tr.fraction;
 
 	// set to follow laser spot
 	SetThink( &CTripmineGrenade::BeamBreakThink );
@@ -171,21 +192,46 @@ void CTripmineGrenade::MakeBeam( void )
 	// to appear if person right in front of it
 	SetNextThink( gpGlobals->curtime + 1.0f );
 
-	Vector vecTmpEnd = GetLocalOrigin() + m_vecDir * 2048 * drawLength;
+	m_hBeam = CBeam::BeamCreate( g_pModelNameLaser, 0.35 );
+	if ( !m_hBeam )
+	{
+		return;
+	}
 
-	m_pBeam = CBeam::BeamCreate( g_pModelNameLaser, 0.35 );
-	m_pBeam->PointEntInit( vecTmpEnd, this );
-	m_pBeam->SetColor( 255, 55, 52 );
-	m_pBeam->SetScrollRate( 25.6 );
-	m_pBeam->SetBrightness( 64 );
+	m_hBeam->PointEntInit( tr.endpos, this );
+	m_hBeam->SetColor( 255, 55, 52 );
+	m_hBeam->SetScrollRate( 25.6 );
+	m_hBeam->SetBrightness( 64 );
 	
 	int beamAttach = LookupAttachment("beam_attach");
-	m_pBeam->SetEndAttachment( beamAttach );
+	m_hBeam->SetEndAttachment( beamAttach );
+}
+
+void CTripmineGrenade::AttachToEntity( CBaseEntity *pEntity )
+{
+	m_hAttachedObject = pEntity;
+	m_bAttachedToEntity = pEntity != NULL;
+	if ( pEntity )
+	{
+		m_vecAttachedPosition = pEntity->GetAbsOrigin();
+		m_angAttachedAngles = pEntity->GetAbsAngles();
+	}
 }
 
 
 void CTripmineGrenade::BeamBreakThink( void  )
 {
+	CBaseEntity *pAttachedObject = m_hAttachedObject.Get();
+	if ( m_bAttachedToEntity &&
+		( !pAttachedObject ||
+		!VectorsAreEqual( m_vecAttachedPosition, pAttachedObject->GetAbsOrigin(), 1.0f ) ||
+		!QAnglesAreEqual( m_angAttachedAngles, pAttachedObject->GetAbsAngles(), 1.0f ) ) )
+	{
+		m_iHealth = 0;
+		Event_Killed( CTakeDamageInfo( (CBaseEntity *)m_hOwner, this, 100, GIB_NORMAL ) );
+		return;
+	}
+
 	// See if I can go solid yet (has dropper moved out of way?)
 	if (IsSolidFlagSet( FSOLID_NOT_SOLID ))
 	{
@@ -208,11 +254,10 @@ void CTripmineGrenade::BeamBreakThink( void  )
 	// ALERT( at_console, "%f : %f\n", tr.flFraction, m_flBeamLength );
 
 	// respawn detect. 
-	if ( !m_pBeam )
+	if ( !m_hBeam )
 	{
 		MakeBeam( );
-		if ( tr.m_pEnt )
-			m_hOwner = tr.m_pEnt;	// reset owner too
+		return;
 	}
 
 
@@ -273,4 +318,3 @@ void CTripmineGrenade::DelayDeathThink( void )
 
 	UTIL_Remove( this );
 }
-

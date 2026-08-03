@@ -96,23 +96,24 @@ void CGrenadeAR2::Spawn( void )
 	// -------------
 	if( g_CV_SmokeTrail.GetInt() && !IsXbox() )
 	{
-		m_hSmokeTrail = SmokeTrail::CreateSmokeTrail();
+		m_hSmokeTrail = DustTrail::CreateDustTrail();
 		
 		if( m_hSmokeTrail )
 		{
 			m_hSmokeTrail->m_SpawnRate = 48;
 			m_hSmokeTrail->m_ParticleLifetime = 1;
-			m_hSmokeTrail->m_StartColor.Init(0.1f, 0.1f, 0.1f);
-			m_hSmokeTrail->m_EndColor.Init(0,0,0);
-			m_hSmokeTrail->m_StartSize = 12;
-			m_hSmokeTrail->m_EndSize = m_hSmokeTrail->m_StartSize * 4;
+			m_hSmokeTrail->m_Color.GetForModify().Init( 0.1f, 0.1f, 0.1f );
+			m_hSmokeTrail->m_StartSize = 24;
+			m_hSmokeTrail->m_EndSize = 96;
 			m_hSmokeTrail->m_SpawnRadius = 4;
 			m_hSmokeTrail->m_MinSpeed = 4;
 			m_hSmokeTrail->m_MaxSpeed = 24;
+			m_hSmokeTrail->m_MinDirectedSpeed = 4;
+			m_hSmokeTrail->m_MaxDirectedSpeed = 24;
 			m_hSmokeTrail->m_Opacity = 0.2f;
 
-			m_hSmokeTrail->SetLifetime(10.0f);
-			m_hSmokeTrail->FollowEntity(this);
+			m_hSmokeTrail->SetLifetime( 10.0f );
+			m_hSmokeTrail->FollowEntity( this );
 		}
 	}
 }
@@ -197,9 +198,13 @@ void CGrenadeAR2::Detonate(void)
 	m_bIsLive		= false;
 	m_takedamage	= DAMAGE_NO;	
 
-	if(m_hSmokeTrail)
+	if ( m_hSmokeTrail )
 	{
-		UTIL_Remove(m_hSmokeTrail);
+		Vector vecTrailOrigin = m_hSmokeTrail->GetAbsOrigin();
+		m_hSmokeTrail->StopFollowingEntity();
+		m_hSmokeTrail->SetAbsOrigin( vecTrailOrigin );
+		m_hSmokeTrail->SetEmit( false );
+		m_hSmokeTrail->SetLifetime( m_hSmokeTrail->m_ParticleLifetime );
 		m_hSmokeTrail = NULL;
 	}
 

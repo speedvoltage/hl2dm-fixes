@@ -115,6 +115,7 @@ public:
 
 	bool IsReady();
 	void SetReady( bool bReady );
+	bool IsTeamChangeDeath() const { return m_bTeamChangeDeath; }
 
 	void CheckChatText( char *p, int bufsize );
 
@@ -144,6 +145,7 @@ public:
 	bool IsThreatAimingTowardMe( CBaseEntity* threat, float cosTolerance = 0.8f ) const;
 	bool IsThreatFiringAtMe( CBaseEntity* threat ) const;
 private:
+	void InputFinishSpectatorTransition( inputdata_t &data );
 
 	CNetworkQAngle( m_angEyeAngles );
 	CPlayerAnimState   m_PlayerAnimState;
@@ -168,6 +170,7 @@ private:
 
     bool m_bEnterObserver;
 	bool m_bReady;
+	bool m_bTeamChangeDeath;
 };
 
 inline CHL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )
