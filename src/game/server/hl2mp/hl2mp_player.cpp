@@ -17,6 +17,7 @@
 #include "KeyValues.h"
 #include "team.h"
 #include "weapon_hl2mpbase.h"
+#include "hl2mp/weapon_physcannon.h"
 #include "grenade_satchel.h"
 #include "eventqueue.h"
 #include "gamestats.h"
@@ -99,6 +100,7 @@ IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CHL2MP_Player )
+	DEFINE_INPUTFUNC( FIELD_VOID, "_EnterSpectatorAfterPhysicsDrop", InputEnterSpectatorAfterPhysicsDrop ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "_FinishSpectatorTransition", InputFinishSpectatorTransition ),
 END_DATADESC()
 
@@ -136,6 +138,7 @@ const char *g_ppszRandomCombineModels[] =
 #define MAX_COMBINE_MODELS 4
 #define MODEL_CHANGE_INTERVAL 5.0f
 #define TEAM_CHANGE_INTERVAL 5.0f
+#define SPECTATOR_PHYSICS_DROP_DELAY 0.1f
 
 #define HL2MPPLAYER_PHYSDAMAGE_SCALE 4.0f
 
@@ -155,6 +158,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
     m_bEnterObserver = false;
 	m_bReady = false;
 	m_bTeamChangeDeath = false;
+	m_bEnteringSpectatorAfterPhysicsDrop = false;
 
 	BaseClass::ChangeTeam( 0 );
 	
@@ -977,6 +981,10 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 	bool bTeamChanged = iTeam != GetTeamNumber();
 	bool bWasSpectator = GetTeamNumber() == TEAM_SPECTATOR;
 	bool bKill = bTeamChanged && HL2MPRules()->IsTeamplay() && GetTeamNumber() != TEAM_UNASSIGNED && IsAlive();
+	if ( !m_bEnteringSpectatorAfterPhysicsDrop )
+	{
+		g_EventQueue.CancelEventOn( this, "_EnterSpectatorAfterPhysicsDrop" );
+	}
 	g_EventQueue.CancelEventOn( this, "_FinishSpectatorTransition" );
 
 	if ( bTeamChanged )
@@ -1038,6 +1046,44 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 }
 
+bool CHL2MP_Player::DelaySpectatorTransitionForPhysics()
+{
+	CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if ( !pWeapon || !PhysCannonGetHeldEntity( pWeapon ) )
+		return false;
+
+	ForceDropOfCarriedPhysObjects( NULL );
+	pWeapon->m_flNextSecondaryAttack = gpGlobals->curtime + SPECTATOR_PHYSICS_DROP_DELAY;
+	g_EventQueue.AddEvent( this, "_EnterSpectatorAfterPhysicsDrop", SPECTATOR_PHYSICS_DROP_DELAY, this, this );
+	return true;
+}
+
+void CHL2MP_Player::EnterSpectator()
+{
+	if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
+	{
+		m_fNextSuicideTime = gpGlobals->curtime;
+		m_bTeamChangeDeath = true;
+		CommitSuicide( false, true );
+		m_bTeamChangeDeath = false;
+	}
+
+	ChangeTeam( TEAM_SPECTATOR );
+}
+
+void CHL2MP_Player::InputEnterSpectatorAfterPhysicsDrop( inputdata_t &data )
+{
+	if ( GetTeamNumber() == TEAM_SPECTATOR )
+		return;
+
+	if ( DelaySpectatorTransitionForPhysics() )
+		return;
+
+	m_bEnteringSpectatorAfterPhysicsDrop = true;
+	EnterSpectator();
+	m_bEnteringSpectatorAfterPhysicsDrop = false;
+}
+
 void CHL2MP_Player::InputFinishSpectatorTransition( inputdata_t &data )
 {
 	if ( GetTeamNumber() != TEAM_SPECTATOR )
@@ -1064,15 +1110,13 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 			return false;
 		}
 
-		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
-		{
-			m_fNextSuicideTime = gpGlobals->curtime;
-			m_bTeamChangeDeath = true;
-			CommitSuicide( false, true );
-			m_bTeamChangeDeath = false;
-		}
+		if ( g_EventQueue.HasEventPending( this, "_EnterSpectatorAfterPhysicsDrop" ) )
+			return true;
 
-		ChangeTeam( TEAM_SPECTATOR );
+		if ( DelaySpectatorTransitionForPhysics() )
+			return true;
+
+		EnterSpectator();
 
 		return true;
 	}

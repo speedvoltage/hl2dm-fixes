@@ -145,7 +145,11 @@ public:
 	bool IsThreatAimingTowardMe( CBaseEntity* threat, float cosTolerance = 0.8f ) const;
 	bool IsThreatFiringAtMe( CBaseEntity* threat ) const;
 private:
+	bool DelaySpectatorTransitionForPhysics();
+	void EnterSpectator();
+	void InputEnterSpectatorAfterPhysicsDrop( inputdata_t &data );
 	void InputFinishSpectatorTransition( inputdata_t &data );
+	bool m_bEnteringSpectatorAfterPhysicsDrop;
 
 	CNetworkQAngle( m_angEyeAngles );
 	CPlayerAnimState   m_PlayerAnimState;

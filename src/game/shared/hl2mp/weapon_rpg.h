@@ -28,6 +28,7 @@
 class CWeaponRPG;
 class CLaserDot;
 class DustTrail;
+class RocketTrail;
  
 //###########################################################################
 //	>> CMissile		(missile launcher class is below this one!)
@@ -82,7 +83,8 @@ protected:
 	// Gets the shooting position 
 	void GetShootPosition( CLaserDot *pLaserDot, Vector *pShootPosition );
 
-	CHandle<DustTrail>		m_hRocketTrail;
+	CHandle<DustTrail>		m_hDustTrail;
+	CHandle<RocketTrail>	m_hFlareTrail;
 	float					m_flAugerTime;		// Amount of time to auger before blowing up anyway
 	float					m_flMarkDeadTime;
 	float					m_flDamage;

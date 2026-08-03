@@ -122,7 +122,8 @@ CLaserDot *GetLaserDotList()
 BEGIN_DATADESC( CMissile )
 
 	DEFINE_FIELD( m_hOwner,					FIELD_EHANDLE ),
-	DEFINE_FIELD( m_hRocketTrail,			FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hDustTrail,				FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hFlareTrail,			FIELD_EHANDLE ),
 	DEFINE_FIELD( m_flAugerTime,			FIELD_TIME ),
 	DEFINE_FIELD( m_flMarkDeadTime,			FIELD_TIME ),
 	DEFINE_FIELD( m_flGracePeriodEndsAt,	FIELD_TIME ),
@@ -146,7 +147,8 @@ class CWeaponRPG;
 //-----------------------------------------------------------------------------
 CMissile::CMissile()
 {
-	m_hRocketTrail = NULL;
+	m_hDustTrail = NULL;
+	m_hFlareTrail = NULL;
 }
 
 CMissile::~CMissile()
@@ -155,14 +157,20 @@ CMissile::~CMissile()
 
 void CMissile::UpdateOnRemove( void )
 {
-	if ( m_hRocketTrail )
+	if ( m_hDustTrail )
 	{
-		Vector vecTrailOrigin = m_hRocketTrail->GetAbsOrigin();
-		m_hRocketTrail->StopFollowingEntity();
-		m_hRocketTrail->SetAbsOrigin( vecTrailOrigin );
-		m_hRocketTrail->SetEmit( false );
-		m_hRocketTrail->SetLifetime( m_hRocketTrail->m_ParticleLifetime );
-		m_hRocketTrail = NULL;
+		Vector vecTrailOrigin = m_hDustTrail->GetAbsOrigin();
+		m_hDustTrail->StopFollowingEntity();
+		m_hDustTrail->SetAbsOrigin( vecTrailOrigin );
+		m_hDustTrail->SetEmit( false );
+		m_hDustTrail->SetLifetime( m_hDustTrail->m_ParticleLifetime );
+		m_hDustTrail = NULL;
+	}
+
+	if ( m_hFlareTrail )
+	{
+		UTIL_Remove( m_hFlareTrail );
+		m_hFlareTrail = NULL;
 	}
 
 	BaseClass::UpdateOnRemove();
@@ -193,7 +201,7 @@ void CMissile::Spawn( void )
 
 	SetSolid( SOLID_BBOX );
 	SetModel("models/weapons/w_missile_launch.mdl");
-	UTIL_SetSize( this, -Vector(4,4,4), Vector(4,4,4) );
+	UTIL_SetSize( this, -Vector(2,2,2), Vector(2,2,2) );
 
 	SetTouch( &CMissile::MissileTouch );
 
@@ -349,6 +357,11 @@ void CMissile::ShotDown( void )
 
 	DispatchEffect( "RPGShotDown", data );
 
+	if ( m_hFlareTrail )
+	{
+		m_hFlareTrail->m_bDamaged = true;
+	}
+
 	SetThink( &CMissile::AugerThink );
 	SetNextThink( gpGlobals->curtime );
 	m_flAugerTime = gpGlobals->curtime + 1.5f;
@@ -369,7 +382,7 @@ void CMissile::ShotDown( void )
 void CMissile::DoExplosion( void )
 {
 	// Explode
-	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetDamage() * 2, 
+	ExplosionCreate( WorldSpaceCenter(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetDamage() * 2,
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
 }
 
@@ -425,25 +438,36 @@ void CMissile::MissileTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CMissile::CreateSmokeTrail( void )
 {
-	if ( m_hRocketTrail )
-		return;
-
-	m_hRocketTrail = DustTrail::CreateDustTrail();
-	if ( m_hRocketTrail )
+	if ( !m_hDustTrail )
 	{
-		m_hRocketTrail->m_SpawnRate = 200;
-		m_hRocketTrail->m_ParticleLifetime = 1.0f;
-		m_hRocketTrail->m_Color.GetForModify().Init( 0.65f, 0.65f, 0.65f );
-		m_hRocketTrail->m_StartSize = 32;
-		m_hRocketTrail->m_EndSize = 64;
-		m_hRocketTrail->m_SpawnRadius = 4;
-		m_hRocketTrail->m_MinSpeed = 4;
-		m_hRocketTrail->m_MaxSpeed = 24;
-		m_hRocketTrail->m_MinDirectedSpeed = 4;
-		m_hRocketTrail->m_MaxDirectedSpeed = 24;
-		m_hRocketTrail->m_Opacity = 0.3f;
-		m_hRocketTrail->SetLifetime( -1 );
-		m_hRocketTrail->FollowEntity( this );
+		m_hDustTrail = DustTrail::CreateDustTrail();
+		if ( m_hDustTrail )
+		{
+			m_hDustTrail->m_SpawnRate = 200;
+			m_hDustTrail->m_ParticleLifetime = 1.0f;
+			m_hDustTrail->m_Color.GetForModify().Init( 0.65f, 0.65f, 0.65f );
+			m_hDustTrail->m_StartSize = 32;
+			m_hDustTrail->m_EndSize = 64;
+			m_hDustTrail->m_SpawnRadius = 4;
+			m_hDustTrail->m_MinSpeed = 4;
+			m_hDustTrail->m_MaxSpeed = 24;
+			m_hDustTrail->m_MinDirectedSpeed = 4;
+			m_hDustTrail->m_MaxDirectedSpeed = 24;
+			m_hDustTrail->m_Opacity = 0.3f;
+			m_hDustTrail->SetLifetime( -1 );
+			m_hDustTrail->FollowEntity( this );
+		}
+	}
+
+	if ( !m_hFlareTrail )
+	{
+		m_hFlareTrail = RocketTrail::CreateRocketTrail();
+		if ( m_hFlareTrail )
+		{
+			m_hFlareTrail->SetEmit( false );
+			m_hFlareTrail->SetLifetime( -1 );
+			m_hFlareTrail->FollowEntity( this );
+		}
 	}
 }
 
@@ -664,7 +688,6 @@ CMissile *CMissile::Create( const Vector &vecOrigin, const QAngle &vecAngles, ed
 	//CMissile *pMissile = (CMissile *)CreateEntityByName("rpg_missile" );
 	CMissile *pMissile = (CMissile *) CBaseEntity::Create( "rpg_missile", vecOrigin, vecAngles, CBaseEntity::Instance( pentOwner ) );
 	pMissile->SetOwnerEntity( Instance( pentOwner ) );
-	pMissile->Spawn();
 	pMissile->AddEffects( EF_NOSHADOW );
 	
 	Vector vecForward;
@@ -883,7 +906,6 @@ CAPCMissile *CAPCMissile::Create( const Vector &vecOrigin, const QAngle &vecAngl
 {
 	CAPCMissile *pMissile = (CAPCMissile *)CBaseEntity::Create( "apc_missile", vecOrigin, vecAngles, pOwner );
 	pMissile->SetOwnerEntity( pOwner );
-	pMissile->Spawn();
 	pMissile->SetAbsVelocity( vecVelocity );
 	pMissile->AddFlag( FL_NOTARGET );
 	pMissile->AddEffects( EF_NOSHADOW );
