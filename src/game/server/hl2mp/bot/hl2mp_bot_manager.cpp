@@ -224,6 +224,7 @@ void CHL2MPBotManager::MaintainBotQuota()
 	int nHL2MPBotsOnGameTeams = 0;
 	int nNonHL2MPBotsOnGameTeams = 0;
 	int nSpectators = 0;
+	const bool bTeamplay = HL2MPRules()->IsTeamplay();
 	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
 		CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_PlayerByIndex( i ) );
@@ -237,22 +238,24 @@ void CHL2MPBotManager::MaintainBotQuota()
 		if ( !pPlayer->IsConnected() )
 			continue;
 
+		const int iTeam = pPlayer->GetTeamNumber();
+		const bool bOnGameTeam = iTeam == TEAM_REBELS || iTeam == TEAM_COMBINE || ( !bTeamplay && iTeam == TEAM_UNASSIGNED );
 		CHL2MPBot* pBot = dynamic_cast<CHL2MPBot*>( pPlayer );
 		if ( pBot && pBot->HasAttribute( CHL2MPBot::QUOTA_MANANGED ) )
 		{
 			nHL2MPBots++;
-			if ( pPlayer->GetTeamNumber() == TEAM_REBELS || pPlayer->GetTeamNumber() == TEAM_COMBINE )
+			if ( bOnGameTeam )
 			{
 				nHL2MPBotsOnGameTeams++;
 			}
 		}
 		else
 		{
-			if ( pPlayer->GetTeamNumber() == TEAM_REBELS || pPlayer->GetTeamNumber() == TEAM_COMBINE )
+			if ( bOnGameTeam )
 			{
 				nNonHL2MPBotsOnGameTeams++;
 			}
-			else if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
+			else if ( iTeam == TEAM_SPECTATOR )
 			{
 				nSpectators++;
 			}
@@ -315,28 +318,20 @@ void CHL2MPBotManager::MaintainBotQuota()
 				iTeam = pRebels->GetNumPlayers() < pCombine->GetNumPlayers() ? TEAM_REBELS : TEAM_COMBINE;
 			}
 
-			const char* pszModel = "";
-			if ( iTeam == TEAM_UNASSIGNED )
-			{
-				pszModel = g_ppszRandomModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomModels ) )];
-			}
-			else if ( iTeam == TEAM_COMBINE )
-			{
-				pszModel = g_ppszRandomCombineModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomCombineModels ) )];
-			}
-			else
-			{
-				pszModel = g_ppszRandomCitizenModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomCitizenModels ) )];
-			}
-
 			// give the bot a proper name
 			char name[256];
 			CHL2MPBot::DifficultyType skill = pBot->GetDifficulty();
 			CreateBotName( pBot->GetTeamNumber(), skill, name, sizeof( name ) );
-			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", pszModel );
+			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", CHL2MPBot::GetRandomPlayerModel( iTeam ) );
 			engine->SetFakeClientConVarValue( pBot->edict(), "name", name );
-			pBot->HandleCommand_JoinTeam( iTeam );
-			pBot->ChangeTeam( iTeam );
+			if ( iTeam != TEAM_UNASSIGNED )
+			{
+				pBot->HandleCommand_JoinTeam( iTeam );
+			}
+			else
+			{
+				pBot->ChangeTeam( iTeam );
+			}
 		}
 	}
 	else if ( desiredBotCount < nHL2MPBotsOnGameTeams )
@@ -484,7 +479,7 @@ CHL2MPBot* CHL2MPBotManager::GetAvailableBotFromPool()
 		if ( ( pBot->GetFlags() & FL_FAKECLIENT ) == 0 )
 			continue;
 
-		if ( pBot->GetTeamNumber() == TEAM_SPECTATOR || pBot->GetTeamNumber() == TEAM_UNASSIGNED )
+		if ( pBot->GetTeamNumber() == TEAM_SPECTATOR || ( HL2MPRules()->IsTeamplay() && pBot->GetTeamNumber() == TEAM_UNASSIGNED ) )
 		{
 			pBot->ClearAttribute( CHL2MPBot::QUOTA_MANANGED );
 			return pBot;
@@ -718,5 +713,4 @@ void CHL2MPBotManager::DrawStuckBotData( float deltaT )
 		NDebugOverlay::Text( m_stuckBotVector[i]->m_stuckEventVector[0]->m_stuckSpot, CFmtStr( "%s(#%d)", m_stuckBotVector[i]->m_name, m_stuckBotVector[i]->m_id ), false, deltaT );
 	}
 }
-
 

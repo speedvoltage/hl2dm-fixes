@@ -9,8 +9,6 @@
 
 #include "nav_mesh.h"
 
-extern void respawn( CBaseEntity* pEdict, bool fCopyCorpse );
-
 //---------------------------------------------------------------------------------------------
 ActionResult< CHL2MPBot >	CHL2MPBotDead::OnStart( CHL2MPBot *me, Action< CHL2MPBot > *priorAction )
 {
@@ -47,12 +45,9 @@ ActionResult< CHL2MPBot >	CHL2MPBotDead::Update( CHL2MPBot *me, float interval )
 	// Some gentle massaging for bots to get unstuck if they are holding keys, etc.
 	if ( me->m_lifeState == LIFE_DEAD || me->m_lifeState == LIFE_RESPAWNABLE )
 	{
-		if ( g_pGameRules->FPlayerCanRespawn( me ) )
-		{
-			respawn( me, !me->IsObserver() );
-		}
+		const float earliestRespawnTime = me->GetDeathTime() + DEATH_ANIMATION_TIME + TICK_INTERVAL;
+		me->QueueRespawnIfNeeded( MAX( gpGlobals->curtime + TICK_INTERVAL, earliestRespawnTime ) );
 	}
 
 	return Continue();
 }
-

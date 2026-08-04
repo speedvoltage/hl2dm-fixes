@@ -37,6 +37,10 @@ extern ConVar hl2mp_bot_difficulty;
 extern ConVar hl2mp_bot_farthest_visible_theater_sample_count;
 extern ConVar hl2mp_bot_path_lookahead_range;
 
+extern void respawn( CBaseEntity *pEdict, bool fCopyCorpse );
+
+static const char *s_pBotQueuedRespawnContext = "BotQueuedRespawn";
+
 
 
 //-----------------------------------------------------------------------------------------------------
@@ -67,6 +71,37 @@ int Bot_GetTeamByName( const char *string )
 	}
 
 	return iTeam;
+}
+
+
+void CHL2MPBot::QueueRespawnIfNeeded( float when )
+{
+	if ( GetNextThink( s_pBotQueuedRespawnContext ) == TICK_NEVER_THINK )
+	{
+		SetContextThink( &CHL2MPBot::BotQueuedRespawnThink, when, s_pBotQueuedRespawnContext );
+	}
+}
+
+
+void CHL2MPBot::BotQueuedRespawnThink( void )
+{
+	if ( IsMarkedForDeletion() || IsAlive() || GetTeamNumber() == TEAM_SPECTATOR )
+		return;
+
+	const float earliestRespawnTime = GetDeathTime() + DEATH_ANIMATION_TIME + TICK_INTERVAL;
+	if ( gpGlobals->curtime < earliestRespawnTime )
+	{
+		QueueRespawnIfNeeded( earliestRespawnTime );
+		return;
+	}
+
+	if ( !g_pGameRules || !g_pGameRules->FPlayerCanRespawn( this ) )
+	{
+		QueueRespawnIfNeeded( gpGlobals->curtime + 0.2f );
+		return;
+	}
+
+	respawn( this, !IsObserver() );
 }
 
 
@@ -208,19 +243,17 @@ CON_COMMAND_F( hl2mp_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 	for( i=0; i<botCount; ++i )
 	{
 		CHL2MPBot *pBot = NULL;
-		const char *pszBotName = NULL;
 
 		if ( !pszBotNameViaArg )
 		{
 			CreateBotName( iTeam, skill, name, sizeof(name) );
-			pszBotName = name;
 		}
 		else
 		{
-			pszBotName = pszBotNameViaArg;
+			Q_strncpy( name, pszBotNameViaArg, sizeof( name ) );
 		}
 
-		pBot = NextBotCreatePlayerBot< CHL2MPBot >( pszBotName );
+		pBot = NextBotCreatePlayerBot< CHL2MPBot >( name );
 
 		if ( pBot ) 
 		{
@@ -240,23 +273,16 @@ CON_COMMAND_F( hl2mp_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 				pBot->SetAttribute( CHL2MPBot::PROP_HATER );
 			}
 
-			const char *pszModel = "";
-			if ( iTeam == TEAM_UNASSIGNED )
+			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", CHL2MPBot::GetRandomPlayerModel( iTeam ) );
+			engine->SetFakeClientConVarValue( pBot->edict(), "name", name );
+			if ( iTeam != TEAM_UNASSIGNED )
 			{
-				pszModel = g_ppszRandomModels[ RandomInt( 0, ARRAYSIZE( g_ppszRandomModels ) ) ];
-			}
-			else if ( iTeam == TEAM_COMBINE )
-			{
-				pszModel = g_ppszRandomCombineModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomCombineModels ) )];
+				pBot->HandleCommand_JoinTeam( iTeam );
 			}
 			else
 			{
-				pszModel = g_ppszRandomCitizenModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomCitizenModels ) )];
+				pBot->ChangeTeam( iTeam );
 			}
-			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", pszModel );
-			engine->SetFakeClientConVarValue( pBot->edict(), "name", name );
-			pBot->HandleCommand_JoinTeam( iTeam );
-			pBot->ChangeTeam( iTeam );
 
 			pBot->SetDifficulty( skill );
 
@@ -649,6 +675,11 @@ CHL2MPBot::~CHL2MPBot()
 //-----------------------------------------------------------------------------------------------------
 void CHL2MPBot::Spawn()
 {
+	if ( GetNextThink( s_pBotQueuedRespawnContext ) != TICK_NEVER_THINK )
+	{
+		SetContextThink( NULL, TICK_NEVER_THINK, s_pBotQueuedRespawnContext );
+	}
+
 	BaseClass::Spawn();
 
 	m_spawnArea = NULL;
@@ -694,6 +725,9 @@ void CHL2MPBot::SetMission( MissionType mission, bool resetBehaviorSystem )
 //-----------------------------------------------------------------------------------------------------
 void CHL2MPBot::PhysicsSimulate( void )
 {
+	if ( IsMarkedForDeletion() )
+		return;
+
 	BaseClass::PhysicsSimulate();
 
 	if ( m_spawnArea == NULL )
@@ -1385,7 +1419,11 @@ bool CHL2MPBot::EquipRequiredWeapon( void )
 	if ( m_requiredWeaponStack.Count() )
 	{
 		CBaseCombatWeapon *pWeapon = m_requiredWeaponStack.Top().Get();
-		return Weapon_Switch( pWeapon );
+		if ( !pWeapon )
+			return false;
+
+		Weapon_Switch( pWeapon );
+		return true;
 	}
 
 	if ( TheHL2MPBots().IsGravGunOnly() || HasWeaponRestriction( GRAVGUN_ONLY ) )
@@ -2425,4 +2463,19 @@ bool CHL2MPBot::IsPropHater() const
 CBaseEntity * CHL2MPBot::Physcannon_GetHeldProp() const
 {
 	return PhysCannonGetHeldEntity( GetActiveWeapon() );
+}
+
+const char *CHL2MPBot::GetRandomPlayerModel( int team )
+{
+	if ( team == TEAM_COMBINE )
+	{
+		return g_ppszRandomCombineModels[ RandomInt( 0, ARRAYSIZE( g_ppszRandomCombineModels ) - 1 ) ];
+	}
+
+	if ( team == TEAM_REBELS )
+	{
+		return g_ppszRandomCitizenModels[ RandomInt( 0, ARRAYSIZE( g_ppszRandomCitizenModels ) - 1 ) ];
+	}
+
+	return g_ppszRandomModels[ RandomInt( 0, ARRAYSIZE( g_ppszRandomModels ) - 1 ) ];
 }

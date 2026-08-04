@@ -62,6 +62,8 @@ public:
 	virtual void		FireGameEvent( IGameEvent *event );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
 	virtual void		PhysicsSimulate( void );
+	void				QueueRespawnIfNeeded( float when );
+	void				BotQueuedRespawnThink( void );
 	virtual void		Touch( CBaseEntity *pOther );
 	virtual void		AvoidPlayers( CUserCmd *pCmd );				// some game types allow players to pass through each other, this method pushes them apart
 	virtual void		UpdateOnRemove( void );
@@ -383,6 +385,7 @@ public:
 	bool IsPropFreak() const;
 	bool IsPropHater() const;
 	CBaseEntity *Physcannon_GetHeldProp() const;
+	static const char *GetRandomPlayerModel( int team = TEAM_UNASSIGNED );
 
 private:
 	CHL2MPBotLocomotion	*m_locomotor;
