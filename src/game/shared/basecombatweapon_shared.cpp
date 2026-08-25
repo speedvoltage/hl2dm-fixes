@@ -74,6 +74,12 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_fMaxRange2		= 1024;
 
 	m_bReloadsSingly	= false;
+	m_bInReload		= false;
+	m_bFireOnEmpty		= false;
+	m_bFiringWholeClip	= false;
+
+	m_nIdealSequence	= -1;
+	m_IdealActivity		= ACT_INVALID;
 
 	// Defaults to zero
 	m_nViewModelIndex	= 0;
@@ -2588,11 +2594,13 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 
 	// Not networked
 
-	DEFINE_FIELD( m_bInReload, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bFireOnEmpty, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bFiringWholeClip, FIELD_BOOLEAN ),
+	DEFINE_PRED_FIELD( m_bInReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bFireOnEmpty, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bFiringWholeClip, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_flNextEmptySoundTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_Activity, FIELD_INTEGER ),
+	DEFINE_FIELD( m_nIdealSequence, FIELD_INTEGER ),
+	DEFINE_FIELD( m_IdealActivity, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fFireDuration, FIELD_FLOAT ),
 	DEFINE_FIELD( m_iszName, FIELD_INTEGER ),		
 	DEFINE_FIELD( m_bFiresUnderwater, FIELD_BOOLEAN ),
@@ -2633,6 +2641,7 @@ BEGIN_DATADESC( CBaseCombatWeapon )
 
 	DEFINE_FIELD( m_bInReload, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bFireOnEmpty, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_bFiringWholeClip, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_hOwner, FIELD_EHANDLE ),
 
 	DEFINE_FIELD( m_iState, FIELD_INTEGER ),
@@ -2816,6 +2825,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
 	SendPropTime( SENDINFO( m_flNextSecondaryAttack ) ),
 	SendPropInt( SENDINFO( m_nNextThinkTick ) ),
 	SendPropTime( SENDINFO( m_flTimeWeaponIdle ) ),
+	SendPropBool( SENDINFO( m_bInReload ) ),
+	SendPropBool( SENDINFO( m_bFireOnEmpty ) ),
+	SendPropBool( SENDINFO( m_bFiringWholeClip ) ),
 
 #if defined( TF_DLL )
 	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
@@ -2826,6 +2838,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
 	RecvPropTime( RECVINFO( m_flNextSecondaryAttack ) ),
 	RecvPropInt( RECVINFO( m_nNextThinkTick ) ),
 	RecvPropTime( RECVINFO( m_flTimeWeaponIdle ) ),
+	RecvPropBool( RECVINFO( m_bInReload ) ),
+	RecvPropBool( RECVINFO( m_bFireOnEmpty ) ),
+	RecvPropBool( RECVINFO( m_bFiringWholeClip ) ),
 #endif
 END_NETWORK_TABLE()
 
