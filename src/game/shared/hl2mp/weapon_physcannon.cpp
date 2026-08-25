@@ -948,6 +948,7 @@ CWeaponPhysCannon::CWeaponPhysCannon( void )
 #ifdef CLIENT_DLL
 	m_nOldEffectState		= EFFECT_NONE;
 	m_bOldOpen				= false;
+	m_hEffectModel			= NULL;
 #endif
 }
 
@@ -2106,6 +2107,34 @@ void CWeaponPhysCannon::ManagePredictedObject( void )
 
 #ifdef CLIENT_DLL
 
+bool CWeaponPhysCannon::IsFirstPersonSpectated( void )
+{
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	return pLocalPlayer && pOwner &&
+		pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE &&
+		pLocalPlayer->GetObserverTarget() == pOwner;
+}
+
+bool CWeaponPhysCannon::ShouldDrawUsingViewModel( void )
+{
+	if ( IsFirstPersonSpectated() )
+	{
+		return true;
+	}
+
+	return BaseClass::ShouldDrawUsingViewModel();
+}
+
+bool CWeaponPhysCannon::ShouldDraw( void )
+{
+	if ( IsFirstPersonSpectated() )
+		return false;
+
+	return BaseClass::ShouldDraw();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Update the pose parameter for the gun
 //-----------------------------------------------------------------------------
@@ -2139,6 +2168,8 @@ void CWeaponPhysCannon::UpdateElementPosition( void )
 
 void CWeaponPhysCannon::ClientThink( void )
 {
+	RefreshEffectAttachments();
+
 	// Update our elements visually
 	UpdateElementPosition();
 
@@ -2573,6 +2604,7 @@ void CWeaponPhysCannon::DestroyEffects( void )
 	m_Beams[0].Release();
 	m_Beams[1].Release();
 	m_Beams[2].Release();
+	m_hEffectModel = NULL;
 
 #endif
 
@@ -2641,26 +2673,6 @@ void CWeaponPhysCannon::StartEffects( void )
 	// Glows
 	// ------------------------------------------
 
-	const char *attachNamesGlowThirdPerson[NUM_GLOW_SPRITES] = 
-	{
-		"fork1m",
-		"fork1t",
-		"fork2m",
-		"fork2t",
-		"fork3m",
-		"fork3t",
-	};
-
-	const char *attachNamesGlow[NUM_GLOW_SPRITES] = 
-	{
-		"fork1b",
-		"fork1m",
-		"fork1t",
-		"fork2b",
-		"fork2m",
-		"fork2t"
-	};
-
 	//Create the glow sprites
 	for ( int i = PHYSCANNON_GLOW1; i < (PHYSCANNON_GLOW1+NUM_GLOW_SPRITES); i++ )
 	{
@@ -2670,15 +2682,6 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetScale().SetAbsolute( 0.05f * SPRITE_SCALE );
 		m_Parameters[i].GetAlpha().SetAbsolute( 64.0f );
 		
-		// Different for different views
-		if ( ShouldDrawUsingViewModel() )
-		{
-			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlow[i-PHYSCANNON_GLOW1] ) );
-		}
-		else
-		{
-			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlowThirdPerson[i-PHYSCANNON_GLOW1] ) );
-		}
 		m_Parameters[i].SetColor( Vector( 255, 128, 0 ) );
 		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_GLOW_SPRITE ) == false )
@@ -2692,13 +2695,6 @@ void CWeaponPhysCannon::StartEffects( void )
 	// End caps
 	// ------------------------------------------
 
-	const char *attachNamesEndCap[NUM_ENDCAP_SPRITES] = 
-	{
-		"fork1t",
-		"fork2t",
-		"fork3t"
-	};
-	
 	//Create the glow sprites
 	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
@@ -2707,7 +2703,6 @@ void CWeaponPhysCannon::StartEffects( void )
 
 		m_Parameters[i].GetScale().SetAbsolute( 0.05f * SPRITE_SCALE );
 		m_Parameters[i].GetAlpha().SetAbsolute( 255.0f );
-		m_Parameters[i].SetAttachment( LookupAttachment( attachNamesEndCap[i-PHYSCANNON_ENDCAP1] ) );
 		m_Parameters[i].SetVisible( false );
 		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
@@ -2717,9 +2712,129 @@ void CWeaponPhysCannon::StartEffects( void )
 		}
 	}
 
+	RefreshEffectAttachments();
+
 #endif
 
 }
+
+#ifdef CLIENT_DLL
+C_BaseAnimating *CWeaponPhysCannon::GetEffectModel( void )
+{
+	if ( ShouldDrawUsingViewModel() )
+	{
+		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+		C_BaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( 0, false ) : NULL;
+		if ( !pViewModel || pViewModel->GetWeapon() != this ||
+			pViewModel->LookupAttachment( "fork1t" ) <= 0 ||
+			pViewModel->LookupAttachment( "fork2t" ) <= 0 )
+		{
+			return NULL;
+		}
+
+		return pViewModel;
+	}
+
+	return this;
+}
+
+void CWeaponPhysCannon::RefreshEffectAttachments( void )
+{
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	bool bModelChanged = m_hEffectModel.Get() != pEffectModel;
+
+	if ( bModelChanged )
+	{
+		m_Beams[0].Release();
+		m_Beams[1].Release();
+		m_Beams[2].Release();
+		m_hEffectModel = pEffectModel;
+	}
+
+	if ( !pEffectModel )
+		return;
+
+	const char *pGlowAttachmentsFirstPerson[NUM_GLOW_SPRITES] =
+	{
+		"fork1b",
+		"fork1m",
+		"fork1t",
+		"fork2b",
+		"fork2m",
+		"fork2t"
+	};
+	const char *pGlowAttachmentsThirdPerson[NUM_GLOW_SPRITES] =
+	{
+		"fork1m",
+		"fork1t",
+		"fork2m",
+		"fork2t",
+		"fork3m",
+		"fork3t"
+	};
+	const char *pEndCapAttachments[NUM_ENDCAP_SPRITES] =
+	{
+		"fork1t",
+		"fork2t",
+		"fork3t"
+	};
+	const char *const *pGlowAttachments = ShouldDrawUsingViewModel() ? pGlowAttachmentsFirstPerson : pGlowAttachmentsThirdPerson;
+
+	m_Parameters[PHYSCANNON_CORE].SetAttachment( 1 );
+	m_Parameters[PHYSCANNON_BLAST].SetAttachment( 1 );
+
+	for ( int i = 0; i < NUM_GLOW_SPRITES; ++i )
+	{
+		m_Parameters[PHYSCANNON_GLOW1 + i].SetAttachment( pEffectModel->LookupAttachment( pGlowAttachments[i] ) );
+	}
+
+	for ( int i = 0; i < NUM_ENDCAP_SPRITES; ++i )
+	{
+		m_Parameters[PHYSCANNON_ENDCAP1 + i].SetAttachment( pEffectModel->LookupAttachment( pEndCapAttachments[i] ) );
+	}
+
+	if ( bModelChanged )
+	{
+		if ( m_EffectState == EFFECT_READY )
+		{
+			DoEffectReady();
+		}
+		else if ( m_EffectState == EFFECT_HOLDING )
+		{
+			DoEffectHolding();
+		}
+	}
+}
+
+void CWeaponPhysCannon::InitHoldingBeams( void )
+{
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	if ( !pEffectModel )
+		return;
+
+	bool bUsesViewModel = ShouldDrawUsingViewModel();
+	int nFork1 = pEffectModel->LookupAttachment( "fork1t" );
+	int nFork2 = pEffectModel->LookupAttachment( "fork2t" );
+	int nFork3 = bUsesViewModel ? 0 : pEffectModel->LookupAttachment( "fork3t" );
+	if ( nFork1 <= 0 || nFork2 <= 0 || ( !bUsesViewModel && nFork3 <= 0 ) )
+		return;
+
+	m_Beams[0].Init( nFork1, 1, pEffectModel, bUsesViewModel );
+	m_Beams[1].Init( nFork2, 1, pEffectModel, bUsesViewModel );
+	m_Beams[0].SetVisible();
+	m_Beams[1].SetVisible();
+
+	if ( bUsesViewModel )
+	{
+		m_Beams[2].SetVisible( false );
+	}
+	else
+	{
+		m_Beams[2].Init( nFork3, 1, pEffectModel, false );
+		m_Beams[2].SetVisible();
+	}
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Closing effects
@@ -2822,17 +2937,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 			m_Parameters[i].SetVisible();
 		}
 
-		// Create our beams
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		CBaseEntity *pBeamEnt = pOwner->GetViewModel();
-
-		// Setup the beams
-		m_Beams[0].Init( LookupAttachment( "fork1t" ), 1, pBeamEnt, true );
-		m_Beams[1].Init( LookupAttachment( "fork2t" ), 1, pBeamEnt, true );
-
-		// Set them visible
-		m_Beams[0].SetVisible();
-		m_Beams[1].SetVisible();
+		InitHoldingBeams();
 	}
 	else
 	{
@@ -2858,15 +2963,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 			m_Parameters[i].SetVisible();
 		}
 
-		// Setup the beams
-		m_Beams[0].Init( LookupAttachment( "fork1t" ), 1, this, false );
-		m_Beams[1].Init( LookupAttachment( "fork2t" ), 1, this, false );
-		m_Beams[2].Init( LookupAttachment( "fork3t" ), 1, this, false );
-
-		// Set them visible
-		m_Beams[0].SetVisible();
-		m_Beams[1].SetVisible();
-		m_Beams[2].SetVisible();
+		InitHoldingBeams();
 	}
 
 	if ( m_bOpen )
@@ -3049,7 +3146,7 @@ extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 // Purpose: Gets the complete list of values needed to render an effect from an
 //			effect parameter
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment )
+bool CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment )
 {
 	const float dt = gpGlobals->curtime;
 
@@ -3072,21 +3169,18 @@ void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &col
 	int		attachment = m_Parameters[effectID].GetAttachment();
 	QAngle	angles;
 
-	// Format for first-person
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	if ( !pEffectModel || attachment <= 0 || !pEffectModel->GetAttachment( attachment, vecAttachment, angles ) )
+	{
+		return false;
+	}
+
 	if ( ShouldDrawUsingViewModel() )
 	{
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		
-		if ( pOwner != NULL )
-		{
-			pOwner->GetViewModel()->GetAttachment( attachment, vecAttachment, angles );
-			::FormatViewModelAttachment( vecAttachment, true );
-		}
+		::FormatViewModelAttachment( vecAttachment, true );
 	}
-	else
-	{
-		GetAttachment( attachment, vecAttachment, angles );
-	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -3112,7 +3206,8 @@ void CWeaponPhysCannon::DrawEffectSprite( EffectType_t effectID )
 		return;
 
 	// Get all of our parameters
-	GetEffectParameters( effectID, color, scale, &pMaterial, vecAttachment );
+	if ( !GetEffectParameters( effectID, color, scale, &pMaterial, vecAttachment ) )
+		return;
 
 	// Msg( "Scale: %.2f\tAlpha: %.2f\n", scale, alpha );
 
@@ -3281,25 +3376,38 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 	if ( pWeapon == NULL )
 		return;
 
-	pWeapon->GetAttachment( 1, vecAttachment, vecAngles );
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *pOwnerPlayer = ToBasePlayer( pWeapon->GetOwner() );
+	bool bUseViewModel = pLocalPlayer && pOwnerPlayer &&
+		( pOwnerPlayer == pLocalPlayer ||
+		( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == pOwnerPlayer ) );
+	C_BaseAnimating *pEffectModel = pWeapon;
+
+	if ( bUseViewModel )
+	{
+		C_BaseViewModel *pViewModel = pOwnerPlayer->GetViewModel( 0, false );
+		if ( !pViewModel || pViewModel->GetWeapon() != pWeapon )
+			return;
+
+		pEffectModel = pViewModel;
+	}
+
+	if ( !pEffectModel->GetAttachment( 1, vecAttachment, vecAngles ) )
+		return;
+
+	pEnt = pEffectModel;
+
+	if ( bUseViewModel )
+	{
+		::FormatViewModelAttachment( vecAttachment, true );
+	}
 
 	Vector	dir = ( data.m_vOrigin - vecAttachment );
 	VectorNormalize( dir );
 
 	// Do special first-person fix-up
-	if ( pWeapon->GetOwner() == CBasePlayer::GetLocalPlayer() )
+	if ( bUseViewModel )
 	{
-		// Translate the attachment entity to the viewmodel
-		C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer *>(pWeapon->GetOwner());
-
-		if ( pPlayer )
-		{
-			pEnt = pPlayer->GetViewModel();
-		}
-
-		// Format attachment for first-person view!
-		::FormatViewModelAttachment( vecAttachment, true );
-
 		// Explosions at the impact point
 		FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
 

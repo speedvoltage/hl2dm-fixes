@@ -401,11 +401,17 @@ protected:
 	virtual bool	IsTransparent( void );
 	virtual void	OnDataChanged( DataUpdateType_t type );
 	virtual void	ClientThink( void );
+	virtual bool	ShouldDrawUsingViewModel( void );
+	virtual bool	ShouldDraw( void );
 	
 	void			ManagePredictedObject( void );
 	void			DrawEffects( void );
-	void			GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment );
+	bool			GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment );
 	void			DrawEffectSprite( EffectType_t effectID );
+	bool			IsFirstPersonSpectated( void );
+	C_BaseAnimating	*GetEffectModel( void );
+	void			RefreshEffectAttachments( void );
+	void			InitHoldingBeams( void );
 	inline bool		IsEffectVisible( EffectType_t effectID );
 	void			UpdateElementPosition( void );
 
@@ -415,6 +421,7 @@ protected:
 	CInterpolatedValue		m_ElementParameter;							// Used to interpolate the position of the articulated elements
 	CPhysCannonEffect		m_Parameters[NUM_PHYSCANNON_PARAMETERS];	// Interpolated parameters for the effects
 	CPhysCannonEffectBeam	m_Beams[NUM_PHYSCANNON_BEAMS];				// Beams
+	CHandle<C_BaseAnimating> m_hEffectModel;
 
 	int				m_nOldEffectState;	// Used for parity checks
 	bool			m_bOldOpen;			// Used for parity checks
