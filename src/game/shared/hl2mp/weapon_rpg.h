@@ -230,6 +230,7 @@ public:
 	virtual bool	IsTranslucent( void );
 
 	void			InitBeam( void );
+	void			DestroyBeam( void );
 	void			GetWeaponAttachment( int attachmentId, Vector &outVector, Vector *dir = NULL );
 	void			DrawEffects( void );
 //	void			DrawLaserDot( void );

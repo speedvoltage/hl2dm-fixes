@@ -1332,6 +1332,10 @@ CWeaponRPG::CWeaponRPG()
 	m_bHideGuiding = false;
 	m_bGuiding = false;
 
+#ifdef CLIENT_DLL
+	m_pBeam = NULL;
+#endif
+
 	m_fMinRange1 = m_fMinRange2 = 40*12;
 	m_fMaxRange1 = m_fMaxRange2 = 500*12;
 }
@@ -1341,7 +1345,9 @@ CWeaponRPG::CWeaponRPG()
 //-----------------------------------------------------------------------------
 CWeaponRPG::~CWeaponRPG()
 {
-#ifndef CLIENT_DLL
+#ifdef CLIENT_DLL
+	DestroyBeam();
+#else
 	if ( m_hLaserDot != NULL )
 	{
 		UTIL_Remove( m_hLaserDot );
@@ -1630,9 +1636,16 @@ bool CWeaponRPG::IsGuiding( void )
 //-----------------------------------------------------------------------------
 bool CWeaponRPG::Deploy( void )
 {
+	if ( !BaseClass::Deploy() )
+		return false;
+
 	m_bInitialStateUpdate = true;
 
-	return BaseClass::Deploy();
+#ifdef CLIENT_DLL
+	DestroyBeam();
+#endif
+
+	return true;
 }
 
 bool CWeaponRPG::CanHolster( void )
@@ -1692,14 +1705,7 @@ void CWeaponRPG::StopGuiding( void )
 		m_hLaserDot = NULL;
 	}
 #else
-	if ( m_pBeam )
-	{
-		//Tell it to die right away and let the beam code free it.
-		m_pBeam->brightness = 0.0f;
-		m_pBeam->flags &= ~FBEAM_FOREVER;
-		m_pBeam->die = gpGlobals->curtime - 0.1;
-		m_pBeam = NULL;
-	}
+	DestroyBeam();
 #endif
 
 }
@@ -1895,7 +1901,7 @@ void CWeaponRPG::InitBeam( void )
 	if ( pOwner == NULL )
 		return;
 
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+	if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 && m_hMissile == NULL )
 		return;
 
 
@@ -1959,19 +1965,32 @@ void CWeaponRPG::InitBeam( void )
 	m_pBeam = beams->CreateBeamEntPoint( beamInfo );
 }
 
+void CWeaponRPG::DestroyBeam( void )
+{
+	if ( m_pBeam == NULL )
+		return;
+
+	m_pBeam->brightness = 0;
+	m_pBeam->flags &= ~FBEAM_FOREVER;
+	m_pBeam->die = gpGlobals->curtime - 0.1f;
+	m_pBeam = NULL;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Draw effects for our weapon
 //-----------------------------------------------------------------------------
 void CWeaponRPG::DrawEffects( void )
 {
-	// Must be guiding and not hidden
-	if ( !m_bGuiding || m_bHideGuiding )
-	{
-		if ( m_pBeam != NULL )
-		{
-			m_pBeam->brightness = 0;
-		}
+	CBaseCombatCharacter *pOwner = GetOwner();
 
+	if ( pOwner == NULL ||
+		 pOwner->GetActiveWeapon() != this ||
+		 !m_bGuiding ||
+		 m_bHideGuiding ||
+		 m_bInitialStateUpdate ||
+		 GetActivity() == ACT_VM_DRAW )
+	{
+		DestroyBeam();
 		return;
 	}
 
@@ -2063,10 +2082,7 @@ void CWeaponRPG::NotifyShouldTransmit( ShouldTransmitState_t state )
 
 	if ( state == SHOULDTRANSMIT_END )
 	{
-		if ( m_pBeam != NULL )
-		{
-			m_pBeam->brightness = 0.0f;
-		}
+		DestroyBeam();
 	}
 }
 
