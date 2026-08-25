@@ -124,6 +124,7 @@ public:
 	void OnNavMeshLoad( void );
 	
 #ifndef CLIENT_DLL
+	bool FlPlayerFallDeathDoesScreenFade( CBasePlayer * ) OVERRIDE { return false; }
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
 	virtual float	FlItemRespawnTime( CItem *pItem );
