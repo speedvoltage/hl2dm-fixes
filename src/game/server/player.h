@@ -1274,6 +1274,8 @@ public:
 
 typedef CHandle<CBasePlayer> CBasePlayerHandle;
 
+float PlayerGetHeldObjectMass( IPhysicsObject *pHeldObject );
+
 EXTERN_SEND_TABLE(DT_BasePlayer)
 
 

@@ -2890,6 +2890,22 @@ float CBasePlayer::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 	return 0;
 }
 
+float PlayerGetHeldObjectMass( IPhysicsObject *pHeldObject )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( !pPlayer )
+			continue;
+
+		float mass = pPlayer->GetHeldObjectMass( pHeldObject );
+		if ( mass > 0.0f )
+			return mass;
+	}
+
+	return 0.0f;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose:	Server side of jumping rules.  Most jumping logic is already
