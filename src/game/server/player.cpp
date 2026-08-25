@@ -6085,9 +6085,10 @@ void CBasePlayer::ImpulseCommands( )
 	case 200:
 		if ( sv_cheats->GetBool() )
 		{
-			CBaseCombatWeapon *pWeapon;
+			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 
-			pWeapon = GetActiveWeapon();
+			if ( pWeapon == NULL )
+				break;
 			
 			if( pWeapon->IsEffectActive( EF_NODRAW ) )
 			{
