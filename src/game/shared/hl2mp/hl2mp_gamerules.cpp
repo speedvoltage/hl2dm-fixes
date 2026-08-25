@@ -459,6 +459,18 @@ Vector CHL2MPRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
 
 #ifndef CLIENT_DLL
 
+QAngle CHL2MPRules::VecWeaponRespawnAngles( CBaseCombatWeapon *pWeapon )
+{
+	CWeaponHL2MPBase *pHL2Weapon = dynamic_cast< CWeaponHL2MPBase * >( pWeapon );
+
+	if ( pHL2Weapon )
+	{
+		return pHL2Weapon->GetOriginalSpawnAngles();
+	}
+
+	return pWeapon->GetAbsAngles();
+}
+
 CItem* IsManagedObjectAnItem( CBaseEntity *pObject )
 {
 	return dynamic_cast< CItem*>( pObject );
