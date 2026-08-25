@@ -44,9 +44,12 @@ END_DATADESC()
 
 BEGIN_PREDICTION_DATA( CBaseHL2MPCombatWeapon )
 	// misyl: We are not perfect at predicting these, and we also don't have to be.
-	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
-	DEFINE_PRED_FIELD( m_flNextPrimaryAttack, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
-	DEFINE_PRED_FIELD( m_flNextSecondaryAttack, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD_TOL( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK, TD_MSECTOLERANCE ),
+	DEFINE_PRED_FIELD_TOL( m_flNextPrimaryAttack, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK, TD_MSECTOLERANCE ),
+	DEFINE_PRED_FIELD_TOL( m_flNextSecondaryAttack, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK, TD_MSECTOLERANCE ),
+	DEFINE_FIELD( m_bLowered, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_flRaiseTime, FIELD_FLOAT ),
+	DEFINE_FIELD( m_flHolsterTime, FIELD_FLOAT ),
 END_PREDICTION_DATA()
 
 #endif
@@ -55,7 +58,9 @@ extern ConVar sk_auto_reload_time;
 
 CBaseHL2MPCombatWeapon::CBaseHL2MPCombatWeapon( void )
 {
-
+	m_bLowered = false;
+	m_flRaiseTime = 0.0f;
+	m_flHolsterTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
