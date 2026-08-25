@@ -15,7 +15,7 @@
 #else
 	#include "hl2mp_player.h"
 	#include "grenade_tripmine.h"
-	#include "grenade_satchel.h"
+	#include "hl2mp/grenade_satchel.h"
 	#include "entitylist.h"
 	#include "eventqueue.h"
 #endif
@@ -508,7 +508,7 @@ void CWeapon_SLAM::SatchelThrow( void )
 		pSatchel->ApplyAbsVelocityImpulse( vecThrow );
 		pSatchel->SetLocalAngularVelocity( QAngle( 0, 400, 0 ) );
 		pSatchel->m_bIsLive = true;
-		pSatchel->m_pMyWeaponSLAM = this;
+		pSatchel->m_hMyWeaponSLAM = this;
 	}
 
 	pPlayer->RemoveAmmo( 1, m_iSecondaryAmmoType );
@@ -591,7 +591,7 @@ void CWeapon_SLAM::SatchelAttach( void )
 			pSatchel->m_bIsLive			= true;
 			pSatchel->SetThrower( GetOwner() );
 			pSatchel->SetOwnerEntity( ((CBaseEntity*)GetOwner()) );
-			pSatchel->m_pMyWeaponSLAM	= this;
+			pSatchel->m_hMyWeaponSLAM	= this;
 
 			pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );
 		}
