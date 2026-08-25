@@ -997,6 +997,14 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 	if ( iTeam == TEAM_SPECTATOR )
 	{
+		ClearZoomOwner();
+		StopZooming();
+		DetonateTripmines( false );
+		ClearUseEntity();
+
+		if ( IsInAVehicle() )
+			LeaveVehicle();
+
 		RemoveAllItems( true );
 
 		State_Transition( STATE_OBSERVER_MODE );
@@ -1279,7 +1287,7 @@ int CHL2MP_Player::GetMaxAmmo( int iAmmoIndex ) const
 	return GetAmmoDef()->MaxCarry( iAmmoIndex );
 }
 
-void CHL2MP_Player::DetonateTripmines( void )
+void CHL2MP_Player::DetonateTripmines( bool bPlaySound )
 {
 	CBaseEntity *pEntity = NULL;
 
@@ -1293,7 +1301,10 @@ void CHL2MP_Player::DetonateTripmines( void )
 	}
 
 	// Play sound for pressing the detonator
-	EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	if ( bPlaySound )
+	{
+		EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	}
 }
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )

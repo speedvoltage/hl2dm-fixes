@@ -109,7 +109,7 @@ public:
 
 	int	GetMaxAmmo( int iAmmoIndex ) const;
 	
-	void  DetonateTripmines( void );
+	void  DetonateTripmines( bool bPlaySound = true );
 
 	void Reset();
 
