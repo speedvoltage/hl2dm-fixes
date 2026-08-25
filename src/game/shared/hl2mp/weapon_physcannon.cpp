@@ -1296,7 +1296,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 				return;
 			}
 				
-			if( forward.z < 0 )
+			if( forward.z < 0 && dynamic_cast<CBaseProp *>( pEntity ) )
 			{
 				//reflect, but flatten the trajectory out a bit so it's easier to hit standing targets
 				forward.z *= -0.65f;
