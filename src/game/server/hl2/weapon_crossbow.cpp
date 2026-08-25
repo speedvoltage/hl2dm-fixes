@@ -813,6 +813,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		return;
 
 	CEffectData	data;
+	data.m_vOrigin = pOwner->GetAbsOrigin();
 
 	data.m_nEntIndex = pViewModel->entindex();
 	data.m_nAttachmentIndex = 1;

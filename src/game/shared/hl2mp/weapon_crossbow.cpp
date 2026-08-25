@@ -807,6 +807,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		return;
 
 	CEffectData	data;
+	data.m_vOrigin = pOwner->GetAbsOrigin();
 
 #ifdef CLIENT_DLL
 	data.m_hEntity = pViewModel->GetRefEHandle();
