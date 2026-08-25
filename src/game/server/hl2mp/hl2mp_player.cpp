@@ -1010,6 +1010,8 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 {
+	const bool bWasSpectator = GetTeamNumber() == TEAM_SPECTATOR;
+
 	if ( !GetGlobalTeam( team ) || team == 0 )
 	{
 		Warning( "HandleCommand_JoinTeam( %d ) - invalid team index.\n", team );
@@ -1047,6 +1049,11 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 
 	// Switch their actual team...
 	ChangeTeam( team );
+
+	if ( bWasSpectator && GetTeamNumber() != TEAM_SPECTATOR )
+	{
+		Spawn();
+	}
 
 	return true;
 }
