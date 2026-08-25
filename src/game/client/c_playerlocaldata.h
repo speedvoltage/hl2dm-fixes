@@ -35,6 +35,7 @@ public:
 		m_flFOVRate = 0;
 		m_bForceLocalPlayerDraw = false;
 		m_bPrevForceLocalPlayerDraw = false;
+		m_bSlowMovement = false;
 
 		m_szScriptOverlayMaterial.GetForModify()[0] = '\0';
 	}

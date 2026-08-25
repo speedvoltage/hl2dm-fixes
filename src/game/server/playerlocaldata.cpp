@@ -57,6 +57,7 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 
 	SendPropFloat	(SENDINFO(m_flStepSize), 16, SPROP_ROUNDUP, 0.0f, 128.0f ),
 	SendPropInt		(SENDINFO(m_bAllowAutoMovement),1, SPROP_UNSIGNED ),
+	SendPropBool	(SENDINFO(m_bSlowMovement)),
 
 	// 3d skybox data
 	SendPropInt(SENDINFO_STRUCTELEM(m_skybox3d.scale), 12),
@@ -193,6 +194,7 @@ CPlayerLocalData::CPlayerLocalData()
 	m_audio.entIndex = 0;
 	m_pOldSkyCamera = NULL;
 	m_bDrawViewmodel = true;
+	m_bSlowMovement = false;
 
 	m_szScriptOverlayMaterial.GetForModify()[0] = '\0';
 }
