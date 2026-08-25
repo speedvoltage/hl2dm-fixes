@@ -149,8 +149,9 @@ bool CWeaponShotgun::StartReload( void )
 	// Make shotgun shell visible
 	SetBodygroup(1,0);
 
-	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
+	pOwner->SetNextAttack( flSequenceEndTime );
+	m_flNextPrimaryAttack = flSequenceEndTime;
 
 	m_bInReload = true;
 	return true;
