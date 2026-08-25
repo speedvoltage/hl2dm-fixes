@@ -161,6 +161,9 @@ Activity CWeaponAR2::GetPrimaryAttackActivity( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::DoImpactEffect( trace_t &tr, int nDamageType )
 {
+	if ( tr.surface.flags & ( SURF_SKY | SURF_NODRAW ) )
+		return;
+
 	CEffectData data;
 
 	data.m_vOrigin = tr.endpos + ( tr.plane.normal * 1.0f );
