@@ -2729,6 +2729,12 @@ void CPhysicsProp::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
 
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
+	if ( pPhysicsObject )
+	{
+		PhysClearGameFlags( pPhysicsObject, FVPHYSICS_WAS_THROWN );
+	}
+	m_bFirstCollisionAfterLaunch = false;
+
 	if ( pPhysicsObject && !pPhysicsObject->IsMoveable() )
 	{
 		if ( !HasSpawnFlags( SF_PHYSPROP_ENABLE_ON_PHYSCANNON ) )
