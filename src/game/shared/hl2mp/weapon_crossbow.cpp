@@ -307,6 +307,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				
 				//FIXME: We actually want to stick (with hierarchy) to what we've hit
 				SetMoveType( MOVETYPE_NONE );
+				SetSolid( SOLID_NONE );
 			
 				Vector vForward;
 
