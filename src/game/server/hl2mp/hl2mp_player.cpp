@@ -1636,6 +1636,16 @@ bool CHL2MP_Player::StartObserverMode(int mode)
 	return false;
 }
 
+bool CHL2MP_Player::SetObserverMode( int mode )
+{
+	if ( mode == OBS_MODE_POI && !IsHLTV() )
+	{
+		mode = OBS_MODE_ROAMING;
+	}
+
+	return BaseClass::SetObserverMode( mode );
+}
+
 void CHL2MP_Player::StopObserverMode()
 {
 	m_bEnterObserver = false;

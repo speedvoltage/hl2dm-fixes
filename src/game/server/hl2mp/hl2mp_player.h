@@ -131,6 +131,7 @@ public:
 
 
 	virtual bool StartObserverMode( int mode );
+	virtual bool SetObserverMode( int mode ) OVERRIDE;
 	virtual void StopObserverMode( void );
 
 
