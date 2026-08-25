@@ -405,6 +405,12 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_hGroundEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_ARRAY( m_hViewModel, FIELD_EHANDLE, MAX_VIEWMODELS, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_hConstraintEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_vecConstraintCenter, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintRadius, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintWidth, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintSpeedFactor, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flLaggedMovementValue, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_FIELD( m_surfaceFriction, FIELD_FLOAT ),
 
@@ -435,6 +441,12 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 	m_flPredictionErrorTime = -100;
 	m_StuckLast = 0;
 	m_bWasFrozen = false;
+	m_hConstraintEntity = NULL;
+	m_vecConstraintCenter.Init();
+	m_flConstraintRadius = 0.0f;
+	m_flConstraintWidth = 0.0f;
+	m_flConstraintSpeedFactor = 0.0f;
+	m_flLaggedMovementValue = 1.0f;
 
 	m_bResampleWaterSurface = true;
 	
