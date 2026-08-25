@@ -24,6 +24,22 @@ void MapCycleFileChangedCallback( IConVar *var, const char *pOldString, float fl
 	}
 }
 
+void FlashlightChangedCallback( IConVar *pConVar, const char *pOldString, float flOldValue )
+{
+	ConVarRef flashlight( pConVar );
+	if ( flashlight.GetInt() != 0 )
+		return;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( pPlayer )
+		{
+			pPlayer->FlashlightTurnOff();
+		}
+	}
+}
+
 ConVar	displaysoundlist( "displaysoundlist","0" );
 ConVar  mapcyclefile( "mapcyclefile", "mapcycle.txt", FCVAR_NONE, "Name of the .txt file used to cycle the maps on multiplayer servers ", MapCycleFileChangedCallback );
 ConVar  servercfgfile( "servercfgfile","server.cfg" );
@@ -38,7 +54,7 @@ ConVar	footsteps( "mp_footsteps","1", FCVAR_NOTIFY );
 #ifdef CSTRIKE
 ConVar	flashlight( "mp_flashlight","1", FCVAR_NOTIFY );
 #else
-ConVar	flashlight( "mp_flashlight","0", FCVAR_NOTIFY );
+ConVar	flashlight( "mp_flashlight","0", FCVAR_NOTIFY, 0, FlashlightChangedCallback );
 #endif
 ConVar	aimcrosshair( "mp_autocrosshair","1", FCVAR_NOTIFY );
 ConVar	decalfrequency( "decalfrequency","10", FCVAR_NOTIFY );
