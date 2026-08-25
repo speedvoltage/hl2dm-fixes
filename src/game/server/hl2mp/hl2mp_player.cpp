@@ -1004,7 +1004,7 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 	if ( bKill == true )
 	{
-		CommitSuicide();
+		CommitSuicide( false, true );
 	}
 }
 
