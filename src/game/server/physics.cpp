@@ -2291,6 +2291,8 @@ void CCollisionEvent::AddDamageEvent( CBaseEntity *pEntity, const CTakeDamageInf
 	if ( pEntity->IsMarkedForDeletion() )
 		return;
 
+	IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
+
 	int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
 	if ( !( info.GetDamageType() & (DMG_BURN | DMG_DROWN | iTimeBasedDamage | DMG_PREVENT_PHYSICS_FORCE) ) )
 	{
@@ -2303,14 +2305,14 @@ void CCollisionEvent::AddDamageEvent( CBaseEntity *pEntity, const CTakeDamageInf
 	event.info = info;
 	event.pInflictorPhysics = pInflictorPhysics;
 	event.bRestoreVelocity = bRestoreVelocity;
-	if ( !pInflictorPhysics || !pInflictorPhysics->IsMoveable() )
+	if ( !pInflictorPhysics || !pInflictorPhysics->IsMoveable() || !pPhysicsObject )
 	{
 		event.bRestoreVelocity = false;
 	}
 
 	if ( event.bRestoreVelocity )
 	{
-		float otherMass = pEntity->VPhysicsGetObject()->GetMass();
+		float otherMass = pPhysicsObject->GetMass();
 		int inflictorIndex = FindDamageInflictor(pInflictorPhysics);
 		if ( inflictorIndex >= 0 )
 		{
