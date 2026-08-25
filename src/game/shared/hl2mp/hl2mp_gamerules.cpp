@@ -1257,6 +1257,10 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 		{
 			pszFormat = "HL2MP_Chat_Spec";
 		}
+		else if ( !pPlayer->IsAlive() )
+		{
+			pszFormat = "HL2MP_Chat_Team_Dead";
+		}
 		else
 		{
 			const char *chatLocation = GetChatLocation( bTeamOnly, pPlayer );
@@ -1273,13 +1277,17 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	// everyone
 	else
 	{
-		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
+		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		{
-			pszFormat = "HL2MP_Chat_All";	
+			pszFormat = "HL2MP_Chat_AllSpec";
+		}
+		else if ( !pPlayer->IsAlive() )
+		{
+			pszFormat = "HL2MP_Chat_AllDead";
 		}
 		else
 		{
-			pszFormat = "HL2MP_Chat_AllSpec";
+			pszFormat = "HL2MP_Chat_All";
 		}
 	}
 
