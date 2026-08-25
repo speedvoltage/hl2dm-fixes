@@ -866,7 +866,8 @@ void C_HL2MP_Player::HandleSpeedChanges( CMoveData *mv )
 
 void C_HL2MP_Player::ReduceTimers( CMoveData* mv )
 {
-	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED;
+	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED &&
+		mv->m_vecVelocity.Length2DSqr() >= 0.01f;
 
 	if ( bSprinting )
 	{

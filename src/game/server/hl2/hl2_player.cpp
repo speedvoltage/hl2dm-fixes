@@ -578,6 +578,10 @@ void CHL2_Player::ReduceTimers( CMoveData *mv )
 {
 	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED;
 
+#ifdef HL2MP
+	bSprinting = bSprinting && mv->m_vecVelocity.Length2DSqr() >= 0.01f;
+#endif
+
 	if ( bSprinting )
 	{
 		SuitPower_AddDevice( SuitDeviceSprint );
