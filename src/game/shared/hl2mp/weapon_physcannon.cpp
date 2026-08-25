@@ -944,10 +944,12 @@ CWeaponPhysCannon::CWeaponPhysCannon( void )
 	m_flCheckSuppressTime	= 0.0f;
 	m_EffectState			= (int)EFFECT_NONE;
 	m_flLastDenySoundPlayed	= false;
+	m_sndMotor				= NULL;
 
 #ifdef CLIENT_DLL
 	m_nOldEffectState		= EFFECT_NONE;
 	m_bOldOpen				= false;
+	m_bMotorSoundActive		= false;
 #endif
 }
 
@@ -2053,6 +2055,9 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 		( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 }
 
 
@@ -2139,6 +2144,19 @@ void CWeaponPhysCannon::UpdateElementPosition( void )
 
 void CWeaponPhysCannon::ClientThink( void )
 {
+	if ( m_bActive && m_EffectState == EFFECT_HOLDING )
+	{
+		StartMotorSound();
+	}
+	else if ( m_bMotorSoundActive )
+	{
+		if ( GetMotorSound() )
+		{
+			( CSoundEnvelopeController::GetController() ).SoundFadeOut( GetMotorSound(), 0.1f );
+		}
+		m_bMotorSoundActive = false;
+	}
+
 	// Update our elements visually
 	UpdateElementPosition();
 
@@ -2393,6 +2411,9 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 		(CSoundEnvelopeController::GetController()).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		(CSoundEnvelopeController::GetController()).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 
 	//Close the elements and suppress checking for a bit
 	m_nChangeState = ELEMENT_STATE_CLOSED;
@@ -2499,6 +2520,9 @@ void CWeaponPhysCannon::CloseElements( void )
 		(CSoundEnvelopeController::GetController()).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		(CSoundEnvelopeController::GetController()).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 	
 	DoEffect( EFFECT_CLOSED );
 
@@ -2544,6 +2568,24 @@ CSoundPatch *CWeaponPhysCannon::GetMotorSound( void )
 	return m_sndMotor;
 }
 
+#ifdef CLIENT_DLL
+void CWeaponPhysCannon::StartMotorSound( void )
+{
+	if ( m_bMotorSoundActive || !m_bOpen )
+		return;
+
+	CSoundPatch *pMotorSound = GetMotorSound();
+	if ( !pMotorSound )
+		return;
+
+	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+	controller.Play( pMotorSound, 0.0f, 50 );
+	controller.SoundChangePitch( pMotorSound, 100, 0.5f );
+	controller.SoundChangeVolume( pMotorSound, 0.8f, 0.5f );
+	m_bMotorSoundActive = true;
+}
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Shuts down sounds
@@ -2555,6 +2597,9 @@ void CWeaponPhysCannon::StopLoopingSounds()
 		 (CSoundEnvelopeController::GetController()).SoundDestroy( m_sndMotor );
 		 m_sndMotor = NULL;
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 
 #ifndef CLIENT_DLL
 	BaseClass::StopLoopingSounds();
@@ -2783,6 +2828,7 @@ void CWeaponPhysCannon::DoEffectReady( void )
 		( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+	m_bMotorSoundActive = false;
 
 #endif
 
@@ -2871,12 +2917,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 
 	if ( m_bOpen )
 	{
-		if ( GetMotorSound() )
-		{
-			( CSoundEnvelopeController::GetController() ).Play( GetMotorSound(), 0.0f, 50 );
-			( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 100, 0.5f );
-			( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.8f, 0.5f );
-		}
+		StartMotorSound();
 	}
 
 #endif
@@ -2990,6 +3031,7 @@ void CWeaponPhysCannon::DoEffectNone( void )
 	{
 		( CSoundEnvelopeController::GetController() ).SoundFadeOut( GetMotorSound(), 0.1f );
 	}
+	m_bMotorSoundActive = false;
 #endif
 }
 

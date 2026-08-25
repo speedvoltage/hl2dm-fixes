@@ -408,6 +408,7 @@ protected:
 	void			DrawEffectSprite( EffectType_t effectID );
 	inline bool		IsEffectVisible( EffectType_t effectID );
 	void			UpdateElementPosition( void );
+	void			StartMotorSound( void );
 
 	// We need to render opaque and translucent pieces
 	RenderGroup_t	GetRenderGroup( void ) {	return RENDER_GROUP_TWOPASS;	}
@@ -418,6 +419,7 @@ protected:
 
 	int				m_nOldEffectState;	// Used for parity checks
 	bool			m_bOldOpen;			// Used for parity checks
+	bool			m_bMotorSoundActive;
 
 	void			NotifyShouldTransmit( ShouldTransmitState_t state );
 
