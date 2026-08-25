@@ -162,34 +162,9 @@ void C_HL2MP_Player::UpdateIDTarget()
 
 void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-	Vector vecOrigin = ptr->endpos - vecDir * 4;
-
-	float flDistance = 0.0f;
-	
-	if ( info.GetAttacker() )
-	{
-		flDistance = (ptr->endpos - info.GetAttacker()->GetAbsOrigin()).Length();
-	}
-
 	if ( m_takedamage )
 	{
 		AddMultiDamage( info, this );
-
-		int blood = BloodColor();
-		
-		CBaseEntity *pAttacker = info.GetAttacker();
-
-		if ( pAttacker )
-		{
-			if ( HL2MPRules()->IsTeamplay() && pAttacker->InSameTeam( this ) == true )
-				return;
-		}
-
-		if ( blood != DONT_BLEED )
-		{
-			SpawnBlood( vecOrigin, vecDir, blood, flDistance );// a little surface blood.
-			TraceBleed( flDistance, vecDir, ptr, info.GetDamageType() );
-		}
 	}
 }
 
