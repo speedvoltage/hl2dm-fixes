@@ -74,6 +74,9 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 		return;
 
 #if defined( CLIENT_DLL )
+	if ( this != C_BasePlayer::GetLocalPlayer() )
+		return;
+
 	// during prediction play footstep sounds only once
 	if ( !prediction->IsFirstTimePredicted() )
 		return;
@@ -103,10 +106,7 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 	filter.AddRecipientsByPAS( vecOrigin );
 
 #ifndef CLIENT_DLL
-	// im MP, server removed all players in origins PVS, these players 
-	// generate the footsteps clientside
-	if ( gpGlobals->maxClients > 1 )
-		filter.RemoveRecipientsByPVS( vecOrigin );
+	filter.RemoveRecipient( this );
 #endif
 
 	EmitSound_t ep;
