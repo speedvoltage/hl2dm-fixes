@@ -41,6 +41,7 @@
 #include "env_zoom.h"
 #include "hl2_gamerules.h"
 #include "prop_combine_ball.h"
+#include "func_ladder.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
 #include "gamestats.h"
@@ -3580,6 +3581,27 @@ void CHL2_Player::DrawDebugGeometryOverlays(void)
 
 		NDebugOverlay::Box( GetAbsOrigin(), mins, maxs, 255, 0, 0, 100, 0 );
 	}
+}
+
+void CHL2_Player::ResetLadderMove()
+{
+	CFuncLadder *pLadder = dynamic_cast< CFuncLadder * >( m_HL2Local.m_hLadder.Get() );
+	if ( pLadder )
+	{
+		pLadder->PlayerGotOff( this );
+	}
+	m_HL2Local.m_hLadder.Set( NULL );
+
+	LadderMove_t *pLadderMove = GetLadderMove();
+	pLadderMove->m_bForceLadderMove = false;
+	pLadderMove->m_bForceMount = false;
+	pLadderMove->m_hForceLadder = NULL;
+
+	if ( pLadderMove->m_hReservedSpot )
+	{
+		UTIL_Remove( ( CBaseEntity * )pLadderMove->m_hReservedSpot.Get() );
+	}
+	pLadderMove->m_hReservedSpot = NULL;
 }
 
 //-----------------------------------------------------------------------------

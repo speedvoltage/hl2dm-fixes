@@ -166,6 +166,8 @@ CHL2MP_Player::~CHL2MP_Player( void )
 
 void CHL2MP_Player::UpdateOnRemove( void )
 {
+	ResetLadderMove();
+
 	if ( m_hRagdoll )
 	{
 		UTIL_RemoveImmediate( m_hRagdoll );
@@ -332,6 +334,8 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::Spawn(void)
 {
+	ResetLadderMove();
+
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
 
@@ -1298,6 +1302,8 @@ void CHL2MP_Player::DetonateTripmines( void )
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 {
+	ResetLadderMove();
+
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
