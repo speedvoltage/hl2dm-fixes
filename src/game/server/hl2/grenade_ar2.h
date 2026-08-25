@@ -18,7 +18,7 @@
 
 #define	MAX_AR2_NO_COLLIDE_TIME 0.2
 
-class SmokeTrail;
+class DustTrail;
 class CWeaponAR2;
 
 class CGrenadeAR2 : public CBaseGrenade
@@ -26,7 +26,7 @@ class CGrenadeAR2 : public CBaseGrenade
 public:
 	DECLARE_CLASS( CGrenadeAR2, CBaseGrenade );
 
-	CHandle< SmokeTrail > m_hSmokeTrail;
+	CHandle< DustTrail > m_hDustTrail;
 	float				 m_fSpawnTime;
 	float				m_fDangerRadius;
 

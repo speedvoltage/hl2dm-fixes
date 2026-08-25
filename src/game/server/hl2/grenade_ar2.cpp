@@ -39,7 +39,7 @@ ConVar g_CV_SmokeTrail("smoke_trail", "1", 0); // temporary dust explosion switc
 
 BEGIN_DATADESC( CGrenadeAR2 )
 
-	DEFINE_FIELD( m_hSmokeTrail, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hDustTrail, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_fSpawnTime, FIELD_TIME ),
 	DEFINE_FIELD( m_fDangerRadius, FIELD_FLOAT ),
 
@@ -96,23 +96,24 @@ void CGrenadeAR2::Spawn( void )
 	// -------------
 	if( g_CV_SmokeTrail.GetInt() && !IsXbox() )
 	{
-		m_hSmokeTrail = SmokeTrail::CreateSmokeTrail();
+		m_hDustTrail = DustTrail::CreateDustTrail();
 		
-		if( m_hSmokeTrail )
+		if( m_hDustTrail )
 		{
-			m_hSmokeTrail->m_SpawnRate = 48;
-			m_hSmokeTrail->m_ParticleLifetime = 1;
-			m_hSmokeTrail->m_StartColor.Init(0.1f, 0.1f, 0.1f);
-			m_hSmokeTrail->m_EndColor.Init(0,0,0);
-			m_hSmokeTrail->m_StartSize = 12;
-			m_hSmokeTrail->m_EndSize = m_hSmokeTrail->m_StartSize * 4;
-			m_hSmokeTrail->m_SpawnRadius = 4;
-			m_hSmokeTrail->m_MinSpeed = 4;
-			m_hSmokeTrail->m_MaxSpeed = 24;
-			m_hSmokeTrail->m_Opacity = 0.2f;
+			m_hDustTrail->m_SpawnRate = 48;
+			m_hDustTrail->m_ParticleLifetime = 1;
+			m_hDustTrail->m_Color.GetForModify().Init( 0.1f, 0.1f, 0.1f );
+			m_hDustTrail->m_StartSize = 24;
+			m_hDustTrail->m_EndSize = 96;
+			m_hDustTrail->m_SpawnRadius = 4;
+			m_hDustTrail->m_MinSpeed = 4;
+			m_hDustTrail->m_MaxSpeed = 24;
+			m_hDustTrail->m_MinDirectedSpeed = 4;
+			m_hDustTrail->m_MaxDirectedSpeed = 24;
+			m_hDustTrail->m_Opacity = 0.2f;
 
-			m_hSmokeTrail->SetLifetime(10.0f);
-			m_hSmokeTrail->FollowEntity(this);
+			m_hDustTrail->SetLifetime( 10.0f );
+			m_hDustTrail->FollowEntity( this );
 		}
 	}
 }
@@ -197,10 +198,10 @@ void CGrenadeAR2::Detonate(void)
 	m_bIsLive		= false;
 	m_takedamage	= DAMAGE_NO;	
 
-	if(m_hSmokeTrail)
+	if( m_hDustTrail )
 	{
-		UTIL_Remove(m_hSmokeTrail);
-		m_hSmokeTrail = NULL;
+		UTIL_Remove( m_hDustTrail );
+		m_hDustTrail = NULL;
 	}
 
 	CPASFilter filter( GetAbsOrigin() );
@@ -249,5 +250,5 @@ void CGrenadeAR2::Precache( void )
 
 CGrenadeAR2::CGrenadeAR2(void)
 {
-	m_hSmokeTrail  = NULL;
+	m_hDustTrail = NULL;
 }

@@ -1831,8 +1831,6 @@ void C_DustTrail::Update( float fTimeDelta )
 		pParticle->m_vecVelocity.Random( -1.0f, 1.0f );
 		pParticle->m_vecVelocity *= random->RandomFloat( m_MinSpeed, m_MaxSpeed );
 
-		pParticle->m_vecVelocity = pParticle->m_vecVelocity + GetAbsVelocity();
-		
 		float flDirectedVel = random->RandomFloat( m_MinDirectedSpeed, m_MaxDirectedSpeed );
 		VectorMA( pParticle->m_vecVelocity, flDirectedVel, vecForward, pParticle->m_vecVelocity );
 
