@@ -109,7 +109,7 @@ void CWeaponAR2::Precache( void )
 void CWeaponAR2::ItemPostFrame( void )
 {
 	// See if we need to fire off our secondary round
-	if ( m_bShotDelayed && gpGlobals->curtime > m_flDelayedFire )
+	if ( m_bShotDelayed && gpGlobals->curtime >= m_flDelayedFire )
 	{
 		DelayedAttack();
 	}
