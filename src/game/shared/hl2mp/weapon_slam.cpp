@@ -144,6 +144,13 @@ void CWeapon_SLAM::Precache( void )
 //------------------------------------------------------------------------------
 void CWeapon_SLAM::SetPickupTouch( void )
 {
+#ifndef CLIENT_DLL
+	if ( gpGlobals->maxClients > 1 && ( GetSpawnFlags() & SF_NORESPAWN ) )
+	{
+		SetThink( &CWeapon_SLAM::SUB_Remove );
+		SetNextThink( gpGlobals->curtime + 30.0f );
+	}
+#endif
 	SetTouch(&CWeapon_SLAM::SlamTouch);
 }
 
