@@ -1447,7 +1447,7 @@ void CFuncTank::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	// player controlled turret
 	CBasePlayer *pPlayer = ToBasePlayer( pActivator );
-	if ( !pPlayer )
+	if ( !pPlayer || pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		return;
 
 	if ( value == 2 && useType == USE_SET )
