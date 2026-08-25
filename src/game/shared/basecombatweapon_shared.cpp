@@ -1336,7 +1336,7 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 
 	if ( visible )
 	{
-		RemoveEffects( EF_NODRAW );
+		RemoveEffects( EF_NODRAW | EF_NOSHADOW );
 		if ( vm )
 		{
 			vm->RemoveEffects( EF_NODRAW );
@@ -1344,7 +1344,7 @@ void CBaseCombatWeapon::SetWeaponVisible( bool visible )
 	}
 	else
 	{
-		AddEffects( EF_NODRAW );
+		AddEffects( EF_NODRAW | EF_NOSHADOW );
 		if ( vm )
 		{
 			vm->AddEffects( EF_NODRAW );
