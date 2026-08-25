@@ -141,9 +141,6 @@ SendProp SendPropTime(
 }
 
 #if !defined( NO_ENTITY_PREDICTION )
-
-#define PREDICTABLE_ID_BITS 31
-
 //-----------------------------------------------------------------------------
 // Purpose: Converts a predictable Id to an integer
 // Input  : *pStruct - 
@@ -154,15 +151,10 @@ SendProp SendPropTime(
 //-----------------------------------------------------------------------------
 static void SendProxy_PredictableIdToInt( const SendProp *pProp, const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID )
 {
-	CPredictableId* pId = ( CPredictableId * )pVarData;
-	if ( pId )
-	{
-		pOut->m_Int = pId->GetRaw();
-	}
-	else
-	{
-		pOut->m_Int = 0;
-	}
+	const CPredictableId *pId = ( const CPredictableId * )pVarData;
+	uint32 raw = pId ? pId->GetNetworkedRaw() : 0;
+	COMPILE_TIME_ASSERT( sizeof( raw ) == sizeof( pOut->m_Int ) );
+	Q_memcpy( &pOut->m_Int, &raw, sizeof( raw ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -178,7 +170,7 @@ SendProp SendPropPredictableId(
 	int offset,
 	int sizeofVar )
 {
-	return SendPropInt( pVarName, offset, sizeofVar, PREDICTABLE_ID_BITS, SPROP_UNSIGNED, SendProxy_PredictableIdToInt );
+	return SendPropInt( pVarName, offset, sizeofVar, CPredictableId::NETWORKED_BITS, SPROP_UNSIGNED, SendProxy_PredictableIdToInt );
 }
 
 #endif

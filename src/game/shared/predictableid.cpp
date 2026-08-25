@@ -12,6 +12,57 @@
 #include "tier0/memdbgon.h"
 
 #if !defined( NO_ENTITY_PREDICTION )
+namespace
+{
+	const int PREDICTABLE_ID_ACK_SHIFT = 0;
+	const int PREDICTABLE_ID_PLAYER_SHIFT = 1;
+	const int PREDICTABLE_ID_COMMAND_SHIFT = 6;
+	const int PREDICTABLE_ID_HASH_SHIFT = 16;
+	const int PREDICTABLE_ID_INSTANCE_SHIFT = 28;
+
+	const uint32 PREDICTABLE_ID_ACK_MASK = 0x00000001u;
+	const uint32 PREDICTABLE_ID_PLAYER_MASK = 0x0000003eu;
+	const uint32 PREDICTABLE_ID_COMMAND_MASK = 0x0000ffc0u;
+	const uint32 PREDICTABLE_ID_HASH_MASK = 0x0fff0000u;
+	const uint32 PREDICTABLE_ID_INSTANCE_MASK = 0xf0000000u;
+	COMPILE_TIME_ASSERT( ( PREDICTABLE_ID_ACK_MASK | PREDICTABLE_ID_PLAYER_MASK | PREDICTABLE_ID_COMMAND_MASK | PREDICTABLE_ID_HASH_MASK | PREDICTABLE_ID_INSTANCE_MASK ) == 0xffffffffu );
+
+	uint32 GetPredictableIdField( uint32 value, uint32 mask, int shift )
+	{
+		return ( value & mask ) >> shift;
+	}
+
+	void SetPredictableIdField( uint32 &value, uint32 mask, int shift, uint32 field )
+	{
+		value = ( value & ~mask ) | ( ( field << shift ) & mask );
+	}
+
+	const char *FindStableModulePath( const char *module )
+	{
+		const char *stablePath = module;
+		int moduleLength = Q_strlen( module );
+
+		for ( int i = 0; i + 5 <= moduleLength; ++i )
+		{
+			bool segmentStart = i == 0 || module[ i - 1 ] == '/' || module[ i - 1 ] == '\\';
+			bool segmentEnd = module[ i + 4 ] == '/' || module[ i + 4 ] == '\\';
+			if ( segmentStart && segmentEnd && !Q_strnicmp( module + i, "game", 4 ) )
+			{
+				stablePath = module + i;
+			}
+		}
+
+		return stablePath;
+	}
+
+	void CanonicalizeModulePath( const char *module, char *buffer, int bufferSize )
+	{
+		Q_strncpy( buffer, FindStableModulePath( module ), bufferSize );
+		Q_FixSlashes( buffer, '/' );
+		Q_strlower( buffer );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Helper class for resetting instance numbers, etc.
 //-----------------------------------------------------------------------------
@@ -41,6 +92,7 @@ public:
 		entry *e = FindOrAddEntry( hash );
 		if ( !e )
 			return 0;
+		Assert( e->count < 16 );
 		e->count++;
 		return e->count-1;
 	}
@@ -70,7 +122,7 @@ private:
 
 		if ( m_nCount >= MAX_ENTRIES )
 		{
-			// assert( 0 );
+			Assert( m_nCount < MAX_ENTRIES );
 			return NULL;
 		}
 
@@ -90,9 +142,9 @@ static CPredictableIdHelper g_Helper;
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CPredictableId::CPredictableId( void )
+CPredictableId::CPredictableId( void ) :
+	m_PredictableID( 0 )
 {
-	memset( &m_PredictableID, 0, sizeof( m_PredictableID ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -109,10 +161,7 @@ void CPredictableId::ResetInstanceCounters( void )
 //-----------------------------------------------------------------------------
 bool CPredictableId::IsActive( void ) const
 {
-	if ( *(const int *)&m_PredictableID == 0 )
-		return false;
-
-	return true;
+	return m_PredictableID != 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,7 +170,9 @@ bool CPredictableId::IsActive( void ) const
 //-----------------------------------------------------------------------------
 void CPredictableId::SetPlayer( int playerIndex )
 {
-	m_PredictableID.player = (unsigned int)playerIndex;
+	Assert( playerIndex >= 0 );
+	Assert( playerIndex <= 31 );
+	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT, (uint32)playerIndex );
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +181,7 @@ void CPredictableId::SetPlayer( int playerIndex )
 //-----------------------------------------------------------------------------
 int CPredictableId::GetPlayer( void ) const
 {
-	return (int)m_PredictableID.player;
+	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT );
 }
 
 //-----------------------------------------------------------------------------
@@ -139,7 +190,7 @@ int CPredictableId::GetPlayer( void ) const
 //-----------------------------------------------------------------------------
 int CPredictableId::GetCommandNumber( void ) const
 {
-	return (int)m_PredictableID.command;
+	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT );
 }
 
 //-----------------------------------------------------------------------------
@@ -148,7 +199,8 @@ int CPredictableId::GetCommandNumber( void ) const
 //-----------------------------------------------------------------------------
 void CPredictableId::SetCommandNumber( int commandNumber )
 {
-	m_PredictableID.command = (unsigned int)commandNumber;
+	Assert( commandNumber >= 0 );
+	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT, (uint32)commandNumber );
 }
 
 /*
@@ -168,29 +220,30 @@ bool CPredictableId::IsCommandNumberEqual( int testNumber ) const
 //			line - 
 // Output : static int
 //-----------------------------------------------------------------------------
-static int ClassFileLineHash( const char *classname, const char *module, int line )
+static uint32 ClassFileLineHash( const char *classname, const char *module, int line )
 {
 	CRC32_t retval;
 
 	CRC32_Init( &retval );
 
 	char tempbuffer[ 512 ];
+	Assert( classname );
+	Assert( module );
 	
 	// ACK, have to go lower case due to issues with .dsp having different cases of drive
 	//  letters, etc.!!!
-	Q_strncpy( tempbuffer, classname, sizeof( tempbuffer ) );
+	Q_strncpy( tempbuffer, classname ? classname : "", sizeof( tempbuffer ) );
 	Q_strlower( tempbuffer );
 	CRC32_ProcessBuffer( &retval, (void *)tempbuffer, Q_strlen( tempbuffer ) );
 	
-	Q_strncpy( tempbuffer, module, sizeof( tempbuffer ) );
-	Q_strlower( tempbuffer );
+	CanonicalizeModulePath( module ? module : "", tempbuffer, sizeof( tempbuffer ) );
 	CRC32_ProcessBuffer( &retval, (void *)tempbuffer, Q_strlen( tempbuffer ) );
 	
 	CRC32_ProcessBuffer( &retval, (void *)&line, sizeof( int ) );
 
 	CRC32_Final( &retval );
 
-	return (int)retval;
+	return retval;
 }
 
 //-----------------------------------------------------------------------------
@@ -206,10 +259,10 @@ void CPredictableId::Init( int player, int command, const char *classname, const
 	SetPlayer( player );
 	SetCommandNumber( command );
 
-	m_PredictableID.hash = ClassFileLineHash( classname, module, line );
+	SetHash( ClassFileLineHash( classname, module, line ) );
 
 	// Use helper to determine instance number this command
-	int instance = g_Helper.AddEntry( command, m_PredictableID.hash );
+	int instance = g_Helper.AddEntry( command, GetHash() );
 
 	// Set appropriate instance number
 	SetInstanceNumber( instance );
@@ -221,7 +274,12 @@ void CPredictableId::Init( int player, int command, const char *classname, const
 //-----------------------------------------------------------------------------
 int CPredictableId::GetHash( void ) const
 {
-	return (int)m_PredictableID.hash;
+	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT );
+}
+
+void CPredictableId::SetHash( uint32 hash )
+{
+	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT, hash );
 }
 
 //-----------------------------------------------------------------------------
@@ -230,7 +288,9 @@ int CPredictableId::GetHash( void ) const
 //-----------------------------------------------------------------------------
 void CPredictableId::SetInstanceNumber( int counter )
 {
-	m_PredictableID.instance = (unsigned int)counter;
+	Assert( counter >= 0 );
+	Assert( counter <= 15 );
+	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT, (uint32)counter );
 }
 
 //-----------------------------------------------------------------------------
@@ -239,7 +299,7 @@ void CPredictableId::SetInstanceNumber( int counter )
 //-----------------------------------------------------------------------------
 int CPredictableId::GetInstanceNumber( void ) const
 {
-	return (int)m_PredictableID.instance;
+	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT );
 }
 
 // Client only
@@ -249,7 +309,7 @@ int CPredictableId::GetInstanceNumber( void ) const
 //-----------------------------------------------------------------------------
 void CPredictableId::SetAcknowledged( bool ack )
 {
-	m_PredictableID.ack = ack ? 1 : 0;
+	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT, ack ? 1u : 0u );
 }
 
 //-----------------------------------------------------------------------------
@@ -258,25 +318,38 @@ void CPredictableId::SetAcknowledged( bool ack )
 //-----------------------------------------------------------------------------
 bool CPredictableId::GetAcknowledged( void ) const
 {
-	return m_PredictableID.ack ? true : false;
+	return GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT ) != 0;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : int
 //-----------------------------------------------------------------------------
-int CPredictableId::GetRaw( void ) const
+uint32 CPredictableId::GetRaw( void ) const
 {
-	return *(int *)&m_PredictableID;
+	return m_PredictableID;
+}
+
+uint32 CPredictableId::GetNetworkedRaw( void ) const
+{
+	return m_PredictableID & ~PREDICTABLE_ID_ACK_MASK;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : raw - 
 //-----------------------------------------------------------------------------
-void CPredictableId::SetRaw( int raw )
+void CPredictableId::SetRaw( uint32 raw )
 {
-	*(int *)&m_PredictableID = raw;
+	m_PredictableID = raw;
+}
+
+void CPredictableId::SetNetworkedRaw( uint32 raw )
+{
+	uint32 previousIdentity = GetNetworkedRaw();
+	bool preserveAcknowledged = GetAcknowledged() && previousIdentity == ( raw & ~PREDICTABLE_ID_ACK_MASK );
+	m_PredictableID = raw & ~PREDICTABLE_ID_ACK_MASK;
+	SetAcknowledged( preserveAcknowledged );
 }
 
 //-----------------------------------------------------------------------------
