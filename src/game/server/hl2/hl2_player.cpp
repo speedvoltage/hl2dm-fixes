@@ -502,9 +502,20 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 	bool bJustPressedSpeed = !!( nChangedButtons & IN_SPEED );
 
 	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) );
-	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+	bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+#ifdef HL2MP
+	bWantsToChangeSprinting = bWantsToChangeSprinting ||
+		( m_HL2Local.m_bNewSprinting != bWantSprint && m_Local.m_bDucked && m_Local.m_bDucking );
+#endif
 
 	bool bSprinting = m_HL2Local.m_bNewSprinting;
+#ifdef HL2MP
+	if ( ( m_Local.m_bDucked && !m_Local.m_bDucking ) || GetWaterLevel() == 3 )
+	{
+		bSprinting = false;
+	}
+#endif
+
 	if ( bWantsToChangeSprinting )
 	{
 		if ( bWantSprint )

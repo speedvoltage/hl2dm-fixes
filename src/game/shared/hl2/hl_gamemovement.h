@@ -40,6 +40,7 @@ public:
 	virtual void ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMove ) OVERRIDE;
 	virtual void CheckParameters( void ) OVERRIDE;
 	virtual void ReduceTimers( void ) OVERRIDE;
+	virtual void HandleDuckingSpeedCrop( void ) OVERRIDE;
 	virtual void FullLadderMove();
 	virtual bool LadderMove( void );
 	virtual bool OnLadder( trace_t &trace );

@@ -780,7 +780,7 @@ Vector C_HL2MP_Player::GetAutoaimVector( float flDelta )
 //-----------------------------------------------------------------------------
 bool C_HL2MP_Player::CanSprint( void )
 {
-	return ( (!m_Local.m_bDucked && !m_Local.m_bDucking) && (GetWaterLevel() != 3) );
+	return ( !(m_Local.m_bDucked && !m_Local.m_bDucking) && (GetWaterLevel() != 3) );
 }
 
 extern ConVar sv_maxspeed;
@@ -790,11 +790,18 @@ void C_HL2MP_Player::HandleSpeedChanges( CMoveData *mv )
 	int nChangedButtons = mv->m_nButtons ^ mv->m_nOldButtons;
 
 	bool bJustPressedSpeed = !!( nChangedButtons & IN_SPEED );
+	const bool bUnducking = m_Local.m_bDucked && m_Local.m_bDucking;
 
 	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) );
-	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) &&
+		( ( nChangedButtons & IN_SPEED ) != 0 || bUnducking );
 
 	bool bSprinting = m_HL2Local.m_bNewSprinting;
+	if ( ( m_Local.m_bDucked && !m_Local.m_bDucking ) || GetWaterLevel() == 3 )
+	{
+		bSprinting = false;
+	}
+
 	if ( bWantsToChangeSprinting )
 	{
 		if ( bWantSprint )

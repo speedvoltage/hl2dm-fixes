@@ -34,6 +34,20 @@ CHL2GameMovement::CHL2GameMovement()
 {
 }
 
+void CHL2GameMovement::HandleDuckingSpeedCrop( void )
+{
+#ifdef HL2MP
+	CHL2_Player *pHL2Player = GetHL2Player();
+	if ( pHL2Player->m_Local.m_bDucked && pHL2Player->m_Local.m_bDucking &&
+		pHL2Player->m_HL2Local.m_bNewSprinting )
+	{
+		return;
+	}
+#endif
+
+	BaseClass::HandleDuckingSpeedCrop();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : type - 
