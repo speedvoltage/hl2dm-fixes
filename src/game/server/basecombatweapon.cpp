@@ -243,6 +243,7 @@ CBaseEntity* CBaseCombatWeapon::Respawn( void )
 		pNewWeapon->AddEffects( EF_NODRAW );// invisible for now
 		pNewWeapon->SetTouch( NULL );// no touch
 		pNewWeapon->SetThink( &CBaseCombatWeapon::AttemptToMaterialize );
+		pNewWeapon->AddEFlags( EFL_NO_PHYSCANNON_INTERACTION );
 
 		UTIL_DropToFloor( this, MASK_SOLID );
 
@@ -612,6 +613,7 @@ void CBaseCombatWeapon::Materialize( void )
 		
 		RemoveEffects( EF_NODRAW );
 		DoMuzzleFlash();
+		RemoveEFlags( EFL_NO_PHYSCANNON_INTERACTION );
 	}
 #ifdef HL2MP
 	if ( HasSpawnFlags( SF_NORESPAWN ) == false )
