@@ -302,8 +302,18 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
-			continue;
+		if ( teamonly )
+		{
+			if ( g_pGameRules->IsTeamplay() )
+			{
+				if ( g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+					continue;
+			}
+			else if ( !pPlayer || client->GetTeamNumber() != pPlayer->GetTeamNumber() )
+			{
+				continue;
+			}
+		}
 
 		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )
 			continue;
