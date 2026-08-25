@@ -1143,6 +1143,18 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			QAngle angles;
 
 			pPhysics->GetPosition( &origin, &angles );
+			if ( !origin.IsValid() || !angles.IsValid() )
+			{
+#ifndef CLIENT_DLL
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Removing invalid transform (%f,%f,%f) (%f,%f,%f) from vphysics! (entity %s)\n",
+						origin.x, origin.y, origin.z, angles.x, angles.y, angles.z, GetDebugName() );
+				}
+				UTIL_Remove( this );
+#endif
+				return;
+			}
 
 			if ( !IsEntityQAngleReasonable( angles ) )
 			{
@@ -1156,17 +1168,18 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			Vector prevOrigin = GetAbsOrigin();
 #endif
 
-			if ( IsEntityPositionReasonable( origin ) )
+			if ( !IsEntityPositionReasonable( origin ) )
 			{
-				SetAbsOrigin( origin );
-			}
-			else
-			{
+#ifndef CLIENT_DLL
 				if ( CheckEmitReasonablePhysicsSpew() )
 				{
-					Warning( "Ignoring unreasonable position (%f,%f,%f) from vphysics! (entity %s)\n", origin.x, origin.y, origin.z, GetDebugName() );
+					Warning( "Removing unreasonable position (%f,%f,%f) from vphysics! (entity %s)\n", origin.x, origin.y, origin.z, GetDebugName() );
 				}
+				UTIL_Remove( this );
+#endif
+				return;
 			}
+			SetAbsOrigin( origin );
 
 			for ( int i = 0; i < 3; ++i )
 			{
