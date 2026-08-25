@@ -14,7 +14,7 @@
 	#include "c_hl2mp_player.h"
 #else
 	#include "hl2mp_player.h"
-	#include "grenade_tripmine.h"
+	#include "hl2mp/grenade_tripmine.h"
 	#include "grenade_satchel.h"
 	#include "entitylist.h"
 	#include "eventqueue.h"
@@ -385,21 +385,28 @@ void CWeapon_SLAM::TripmineAttach( void )
 		CBaseEntity *pEntity = tr.m_pEnt;
 		if (pEntity && !(pEntity->GetFlags() & FL_CONVEYOR))
 		{
+			bool bAttached = true;
 
 #ifndef CLIENT_DLL
+			bAttached = false;
 			QAngle angles;
 			VectorAngles(tr.plane.normal, angles);
 
 			angles.x += 90;
 
-			CBaseEntity *pEnt = CBaseEntity::Create( "npc_tripmine", tr.endpos + tr.plane.normal * 3, angles, NULL );
-
-			CTripmineGrenade *pMine = (CTripmineGrenade *)pEnt;
-			pMine->m_hOwner = GetOwner();
+			CTripmineGrenade *pMine = dynamic_cast<CTripmineGrenade *>( CBaseEntity::Create( "npc_tripmine", tr.endpos + tr.plane.normal * 3, angles, NULL ) );
+			if ( pMine )
+			{
+				pMine->AttachToEntity( tr.m_pEnt );
+				pMine->m_hOwner = GetOwner();
+				bAttached = true;
+			}
 
 #endif
-
-			pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );
+			if ( bAttached )
+			{
+				pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );
+			}
 		}
 	}
 }

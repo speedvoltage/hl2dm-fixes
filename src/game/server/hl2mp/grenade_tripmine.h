@@ -36,6 +36,8 @@ public:
 
 	void MakeBeam( void );
 	void KillBeam( void );
+	void AttachToEntity( CBaseEntity *pEntity );
+	bool HasAttachedObjectMoved( void ) const;
 
 public:
 	EHANDLE		m_hOwner;
@@ -47,8 +49,10 @@ private:
 	float		m_flBeamLength;
 
 	CBeam		*m_pBeam;
-	Vector		m_posOwner;
-	Vector		m_angleOwner;
+	CHandle<CBaseEntity> m_hAttachedObject;
+	bool		m_bAttachedToEntity;
+	Vector		m_vecAttachedOrigin;
+	QAngle		m_angAttachedAngles;
 
 	DECLARE_DATADESC();
 };
