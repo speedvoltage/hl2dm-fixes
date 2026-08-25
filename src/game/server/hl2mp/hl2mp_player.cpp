@@ -1282,6 +1282,7 @@ int CHL2MP_Player::GetMaxAmmo( int iAmmoIndex ) const
 void CHL2MP_Player::DetonateTripmines( void )
 {
 	CBaseEntity *pEntity = NULL;
+	bool bDetonationScheduled = false;
 
 	while ((pEntity = gEntList.FindEntityByClassname( pEntity, "npc_satchel" )) != NULL)
 	{
@@ -1289,11 +1290,15 @@ void CHL2MP_Player::DetonateTripmines( void )
 		if (pSatchel->m_bIsLive && pSatchel->GetThrower() == this )
 		{
 			g_EventQueue.AddEvent( pSatchel, "Explode", 0.20, this, this );
+			bDetonationScheduled = true;
 		}
 	}
 
 	// Play sound for pressing the detonator
-	EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	if ( bDetonationScheduled )
+	{
+		EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	}
 }
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
