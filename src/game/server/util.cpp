@@ -3011,9 +3011,13 @@ static ConCommand voxeltree_view( "voxeltree_view", CC_VoxelTreeView, "View enti
 
 void CC_VoxelTreePlayerView( void )
 {
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayerOrListenServerHost();
+
+	if ( !pPlayer )
+		return;
+
 	Msg( "VoxelTreePlayerView\n" );
 
-	CBasePlayer *pPlayer = static_cast<CBasePlayer*>( UTIL_GetLocalPlayer() );
 	Vector vecStart = pPlayer->GetAbsOrigin();
 	::partition->RenderObjectsInPlayerLeafs( vecStart - VEC_HULL_MIN_SCALED( pPlayer ), vecStart + VEC_HULL_MAX_SCALED( pPlayer ), 3.0f  );
 }
