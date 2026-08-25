@@ -1490,41 +1490,55 @@ ReturnSpot:
 CON_COMMAND( timeleft, "prints the time remaining in the match" )
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_GetCommandClient() );
+	const int iFragLimit = MAX( fraglimit.GetInt(), 0 );
+	char szMessage[128];
 
-	int iTimeRemaining = (int)HL2MPRules()->GetMapRemainingTime();
-    
-	if ( iTimeRemaining == 0 )
+	if ( mp_timelimit.GetInt() <= 0 )
 	{
-		if ( pPlayer )
+		if ( iFragLimit > 0 )
 		{
-			ClientPrint( pPlayer, HUD_PRINTTALK, "This game has no timelimit." );
+			Q_snprintf( szMessage, sizeof( szMessage ), "No time limit. Frag limit: %d.", iFragLimit );
 		}
 		else
 		{
-			Msg( "* No Time Limit *\n" );
+			Q_snprintf( szMessage, sizeof( szMessage ), "No time or frag limit." );
 		}
 	}
 	else
 	{
-		int iMinutes, iSeconds;
-		iMinutes = iTimeRemaining / 60;
-		iSeconds = iTimeRemaining % 60;
+		const int iTimeRemaining = MAX( (int)HL2MPRules()->GetMapRemainingTime(), 0 );
+		const int iHours = iTimeRemaining / 3600;
+		const int iMinutes = ( iTimeRemaining / 60 ) % 60;
+		const int iSeconds = iTimeRemaining % 60;
+		char szTime[32];
 
-		char minutes[8];
-		char seconds[8];
-
-		Q_snprintf( minutes, sizeof(minutes), "%d", iMinutes );
-		Q_snprintf( seconds, sizeof(seconds), "%2.2d", iSeconds );
-
-		if ( pPlayer )
+		if ( iHours > 0 )
 		{
-			ClientPrint( pPlayer, HUD_PRINTTALK, "Time left in map: %s1:%s2", minutes, seconds );
+			Q_snprintf( szTime, sizeof( szTime ), "%d:%02d:%02d", iHours, iMinutes, iSeconds );
 		}
 		else
 		{
-			Msg( "Time Remaining:  %s:%s\n", minutes, seconds );
+			Q_snprintf( szTime, sizeof( szTime ), "%d:%02d", iMinutes, iSeconds );
 		}
-	}	
+
+		if ( iFragLimit > 0 )
+		{
+			Q_snprintf( szMessage, sizeof( szMessage ), "Time remaining: %s. Frag limit: %d.", szTime, iFragLimit );
+		}
+		else
+		{
+			Q_snprintf( szMessage, sizeof( szMessage ), "Time remaining: %s.", szTime );
+		}
+	}
+
+	if ( pPlayer )
+	{
+		ClientPrint( pPlayer, HUD_PRINTTALK, szMessage );
+	}
+	else
+	{
+		Msg( "%s\n", szMessage );
+	}
 }
 
 
