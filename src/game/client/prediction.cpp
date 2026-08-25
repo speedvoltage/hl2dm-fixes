@@ -893,6 +893,7 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	// Set globals appropriately
 	gpGlobals->curtime		= player->m_nTickBase * TICK_INTERVAL;
 	gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
+	gpGlobals->tickcount	= player->m_nTickBase;
 
 	g_pGameMovement->StartTrackPredictionErrors( player );
 
@@ -1200,6 +1201,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 	Assert( localPlayer );
 	C_CommandContext *ctx = localPlayer->GetCommandContext();
 	Assert( ctx );
+	const int commandTick = localPlayer->m_nTickBase;
 	
 	ctx->needsprocessing = true;
 	ctx->cmd = *cmd;
@@ -1225,6 +1227,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 		// Always reset
 		gpGlobals->curtime		= curtime;
 		gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
+		gpGlobals->tickcount	= commandTick;
 
 		C_BaseEntity *entity = predictables->GetPredictable( i );
 

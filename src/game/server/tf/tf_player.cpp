@@ -111,6 +111,7 @@
 #include "tf_weapon_passtime_gun.h"
 #include "player_resource.h"
 #include "tf_player_resource.h"
+#include "player_command.h"
 #include "gcsdk/gcclient_sharedobjectcache.h"
 #include "tf_party.h"
 
@@ -13506,9 +13507,10 @@ void CTFPlayer::NoteWeaponFired()
 	}
 
 	// Remember the tickcount when the weapon was fired and lock viewangles here!
-	if ( m_iLockViewanglesTickNumber != gpGlobals->tickcount )
+	int serverTickCount = PlayerCommandServerTickCount();
+	if ( m_iLockViewanglesTickNumber != serverTickCount )
 	{
-		m_iLockViewanglesTickNumber = gpGlobals->tickcount;
+		m_iLockViewanglesTickNumber = serverTickCount;
 		m_qangLockViewangles = pl.v_angle;
 	}
 }

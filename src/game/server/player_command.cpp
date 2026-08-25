@@ -25,6 +25,38 @@ extern ConVar sv_noclipduringpause;
 ConVar sv_maxusrcmdprocessticks_warning( "sv_maxusrcmdprocessticks_warning", "-1", FCVAR_NONE, "Print a warning when user commands get dropped due to insufficient usrcmd ticks allocated, number of seconds to throttle, negative disabled" );
 static ConVar sv_maxusrcmdprocessticks_holdaim( "sv_maxusrcmdprocessticks_holdaim", "1", FCVAR_CHEAT, "Hold client aim for multiple server sim ticks when client-issued usrcmd contains multiple actions (0: off; 1: hold this server tick; 2+: hold multiple ticks)" );
 
+static int s_nPlayerCommandServerTick = -1;
+
+class CScopedPlayerCommandTick
+{
+public:
+	CScopedPlayerCommandTick( int commandTick ) :
+		m_nPreviousTick( gpGlobals->tickcount ),
+		m_nPreviousServerTick( s_nPlayerCommandServerTick )
+	{
+		if ( s_nPlayerCommandServerTick < 0 )
+		{
+			s_nPlayerCommandServerTick = m_nPreviousTick;
+		}
+		gpGlobals->tickcount = commandTick;
+	}
+
+	~CScopedPlayerCommandTick()
+	{
+		gpGlobals->tickcount = m_nPreviousTick;
+		s_nPlayerCommandServerTick = m_nPreviousServerTick;
+	}
+
+private:
+	int m_nPreviousTick;
+	int m_nPreviousServerTick;
+};
+
+int PlayerCommandServerTickCount()
+{
+	return s_nPlayerCommandServerTick >= 0 ? s_nPlayerCommandServerTick : gpGlobals->tickcount;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -333,7 +365,9 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 		return; // Don't process this command
 	}
 
-	const float playerCurTime = player->m_nTickBase * TICK_INTERVAL;
+	const int serverTickCount = gpGlobals->tickcount;
+	const int playerTickCount = player->m_nTickBase;
+	const float playerCurTime = playerTickCount * TICK_INTERVAL;
 	const float playerFrameTime = TICK_INTERVAL;
 
 	StartCommand( player, ucmd );
@@ -341,6 +375,7 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	// Set globals appropriately
 	gpGlobals->curtime = playerCurTime;
 	gpGlobals->frametime = playerFrameTime;
+	CScopedPlayerCommandTick scopedPlayerCommandTick( playerTickCount );
 
 	// Prevent hacked clients from sending us invalid view angles to try to get leaf server code to crash
 	if ( !ucmd->viewangles.IsValid() || !IsEntityQAngleReasonable(ucmd->viewangles) )
@@ -437,7 +472,7 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	FinishMove( player, ucmd, g_pMoveData );
 
 	// If we have to restore the view angle then do so right now
-	if ( !player->IsBot() && ( gpGlobals->tickcount - player->GetLockViewanglesTickNumber() < sv_maxusrcmdprocessticks_holdaim.GetInt() ) )
+	if ( !player->IsBot() && ( serverTickCount - player->GetLockViewanglesTickNumber() < sv_maxusrcmdprocessticks_holdaim.GetInt() ) )
 	{
 		player->pl.v_angle = player->GetLockViewanglesData();
 	}
