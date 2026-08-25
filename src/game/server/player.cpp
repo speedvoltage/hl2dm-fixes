@@ -2149,10 +2149,15 @@ void CBasePlayer::PlayerDeathThink(void)
 		fAnyButtonDown &= ~IN_DUCK;
 	}
 
+	const bool bForcedRespawnDue =
+		g_pGameRules->IsMultiplayer() &&
+		forcerespawn.GetInt() > 0 &&
+		gpGlobals->curtime > ( m_flDeathTime + 5.0f );
+
 	// wait for all buttons released
 	if (m_lifeState == LIFE_DEAD)
 	{
-		if (fAnyButtonDown)
+		if ( fAnyButtonDown && !bForcedRespawnDue )
 			return;
 
 		if ( g_pGameRules->FPlayerCanRespawn( this ) )
@@ -2173,8 +2178,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	}
 	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
-	if (!fAnyButtonDown 
-		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
+	if ( !fAnyButtonDown && !bForcedRespawnDue )
 		return;
 
 	m_nButtons = 0;
