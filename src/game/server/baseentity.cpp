@@ -6250,7 +6250,8 @@ void CC_Ent_Info( const CCommand& args )
 	else
 	{
 		// iterate through all the ents printing out their details
-		CBaseEntity *ent = CreateEntityByName( args[1] );
+		const bool bIsWorldspawn = Q_stricmp( args[1], "worldspawn" ) == 0;
+		CBaseEntity *ent = bIsWorldspawn ? CBaseEntity::Instance( 0 ) : CreateEntityByName( args[1] );
 
 		if ( ent )
 		{
@@ -6279,7 +6280,10 @@ void CC_Ent_Info( const CCommand& args )
 				}
 			}
 
-			delete ent;
+			if ( !bIsWorldspawn )
+			{
+				delete ent;
+			}
 		}
 		else
 		{
