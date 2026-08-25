@@ -1098,6 +1098,19 @@ void CFuncRotating::RotateMove( void )
 {
 	SetMoveDoneTime( 10 );
 
+	QAngle angles = GetLocalAngles();
+
+	if ( m_vecMoveAng.x )
+		angles.x = AngleNormalize( angles.x );
+
+	if ( m_vecMoveAng.y )
+		angles.y = AngleNormalize( angles.y );
+
+	if ( m_vecMoveAng.z )
+		angles.z = AngleNormalize( angles.z );
+
+	SetLocalAngles( angles );
+
 	if ( m_bStopAtStartPos )
 	{
 		SetMoveDoneTime( GetNextMoveInterval() );
