@@ -54,6 +54,7 @@ public:
 	void CheckHolsterReload( void );
 	void Pump( void );
 //	void WeaponIdle( void );
+	bool Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	void ItemHolsterFrame( void );
 	void ItemPostFrame( void );
 	void PrimaryAttack( void );
@@ -578,6 +579,19 @@ CWeaponShotgun::CWeaponShotgun( void )
 	m_fMaxRange1		= 500;
 	m_fMinRange2		= 0.0;
 	m_fMaxRange2		= 200;
+}
+
+bool CWeaponShotgun::Holster( CBaseCombatWeapon *pSwitchingTo )
+{
+	if ( !BaseClass::Holster( pSwitchingTo ) )
+	{
+		return false;
+	}
+
+	m_bDelayedFire1 = false;
+	m_bDelayedFire2 = false;
+	m_bDelayedReload = false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------
