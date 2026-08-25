@@ -224,11 +224,13 @@ public:
 	// We need to render opaque and translucent pieces
 	virtual RenderGroup_t	GetRenderGroup( void ) {	return RENDER_GROUP_TWOPASS;	}
 
+	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	NotifyShouldTransmit( ShouldTransmitState_t state );
 	virtual int		DrawModel( int flags );
 	virtual void	ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
 	virtual bool	IsTranslucent( void );
 
+	void			UpdateGuidingSound( void );
 	void			InitBeam( void );
 	void			GetWeaponAttachment( int attachmentId, Vector &outVector, Vector *dir = NULL );
 	void			DrawEffects( void );
@@ -237,6 +239,7 @@ public:
 	CMaterialReference	m_hSpriteMaterial;	// Used for the laser glint
 	CMaterialReference	m_hBeamMaterial;	// Used for the laser beam
 	Beam_t				*m_pBeam;			// Laser beam temp entity
+	bool				m_bGuidingSoundState;
 
 #endif	//CLIENT_DLL
 

@@ -1332,6 +1332,10 @@ CWeaponRPG::CWeaponRPG()
 	m_bHideGuiding = false;
 	m_bGuiding = false;
 
+#ifdef CLIENT_DLL
+	m_bGuidingSoundState = false;
+#endif
+
 	m_fMinRange1 = m_fMinRange2 = 40*12;
 	m_fMaxRange1 = m_fMaxRange2 = 500*12;
 }
@@ -1349,6 +1353,40 @@ CWeaponRPG::~CWeaponRPG()
 	}
 #endif
 }
+
+#ifdef CLIENT_DLL
+void CWeaponRPG::OnDataChanged( DataUpdateType_t updateType )
+{
+	BaseClass::OnDataChanged( updateType );
+
+	if ( updateType == DATA_UPDATE_CREATED )
+	{
+		m_bGuidingSoundState = m_bGuiding;
+		return;
+	}
+
+	UpdateGuidingSound();
+}
+
+void CWeaponRPG::UpdateGuidingSound( void )
+{
+	if ( m_bGuidingSoundState == m_bGuiding )
+		return;
+
+	m_bGuidingSoundState = m_bGuiding;
+
+	const char *pSoundName = GetHL2MPWpnData().aShootSounds[m_bGuiding ? SPECIAL1 : SPECIAL2];
+	if ( pSoundName == NULL || pSoundName[0] == '\0' )
+		return;
+
+	CBaseEntity *pSource = GetOwner();
+	if ( pSource == NULL )
+		pSource = this;
+
+	CLocalPlayerFilter filter;
+	CBaseEntity::EmitSound( filter, pSource->entindex(), pSoundName, &pSource->GetAbsOrigin() );
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1666,9 +1704,9 @@ void CWeaponRPG::StartGuiding( void )
 	m_bGuiding = true;
 
 #ifndef CLIENT_DLL
-	WeaponSound(SPECIAL1);
-
 	CreateLaserPointer();
+#else
+	UpdateGuidingSound();
 #endif
 
 }
@@ -1681,9 +1719,6 @@ void CWeaponRPG::StopGuiding( void )
 	m_bGuiding = false;
 
 #ifndef CLIENT_DLL
-
-	WeaponSound( SPECIAL2 );
-
 	// Kill the dot completely
 	if ( m_hLaserDot != NULL )
 	{
@@ -1692,6 +1727,8 @@ void CWeaponRPG::StopGuiding( void )
 		m_hLaserDot = NULL;
 	}
 #else
+	UpdateGuidingSound();
+
 	if ( m_pBeam )
 	{
 		//Tell it to die right away and let the beam code free it.
