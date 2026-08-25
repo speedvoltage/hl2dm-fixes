@@ -228,6 +228,14 @@ void CTriggerWeaponDissolve::DissolveThink( void )
 	for ( int i = 0; i < numWeapons; i++ )
 	{
 		CBaseCombatWeapon *pWeapon = m_pWeapons[i];
+		if ( !pWeapon )
+		{
+			m_pWeapons.Remove( i );
+			--i;
+			--numWeapons;
+			continue;
+		}
+
 		Vector vecConduit = GetConduitPoint( pWeapon );
 		
 		// The physcannon upgrades when this happens
