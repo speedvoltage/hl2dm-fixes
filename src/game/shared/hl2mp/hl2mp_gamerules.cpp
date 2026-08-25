@@ -993,6 +993,14 @@ CAmmoDef *GetAmmoDef()
 		return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
 	}
 
+	bool CHL2MPRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
+	{
+		if ( pAttacker && pAttacker->IsPlayer() && pAttacker->GetTeamNumber() == TEAM_SPECTATOR )
+			return false;
+
+		return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker, info );
+	}
+
 #endif
 
 #ifndef CLIENT_DLL
