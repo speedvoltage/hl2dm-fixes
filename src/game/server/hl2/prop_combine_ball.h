@@ -37,6 +37,7 @@ public:
 	virtual void UpdateOnRemove();
 	void StopLoopingSounds();
 
+	virtual bool OnAttemptPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	virtual void OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reason );
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
