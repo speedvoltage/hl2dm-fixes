@@ -923,19 +923,13 @@ void CItem_AmmoCrate::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 //-----------------------------------------------------------------------------
 int CItem_AmmoCrate::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	// if it's the player hitting us with a crowbar, open up
 	CBasePlayer *player = ToBasePlayer(info.GetAttacker());
-	if (player)
+	if ( player && ( info.GetDamageType() & DMG_CLUB ) )
 	{
-		CBaseCombatWeapon *weapon = player->GetActiveWeapon();
-
-		if (weapon && !stricmp(weapon->GetName(), "weapon_crowbar"))
-		{
-			// play the normal use sound
-			player->EmitSound( "HL2Player.Use" );
-			// open the crate
-			Use(info.GetAttacker(), info.GetAttacker(), USE_TOGGLE, 0.0f);
-		}
+		// play the normal use sound
+		player->EmitSound( "HL2Player.Use" );
+		// open the crate
+		Use(info.GetAttacker(), info.GetAttacker(), USE_TOGGLE, 0.0f);
 	}
 
 	// don't actually take any damage
