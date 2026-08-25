@@ -1263,12 +1263,13 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponRPG, DT_WeaponRPG )
 void RecvProxy_MissileDied( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	CWeaponRPG *pRPG = ((CWeaponRPG*)pStruct);
+	CBaseHandle oldMissile = *(CBaseHandle*)pOut;
 
 	RecvProxy_IntToEHandle( pData, pStruct, pOut );
 
-	CBaseEntity *pNewMissile = pRPG->GetMissile();
+	CBaseHandle newMissile = *(CBaseHandle*)pOut;
 
-	if ( pNewMissile == NULL )
+	if ( oldMissile.IsValid() && !newMissile.IsValid() )
 	{
 		if ( pRPG->GetOwner() && pRPG->GetOwner()->GetActiveWeapon() == pRPG )
 		{
