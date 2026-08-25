@@ -933,9 +933,14 @@ void CAmbientGeneric::InputPlaySound( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CAmbientGeneric::InputStopSound( inputdata_t &inputdata )
 {
-	if (m_fActive)
+	if ( m_fActive )
 	{
 		ToggleSound();
+	}
+	else
+	{
+		SendSound( SND_STOP );
+		SetNextThink( TICK_NEVER_THINK );
 	}
 }
 
