@@ -693,7 +693,7 @@ void CWeapon_SLAM::SLAMThink( void )
 				SetSlamState(SLAM_TRIPMINE_READY);
 				int iAnim =	m_bDetonatorArmed ? ACT_SLAM_THROW_TO_STICKWALL : ACT_SLAM_THROW_TO_TRIPMINE_ND;
 				SendWeaponAnim( iAnim );
-				m_flWallSwitchTime = gpGlobals->curtime + SequenceDuration();
+				m_flWallSwitchTime = gpGlobals->curtime + SequenceDuration() / 2.0f;
 				m_bNeedReload = false;
 			}
 		}
@@ -704,7 +704,7 @@ void CWeapon_SLAM::SLAMThink( void )
 				SetSlamState(SLAM_SATCHEL_THROW);
 				int iAnim =	m_bDetonatorArmed ? ACT_SLAM_STICKWALL_TO_THROW : ACT_SLAM_TRIPMINE_TO_THROW_ND;
 				SendWeaponAnim( iAnim );
-				m_flWallSwitchTime = gpGlobals->curtime + SequenceDuration();
+				m_flWallSwitchTime = gpGlobals->curtime + SequenceDuration() / 2.0f;
 				m_bNeedReload = false;
 			}
 		}
@@ -993,6 +993,7 @@ void CWeapon_SLAM::WeaponIdle( void )
 			}
 		}
 		SendWeaponAnim( iAnim );
+		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() / 3.0f );
 	}
 }
 
