@@ -523,7 +523,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 		}
 	}
 
-	if ( pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload ) 
+	if ( pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload && !m_bDelayedFire1 && !m_bDelayedFire2 )
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		StartReload();
