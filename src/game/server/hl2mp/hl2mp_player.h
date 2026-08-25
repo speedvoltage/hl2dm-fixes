@@ -52,6 +52,7 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 	DECLARE_ENT_SCRIPTDESC();
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_fIsWalking );
 
 	virtual void Precache( void );
 	virtual void Spawn( void );

@@ -71,16 +71,6 @@ END_SEND_TABLE()
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	SendPropExclude( "DT_BaseEntity", "m_vecOrigin" ),
 
-	// misyl:
-	// m_flMaxspeed is fully predicted by the client and the client's
-	// maxspeed is sent in the user message.
-	// Other games like DOD, etc don't use this var at all and just fully
-	// predict in GameMovement, but the HL2 codebase doesn't do that and modifies this
-	// on the player.
-	// So, just never send it, and don't predict it on the client either.
-	SendPropExclude( "DT_BasePlayer", "m_flMaxspeed" ),
-
-
 	// Data that only gets sent to the local player
 	SendPropDataTable( "hl2mplocaldata", 0, &REFERENCE_SEND_TABLE( DT_HL2MPLocalPlayerExclusive ), SendProxy_SendLocalDataTable ),
 
@@ -90,6 +80,7 @@ IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 	SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
 	SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
+	SendPropBool( SENDINFO( m_fIsWalking ) ),
 	
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
