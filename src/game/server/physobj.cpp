@@ -1559,11 +1559,24 @@ CPhysMagnet::~CPhysMagnet( void )
 //-----------------------------------------------------------------------------
 void CPhysMagnet::Spawn( void )
 {
+	const char *pszModel = STRING( GetModelName() );
+
+	if ( !pszModel || !*pszModel )
+	{
+		Warning( "%s at %.0f %.0f %.0f is missing a model\n",
+			GetClassname(),
+			GetAbsOrigin().x,
+			GetAbsOrigin().y,
+			GetAbsOrigin().z );
+		UTIL_Remove( this );
+		return;
+	}
+
 	Precache();
 
 	SetMoveType( MOVETYPE_NONE );
 	SetSolid( SOLID_VPHYSICS );
-	SetModel( STRING( GetModelName() ) );
+	SetModel( pszModel );
 
 	m_takedamage = DAMAGE_EVENTS_ONLY;
 
