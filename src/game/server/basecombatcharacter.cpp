@@ -1139,6 +1139,9 @@ bool CTraceFilterMelee::ShouldHitEntity( IHandleEntity *pHandleEntity, int conte
 		if ( pEntity->m_takedamage == DAMAGE_NO )
 			return false;
 
+		if ( !pEntity->CanBeHitByMeleeAttack( m_dmgInfo->GetAttacker() ) )
+			return false;
+
 		// FIXME: Do not translate this to the driver because the driver only accepts damage from the vehicle
 		// Translate the vehicle into its driver for damage
 		/*
