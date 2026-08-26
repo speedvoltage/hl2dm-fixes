@@ -24,6 +24,7 @@
 #include "shake.h"
 #include "particle_smokegrenade.h"
 #include "player.h"
+#include "ilagcompensationmanager.h"
 #include "entitylist.h"
 #include "IEffects.h"
 #include "ai_basenpc.h"
@@ -1169,6 +1170,12 @@ void CFuncTank::ControllerPostFrame( void )
 	m_fireLast = gpGlobals->curtime - (1/m_fireRate) - 0.01;  // to make sure the gun doesn't fire too many bullets
 	
 	int bulletCount = (gpGlobals->curtime - m_fireLast) * m_fireRate;
+	CUserCmd *pCmd = pPlayer->GetCurrentCommand();
+
+	if ( pCmd )
+	{
+		lagcompensation->StartLagCompensation( pPlayer, pCmd );
+	}
 	
 	if( HasSpawnFlags( SF_TANK_AIM_ASSISTANCE ) )
 	{
@@ -1187,6 +1194,11 @@ void CFuncTank::ControllerPostFrame( void )
 	}
 	
 	Fire( bulletCount, WorldBarrelPosition(), forward, pPlayer, false );
+
+	if ( pCmd )
+	{
+		lagcompensation->FinishLagCompensation( pPlayer );
+	}
  
 #if defined( WIN32 ) && !defined( _X360 ) 
 	// NVNT apply a punch on the player each time fired
