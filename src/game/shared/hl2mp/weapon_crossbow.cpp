@@ -469,6 +469,7 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA( CWeaponCrossbow )
 	DEFINE_PRED_FIELD( m_bInZoom, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bMustReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_FIELD( m_nChargeState, FIELD_INTEGER ),
 
 	// misyl: Can't predict this easily as it comes from some animevent stuff...
 	DEFINE_PRED_FIELD( m_nSkin, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
@@ -505,6 +506,7 @@ CWeaponCrossbow::CWeaponCrossbow( void )
 	m_bFiresUnderwater	= true;
 	m_bInZoom			= false;
 	m_bMustReload		= false;
+	m_nChargeState		= CHARGER_STATE_OFF;
 }
 
 #define	CROSSBOW_GLOW_SPRITE	"sprites/light_glow02_noz.vmt"
@@ -681,6 +683,7 @@ void CWeaponCrossbow::FireBolt( void )
 
 	DoLoadEffect();
 	SetChargerState( CHARGER_STATE_DISCHARGE );
+	SetSkin( BOLT_SKIN_NORMAL );
 }
 
 //-----------------------------------------------------------------------------
@@ -712,6 +715,7 @@ bool CWeaponCrossbow::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	SetChargerState( CHARGER_STATE_OFF );
+	SetSkin( BOLT_SKIN_NORMAL );
 
 	return BaseClass::Holster( pSwitchingTo );
 }
