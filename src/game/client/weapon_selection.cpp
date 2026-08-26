@@ -75,7 +75,7 @@ static void ClientUse( const CCommand &args )
 	input->MakeWeaponSelection( pWeapon );
 }
 
-static ConCommand use( "use", ClientUse, "Use a particular weapon\t\nArguments: <weapon_name>" );
+static ConCommand use( "use", ClientUse, "Use a particular weapon\t\nArguments: <weapon_name>", FCVAR_SERVER_CAN_EXECUTE );
 #endif
 
 // instance info
