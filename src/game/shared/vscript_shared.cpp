@@ -104,10 +104,15 @@ HSCRIPT VScriptCompileScript( const char *pszScriptName, bool bWarnMissing )
 	{
 		bool bResult = filesystem->ReadFile( scriptPath, "GAME", bufferScript );
 
-		if( !bResult )
+		if ( !bResult )
 		{
-			Log_Warning( LOG_VScript, "Script not found (%s) \n", scriptPath.operator const char *() );
-			Assert( "Error running script" );
+			if ( bWarnMissing )
+			{
+				Log_Warning( LOG_VScript, "Script not found (%s) \n", scriptPath.operator const char *() );
+				Assert( "Error running script" );
+			}
+
+			return NULL;
 		}
 
 		pBase = (const char *) bufferScript.Base();
