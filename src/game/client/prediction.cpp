@@ -1594,6 +1594,14 @@ bool CPrediction::PerformPrediction( bool received_new_world_update, C_BasePlaye
 	//  go until we get to targettime or we run out of new commands
 	int i = ComputeFirstCommandToExecute( received_new_world_update, incoming_acknowledged, outgoing_command );
 
+	entity = localPlayer->GetGroundEntity();
+
+	while ( entity && entity->entindex() > 0 )
+	{
+		entity->MoveToLastReceivedPosition();
+		entity = entity->GetMoveParent();
+	}
+
 	//Msg( "%i/%i tickbase %i\n",
 	//	gpGlobals->framecount,
 	//	gpGlobals->tickcount,

@@ -8317,13 +8317,25 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		}
 	}
 
+	IPhysicsObject *pPhysGround = GetGroundVPhysics();
+	const bool bRideableGround = IsRideablePhysics( pPhysGround );
+#ifdef HL2MP
+	const bool bLightPhysicsGround = pPhysGround && !bRideableGround;
+#else
+	const bool bLightPhysicsGround = false;
+#endif
+	const bool bControllerContact = m_pPhysicsController->IsInContact();
+
 	bool bCheckStuck = false;
 	if ( m_afPhysicsFlags & PFLAG_GAMEPHYSICS_ROTPUSH )
 	{
 		bCheckStuck = true;
+#ifdef HL2MP
+		m_touchedPhysObject = true;
+#endif
 		m_afPhysicsFlags &= ~PFLAG_GAMEPHYSICS_ROTPUSH;
 	}
-	if ( m_pPhysicsController->IsInContact() || (m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) )
+	if ( (bControllerContact && !bLightPhysicsGround) || (m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) )
 	{
 		m_touchedPhysObject = true;
 	}
@@ -8346,8 +8358,6 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 
 	if ( !physicsUpdated )
 		return;
-
-	IPhysicsObject *pPhysGround = GetGroundVPhysics();
 
 	Vector newVelocity;
 	pPhysics->GetPosition( &newPosition, 0 );
@@ -8373,16 +8383,18 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 
 	float maxDistErrorSqr = VPHYS_MAX_DISTSQR;
 	float maxVelErrorSqr = VPHYS_MAX_VELSQR;
-	if ( IsRideablePhysics(pPhysGround) )
+	if ( bRideableGround )
 	{
 		maxDistErrorSqr *= 0.25;
 		maxVelErrorSqr *= 0.25;
 	}
 
 #ifdef HL2MP
-	const bool bForceGroundUpdate = IsRideablePhysics(pPhysGround) && !m_touchedPhysObject;
+	const bool bForceGroundUpdate = bRideableGround && !m_touchedPhysObject;
+	const bool bIgnoreGroundShadowFeedback = bLightPhysicsGround && !m_touchedPhysObject;
 #else
 	const bool bForceGroundUpdate = pPhysGround && !m_touchedPhysObject;
+	const bool bIgnoreGroundShadowFeedback = false;
 #endif
 
 	// player's physics was frozen, try moving to the game's simulated position if possible
@@ -8407,7 +8419,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		}
 
 	}
-	if ( dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || bForceGroundUpdate )
+	if ( !bIgnoreGroundShadowFeedback && (dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || bForceGroundUpdate) )
 	{
 		if ( m_touchedPhysObject || pPhysGround )
 		{
@@ -8434,7 +8446,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 					VectorMA( newVelocity, val - len, dir, newVelocity );
 				}
 
-				if ( !IsRideablePhysics(pPhysGround) )
+				if ( !bRideableGround )
 				{
 					if ( !(m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER ) && IsSimulatingOnAlternateTicks() )
 					{
@@ -8458,7 +8470,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	}
 	else
 	{
-		if ( m_touchedPhysObject )
+		if ( m_touchedPhysObject || bControllerContact )
 		{
 			// check my position (physics object could have simulated into my position
 			// physics is not very far away, check my position
@@ -9684,4 +9696,3 @@ void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruc
 	return ( void * )pVarData;
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
-
