@@ -1050,11 +1050,6 @@ int CBreakableProp::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 1;
 	}
 
-	if( info.GetAttacker() && info.GetAttacker()->MyCombatCharacterPointer() )
-	{
-		m_hLastAttacker.Set( info.GetAttacker() );
-	}
-
 	float flPropDamage = GetBreakableDamage( info, assert_cast<IBreakableWithPropData*>(this) );
 	info.SetDamage( flPropDamage );
 
@@ -1086,6 +1081,11 @@ int CBreakableProp::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if( IsOnFire() && (inputInfo.GetDamageType() & DMG_BURN) && !(inputInfo.GetDamageType() & DMG_DIRECT) )
 	{
 		return 0;
+	}
+
+	if( info.GetAttacker() && info.GetAttacker()->MyCombatCharacterPointer() )
+	{
+		m_hLastAttacker.Set( info.GetAttacker() );
 	}
 
 	bool bDeadly = info.GetDamage() >= m_iHealth;
@@ -1164,6 +1164,10 @@ int CBreakableProp::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0.f, 1.f );
 	m_OnHealthChanged.Set( flRatio, info.GetAttacker(), this );
 	m_OnTakeDamage.FireOutput( info.GetAttacker(), this );
+	if ( !IsOnFire() )
+	{
+		m_hLastAttacker = NULL;
+	}
 
 	return ret;
 }
