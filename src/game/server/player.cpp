@@ -8336,7 +8336,8 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	bool physicsUpdated = m_pPhysicsController->GetShadowPosition( &newPosition, NULL ) > 0 ? true : false;
 
 	// UNDONE: If the player is penetrating, but the player's game collisions are not stuck, teleport the physics shadow to the game position
-	if ( pPhysics->GetGameFlags() & FVPHYSICS_PENETRATING )
+	const bool bPenetrating = (pPhysics->GetGameFlags() & FVPHYSICS_PENETRATING) != 0;
+	if ( bPenetrating )
 	{
 		CUtlVector<CBaseEntity *> list;
 		PhysGetListOfPenetratingEntities( this, list );
@@ -8383,7 +8384,8 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		m_touchedPhysObject = true;
 	}
 
-	if ( IsFollowingPhysics() )
+	const bool bFollowingPhysics = IsFollowingPhysics();
+	if ( bFollowingPhysics )
 	{
 		m_touchedPhysObject = true;
 	}
@@ -8435,9 +8437,15 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 #ifdef HL2MP
 	const bool bForceGroundUpdate = bRideableGround && !m_touchedPhysObject;
 	const bool bIgnoreGroundShadowFeedback = bLightPhysicsGround && !m_touchedPhysObject;
+	const bool bPositionError = dist >= maxDistErrorSqr || bForceGroundUpdate;
+	const bool bVelocityError = deltaV >= maxVelErrorSqr;
+	const bool bCoupledShadowCorrection = !(GetFlags() & FL_ONGROUND) || bPenetrating || bCheckStuck ||
+		(m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) || bFollowingPhysics || bRideableGround;
 #else
 	const bool bForceGroundUpdate = pPhysGround && !m_touchedPhysObject;
 	const bool bIgnoreGroundShadowFeedback = false;
+	const bool bPositionError = dist >= maxDistErrorSqr || bForceGroundUpdate;
+	const bool bVelocityError = deltaV >= maxVelErrorSqr;
 #endif
 
 	// player's physics was frozen, try moving to the game's simulated position if possible
@@ -8462,12 +8470,13 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		}
 
 	}
-	if ( !bIgnoreGroundShadowFeedback && (dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || bForceGroundUpdate) )
+	bool bCheckCurrentPosition = false;
+	if ( !bIgnoreGroundShadowFeedback && (bPositionError || bVelocityError) )
 	{
 		if ( m_touchedPhysObject || pPhysGround )
 		{
 			// BUGBUG: Rewrite this code using fixed timestep
-			if ( deltaV >= maxVelErrorSqr && !m_bPhysicsWasFrozen )
+			if ( bVelocityError && !m_bPhysicsWasFrozen )
 			{
 				Vector dir = GetAbsVelocity();
 				float len = VectorNormalize(dir);
@@ -8499,12 +8508,23 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 				}
 			}
 			
-			trace_t trace;
-			UTIL_TraceEntity( this, newPosition, newPosition, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
-			if ( !trace.allsolid && !trace.startsolid )
+#ifdef HL2MP
+			if ( bPositionError || bCoupledShadowCorrection )
+#endif
 			{
-				SetAbsOrigin( newPosition );
+				trace_t trace;
+				UTIL_TraceEntity( this, newPosition, newPosition, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+				if ( !trace.allsolid && !trace.startsolid )
+				{
+					SetAbsOrigin( newPosition );
+				}
 			}
+#ifdef HL2MP
+			else
+			{
+				bCheckCurrentPosition = true;
+			}
+#endif
 		}
 		else
 		{
@@ -8513,22 +8533,24 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	}
 	else
 	{
-		if ( m_touchedPhysObject || bControllerContact )
+		bCheckCurrentPosition = true;
+	}
+
+	if ( bCheckCurrentPosition && (m_touchedPhysObject || bControllerContact) )
+	{
+		// check my position (physics object could have simulated into my position
+		// physics is not very far away, check my position
+		trace_t trace;
+		UTIL_TraceEntity( this, GetAbsOrigin(), GetAbsOrigin(),
+			MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+
+		// is current position ok?
+		if ( trace.allsolid || trace.startsolid )
 		{
-			// check my position (physics object could have simulated into my position
-			// physics is not very far away, check my position
-			trace_t trace;
-			UTIL_TraceEntity( this, GetAbsOrigin(), GetAbsOrigin(),
-				MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
-			
-			// is current position ok?
-			if ( trace.allsolid || trace.startsolid )
-			{
-				// no use the final stuck check to move back to old if this stuck fix didn't work
-				bCheckStuck = true;
-				lastValidPosition = m_oldOrigin;
-				SetAbsOrigin( newPosition );
-			}
+			// no use the final stuck check to move back to old if this stuck fix didn't work
+			bCheckStuck = true;
+			lastValidPosition = m_oldOrigin;
+			SetAbsOrigin( newPosition );
 		}
 	}
 
