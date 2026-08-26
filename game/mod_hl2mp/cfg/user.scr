@@ -1,0 +1,11 @@
+VERSION 1.0
+
+DESCRIPTION INFO_OPTIONS
+{
+	"fov_desired"
+	{
+		"#GameUI_FOV"
+		{ SLIDER 70 110 }
+		{ "75" }
+	}
+}

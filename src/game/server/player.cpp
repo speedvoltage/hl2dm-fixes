@@ -2333,6 +2333,10 @@ bool CBasePlayer::SetObserverMode(int mode )
 	}
 
 	m_iObserverMode = mode;
+
+#ifdef HL2MP
+	NetworkStateChanged( &m_Local.m_flFOVRate );
+#endif
 	
 	switch ( mode )
 	{
@@ -2644,6 +2648,10 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	
 	// set new target
 	m_hObserverTarget.Set( target ); 
+
+#ifdef HL2MP
+	NetworkStateChanged( &m_Local.m_flFOVRate );
+#endif
 
 	// reset fov to default
 	SetFOV( this, 0 );	
@@ -9678,4 +9686,3 @@ void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruc
 	return ( void * )pVarData;
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
-
