@@ -58,7 +58,7 @@ HOOK_COMMAND( invnext, NextWeapon );
 HOOK_COMMAND( invprev, PrevWeapon );
 HOOK_COMMAND( lastinv, LastWeapon );
 
-#ifdef HL2_CLIENT_DLL
+#ifdef HL2MP
 static void ClientUse( const CCommand &args )
 {
 	if ( args.ArgC() < 2 )

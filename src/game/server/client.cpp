@@ -1105,7 +1105,7 @@ static ConCommand bugswap("bug_swap", CC_Player_BugBaitSwap, "Automatically swap
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-#ifndef HL2_DLL
+#ifndef HL2MP
 void CC_Player_Use( const CCommand &args )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
