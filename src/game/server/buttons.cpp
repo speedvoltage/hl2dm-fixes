@@ -896,6 +896,11 @@ void CRotButton::Spawn( void )
 	m_fStayPushed = (m_flWait == -1 ? TRUE : FALSE);
 	m_fRotating = TRUE;
 
+	if ( HasSpawnFlags( SF_BUTTON_LOCKED ) )
+	{
+		m_bLocked = true;
+	}
+
 	SetUse(&CRotButton::ButtonUse);
 
 	//
