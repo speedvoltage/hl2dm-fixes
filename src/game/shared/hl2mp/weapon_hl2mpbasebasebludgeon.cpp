@@ -123,7 +123,15 @@ void CBaseHL2MPBludgeonWeapon::PrimaryAttack()
 //------------------------------------------------------------------------------
 void CBaseHL2MPBludgeonWeapon::SecondaryAttack()
 {
+#ifndef CLIENT_DLL
+	CHL2MP_Player *pPlayer = ToHL2MPPlayer( GetPlayerOwner() );
+	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
+#endif
 	Swing( true );
+#ifndef CLIENT_DLL
+	lagcompensation->FinishLagCompensation( pPlayer );
+	pPlayer->OnMyWeaponFired( this );
+#endif
 }
 
 
