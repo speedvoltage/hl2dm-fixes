@@ -36,6 +36,7 @@ extern ConVar hl2mp_bot_fire_weapon_min_time;
 extern ConVar hl2mp_bot_difficulty;
 extern ConVar hl2mp_bot_farthest_visible_theater_sample_count;
 extern ConVar hl2mp_bot_path_lookahead_range;
+extern void respawn( CBaseEntity *pEdict, bool fCopyCorpse );
 
 
 
@@ -605,6 +606,8 @@ CHL2MPBot::CHL2MPBot()
 	m_homeArea = NULL;
 	m_squad = NULL;
 	m_didReselectClass = false;
+	m_bRespawnRequested = false;
+	m_bRespawnCopyCorpse = false;
 	m_spotWhereEnemySentryLastInjuredMe = vec3_origin;
 	m_isLookingAroundForEnemies = true;
 	m_behaviorFlags = 0;
@@ -655,6 +658,8 @@ void CHL2MPBot::Spawn()
 	m_justLostPointTimer.Invalidate();
 	m_squad = NULL;
 	m_didReselectClass = false;
+	m_bRespawnRequested = false;
+	m_bRespawnCopyCorpse = false;
 	m_isLookingAroundForEnemies = true;
 	m_attentionFocusEntity = NULL;
 
@@ -696,6 +701,21 @@ void CHL2MPBot::PhysicsSimulate( void )
 {
 	BaseClass::PhysicsSimulate();
 
+	if ( m_bRespawnRequested )
+	{
+		bool bCopyCorpse = m_bRespawnCopyCorpse;
+		m_bRespawnRequested = false;
+		m_bRespawnCopyCorpse = false;
+
+		if ( !IsMarkedForDeletion() &&
+			( m_lifeState == LIFE_DEAD || m_lifeState == LIFE_RESPAWNABLE ) &&
+			g_pGameRules != NULL && g_pGameRules->FPlayerCanRespawn( this ) )
+		{
+			respawn( this, bCopyCorpse );
+			return;
+		}
+	}
+
 	if ( m_spawnArea == NULL )
 	{
 		m_spawnArea = GetLastKnownArea();
@@ -713,6 +733,13 @@ void CHL2MPBot::PhysicsSimulate( void )
 
 
 //-----------------------------------------------------------------------------------------------------
+void CHL2MPBot::RequestRespawn( bool bCopyCorpse )
+{
+	m_bRespawnRequested = true;
+	m_bRespawnCopyCorpse = bCopyCorpse;
+}
+
+
 void CHL2MPBot::Touch( CBaseEntity *pOther )
 {
 	BaseClass::Touch( pOther );

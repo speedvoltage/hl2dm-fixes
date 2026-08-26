@@ -9,8 +9,6 @@
 
 #include "nav_mesh.h"
 
-extern void respawn( CBaseEntity* pEdict, bool fCopyCorpse );
-
 //---------------------------------------------------------------------------------------------
 ActionResult< CHL2MPBot >	CHL2MPBotDead::OnStart( CHL2MPBot *me, Action< CHL2MPBot > *priorAction )
 {
@@ -49,10 +47,9 @@ ActionResult< CHL2MPBot >	CHL2MPBotDead::Update( CHL2MPBot *me, float interval )
 	{
 		if ( g_pGameRules->FPlayerCanRespawn( me ) )
 		{
-			respawn( me, !me->IsObserver() );
+			me->RequestRespawn( !me->IsObserver() );
 		}
 	}
 
 	return Continue();
 }
-

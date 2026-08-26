@@ -62,6 +62,7 @@ public:
 	virtual void		FireGameEvent( IGameEvent *event );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
 	virtual void		PhysicsSimulate( void );
+	void				RequestRespawn( bool bCopyCorpse );
 	virtual void		Touch( CBaseEntity *pOther );
 	virtual void		AvoidPlayers( CUserCmd *pCmd );				// some game types allow players to pass through each other, this method pushes them apart
 	virtual void		UpdateOnRemove( void );
@@ -406,6 +407,8 @@ private:
 
 	CHL2MPBotSquad *m_squad;
 	bool m_didReselectClass;
+	bool m_bRespawnRequested;
+	bool m_bRespawnCopyCorpse;
 
 	Vector m_spotWhereEnemySentryLastInjuredMe;			// the last position where I was injured by an enemy sentry
 
