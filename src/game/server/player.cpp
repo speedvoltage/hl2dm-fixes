@@ -634,6 +634,11 @@ CBasePlayer::CBasePlayer( )
 
 	m_nNumCrouches = 0;
 	m_bDuckToggled = false;
+#ifdef HL2MP
+	m_bGameMovementTouchedPhysics = false;
+	m_bGameMovementTouchedIncomingPhysics = false;
+	m_nGameMovementTouchTick = -1;
+#endif
 	m_bPhysicsWasFrozen = false;
 
 	// Used to mask off buttons
@@ -3816,6 +3821,11 @@ ConVar xc_crouch_debounce( "xc_crouch_debounce", "0", FCVAR_NONE );
 void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
 	m_touchedPhysObject = false;
+#ifdef HL2MP
+	m_bGameMovementTouchedPhysics = false;
+	m_bGameMovementTouchedIncomingPhysics = false;
+	m_nGameMovementTouchTick = -1;
+#endif
 
 	if ( pl.fixangle == FIXANGLE_NONE)
 	{
@@ -4808,6 +4818,32 @@ void CBasePlayer::Touch( CBaseEntity *pOther )
 		return;
 
 	SetTouchedPhysics( true );
+
+#ifdef HL2MP
+	const trace_t &touchTrace = GetTouchTrace();
+	if ( m_pCurrentCommand && touchTrace.m_pEnt == pOther )
+	{
+		m_bGameMovementTouchedPhysics = true;
+		m_nGameMovementTouchTick = PlayerCommandServerTickCount();
+
+		if ( !touchTrace.startsolid && !touchTrace.allsolid && !touchTrace.plane.normal.IsZero() )
+		{
+			Vector nearestPoint;
+			pOther->CollisionProp()->CalcNearestPoint( WorldSpaceCenter(), &nearestPoint );
+
+			Vector objectVelocity;
+			pPhys->GetVelocityAtPoint( nearestPoint, &objectVelocity );
+			if ( DotProduct( objectVelocity, touchTrace.plane.normal ) > VPHYS_MAX_VEL )
+			{
+				m_bGameMovementTouchedIncomingPhysics = true;
+			}
+		}
+		else
+		{
+			m_bGameMovementTouchedIncomingPhysics = true;
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -8328,6 +8364,14 @@ unsigned int CBasePlayer::PlayerSolidMask( bool brushOnly ) const
 //-----------------------------------------------------------------------------
 void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 {
+#ifdef HL2MP
+	const bool bTouchedPhysicsDuringMovement = m_nGameMovementTouchTick == PlayerCommandServerTickCount() && m_bGameMovementTouchedPhysics;
+	const bool bIncomingPhysicsDuringMovement = bTouchedPhysicsDuringMovement && m_bGameMovementTouchedIncomingPhysics;
+	m_bGameMovementTouchedPhysics = false;
+	m_bGameMovementTouchedIncomingPhysics = false;
+	m_nGameMovementTouchTick = -1;
+#endif
+
 	if ( sv_turbophysics.GetBool() )
 		return;
 
@@ -8441,11 +8485,13 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	const bool bVelocityError = deltaV >= maxVelErrorSqr;
 	const bool bCoupledShadowCorrection = !(GetFlags() & FL_ONGROUND) || bPenetrating || bCheckStuck ||
 		(m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) || bFollowingPhysics || bRideableGround;
+	const bool bApplyVelocityFeedback = !bTouchedPhysicsDuringMovement || bIncomingPhysicsDuringMovement || bCoupledShadowCorrection;
 #else
 	const bool bForceGroundUpdate = pPhysGround && !m_touchedPhysObject;
 	const bool bIgnoreGroundShadowFeedback = false;
 	const bool bPositionError = dist >= maxDistErrorSqr || bForceGroundUpdate;
 	const bool bVelocityError = deltaV >= maxVelErrorSqr;
+	const bool bApplyVelocityFeedback = true;
 #endif
 
 	// player's physics was frozen, try moving to the game's simulated position if possible
@@ -8476,7 +8522,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		if ( m_touchedPhysObject || pPhysGround )
 		{
 			// BUGBUG: Rewrite this code using fixed timestep
-			if ( bVelocityError && !m_bPhysicsWasFrozen )
+			if ( bVelocityError && !m_bPhysicsWasFrozen && bApplyVelocityFeedback )
 			{
 				Vector dir = GetAbsVelocity();
 				float len = VectorNormalize(dir);
@@ -8606,6 +8652,12 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 
 void CBasePlayer::VPhysicsDestroyObject()
 {
+#ifdef HL2MP
+	m_bGameMovementTouchedPhysics = false;
+	m_bGameMovementTouchedIncomingPhysics = false;
+	m_nGameMovementTouchTick = -1;
+#endif
+
 	// Since CBasePlayer aliases its pointer to the physics object, tell CBaseEntity to 
 	// clear out its physics object pointer so we don't wind up deleting one of
 	// the aliased objects twice.

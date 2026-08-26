@@ -1023,6 +1023,11 @@ protected: //used to be private, but need access for portal mod (Dave Kircher)
 	Vector						m_oldOrigin;
 	Vector						m_vecSmoothedVelocity;
 	bool						m_touchedPhysObject;
+#ifdef HL2MP
+	bool						m_bGameMovementTouchedPhysics;
+	bool						m_bGameMovementTouchedIncomingPhysics;
+	int							m_nGameMovementTouchTick;
+#endif
 	bool						m_bPhysicsWasFrozen;
 
 private:
