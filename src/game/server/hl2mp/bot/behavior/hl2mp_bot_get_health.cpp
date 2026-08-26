@@ -13,7 +13,7 @@ ConVar hl2mp_bot_health_ok_ratio( "hl2mp_bot_health_ok_ratio", "0.65", FCVAR_CHE
 ConVar hl2mp_bot_health_search_near_range( "hl2mp_bot_health_search_near_range", "1000", FCVAR_CHEAT );
 ConVar hl2mp_bot_health_search_far_range( "hl2mp_bot_health_search_far_range", "2000", FCVAR_CHEAT );
 
-ConVar hl2mp_bot_debug_health_scavenging( "hl2mp_bot_debug_ammo_scavenging", "0", FCVAR_CHEAT );
+ConVar hl2mp_bot_debug_health_scavenging( "hl2mp_bot_debug_health_scavenging", "0", FCVAR_CHEAT );
 
 //---------------------------------------------------------------------------------------------
 class CHealthFilter : public INextBotFilter
