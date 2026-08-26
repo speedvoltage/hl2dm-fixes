@@ -1726,7 +1726,31 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		float fPortalFraction = 2.0f;
 #endif
 
+#if defined( HL2MP )
+		if ( IsPlayer() && info.m_iAmmoType == GetAmmoDef()->Index( "Buckshot" ) )
+		{
+			trace_t trHull;
+			trace_t trRay;
+			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -1.5f, -1.5f, -1.5f ), Vector( 1.5f, 1.5f, 1.5f ), MASK_SHOT, &traceFilter, &trHull );
+			AI_TraceLine( info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &trRay );
+			const bool bHullHit = trHull.DidHit() && !trHull.startsolid && !trHull.allsolid;
 
+			if ( trRay.DidHit() && trRay.hitgroup == HITGROUP_HEAD &&
+				( !bHullHit || trRay.fraction <= trHull.fraction || trRay.m_pEnt == trHull.m_pEnt ) )
+			{
+				tr = trRay;
+			}
+			else if ( bHullHit )
+			{
+				tr = trHull;
+			}
+			else
+			{
+				tr = trRay;
+			}
+		}
+		else
+#endif
 		if( IsPlayer() && info.m_iShots > 1 && iShot % 2 )
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
