@@ -61,6 +61,7 @@ public:
 	
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
+	virtual void BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
 
 	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
 	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
@@ -127,6 +128,10 @@ private:
 	C_HL2MP_Player( const C_HL2MP_Player & );
 
 	CPlayerAnimState m_PlayerAnimState;
+	bool	m_bDuckJumpInterp;
+	float	m_flFirstDuckJumpInterp;
+	float	m_flLastDuckJumpInterp;
+	float	m_flDuckJumpInterp;
 
 	QAngle	m_angEyeAngles;
 
