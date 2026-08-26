@@ -2013,20 +2013,13 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	// misyl: Disable pred filtering in this server-only section.
 	CDisablePredictionFiltering disablePred;
 
-	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( GetOwner() );
-	if( pOwner != NULL )
-	{
-		pOwner->EnableSprint( true );
-		pOwner->SetMaxSpeed( hl2_normspeed.GetFloat() );
-	}
-
 	CBaseEntity *pObject = m_grabController.GetAttached();
 
 	m_grabController.DetachEntity( wasLaunched );
 
 	if ( pObject != NULL )
 	{
-		Pickup_OnPhysGunDrop( pObject, pOwner, wasLaunched ? LAUNCHED_BY_CANNON : DROPPED_BY_CANNON );
+		Pickup_OnPhysGunDrop( pObject, GetPlayerOwner(), wasLaunched ? LAUNCHED_BY_CANNON : DROPPED_BY_CANNON );
 	}
 	
 	if ( pObject && m_bResetOwnerEntity == true )
