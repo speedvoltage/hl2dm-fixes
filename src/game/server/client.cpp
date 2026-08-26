@@ -1077,6 +1077,7 @@ static ConCommand bugswap("bug_swap", CC_Player_BugBaitSwap, "Automatically swap
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+#ifndef HL2MP
 void CC_Player_Use( const CCommand &args )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
@@ -1086,6 +1087,7 @@ void CC_Player_Use( const CCommand &args )
 	}
 }
 static ConCommand use("use", CC_Player_Use, "Use a particular weapon\t\nArguments: <weapon_name>");
+#endif
 
 
 //------------------------------------------------------------------------------
