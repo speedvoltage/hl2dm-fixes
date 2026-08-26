@@ -459,7 +459,13 @@ void CPhysBox::Spawn( void )
 	{
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
-	CreateVPhysics();
+	if ( !CreateVPhysics() )
+	{
+		Warning( "func_physbox %s failed to create a physics object and will be removed.\n", GetDebugName() );
+		SetSolid( SOLID_NONE );
+		UTIL_Remove( this );
+		return;
+	}
 
 	m_hCarryingPlayer = NULL;
 
@@ -508,21 +514,35 @@ static bool ShouldDampRotation( const CPhysCollide *pCollide )
 
 bool CPhysBox::CreateVPhysics()
 {
+	vcollide_t *pVCollide = modelinfo->GetVCollide( GetModelIndex() );
+	if ( !pVCollide || !pVCollide->solidCount || !pVCollide->solids )
+		return false;
+
 	solid_t tmpSolid;
-	PhysModelParseSolid( tmpSolid, this, GetModelIndex() );
+	if ( !PhysModelParseSolid( tmpSolid, this, GetModelIndex() ) )
+		return false;
+
+	if ( tmpSolid.index < 0 || tmpSolid.index >= pVCollide->solidCount )
+		return false;
+
+	CPhysCollide *pCollide = pVCollide->solids[tmpSolid.index];
+	if ( !pCollide )
+		return false;
+
 	if ( m_massScale > 0 )
 	{
 		tmpSolid.params.mass *= m_massScale;
 	}
 
-	vcollide_t *pVCollide = modelinfo->GetVCollide( GetModelIndex() );
 	PhysGetMassCenterOverride( this, pVCollide, tmpSolid );
 	PhysSolidOverride( tmpSolid, m_iszOverrideScript );
-	if ( tmpSolid.params.rotdamping < 1.0f && ShouldDampRotation(pVCollide->solids[0]) )
+	if ( tmpSolid.params.rotdamping < 1.0f && ShouldDampRotation( pCollide ) )
 	{
 		tmpSolid.params.rotdamping = 1.0f;
 	}
 	IPhysicsObject *pPhysics = VPhysicsInitNormal( GetSolid(), GetSolidFlags(), true, &tmpSolid );
+	if ( !pPhysics )
+		return false;
 
 	if ( m_damageType == 1 )
 	{
