@@ -841,19 +841,25 @@ int CTriggerHurt::HurtAllTouchers( float dt )
 
 	m_hurtEntities.RemoveAll();
 
+	CUtlVector< EHANDLE > touchingEntities;
 	touchlink_t *root = ( touchlink_t * )GetDataObject( TOUCHLINK );
 	if ( root )
 	{
 		for ( touchlink_t *link = root->nextLink; link != root; link = link->nextLink )
 		{
-			CBaseEntity *pTouch = link->entityTouched;
-			if ( pTouch )
+			if ( link->entityTouched )
 			{
-				if ( HurtEntity( pTouch, fldmg ) )
-				{
-					hurtCount++;
-				}
+				touchingEntities.AddToTail( link->entityTouched );
 			}
+		}
+	}
+
+	for ( int i = 0; i < touchingEntities.Count(); ++i )
+	{
+		CBaseEntity *pTouch = touchingEntities[i];
+		if ( pTouch && HurtEntity( pTouch, fldmg ) )
+		{
+			hurtCount++;
 		}
 	}
 

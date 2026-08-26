@@ -400,6 +400,43 @@ void CBaseHudWeaponSelection::UserCmd_Slot10(void)
 	SelectSlot( 10 );
 }
 
+#ifdef HL2_CLIENT_DLL
+static void ClientPhysSwap()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return;
+
+	C_BaseCombatWeapon *pActiveWeapon = pPlayer->GetActiveWeapon();
+	if ( !pActiveWeapon )
+		return;
+
+	C_BaseCombatWeapon *pPhysCannon = pPlayer->Weapon_OwnsThisType( "weapon_physcannon" );
+	if ( !pPhysCannon )
+		return;
+
+	C_BaseCombatWeapon *pTargetWeapon = pPhysCannon;
+	if ( pActiveWeapon == pPhysCannon )
+	{
+		if ( !pPhysCannon->CanHolster() )
+		{
+			engine->ClientCmd( "cancelselect\n" );
+			return;
+		}
+
+		pTargetWeapon = pPlayer->GetLastWeapon();
+	}
+
+	if ( !pTargetWeapon )
+		return;
+
+	input->MakeWeaponSelection( pTargetWeapon );
+	engine->ClientCmd( "cancelselect\n" );
+}
+
+static ConCommand physSwap( "phys_swap", ClientPhysSwap, "Switches to the physics cannon or back to the previous weapon." );
+#endif
+
 //-----------------------------------------------------------------------------
 // Purpose: returns true if the CHudMenu should take slot1, etc commands
 //-----------------------------------------------------------------------------

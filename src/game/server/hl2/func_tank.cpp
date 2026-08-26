@@ -910,6 +910,22 @@ void CFuncTank::Precache( void )
 	}
 }
 
+int CFuncTank::UpdateTransmitState( void )
+{
+	return SetTransmitState( FL_EDICT_FULLCHECK );
+}
+
+int CFuncTank::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	CBaseCombatCharacter *pController = m_hController.Get();
+	if ( pController && pController->IsPlayer() && pInfo->m_pClientEnt == pController->edict() )
+	{
+		return FL_EDICT_ALWAYS;
+	}
+
+	return BaseClass::ShouldTransmit( pInfo );
+}
+
 void CFuncTank::UpdateOnRemove( void )
 {
 	if ( HasController() )
@@ -1447,7 +1463,7 @@ void CFuncTank::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	// player controlled turret
 	CBasePlayer *pPlayer = ToBasePlayer( pActivator );
-	if ( !pPlayer )
+	if ( !pPlayer || pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		return;
 
 	if ( value == 2 && useType == USE_SET )

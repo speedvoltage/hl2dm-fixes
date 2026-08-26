@@ -1834,15 +1834,11 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 		if ( gameFlags & FVPHYSICS_PLAYER_HELD )
 		{
 			// if the player is holding the object, use it's real mass (player holding reduced the mass)
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-			if ( pPlayer )
+			float mass = PlayerGetHeldObjectMass( VPhysicsGetObject() );
+			if ( mass != 0.0f )
 			{
-				float mass = pPlayer->GetHeldObjectMass( VPhysicsGetObject() );
-				if ( mass != 0.0f )
-				{
-					float ratio = VPhysicsGetObject()->GetMass() / mass;
-					force *= ratio;
-				}
+				float ratio = VPhysicsGetObject()->GetMass() / mass;
+				force *= ratio;
 			}
 		}
 		else if ( (gameFlags & FVPHYSICS_PART_OF_RAGDOLL) && (gameFlags & FVPHYSICS_CONSTRAINT_STATIC) )
@@ -6250,7 +6246,8 @@ void CC_Ent_Info( const CCommand& args )
 	else
 	{
 		// iterate through all the ents printing out their details
-		CBaseEntity *ent = CreateEntityByName( args[1] );
+		const bool bIsWorldspawn = Q_stricmp( args[1], "worldspawn" ) == 0;
+		CBaseEntity *ent = bIsWorldspawn ? CBaseEntity::Instance( 0 ) : CreateEntityByName( args[1] );
 
 		if ( ent )
 		{
@@ -6279,7 +6276,10 @@ void CC_Ent_Info( const CCommand& args )
 				}
 			}
 
-			delete ent;
+			if ( !bIsWorldspawn )
+			{
+				delete ent;
+			}
 		}
 		else
 		{

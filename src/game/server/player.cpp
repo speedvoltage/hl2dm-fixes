@@ -609,6 +609,7 @@ CBasePlayer::CBasePlayer( )
 	m_bLagCompensation = false;
 	m_flLaggedMovementValue = 1.0f;
 	m_StuckLast = 0;
+	m_vecWaterJumpVel.Init();
 	m_impactEnergyScale = 1.0f;
 	m_fLastPlayerTalkTime = 0.0f;
 	m_fLastPlayerTalkAttemptTime = 0.0f;
@@ -866,6 +867,9 @@ void CBasePlayer::DeathSound( const CTakeDamageInfo &info )
 
 int CBasePlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
+	if ( !IsAlive() )
+		return 0;
+
 	// clear out any damage types we healed.
 	// UNDONE: generic health should not heal any
 	// UNDONE: time-based damage
@@ -973,6 +977,9 @@ void CBasePlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 		if ( bShouldBleed )
 #endif
 		{
+#ifdef HL2MP
+			CDisablePredictionFiltering disablePredictionFiltering;
+#endif
 			SpawnBlood(ptr->endpos, vecDir, BloodColor(), info.GetDamage());// a little surface blood.
 			TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
 		}
@@ -1754,7 +1761,8 @@ void CBasePlayer::Event_Dying( const CTakeDamageInfo& info )
 {
 	// NOT GIBBED, RUN THIS CODE
 
-	DeathSound( info );
+	if ( !IsDisconnecting() )
+		DeathSound( info );
 
 	// The dead body rolls out of the vehicle.
 	if ( IsInAVehicle() )
@@ -2149,10 +2157,15 @@ void CBasePlayer::PlayerDeathThink(void)
 		fAnyButtonDown &= ~IN_DUCK;
 	}
 
+	const bool bForcedRespawnDue =
+		g_pGameRules->IsMultiplayer() &&
+		forcerespawn.GetInt() > 0 &&
+		gpGlobals->curtime > ( m_flDeathTime + 5.0f );
+
 	// wait for all buttons released
 	if (m_lifeState == LIFE_DEAD)
 	{
-		if (fAnyButtonDown)
+		if ( fAnyButtonDown && !bForcedRespawnDue )
 			return;
 
 		if ( g_pGameRules->FPlayerCanRespawn( this ) )
@@ -2173,8 +2186,7 @@ void CBasePlayer::PlayerDeathThink(void)
 	}
 	
 // wait for any button down,  or mp_forcerespawn is set and the respawn time is up
-	if (!fAnyButtonDown 
-		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
+	if ( !fAnyButtonDown && !bForcedRespawnDue )
 		return;
 
 	m_nButtons = 0;
@@ -2333,6 +2345,10 @@ bool CBasePlayer::SetObserverMode(int mode )
 	}
 
 	m_iObserverMode = mode;
+
+#ifdef HL2MP
+	NetworkStateChanged( &m_Local.m_flFOVRate );
+#endif
 	
 	switch ( mode )
 	{
@@ -2645,6 +2661,10 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	// set new target
 	m_hObserverTarget.Set( target ); 
 
+#ifdef HL2MP
+	NetworkStateChanged( &m_Local.m_flFOVRate );
+#endif
+
 	// reset fov to default
 	SetFOV( this, 0 );	
 	
@@ -2888,6 +2908,22 @@ bool CBasePlayer::CanPickupObject( CBaseEntity *pObject, float massLimit, float 
 float CBasePlayer::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 {
 	return 0;
+}
+
+float PlayerGetHeldObjectMass( IPhysicsObject *pHeldObject )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( !pPlayer )
+			continue;
+
+		float mass = pPlayer->GetHeldObjectMass( pHeldObject );
+		if ( mass > 0.0f )
+			return mass;
+	}
+
+	return 0.0f;
 }
 
 
@@ -6085,9 +6121,10 @@ void CBasePlayer::ImpulseCommands( )
 	case 200:
 		if ( sv_cheats->GetBool() )
 		{
-			CBaseCombatWeapon *pWeapon;
+			CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 
-			pWeapon = GetActiveWeapon();
+			if ( pWeapon == NULL )
+				break;
 			
 			if( pWeapon->IsEffectActive( EF_NODRAW ) )
 			{
@@ -8133,6 +8170,8 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 
 		SendPropInt			( SENDINFO( m_nTickBase ), -1, SPROP_CHANGES_OFTEN ),
 		SendPropInt			( SENDINFO( m_nNextThinkTick ) ),
+		SendPropInt			( SENDINFO( m_afButtonDisabled ), 32, SPROP_UNSIGNED ),
+		SendPropInt			( SENDINFO( m_afButtonForced ), 32, SPROP_UNSIGNED ),
 
 		SendPropEHandle		( SENDINFO( m_hLastWeapon ) ),
 		SendPropEHandle		( SENDINFO( m_hGroundEntity ), SPROP_CHANGES_OFTEN ),
@@ -8179,7 +8218,11 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
 		SendPropInt		(SENDINFO(m_iBonusProgress), 15 ),
 		SendPropInt		(SENDINFO(m_iBonusChallenge), 4 ),
+#ifdef HL2MP
+		SendPropFloat	(SENDINFO(m_flMaxspeed), 0, SPROP_NOSCALE ),
+#else
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
+#endif
 		SendPropInt		(SENDINFO(m_fFlags), 0, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN ),
 		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
 		SendPropEHandle	(SENDINFO(m_hObserverTarget) ),
@@ -8771,8 +8814,8 @@ void CBasePlayer::DeactivateMovementConstraint( )
 bool CBasePlayer::ArePlayerTalkMessagesAvailable( void )
 {
 	// How long since we last tried to chat?
-	float flTimeElapsedSinceLastMsg = gpGlobals->curtime - m_fLastPlayerTalkAttemptTime;
-	m_fLastPlayerTalkAttemptTime = gpGlobals->curtime;
+	float flTimeElapsedSinceLastMsg = gpGlobals->realtime - m_fLastPlayerTalkAttemptTime;
+	m_fLastPlayerTalkAttemptTime = gpGlobals->realtime;
 
 	// The max messages we can have available
 	// Tier 1 is for short-term spam
@@ -8810,7 +8853,7 @@ bool CBasePlayer::CanPlayerTalk()
 {
 	const float talk_interval = 0.66; // min time between say commands from a client
 
-	bool bRateLimitAllowed = LastTimePlayerTalked() + talk_interval < gpGlobals->curtime;
+	bool bRateLimitAllowed = LastTimePlayerTalked() + talk_interval < gpGlobals->realtime;
 
 	bool bTokenBucketLimitAllowed = ArePlayerTalkMessagesAvailable();
 
@@ -9604,7 +9647,8 @@ void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 	}
 	else
 	{
-		gamestats->Event_PlayerSuicide( this );
+		if ( !IsDisconnecting() )
+			gamestats->Event_PlayerSuicide( this );
 	}
 }
 
@@ -9678,4 +9722,3 @@ void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruc
 	return ( void * )pVarData;
 }
 REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
-

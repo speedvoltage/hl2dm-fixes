@@ -183,6 +183,7 @@ void CMissile::Spawn( void )
 	SetTouch( &CMissile::MissileTouch );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );
 	SetThink( &CMissile::IgniteThink );
 	
 	SetNextThink( gpGlobals->curtime + 0.3f );
@@ -1263,12 +1264,13 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponRPG, DT_WeaponRPG )
 void RecvProxy_MissileDied( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	CWeaponRPG *pRPG = ((CWeaponRPG*)pStruct);
+	CBaseHandle oldMissile = *(CBaseHandle*)pOut;
 
 	RecvProxy_IntToEHandle( pData, pStruct, pOut );
 
-	CBaseEntity *pNewMissile = pRPG->GetMissile();
+	CBaseHandle newMissile = *(CBaseHandle*)pOut;
 
-	if ( pNewMissile == NULL )
+	if ( oldMissile.IsValid() && !newMissile.IsValid() )
 	{
 		if ( pRPG->GetOwner() && pRPG->GetOwner()->GetActiveWeapon() == pRPG )
 		{
@@ -1332,6 +1334,12 @@ CWeaponRPG::CWeaponRPG()
 	m_bHideGuiding = false;
 	m_bGuiding = false;
 
+#ifdef CLIENT_DLL
+	m_pBeam = NULL;
+	m_bGuidingSoundState = false;
+	m_hBeamEffectModel = NULL;
+#endif
+
 	m_fMinRange1 = m_fMinRange2 = 40*12;
 	m_fMaxRange1 = m_fMaxRange2 = 500*12;
 }
@@ -1341,7 +1349,9 @@ CWeaponRPG::CWeaponRPG()
 //-----------------------------------------------------------------------------
 CWeaponRPG::~CWeaponRPG()
 {
-#ifndef CLIENT_DLL
+#ifdef CLIENT_DLL
+	DestroyBeam();
+#else
 	if ( m_hLaserDot != NULL )
 	{
 		UTIL_Remove( m_hLaserDot );
@@ -1349,6 +1359,47 @@ CWeaponRPG::~CWeaponRPG()
 	}
 #endif
 }
+
+#ifdef CLIENT_DLL
+void CWeaponRPG::OnDataChanged( DataUpdateType_t updateType )
+{
+	BaseClass::OnDataChanged( updateType );
+
+	if ( updateType == DATA_UPDATE_CREATED )
+	{
+		m_bGuidingSoundState = m_bGuiding;
+	}
+	else
+	{
+		UpdateGuidingSound();
+	}
+
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if ( !m_bGuiding || m_bHideGuiding || pOwner == NULL || pOwner->GetActiveWeapon() != this )
+	{
+		DestroyBeam();
+	}
+}
+
+void CWeaponRPG::UpdateGuidingSound( void )
+{
+	if ( m_bGuidingSoundState == m_bGuiding )
+		return;
+
+	m_bGuidingSoundState = m_bGuiding;
+
+	const char *pSoundName = GetHL2MPWpnData().aShootSounds[m_bGuiding ? SPECIAL1 : SPECIAL2];
+	if ( pSoundName == NULL || pSoundName[0] == '\0' )
+		return;
+
+	CBaseEntity *pSource = GetOwner();
+	if ( pSource == NULL )
+		pSource = this;
+
+	CLocalPlayerFilter filter;
+	CBaseEntity::EmitSound( filter, pSource->entindex(), pSoundName, &pSource->GetAbsOrigin() );
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1630,12 +1681,19 @@ bool CWeaponRPG::IsGuiding( void )
 //-----------------------------------------------------------------------------
 bool CWeaponRPG::Deploy( void )
 {
+	if ( !BaseClass::Deploy() )
+		return false;
+
 	m_bInitialStateUpdate = true;
 
-	return BaseClass::Deploy();
+#ifdef CLIENT_DLL
+	DestroyBeam();
+#endif
+
+	return true;
 }
 
-bool CWeaponRPG::CanHolster( void )
+bool CWeaponRPG::CanHolster( void ) const
 {
 	//Can't have an active missile out
 	if ( m_hMissile != NULL )
@@ -1666,9 +1724,9 @@ void CWeaponRPG::StartGuiding( void )
 	m_bGuiding = true;
 
 #ifndef CLIENT_DLL
-	WeaponSound(SPECIAL1);
-
 	CreateLaserPointer();
+#else
+	UpdateGuidingSound();
 #endif
 
 }
@@ -1681,9 +1739,6 @@ void CWeaponRPG::StopGuiding( void )
 	m_bGuiding = false;
 
 #ifndef CLIENT_DLL
-
-	WeaponSound( SPECIAL2 );
-
 	// Kill the dot completely
 	if ( m_hLaserDot != NULL )
 	{
@@ -1692,14 +1747,8 @@ void CWeaponRPG::StopGuiding( void )
 		m_hLaserDot = NULL;
 	}
 #else
-	if ( m_pBeam )
-	{
-		//Tell it to die right away and let the beam code free it.
-		m_pBeam->brightness = 0.0f;
-		m_pBeam->flags &= ~FBEAM_FOREVER;
-		m_pBeam->die = gpGlobals->curtime - 0.1;
-		m_pBeam = NULL;
-	}
+	UpdateGuidingSound();
+	DestroyBeam();
 #endif
 
 }
@@ -1795,7 +1844,7 @@ void CWeaponRPG::CreateLaserPointer( void )
 	if ( pOwner == NULL )
 		return;
 
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+	if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 && m_hMissile == NULL )
 		return;
 
 	m_hLaserDot = CLaserDot::Create( GetAbsOrigin(), GetOwner() );
@@ -1851,35 +1900,67 @@ bool CWeaponRPG::Reload( void )
 
 extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 
+bool CWeaponRPG::IsFirstPersonSpectated( void )
+{
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	return pLocalPlayer && pOwner &&
+		pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE &&
+		pLocalPlayer->GetObserverTarget() == pOwner;
+}
+
+bool CWeaponRPG::ShouldDrawUsingViewModel( void )
+{
+	if ( IsFirstPersonSpectated() )
+		return true;
+
+	return BaseClass::ShouldDrawUsingViewModel();
+}
+
+bool CWeaponRPG::ShouldDraw( void )
+{
+	if ( IsFirstPersonSpectated() )
+		return false;
+
+	return BaseClass::ShouldDraw();
+}
+
+C_BaseAnimating *CWeaponRPG::GetEffectModel( void )
+{
+	if ( !ShouldDrawUsingViewModel() )
+		return this;
+
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	C_BaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( 0, false ) : NULL;
+	if ( !pViewModel || pViewModel->GetWeapon() != this )
+		return NULL;
+
+	return pViewModel;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Returns the attachment point on either the world or viewmodel
 //			This should really be worked into the CBaseCombatWeapon class!
 //-----------------------------------------------------------------------------
-void CWeaponRPG::GetWeaponAttachment( int attachmentId, Vector &outVector, Vector *dir /*= NULL*/ )
+bool CWeaponRPG::GetWeaponAttachment( int attachmentId, Vector &outVector, Vector *dir /*= NULL*/ )
 {
-	QAngle	angles;
+	QAngle angles;
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+
+	if ( !pEffectModel || attachmentId <= 0 || !pEffectModel->GetAttachment( attachmentId, outVector, angles ) )
+		return false;
 
 	if ( ShouldDrawUsingViewModel() )
-	{
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		
-		if ( pOwner != NULL )
-		{
-			pOwner->GetViewModel()->GetAttachment( attachmentId, outVector, angles );
-			::FormatViewModelAttachment( outVector, true );
-		}
-	}
-	else
-	{
-		// We offset the IDs to make them correct for our world model
-		BaseClass::GetAttachment( attachmentId, outVector, angles );
-	}
+		::FormatViewModelAttachment( outVector, true );
 
 	// Supply the direction, if requested
 	if ( dir != NULL )
 	{
 		AngleVectors( angles, dir, NULL, NULL );
 	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1887,48 +1968,36 @@ void CWeaponRPG::GetWeaponAttachment( int attachmentId, Vector &outVector, Vecto
 //-----------------------------------------------------------------------------
 void CWeaponRPG::InitBeam( void )
 {
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	bool bUsesViewModel = ShouldDrawUsingViewModel();
+	if ( m_pBeam != NULL && m_hBeamEffectModel.Get() != pEffectModel )
+	{
+		DestroyBeam();
+	}
+
 	if ( m_pBeam != NULL )
 		return;
 
-	CBaseCombatCharacter *pOwner = GetOwner();
-	
-	if ( pOwner == NULL )
+	if ( GetOwner() == NULL )
 		return;
 
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+	if ( pEffectModel == NULL )
 		return;
-
 
 	BeamInfo_t beamInfo;
 
-	CBaseEntity *pEntity = NULL;
-
-	if ( ShouldDrawUsingViewModel() )
-	{
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		
-		if ( pOwner != NULL )
-		{
-			pEntity = pOwner->GetViewModel();
-		}
-	}
-	else
-	{
-		pEntity = this;
-	}
-
-	beamInfo.m_pStartEnt = pEntity;
-	beamInfo.m_pEndEnt = pEntity;
+	beamInfo.m_pStartEnt = pEffectModel;
+	beamInfo.m_pEndEnt = pEffectModel;
 	beamInfo.m_nType = TE_BEAMPOINTS;
 	beamInfo.m_vecStart = vec3_origin;
 	beamInfo.m_vecEnd = vec3_origin;
 	
-	beamInfo.m_pszModelName = ( ShouldDrawUsingViewModel() ) ? RPG_BEAM_SPRITE_NOZ : RPG_BEAM_SPRITE;
+	beamInfo.m_pszModelName = bUsesViewModel ? RPG_BEAM_SPRITE_NOZ : RPG_BEAM_SPRITE;
 	
 	beamInfo.m_flHaloScale = 0.0f;
 	beamInfo.m_flLife = 0.0f;
 	
-	if ( ShouldDrawUsingViewModel() )
+	if ( bUsesViewModel )
 	{
 		beamInfo.m_flWidth = 2.0f;
 		beamInfo.m_flEndWidth = 2.0f;
@@ -1957,21 +2026,41 @@ void CWeaponRPG::InitBeam( void )
 	beamInfo.m_nFlags = (FBEAM_FOREVER|FBEAM_SHADEOUT);
 
 	m_pBeam = beams->CreateBeamEntPoint( beamInfo );
+	if ( m_pBeam )
+	{
+		m_hBeamEffectModel = pEffectModel;
+	}
 }
 
+void CWeaponRPG::DestroyBeam( void )
+{
+	if ( m_pBeam == NULL )
+	{
+		m_hBeamEffectModel = NULL;
+		return;
+	}
+
+	m_pBeam->brightness = 0;
+	m_pBeam->flags &= ~FBEAM_FOREVER;
+	m_pBeam->die = gpGlobals->curtime - 0.1f;
+	m_pBeam = NULL;
+	m_hBeamEffectModel = NULL;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Draw effects for our weapon
 //-----------------------------------------------------------------------------
 void CWeaponRPG::DrawEffects( void )
 {
-	// Must be guiding and not hidden
-	if ( !m_bGuiding || m_bHideGuiding )
-	{
-		if ( m_pBeam != NULL )
-		{
-			m_pBeam->brightness = 0;
-		}
+	CBaseCombatCharacter *pOwner = GetOwner();
 
+	if ( pOwner == NULL ||
+		 pOwner->GetActiveWeapon() != this ||
+		 !m_bGuiding ||
+		 m_bHideGuiding ||
+		 m_bInitialStateUpdate ||
+		 GetActivity() == ACT_VM_DRAW )
+	{
+		DestroyBeam();
 		return;
 	}
 
@@ -1995,7 +2084,11 @@ void CWeaponRPG::DrawEffects( void )
 
 	int	attachmentID = ( ShouldDrawUsingViewModel() ) ? RPG_GUIDE_ATTACHMENT : RPG_GUIDE_ATTACHMENT_3RD;
 
-	GetWeaponAttachment( attachmentID, vecAttachment, &vecDir );
+	if ( !GetWeaponAttachment( attachmentID, vecAttachment, &vecDir ) )
+	{
+		DestroyBeam();
+		return;
+	}
 
 	// Draw the sprite
 	CMatRenderContextPtr pRenderContext( materials );
@@ -2063,10 +2156,7 @@ void CWeaponRPG::NotifyShouldTransmit( ShouldTransmitState_t state )
 
 	if ( state == SHOULDTRANSMIT_END )
 	{
-		if ( m_pBeam != NULL )
-		{
-			m_pBeam->brightness = 0.0f;
-		}
+		DestroyBeam();
 	}
 }
 

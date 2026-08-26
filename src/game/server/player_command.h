@@ -59,6 +59,7 @@ protected:
 // Singleton accessor
 //-----------------------------------------------------------------------------
 CPlayerMove *PlayerMove();
+int PlayerCommandServerTickCount();
 
 
 #endif // PLAYER_COMMAND_H

@@ -180,6 +180,7 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	RecvPropBool	(RECVINFO(m_bForceLocalPlayerDraw)),
 	RecvPropFloat	(RECVINFO(m_flStepSize)),
 	RecvPropInt		(RECVINFO(m_bAllowAutoMovement)),
+	RecvPropBool	(RECVINFO(m_bSlowMovement)),
 
 	// 3d skybox data
 	RecvPropInt(RECVINFO(m_skybox3d.scale)),
@@ -235,6 +236,8 @@ END_RECV_TABLE()
 
 		RecvPropInt			( RECVINFO( m_nTickBase ) ),
 		RecvPropInt			( RECVINFO( m_nNextThinkTick ) ),
+		RecvPropInt			( RECVINFO( m_afButtonDisabled ) ),
+		RecvPropInt			( RECVINFO( m_afButtonForced ) ),
 
 		RecvPropEHandle		( RECVINFO( m_hLastWeapon ) ),
 		RecvPropEHandle		( RECVINFO( m_hGroundEntity ) ),
@@ -353,6 +356,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 	DEFINE_FIELD( m_nOldButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flOldForwardMove, FIELD_FLOAT ),
 	DEFINE_PRED_FIELD( m_flStepSize, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bSlowMovement, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_flFOVRate, FIELD_FLOAT ),
 
 END_PREDICTION_DATA()	
@@ -368,7 +372,11 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_iFOVStart, FIELD_INTEGER, 0 ),
 
 	DEFINE_PRED_FIELD( m_hVehicle, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+#ifdef HL2MP
+	DEFINE_PRED_FIELD( m_flMaxspeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+#else
 	DEFINE_PRED_FIELD_TOL( m_flMaxspeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
+#endif
 	DEFINE_PRED_FIELD( m_iHealth, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_ONLY_ERROR_IF_ABOVE_ZERO_TO_ZERO_OR_BELOW_ETC ),
 	DEFINE_PRED_FIELD( m_iBonusProgress, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iBonusChallenge, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -381,6 +389,7 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 
 	DEFINE_FIELD( m_nButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flWaterJumpTime, FIELD_FLOAT ),
+	DEFINE_FIELD( m_vecWaterJumpVel, FIELD_VECTOR ),
 	DEFINE_FIELD( m_nImpulse, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flStepSoundTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_FLOAT ),
@@ -390,6 +399,8 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_FIELD( m_afButtonLast, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonPressed, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonReleased, FIELD_INTEGER ),
+	DEFINE_PRED_FIELD( m_afButtonDisabled, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_afButtonForced, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	// DEFINE_FIELD( m_vecOldViewAngles, FIELD_VECTOR ),
 
 	// DEFINE_ARRAY( m_iOldAmmo, FIELD_INTEGER,  MAX_AMMO_TYPES ),
@@ -405,8 +416,16 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_FIELD( m_hGroundEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_ARRAY( m_hViewModel, FIELD_EHANDLE, MAX_VIEWMODELS, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_hConstraintEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_vecConstraintCenter, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintRadius, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintWidth, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flConstraintSpeedFactor, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flLaggedMovementValue, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
+	DEFINE_FIELD( m_surfaceProps, FIELD_INTEGER ),
 	DEFINE_FIELD( m_surfaceFriction, FIELD_FLOAT ),
+	DEFINE_FIELD( m_chTextureType, FIELD_CHARACTER ),
 
 END_PREDICTION_DATA()
 
@@ -434,7 +453,16 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 
 	m_flPredictionErrorTime = -100;
 	m_StuckLast = 0;
+	m_afButtonDisabled = 0;
+	m_afButtonForced = 0;
+	m_vecWaterJumpVel.Init();
 	m_bWasFrozen = false;
+	m_hConstraintEntity = NULL;
+	m_vecConstraintCenter.Init();
+	m_flConstraintRadius = 0.0f;
+	m_flConstraintWidth = 0.0f;
+	m_flConstraintSpeedFactor = 0.0f;
+	m_flLaggedMovementValue = 1.0f;
 
 	m_bResampleWaterSurface = true;
 	
@@ -2451,7 +2479,28 @@ float C_BasePlayer::GetFOV( void )
 		// get fov from observer target. Not if target is observer itself
 		if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
 		{
+#ifdef HL2MP
+			int iDefaultFOV = GetDefaultFOV();
+			int iTargetDefaultFOV = pTargetPlayer->GetDefaultFOV();
+
+			float fFOV = ( pTargetPlayer->m_iFOV == 0 ) ? iDefaultFOV : pTargetPlayer->m_iFOV;
+			float flFOVStart = pTargetPlayer->m_iFOVStart;
+
+			if ( flFOVStart == iTargetDefaultFOV )
+			{
+				flFOVStart = iDefaultFOV;
+			}
+
+			if ( !prediction->InPrediction() && fFOV != flFOVStart && m_Local.m_flFOVRate > 0.0f )
+			{
+				float flDeltaTime = ( gpGlobals->curtime - pTargetPlayer->m_flFOVTime ) / m_Local.m_flFOVRate;
+				fFOV = SimpleSplineRemapValClamped( flDeltaTime, 0.0f, 1.0f, flFOVStart, fFOV );
+			}
+
+			return fFOV;
+#else
 			return pTargetPlayer->GetFOV();
+#endif
 		}
 	}
 

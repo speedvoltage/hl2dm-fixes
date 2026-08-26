@@ -11,6 +11,8 @@
 #pragma once
 #endif
 
+#include "tier0/platform.h"
+
 #if !defined( NO_ENTITY_PREDICTION )
 //-----------------------------------------------------------------------------
 // Purpose: Wraps 32bit predictID to allow access and creation
@@ -18,6 +20,11 @@
 class CPredictableId
 {
 public:
+	enum
+	{
+		NETWORKED_BITS = 32,
+	};
+
 	// Construction
 					CPredictableId( void );
 
@@ -46,8 +53,10 @@ public:
 	bool			GetAcknowledged( void ) const;
 
 	// For conversion to/from integer
-	int				GetRaw( void ) const;
-	void			SetRaw( int raw );
+	uint32			GetRaw( void ) const;
+	uint32			GetNetworkedRaw( void ) const;
+	void			SetRaw( uint32 raw );
+	void			SetNetworkedRaw( uint32 raw );
 
 	char const		*Describe( void ) const;
 
@@ -57,18 +66,14 @@ public:
 private:
 	void			SetCommandNumber( int commandNumber );
 	void			SetPlayer( int playerIndex );
+	void			SetHash( uint32 hash );
 	void			SetInstanceNumber( int counter );
 
-	// Encoding bits, should total 32
-	struct bitfields
-	{
-		 unsigned int ack		: 1;	// 1
-		 unsigned int player	: 5;	// 6
-		 unsigned int command	: 10;	// 16
-		 unsigned int hash		: 12;	// 28
-		 unsigned int instance	: 4;	// 32
-	} m_PredictableID;
+	uint32			m_PredictableID;
 };
+
+COMPILE_TIME_ASSERT( sizeof( CPredictableId ) == sizeof( uint32 ) );
+COMPILE_TIME_ASSERT( CPredictableId::NETWORKED_BITS == sizeof( uint32 ) * 8 );
 
 // This can be empty, the class has a proper constructor
 FORCEINLINE void NetworkVarConstruct( CPredictableId &x ) {}

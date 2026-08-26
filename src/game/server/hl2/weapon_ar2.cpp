@@ -186,6 +186,9 @@ Activity CWeaponAR2::GetPrimaryAttackActivity( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::DoImpactEffect( trace_t &tr, int nDamageType )
 {
+	if ( tr.surface.flags & ( SURF_SKY | SURF_NODRAW ) )
+		return;
+
 	CEffectData data;
 
 	data.m_vOrigin = tr.endpos + ( tr.plane.normal * 1.0f );
@@ -249,7 +252,7 @@ void CWeaponAR2::DelayedAttack( void )
 
 	pOwner->SnapEyeAngles( angles );
 	
-	pOwner->ViewPunch( QAngle( random->RandomInt( -8, -12 ), random->RandomInt( 1, 2 ), 0 ) );
+	pOwner->ViewPunch( QAngle( random->RandomInt( -12, -8 ), random->RandomInt( 1, 2 ), 0 ) );
 
 	// Decrease ammo
 	pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );

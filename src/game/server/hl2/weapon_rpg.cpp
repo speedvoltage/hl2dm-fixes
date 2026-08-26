@@ -163,6 +163,7 @@ void CMissile::Spawn( void )
 	SetTouch( &CMissile::MissileTouch );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );
 	SetThink( &CMissile::IgniteThink );
 	
 	SetNextThink( gpGlobals->curtime + 0.3f );

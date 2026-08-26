@@ -459,6 +459,18 @@ Vector CHL2MPRules::VecWeaponRespawnSpot( CBaseCombatWeapon *pWeapon )
 
 #ifndef CLIENT_DLL
 
+QAngle CHL2MPRules::VecWeaponRespawnAngles( CBaseCombatWeapon *pWeapon )
+{
+	CWeaponHL2MPBase *pHL2Weapon = dynamic_cast< CWeaponHL2MPBase * >( pWeapon );
+
+	if ( pHL2Weapon )
+	{
+		return pHL2Weapon->GetOriginalSpawnAngles();
+	}
+
+	return pWeapon->GetAbsAngles();
+}
+
 CItem* IsManagedObjectAnItem( CBaseEntity *pObject )
 {
 	return dynamic_cast< CItem*>( pObject );
@@ -724,6 +736,11 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 			killer_weapon_name = "physics";
 		}
 
+		if ( strcmp( killer_weapon_name, "physbox" ) == 0 )
+		{
+			killer_weapon_name = "physics";
+		}
+
 		if ( strcmp( killer_weapon_name, "prop_combine_ball" ) == 0 )
 		{
 			killer_weapon_name = "combine_ball";
@@ -809,6 +826,12 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	if ( sv_report_client_settings.GetInt() == 1 )
 	{
 		UTIL_LogPrintf( "\"%s\" cl_cmdrate = \"%s\"\n", pHL2Player->GetPlayerName(), engine->GetClientConVarValue( pHL2Player->entindex(), "cl_cmdrate" ));
+	}
+
+	const char *pszFov = engine->GetClientConVarValue( pHL2Player->entindex(), "fov_desired" );
+	if ( pszFov && pszFov[0] )
+	{
+		pHL2Player->SetDefaultFOV( clamp( atoi( pszFov ), 70, 110 ) );
 	}
 
 	BaseClass::ClientSettingsChanged( pPlayer );
@@ -993,6 +1016,14 @@ CAmmoDef *GetAmmoDef()
 		return BaseClass::FShouldSwitchWeapon( pPlayer, pWeapon );
 	}
 
+	bool CHL2MPRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
+	{
+		if ( pAttacker && pAttacker->IsPlayer() && pAttacker->GetTeamNumber() == TEAM_SPECTATOR )
+			return false;
+
+		return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker, info );
+	}
+
 #endif
 
 #ifndef CLIENT_DLL
@@ -1026,7 +1057,8 @@ void CHL2MPRules::RestartGame()
 			pPlayer->GetActiveWeapon()->Holster();
 		}
 		pPlayer->RemoveAllItems( true );
-		respawn( pPlayer, false );
+		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
+			respawn( pPlayer, false );
 		pPlayer->Reset();
 	}
 
@@ -1257,6 +1289,10 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 		{
 			pszFormat = "HL2MP_Chat_Spec";
 		}
+		else if ( !pPlayer->IsAlive() )
+		{
+			pszFormat = "HL2MP_Chat_Team_Dead";
+		}
 		else
 		{
 			const char *chatLocation = GetChatLocation( bTeamOnly, pPlayer );
@@ -1273,13 +1309,17 @@ const char *CHL2MPRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	// everyone
 	else
 	{
-		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
+		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		{
-			pszFormat = "HL2MP_Chat_All";	
+			pszFormat = "HL2MP_Chat_AllSpec";
+		}
+		else if ( !pPlayer->IsAlive() )
+		{
+			pszFormat = "HL2MP_Chat_AllDead";
 		}
 		else
 		{
-			pszFormat = "HL2MP_Chat_AllSpec";
+			pszFormat = "HL2MP_Chat_All";
 		}
 	}
 

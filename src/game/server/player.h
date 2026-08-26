@@ -759,6 +759,9 @@ public:
 	bool	IsLerpingFOV( void ) const;
 	int		GetFOV( void );														// Get the current FOV value
 	int		GetDefaultFOV( void ) const;										// Default FOV if not specified otherwise
+#ifdef HL2MP
+	float	GetFOVRate( void ) const { return m_Local.m_flFOVRate; }
+#endif
 	int		GetFOVForNetworking( void );										// Get the current FOV used for network computations
 	bool	SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate = 0.0f, int iZoomStart = 0 );	// Alters the base FOV of the player (must have a valid requester)
 	void	SetDefaultFOV( int FOV );											// Sets the base FOV if nothing else is affecting it by zooming
@@ -774,7 +777,7 @@ public:
 
 	// talk control
 	virtual bool CanPlayerTalk();
-	void	NotePlayerTalked() { m_fLastPlayerTalkTime = gpGlobals->curtime; }
+	void	NotePlayerTalked() { m_fLastPlayerTalkTime = gpGlobals->realtime; }
 	float	LastTimePlayerTalked() const { return m_fLastPlayerTalkTime; }
 	bool	ArePlayerTalkMessagesAvailable();
 
@@ -888,8 +891,8 @@ public:
 	int						m_afButtonPressed;
 	int						m_afButtonReleased;
 	int						m_afButtonLast;
-	int						m_afButtonDisabled;	// A mask of input flags that are cleared automatically
-	int						m_afButtonForced;	// These are forced onto the player's inputs
+	CNetworkVar( int,		m_afButtonDisabled );	// A mask of input flags that are cleared automatically
+	CNetworkVar( int,		m_afButtonForced );	// These are forced onto the player's inputs
 
 	CNetworkVar( bool, m_fOnTarget );		//Is the crosshair on a target?
 
@@ -1273,6 +1276,8 @@ public:
 };
 
 typedef CHandle<CBasePlayer> CBasePlayerHandle;
+
+float PlayerGetHeldObjectMass( IPhysicsObject *pHeldObject );
 
 EXTERN_SEND_TABLE(DT_BasePlayer)
 

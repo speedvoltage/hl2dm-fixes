@@ -20,19 +20,40 @@
 
 //=============================================================================
 
+#ifdef HL2MP
+static void SendProxy_FOVRate( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
+{
+	pOut->m_Float = *( float * )pData;
+
+	CBasePlayer *pPlayer = ToBasePlayer( CBaseEntity::Instance( objectID ) );
+	if ( !pPlayer || pPlayer->GetObserverMode() != OBS_MODE_IN_EYE )
+		return;
+
+	CBasePlayer *pTargetPlayer = ToBasePlayer( pPlayer->GetObserverTarget() );
+	if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
+	{
+		pOut->m_Float = pTargetPlayer->GetFOVRate();
+	}
+}
+#endif
+
 BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 
 	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaBits), SendPropInt(SENDINFO_ARRAY(m_chAreaBits), 8, SPROP_UNSIGNED)),
 	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaPortalBits), SendPropInt(SENDINFO_ARRAY(m_chAreaPortalBits), 8, SPROP_UNSIGNED)),
 	
 	SendPropInt		(SENDINFO(m_iHideHUD), HIDEHUD_BITCOUNT, SPROP_UNSIGNED),
+#ifdef HL2MP
+	SendPropFloat	(SENDINFO(m_flFOVRate), 0, SPROP_NOSCALE, 0.0f, HIGH_DEFAULT, SendProxy_FOVRate ),
+#else
 	SendPropFloat	(SENDINFO(m_flFOVRate), 0, SPROP_NOSCALE ),
+#endif
 	SendPropInt		(SENDINFO(m_bDucked),	1, SPROP_UNSIGNED ),
 	SendPropInt		(SENDINFO(m_bDucking),	1, SPROP_UNSIGNED ),
 	SendPropInt		(SENDINFO(m_bInDuckJump),	1, SPROP_UNSIGNED ),
-	SendPropFloat	(SENDINFO(m_flDucktime), 12, SPROP_ROUNDDOWN|SPROP_CHANGES_OFTEN, 0.0f, 2048.0f ),
-	SendPropFloat	(SENDINFO(m_flDuckJumpTime), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),
-	SendPropFloat	(SENDINFO(m_flJumpTime), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),
+	SendPropFloat	(SENDINFO(m_flDucktime), 0, SPROP_NOSCALE|SPROP_CHANGES_OFTEN ),
+	SendPropFloat	(SENDINFO(m_flDuckJumpTime), 0, SPROP_NOSCALE ),
+	SendPropFloat	(SENDINFO(m_flJumpTime), 0, SPROP_NOSCALE ),
 #if PREDICTION_ERROR_CHECK_LEVEL > 1 
 	SendPropFloat	(SENDINFO(m_flFallVelocity), 32, SPROP_NOSCALE ),
 
@@ -55,8 +76,9 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropBool	(SENDINFO(m_bPoisoned)),
 	SendPropBool	(SENDINFO(m_bForceLocalPlayerDraw)),
 
-	SendPropFloat	(SENDINFO(m_flStepSize), 16, SPROP_ROUNDUP, 0.0f, 128.0f ),
+	SendPropFloat	(SENDINFO(m_flStepSize), 0, SPROP_NOSCALE ),
 	SendPropInt		(SENDINFO(m_bAllowAutoMovement),1, SPROP_UNSIGNED ),
+	SendPropBool	(SENDINFO(m_bSlowMovement)),
 
 	// 3d skybox data
 	SendPropInt(SENDINFO_STRUCTELEM(m_skybox3d.scale), 12),
@@ -193,6 +215,7 @@ CPlayerLocalData::CPlayerLocalData()
 	m_audio.entIndex = 0;
 	m_pOldSkyCamera = NULL;
 	m_bDrawViewmodel = true;
+	m_bSlowMovement = false;
 
 	m_szScriptOverlayMaterial.GetForModify()[0] = '\0';
 }
@@ -263,4 +286,3 @@ void UpdateAllClientData( void )
 		ClientData_Update( pl );
 	}
 }
-

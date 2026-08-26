@@ -135,6 +135,12 @@ void C_HL2MP_Player::UpdateIDTarget()
 	if ( !IsLocalPlayer() )
 		return;
 
+	if ( !hud_showtargetid.GetBool() )
+	{
+		m_iIDEntIndex = 0;
+		return;
+	}
+
 	// Clear old target and find a new one
 	m_iIDEntIndex = 0;
 
@@ -162,34 +168,9 @@ void C_HL2MP_Player::UpdateIDTarget()
 
 void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-	Vector vecOrigin = ptr->endpos - vecDir * 4;
-
-	float flDistance = 0.0f;
-	
-	if ( info.GetAttacker() )
-	{
-		flDistance = (ptr->endpos - info.GetAttacker()->GetAbsOrigin()).Length();
-	}
-
 	if ( m_takedamage )
 	{
 		AddMultiDamage( info, this );
-
-		int blood = BloodColor();
-		
-		CBaseEntity *pAttacker = info.GetAttacker();
-
-		if ( pAttacker )
-		{
-			if ( HL2MPRules()->IsTeamplay() && pAttacker->InSameTeam( this ) == true )
-				return;
-		}
-
-		if ( blood != DONT_BLEED )
-		{
-			SpawnBlood( vecOrigin, vecDir, blood, flDistance );// a little surface blood.
-			TraceBleed( flDistance, vecDir, ptr, info.GetDamageType() );
-		}
 	}
 }
 
@@ -780,7 +761,7 @@ Vector C_HL2MP_Player::GetAutoaimVector( float flDelta )
 //-----------------------------------------------------------------------------
 bool C_HL2MP_Player::CanSprint( void )
 {
-	return ( (!m_Local.m_bDucked && !m_Local.m_bDucking) && (GetWaterLevel() != 3) );
+	return ( !(m_Local.m_bDucked && !m_Local.m_bDucking) && (GetWaterLevel() != 3) );
 }
 
 extern ConVar sv_maxspeed;
@@ -790,11 +771,18 @@ void C_HL2MP_Player::HandleSpeedChanges( CMoveData *mv )
 	int nChangedButtons = mv->m_nButtons ^ mv->m_nOldButtons;
 
 	bool bJustPressedSpeed = !!( nChangedButtons & IN_SPEED );
+	const bool bUnducking = m_Local.m_bDucked && m_Local.m_bDucking;
 
 	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) );
-	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) &&
+		( ( nChangedButtons & IN_SPEED ) != 0 || bUnducking );
 
 	bool bSprinting = m_HL2Local.m_bNewSprinting;
+	if ( ( m_Local.m_bDucked && !m_Local.m_bDucking ) || GetWaterLevel() == 3 )
+	{
+		bSprinting = false;
+	}
+
 	if ( bWantsToChangeSprinting )
 	{
 		if ( bWantSprint )
@@ -866,7 +854,8 @@ void C_HL2MP_Player::HandleSpeedChanges( CMoveData *mv )
 
 void C_HL2MP_Player::ReduceTimers( CMoveData* mv )
 {
-	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED;
+	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED &&
+		mv->m_vecVelocity.Length2DSqr() >= 0.01f;
 
 	if ( bSprinting )
 	{

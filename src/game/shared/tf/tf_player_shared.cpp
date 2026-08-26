@@ -68,6 +68,7 @@
 // Server specific.
 #else
 #include "tf_player.h"
+#include "player_command.h"
 #include "te_effect_dispatch.h"
 #include "tf_fx.h"
 #include "util.h"
@@ -10475,7 +10476,7 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 		if ( iEnemyPlayersHit )
 		{	// Guarantee that the bullet that hit an enemy trumps the player viewangles
 			// that are locked in for the duration of the server simulation ticks
-			m_iLockViewanglesTickNumber = gpGlobals->tickcount;
+			m_iLockViewanglesTickNumber = PlayerCommandServerTickCount();
 			m_qangLockViewangles = pl.v_angle;
 		}
 	}

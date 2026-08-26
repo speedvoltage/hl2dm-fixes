@@ -54,6 +54,7 @@ public:
 	void CheckHolsterReload( void );
 	void Pump( void );
 //	void WeaponIdle( void );
+	bool Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	void ItemHolsterFrame( void );
 	void ItemPostFrame( void );
 	void PrimaryAttack( void );
@@ -146,11 +147,18 @@ bool CWeaponShotgun::StartReload( void )
 
 	SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
 
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	if ( pPlayer )
+	{
+		pPlayer->SetAnimation( PLAYER_RELOAD );
+	}
+
 	// Make shotgun shell visible
 	SetBodygroup(1,0);
 
-	pOwner->m_flNextAttack = gpGlobals->curtime;
-	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
+	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
+	pOwner->SetNextAttack( flSequenceEndTime );
+	m_flNextPrimaryAttack = flSequenceEndTime;
 
 	m_bInReload = true;
 	return true;
@@ -523,7 +531,7 @@ void CWeaponShotgun::ItemPostFrame( void )
 		}
 	}
 
-	if ( pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload ) 
+	if ( pOwner->m_nButtons & IN_RELOAD && UsesClipsForAmmo1() && !m_bInReload && !m_bDelayedFire1 && !m_bDelayedFire2 )
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		StartReload();
@@ -578,6 +586,19 @@ CWeaponShotgun::CWeaponShotgun( void )
 	m_fMaxRange1		= 500;
 	m_fMinRange2		= 0.0;
 	m_fMaxRange2		= 200;
+}
+
+bool CWeaponShotgun::Holster( CBaseCombatWeapon *pSwitchingTo )
+{
+	if ( !BaseClass::Holster( pSwitchingTo ) )
+	{
+		return false;
+	}
+
+	m_bDelayedFire1 = false;
+	m_bDelayedFire2 = false;
+	m_bDelayedReload = false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------

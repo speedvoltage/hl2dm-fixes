@@ -21,6 +21,18 @@
 
 #define SF_USE_TARGET_FACING	(1<<0)	// Use the target entity's direction instead of position
 
+static void GetFacingVector(CBaseEntity *pEntity, Vector *pForward)
+{
+	if (pEntity->IsPlayer())
+	{
+		ToBasePlayer(pEntity)->EyeVectors(pForward);
+	}
+	else
+	{
+		pEntity->GetVectors(pForward, NULL, NULL);
+	}
+}
+
 class CPointAngleSensor : public CPointEntity
 {
 	DECLARE_CLASS(CPointAngleSensor, CPointEntity);
@@ -176,7 +188,7 @@ bool CPointAngleSensor::IsFacingWithinTolerance(CBaseEntity *pEntity, CBaseEntit
 	}
 
 	Vector forward;
-	pEntity->GetVectors(&forward, NULL, NULL);
+	GetFacingVector(pEntity, &forward);
 
 	Vector dir;
 	// Use either our position relative to the target, or the target's raw facing
@@ -216,7 +228,7 @@ void CPointAngleSensor::Think(void)
 	if (m_hTargetEntity != NULL)
 	{
 		Vector forward;
-		m_hTargetEntity->GetVectors(&forward, NULL, NULL);
+		GetFacingVector(m_hTargetEntity.Get(), &forward);
 		m_TargetDir.Set(forward, this, this);
 
 		if (m_hLookAtEntity != NULL)

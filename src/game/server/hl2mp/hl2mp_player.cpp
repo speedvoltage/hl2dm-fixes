@@ -71,16 +71,6 @@ END_SEND_TABLE()
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	SendPropExclude( "DT_BaseEntity", "m_vecOrigin" ),
 
-	// misyl:
-	// m_flMaxspeed is fully predicted by the client and the client's
-	// maxspeed is sent in the user message.
-	// Other games like DOD, etc don't use this var at all and just fully
-	// predict in GameMovement, but the HL2 codebase doesn't do that and modifies this
-	// on the player.
-	// So, just never send it, and don't predict it on the client either.
-	SendPropExclude( "DT_BasePlayer", "m_flMaxspeed" ),
-
-
 	// Data that only gets sent to the local player
 	SendPropDataTable( "hl2mplocaldata", 0, &REFERENCE_SEND_TABLE( DT_HL2MPLocalPlayerExclusive ), SendProxy_SendLocalDataTable ),
 
@@ -90,6 +80,7 @@ IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 	SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
 	SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
+	SendPropBool( SENDINFO( m_fIsWalking ) ),
 	
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
@@ -166,6 +157,8 @@ CHL2MP_Player::~CHL2MP_Player( void )
 
 void CHL2MP_Player::UpdateOnRemove( void )
 {
+	ResetLadderMove();
+
 	if ( m_hRagdoll )
 	{
 		UTIL_RemoveImmediate( m_hRagdoll );
@@ -332,6 +325,8 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::Spawn(void)
 {
+	ResetLadderMove();
+
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
 
@@ -639,6 +634,8 @@ void CHL2MP_Player::PlayerDeathThink()
 
 void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 {
+	NoteWeaponFired();
+
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( this, this->GetCurrentCommand() );
 
@@ -650,8 +647,6 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 	{
 		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 	}
-
-	NoteWeaponFired();
 
 	BaseClass::FireBullets( modinfo );
 
@@ -997,19 +992,33 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 
 	if ( iTeam == TEAM_SPECTATOR )
 	{
+		ClearZoomOwner();
+		StopZooming();
+		DetonateTripmines( false );
+		ClearUseEntity();
+
+		if ( IsInAVehicle() )
+			LeaveVehicle();
+
+		ForceDropOfCarriedPhysObjects( NULL );
 		RemoveAllItems( true );
+
+		if ( FlashlightIsOn() )
+			FlashlightTurnOff();
 
 		State_Transition( STATE_OBSERVER_MODE );
 	}
 
 	if ( bKill == true )
 	{
-		CommitSuicide();
+		CommitSuicide( false, true );
 	}
 }
 
 bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 {
+	const bool bWasSpectator = GetTeamNumber() == TEAM_SPECTATOR;
+
 	if ( !GetGlobalTeam( team ) || team == 0 )
 	{
 		Warning( "HandleCommand_JoinTeam( %d ) - invalid team index.\n", team );
@@ -1047,6 +1056,11 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 
 	// Switch their actual team...
 	ChangeTeam( team );
+
+	if ( bWasSpectator && GetTeamNumber() != TEAM_SPECTATOR )
+	{
+		Spawn();
+	}
 
 	return true;
 }
@@ -1279,9 +1293,10 @@ int CHL2MP_Player::GetMaxAmmo( int iAmmoIndex ) const
 	return GetAmmoDef()->MaxCarry( iAmmoIndex );
 }
 
-void CHL2MP_Player::DetonateTripmines( void )
+void CHL2MP_Player::DetonateTripmines( bool bPlaySound )
 {
 	CBaseEntity *pEntity = NULL;
+	bool bDetonationScheduled = false;
 
 	while ((pEntity = gEntList.FindEntityByClassname( pEntity, "npc_satchel" )) != NULL)
 	{
@@ -1289,15 +1304,21 @@ void CHL2MP_Player::DetonateTripmines( void )
 		if (pSatchel->m_bIsLive && pSatchel->GetThrower() == this )
 		{
 			g_EventQueue.AddEvent( pSatchel, "Explode", 0.20, this, this );
+			bDetonationScheduled = true;
 		}
 	}
 
 	// Play sound for pressing the detonator
-	EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	if ( bPlaySound && bDetonationScheduled )
+	{
+		EmitSound( "Weapon_SLAM.SatchelDetonate" );
+	}
 }
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 {
+	ResetLadderMove();
+
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
@@ -1490,41 +1511,55 @@ ReturnSpot:
 CON_COMMAND( timeleft, "prints the time remaining in the match" )
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_GetCommandClient() );
+	const int iFragLimit = MAX( fraglimit.GetInt(), 0 );
+	char szMessage[128];
 
-	int iTimeRemaining = (int)HL2MPRules()->GetMapRemainingTime();
-    
-	if ( iTimeRemaining == 0 )
+	if ( mp_timelimit.GetInt() <= 0 )
 	{
-		if ( pPlayer )
+		if ( iFragLimit > 0 )
 		{
-			ClientPrint( pPlayer, HUD_PRINTTALK, "This game has no timelimit." );
+			Q_snprintf( szMessage, sizeof( szMessage ), "No time limit. Frag limit: %d.", iFragLimit );
 		}
 		else
 		{
-			Msg( "* No Time Limit *\n" );
+			Q_snprintf( szMessage, sizeof( szMessage ), "No time or frag limit." );
 		}
 	}
 	else
 	{
-		int iMinutes, iSeconds;
-		iMinutes = iTimeRemaining / 60;
-		iSeconds = iTimeRemaining % 60;
+		const int iTimeRemaining = MAX( (int)HL2MPRules()->GetMapRemainingTime(), 0 );
+		const int iHours = iTimeRemaining / 3600;
+		const int iMinutes = ( iTimeRemaining / 60 ) % 60;
+		const int iSeconds = iTimeRemaining % 60;
+		char szTime[32];
 
-		char minutes[8];
-		char seconds[8];
-
-		Q_snprintf( minutes, sizeof(minutes), "%d", iMinutes );
-		Q_snprintf( seconds, sizeof(seconds), "%2.2d", iSeconds );
-
-		if ( pPlayer )
+		if ( iHours > 0 )
 		{
-			ClientPrint( pPlayer, HUD_PRINTTALK, "Time left in map: %s1:%s2", minutes, seconds );
+			Q_snprintf( szTime, sizeof( szTime ), "%d:%02d:%02d", iHours, iMinutes, iSeconds );
 		}
 		else
 		{
-			Msg( "Time Remaining:  %s:%s\n", minutes, seconds );
+			Q_snprintf( szTime, sizeof( szTime ), "%d:%02d", iMinutes, iSeconds );
 		}
-	}	
+
+		if ( iFragLimit > 0 )
+		{
+			Q_snprintf( szMessage, sizeof( szMessage ), "Time remaining: %s. Frag limit: %d.", szTime, iFragLimit );
+		}
+		else
+		{
+			Q_snprintf( szMessage, sizeof( szMessage ), "Time remaining: %s.", szTime );
+		}
+	}
+
+	if ( pPlayer )
+	{
+		ClientPrint( pPlayer, HUD_PRINTTALK, szMessage );
+	}
+	else
+	{
+		Msg( "%s\n", szMessage );
+	}
 }
 
 
@@ -1634,6 +1669,16 @@ bool CHL2MP_Player::StartObserverMode(int mode)
 		return BaseClass::StartObserverMode( mode );
 	}
 	return false;
+}
+
+bool CHL2MP_Player::SetObserverMode( int mode )
+{
+	if ( mode == OBS_MODE_POI && !IsHLTV() )
+	{
+		mode = OBS_MODE_ROAMING;
+	}
+
+	return BaseClass::SetObserverMode( mode );
 }
 
 void CHL2MP_Player::StopObserverMode()

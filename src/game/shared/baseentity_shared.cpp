@@ -1143,6 +1143,18 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			QAngle angles;
 
 			pPhysics->GetPosition( &origin, &angles );
+			if ( !origin.IsValid() || !angles.IsValid() )
+			{
+#ifndef CLIENT_DLL
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Removing invalid transform (%f,%f,%f) (%f,%f,%f) from vphysics! (entity %s)\n",
+						origin.x, origin.y, origin.z, angles.x, angles.y, angles.z, GetDebugName() );
+				}
+				UTIL_Remove( this );
+#endif
+				return;
+			}
 
 			if ( !IsEntityQAngleReasonable( angles ) )
 			{
@@ -1156,17 +1168,18 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			Vector prevOrigin = GetAbsOrigin();
 #endif
 
-			if ( IsEntityPositionReasonable( origin ) )
+			if ( !IsEntityPositionReasonable( origin ) )
 			{
-				SetAbsOrigin( origin );
-			}
-			else
-			{
+#ifndef CLIENT_DLL
 				if ( CheckEmitReasonablePhysicsSpew() )
 				{
-					Warning( "Ignoring unreasonable position (%f,%f,%f) from vphysics! (entity %s)\n", origin.x, origin.y, origin.z, GetDebugName() );
+					Warning( "Removing unreasonable position (%f,%f,%f) from vphysics! (entity %s)\n", origin.x, origin.y, origin.z, GetDebugName() );
 				}
+				UTIL_Remove( this );
+#endif
+				return;
 			}
+			SetAbsOrigin( origin );
 
 			for ( int i = 0; i < 3; ++i )
 			{
@@ -1726,7 +1739,31 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		float fPortalFraction = 2.0f;
 #endif
 
+#if defined( HL2MP )
+		if ( IsPlayer() && info.m_iAmmoType == GetAmmoDef()->Index( "Buckshot" ) )
+		{
+			trace_t trHull;
+			trace_t trRay;
+			AI_TraceHull( info.m_vecSrc, vecEnd, Vector( -1.5f, -1.5f, -1.5f ), Vector( 1.5f, 1.5f, 1.5f ), MASK_SHOT, &traceFilter, &trHull );
+			AI_TraceLine( info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &trRay );
+			const bool bHullHit = trHull.DidHit() && !trHull.startsolid && !trHull.allsolid;
 
+			if ( trRay.DidHit() && trRay.hitgroup == HITGROUP_HEAD &&
+				( !bHullHit || trRay.fraction <= trHull.fraction || trRay.m_pEnt == trHull.m_pEnt ) )
+			{
+				tr = trRay;
+			}
+			else if ( bHullHit )
+			{
+				tr = trHull;
+			}
+			else
+			{
+				tr = trRay;
+			}
+		}
+		else
+#endif
 		if( IsPlayer() && info.m_iShots > 1 && iShot % 2 )
 		{
 			// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.

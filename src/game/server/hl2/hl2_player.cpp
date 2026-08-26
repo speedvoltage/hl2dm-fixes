@@ -41,6 +41,7 @@
 #include "env_zoom.h"
 #include "hl2_gamerules.h"
 #include "prop_combine_ball.h"
+#include "func_ladder.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
 #include "gamestats.h"
@@ -502,9 +503,20 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 	bool bJustPressedSpeed = !!( nChangedButtons & IN_SPEED );
 
 	const bool bWantSprint = ( CanSprint() && IsSuitEquipped() && ( mv->m_nButtons & IN_SPEED ) );
-	const bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+	bool bWantsToChangeSprinting = ( m_HL2Local.m_bNewSprinting != bWantSprint ) && ( nChangedButtons & IN_SPEED ) != 0;
+#ifdef HL2MP
+	bWantsToChangeSprinting = bWantsToChangeSprinting ||
+		( m_HL2Local.m_bNewSprinting != bWantSprint && m_Local.m_bDucked && m_Local.m_bDucking );
+#endif
 
 	bool bSprinting = m_HL2Local.m_bNewSprinting;
+#ifdef HL2MP
+	if ( ( m_Local.m_bDucked && !m_Local.m_bDucking ) || GetWaterLevel() == 3 )
+	{
+		bSprinting = false;
+	}
+#endif
+
 	if ( bWantsToChangeSprinting )
 	{
 		if ( bWantSprint )
@@ -577,6 +589,10 @@ void CHL2_Player::HandleSpeedChanges( CMoveData *mv )
 void CHL2_Player::ReduceTimers( CMoveData *mv )
 {
 	bool bSprinting = mv->m_flClientMaxSpeed == HL2_SPRINT_SPEED;
+
+#ifdef HL2MP
+	bSprinting = bSprinting && mv->m_vecVelocity.Length2DSqr() >= 0.01f;
+#endif
 
 	if ( bSprinting )
 	{
@@ -2647,13 +2663,14 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 	// If I was dry on ammo for my best weapon and justed picked up ammo for it,
 	// autoswitch to my best weapon now.
 	//
-	if (bCheckAutoSwitch)
+	if ( bCheckAutoSwitch )
 	{
-		CBaseCombatWeapon *pWeapon = g_pGameRules->GetNextBestWeapon(this, GetActiveWeapon());
+		CBaseCombatWeapon *pWeapon = g_pGameRules->GetNextBestWeapon( this, GetActiveWeapon() );
 
-		if ( pWeapon && pWeapon->GetPrimaryAmmoType() == nAmmoIndex )
+		if ( pWeapon && pWeapon->GetPrimaryAmmoType() == nAmmoIndex &&
+			g_pGameRules->FShouldSwitchWeapon( this, pWeapon ) )
 		{
-			SwitchToNextBestWeapon(GetActiveWeapon());
+			Weapon_Switch( pWeapon );
 		}
 	}
 
@@ -3213,10 +3230,13 @@ void CHL2_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis
 #endif
 
 	// Drop any objects being handheld.
-	ClearUseEntity();
+	if ( pOnlyIfHoldingThis == NULL || IsHoldingEntity( pOnlyIfHoldingThis ) )
+	{
+		ClearUseEntity();
+	}
 
 	// Then force the physcannon to drop anything it's holding, if it's our active weapon
-	PhysCannonForceDrop( GetActiveWeapon(), NULL );
+	PhysCannonForceDrop( GetActiveWeapon(), pOnlyIfHoldingThis );
 }
 
 void CHL2_Player::InputForceDropPhysObjects( inputdata_t &data )
@@ -3580,6 +3600,27 @@ void CHL2_Player::DrawDebugGeometryOverlays(void)
 
 		NDebugOverlay::Box( GetAbsOrigin(), mins, maxs, 255, 0, 0, 100, 0 );
 	}
+}
+
+void CHL2_Player::ResetLadderMove()
+{
+	CFuncLadder *pLadder = dynamic_cast< CFuncLadder * >( m_HL2Local.m_hLadder.Get() );
+	if ( pLadder )
+	{
+		pLadder->PlayerGotOff( this );
+	}
+	m_HL2Local.m_hLadder.Set( NULL );
+
+	LadderMove_t *pLadderMove = GetLadderMove();
+	pLadderMove->m_bForceLadderMove = false;
+	pLadderMove->m_bForceMount = false;
+	pLadderMove->m_hForceLadder = NULL;
+
+	if ( pLadderMove->m_hReservedSpot )
+	{
+		UTIL_Remove( ( CBaseEntity * )pLadderMove->m_hReservedSpot.Get() );
+	}
+	pLadderMove->m_hReservedSpot = NULL;
 }
 
 //-----------------------------------------------------------------------------

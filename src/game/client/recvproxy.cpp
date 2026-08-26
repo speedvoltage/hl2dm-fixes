@@ -208,7 +208,10 @@ static void RecvProxy_IntToPredictableId( const CRecvProxyData *pData, void *pSt
 {
 	CPredictableId *pId = (CPredictableId*)pOut;
 	Assert( pId );
-	pId->SetRaw( pData->m_Value.m_Int );
+	uint32 raw;
+	COMPILE_TIME_ASSERT( sizeof( raw ) == sizeof( pData->m_Value.m_Int ) );
+	Q_memcpy( &raw, &pData->m_Value.m_Int, sizeof( raw ) );
+	pId->SetNetworkedRaw( raw );
 }
 
 //-----------------------------------------------------------------------------

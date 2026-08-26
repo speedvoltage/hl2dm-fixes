@@ -843,16 +843,14 @@ void CPrediction::RunPostThink( C_BasePlayer *player )
 //-----------------------------------------------------------------------------
 void CPrediction::CheckMovingGround( C_BasePlayer *player, double frametime )
 {
-#if 0
 	CBaseEntity	    *groundentity;
 
 	if ( player->GetFlags() & FL_ONGROUND )
 	{
 		groundentity = player->GetGroundEntity();
-		if ( groundentity && ( groundentity->GetFlags() & FL_CONVEYOR) )
+		Vector vecNewVelocity;
+		if ( groundentity && groundentity->GetGroundVelocityToApply( vecNewVelocity ) )
 		{
-			Vector vecNewVelocity;
-			groundentity->GetGroundVelocityToApply( vecNewVelocity );
 			if ( player->GetFlags() & FL_BASEVELOCITY )
 			{
 				vecNewVelocity += player->GetBaseVelocity();
@@ -861,7 +859,6 @@ void CPrediction::CheckMovingGround( C_BasePlayer *player, double frametime )
 			player->AddFlag( FL_BASEVELOCITY );
 		}
 	}
-#endif
 
 	if ( !( player->GetFlags() & FL_BASEVELOCITY ) )
 	{
@@ -888,11 +885,17 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	Q_snprintf( sz, sizeof( sz ), "runcommand%04d", ucmd->command_number );
 	PREDICTION_TRACKVALUECHANGESCOPE( sz );
 #endif
+	CUserCmd effectiveCmd( *ucmd );
+	effectiveCmd.buttons |= player->m_afButtonForced;
+	effectiveCmd.buttons &= ~player->m_afButtonDisabled;
+	ucmd = &effectiveCmd;
+
 	StartCommand( player, ucmd );
 
 	// Set globals appropriately
 	gpGlobals->curtime		= player->m_nTickBase * TICK_INTERVAL;
 	gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
+	gpGlobals->tickcount	= player->m_nTickBase;
 
 	g_pGameMovement->StartTrackPredictionErrors( player );
 
@@ -1200,6 +1203,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 	Assert( localPlayer );
 	C_CommandContext *ctx = localPlayer->GetCommandContext();
 	Assert( ctx );
+	const int commandTick = localPlayer->m_nTickBase;
 	
 	ctx->needsprocessing = true;
 	ctx->cmd = *cmd;
@@ -1225,6 +1229,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 		// Always reset
 		gpGlobals->curtime		= curtime;
 		gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
+		gpGlobals->tickcount	= commandTick;
 
 		C_BaseEntity *entity = predictables->GetPredictable( i );
 

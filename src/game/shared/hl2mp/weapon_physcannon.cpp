@@ -792,7 +792,7 @@ void CPlayerPickupController::Use( CBaseEntity *pActivator, CBaseEntity *pCaller
 		
 		//Adrian: Oops, our object became motion disabled, let go!
 		IPhysicsObject *pPhys = pAttached->VPhysicsGetObject();
-		if ( pPhys && pPhys->IsMoveable() == false )
+		if ( !pPhys || pPhys->IsMoveable() == false )
 		{
 			Shutdown();
 			return;
@@ -892,6 +892,8 @@ END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponPhysCannon )
+	DEFINE_PRED_FIELD( m_bActive, 		FIELD_BOOLEAN,	FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_hAttachedObject,	FIELD_EHANDLE,	FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_EffectState,	FIELD_INTEGER,	FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_bOpen,			FIELD_BOOLEAN,	FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 END_PREDICTION_DATA()
@@ -939,15 +941,20 @@ enum
 //-----------------------------------------------------------------------------
 CWeaponPhysCannon::CWeaponPhysCannon( void )
 {
+	m_bActive				= false;
+	m_hAttachedObject		= NULL;
 	m_bOpen					= false;
 	m_nChangeState			= ELEMENT_STATE_NONE;
 	m_flCheckSuppressTime	= 0.0f;
 	m_EffectState			= (int)EFFECT_NONE;
 	m_flLastDenySoundPlayed	= false;
+	m_sndMotor				= NULL;
 
 #ifdef CLIENT_DLL
 	m_nOldEffectState		= EFFECT_NONE;
 	m_bOldOpen				= false;
+	m_bMotorSoundActive		= false;
+	m_hEffectModel			= NULL;
 #endif
 }
 
@@ -1135,7 +1142,7 @@ void CWeaponPhysCannon::Drop( const Vector &vecVelocity )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CWeaponPhysCannon::CanHolster( void ) 
+bool CWeaponPhysCannon::CanHolster( void ) const
 { 
 	//Don't holster this weapon if we're holding onto something
 	if ( m_bActive )
@@ -1296,7 +1303,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 				return;
 			}
 				
-			if( forward.z < 0 )
+			if( forward.z < 0 && dynamic_cast<CBaseProp *>( pEntity ) )
 			{
 				//reflect, but flatten the trajectory out a bit so it's easier to hit standing targets
 				forward.z *= -0.65f;
@@ -1360,7 +1367,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 
 #endif
 	// Add recoil
-	QAngle	recoil = QAngle( random->RandomFloat( 1.0f, 2.0f ), random->RandomFloat( -1.0f, 1.0f ), 0 );
+	QAngle	recoil = QAngle( SharedRandomFloat( "physcannonpax", 1.0f, 2.0f ), SharedRandomFloat( "physcannonpay", -1.0f, 1.0f ), 0 );
 	pOwner->ViewPunch( recoil );
 
 	//Explosion effect
@@ -1999,12 +2006,12 @@ void CWeaponPhysCannon::UpdateObject( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 {
+	if ( m_bActive == false )
+		return;
+
 #ifndef CLIENT_DLL
 	// misyl: Disable pred filtering in this server-only section.
 	CDisablePredictionFiltering disablePred;
-
-	if ( m_bActive == false )
-		return;
 
 	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( GetOwner() );
 	if( pOwner != NULL )
@@ -2027,10 +2034,6 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 		pObject->SetOwnerEntity( NULL );
 	}
 
-	m_bActive = false;
-	m_hAttachedObject = NULL;
-
-	
 	if ( playSound )
 	{
 		//Play the detach sound
@@ -2038,14 +2041,18 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	}
 	
 #else
+	CBaseEntity *pObject = m_hAttachedObject.Get();
 
 	m_grabController.DetachEntity( wasLaunched );
 
-	if ( m_hAttachedObject )
+	if ( pObject )
 	{
-		m_hAttachedObject->VPhysicsDestroyObject();
+		pObject->VPhysicsDestroyObject();
 	}
 #endif
+
+	m_bActive = false;
+	m_hAttachedObject = NULL;
 
 	// Stop our looping sound
 	if ( GetMotorSound() )
@@ -2053,6 +2060,9 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 		( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 }
 
 
@@ -2106,6 +2116,34 @@ void CWeaponPhysCannon::ManagePredictedObject( void )
 
 #ifdef CLIENT_DLL
 
+bool CWeaponPhysCannon::IsFirstPersonSpectated( void )
+{
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	return pLocalPlayer && pOwner &&
+		pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE &&
+		pLocalPlayer->GetObserverTarget() == pOwner;
+}
+
+bool CWeaponPhysCannon::ShouldDrawUsingViewModel( void )
+{
+	if ( IsFirstPersonSpectated() )
+	{
+		return true;
+	}
+
+	return BaseClass::ShouldDrawUsingViewModel();
+}
+
+bool CWeaponPhysCannon::ShouldDraw( void )
+{
+	if ( IsFirstPersonSpectated() )
+		return false;
+
+	return BaseClass::ShouldDraw();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Update the pose parameter for the gun
 //-----------------------------------------------------------------------------
@@ -2139,6 +2177,21 @@ void CWeaponPhysCannon::UpdateElementPosition( void )
 
 void CWeaponPhysCannon::ClientThink( void )
 {
+	RefreshEffectAttachments();
+
+	if ( m_bActive && m_EffectState == EFFECT_HOLDING )
+	{
+		StartMotorSound();
+	}
+	else if ( m_bMotorSoundActive )
+	{
+		if ( GetMotorSound() )
+		{
+			( CSoundEnvelopeController::GetController() ).SoundFadeOut( GetMotorSound(), 0.1f );
+		}
+		m_bMotorSoundActive = false;
+	}
+
 	// Update our elements visually
 	UpdateElementPosition();
 
@@ -2337,7 +2390,7 @@ void CWeaponPhysCannon::ItemPostFrame()
 		}
 	}
 	
-	if (( pOwner->m_nButtons & IN_ATTACK2 ) == 0 )
+	if ( ( pOwner->m_nButtons & IN_ATTACK2 ) == 0 && CanPerformSecondaryAttack() )
 	{
 		m_nAttack2Debounce = 0;
 	}
@@ -2393,6 +2446,9 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 		(CSoundEnvelopeController::GetController()).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		(CSoundEnvelopeController::GetController()).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 
 	//Close the elements and suppress checking for a bit
 	m_nChangeState = ELEMENT_STATE_CLOSED;
@@ -2499,6 +2555,9 @@ void CWeaponPhysCannon::CloseElements( void )
 		(CSoundEnvelopeController::GetController()).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		(CSoundEnvelopeController::GetController()).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 	
 	DoEffect( EFFECT_CLOSED );
 
@@ -2544,6 +2603,24 @@ CSoundPatch *CWeaponPhysCannon::GetMotorSound( void )
 	return m_sndMotor;
 }
 
+#ifdef CLIENT_DLL
+void CWeaponPhysCannon::StartMotorSound( void )
+{
+	if ( m_bMotorSoundActive || !m_bOpen )
+		return;
+
+	CSoundPatch *pMotorSound = GetMotorSound();
+	if ( !pMotorSound )
+		return;
+
+	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+	controller.Play( pMotorSound, 0.0f, 50 );
+	controller.SoundChangePitch( pMotorSound, 100, 0.5f );
+	controller.SoundChangeVolume( pMotorSound, 0.8f, 0.5f );
+	m_bMotorSoundActive = true;
+}
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Shuts down sounds
@@ -2555,6 +2632,9 @@ void CWeaponPhysCannon::StopLoopingSounds()
 		 (CSoundEnvelopeController::GetController()).SoundDestroy( m_sndMotor );
 		 m_sndMotor = NULL;
 	}
+#ifdef CLIENT_DLL
+	m_bMotorSoundActive = false;
+#endif
 
 #ifndef CLIENT_DLL
 	BaseClass::StopLoopingSounds();
@@ -2573,6 +2653,7 @@ void CWeaponPhysCannon::DestroyEffects( void )
 	m_Beams[0].Release();
 	m_Beams[1].Release();
 	m_Beams[2].Release();
+	m_hEffectModel = NULL;
 
 #endif
 
@@ -2641,26 +2722,6 @@ void CWeaponPhysCannon::StartEffects( void )
 	// Glows
 	// ------------------------------------------
 
-	const char *attachNamesGlowThirdPerson[NUM_GLOW_SPRITES] = 
-	{
-		"fork1m",
-		"fork1t",
-		"fork2m",
-		"fork2t",
-		"fork3m",
-		"fork3t",
-	};
-
-	const char *attachNamesGlow[NUM_GLOW_SPRITES] = 
-	{
-		"fork1b",
-		"fork1m",
-		"fork1t",
-		"fork2b",
-		"fork2m",
-		"fork2t"
-	};
-
 	//Create the glow sprites
 	for ( int i = PHYSCANNON_GLOW1; i < (PHYSCANNON_GLOW1+NUM_GLOW_SPRITES); i++ )
 	{
@@ -2670,15 +2731,6 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetScale().SetAbsolute( 0.05f * SPRITE_SCALE );
 		m_Parameters[i].GetAlpha().SetAbsolute( 64.0f );
 		
-		// Different for different views
-		if ( ShouldDrawUsingViewModel() )
-		{
-			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlow[i-PHYSCANNON_GLOW1] ) );
-		}
-		else
-		{
-			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlowThirdPerson[i-PHYSCANNON_GLOW1] ) );
-		}
 		m_Parameters[i].SetColor( Vector( 255, 128, 0 ) );
 		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_GLOW_SPRITE ) == false )
@@ -2692,13 +2744,6 @@ void CWeaponPhysCannon::StartEffects( void )
 	// End caps
 	// ------------------------------------------
 
-	const char *attachNamesEndCap[NUM_ENDCAP_SPRITES] = 
-	{
-		"fork1t",
-		"fork2t",
-		"fork3t"
-	};
-	
 	//Create the glow sprites
 	for ( int i = PHYSCANNON_ENDCAP1; i < (PHYSCANNON_ENDCAP1+NUM_ENDCAP_SPRITES); i++ )
 	{
@@ -2707,7 +2752,6 @@ void CWeaponPhysCannon::StartEffects( void )
 
 		m_Parameters[i].GetScale().SetAbsolute( 0.05f * SPRITE_SCALE );
 		m_Parameters[i].GetAlpha().SetAbsolute( 255.0f );
-		m_Parameters[i].SetAttachment( LookupAttachment( attachNamesEndCap[i-PHYSCANNON_ENDCAP1] ) );
 		m_Parameters[i].SetVisible( false );
 		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
@@ -2717,9 +2761,129 @@ void CWeaponPhysCannon::StartEffects( void )
 		}
 	}
 
+	RefreshEffectAttachments();
+
 #endif
 
 }
+
+#ifdef CLIENT_DLL
+C_BaseAnimating *CWeaponPhysCannon::GetEffectModel( void )
+{
+	if ( ShouldDrawUsingViewModel() )
+	{
+		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+		C_BaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( 0, false ) : NULL;
+		if ( !pViewModel || pViewModel->GetWeapon() != this ||
+			pViewModel->LookupAttachment( "fork1t" ) <= 0 ||
+			pViewModel->LookupAttachment( "fork2t" ) <= 0 )
+		{
+			return NULL;
+		}
+
+		return pViewModel;
+	}
+
+	return this;
+}
+
+void CWeaponPhysCannon::RefreshEffectAttachments( void )
+{
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	bool bModelChanged = m_hEffectModel.Get() != pEffectModel;
+
+	if ( bModelChanged )
+	{
+		m_Beams[0].Release();
+		m_Beams[1].Release();
+		m_Beams[2].Release();
+		m_hEffectModel = pEffectModel;
+	}
+
+	if ( !pEffectModel )
+		return;
+
+	const char *pGlowAttachmentsFirstPerson[NUM_GLOW_SPRITES] =
+	{
+		"fork1b",
+		"fork1m",
+		"fork1t",
+		"fork2b",
+		"fork2m",
+		"fork2t"
+	};
+	const char *pGlowAttachmentsThirdPerson[NUM_GLOW_SPRITES] =
+	{
+		"fork1m",
+		"fork1t",
+		"fork2m",
+		"fork2t",
+		"fork3m",
+		"fork3t"
+	};
+	const char *pEndCapAttachments[NUM_ENDCAP_SPRITES] =
+	{
+		"fork1t",
+		"fork2t",
+		"fork3t"
+	};
+	const char *const *pGlowAttachments = ShouldDrawUsingViewModel() ? pGlowAttachmentsFirstPerson : pGlowAttachmentsThirdPerson;
+
+	m_Parameters[PHYSCANNON_CORE].SetAttachment( 1 );
+	m_Parameters[PHYSCANNON_BLAST].SetAttachment( 1 );
+
+	for ( int i = 0; i < NUM_GLOW_SPRITES; ++i )
+	{
+		m_Parameters[PHYSCANNON_GLOW1 + i].SetAttachment( pEffectModel->LookupAttachment( pGlowAttachments[i] ) );
+	}
+
+	for ( int i = 0; i < NUM_ENDCAP_SPRITES; ++i )
+	{
+		m_Parameters[PHYSCANNON_ENDCAP1 + i].SetAttachment( pEffectModel->LookupAttachment( pEndCapAttachments[i] ) );
+	}
+
+	if ( bModelChanged )
+	{
+		if ( m_EffectState == EFFECT_READY )
+		{
+			DoEffectReady();
+		}
+		else if ( m_EffectState == EFFECT_HOLDING )
+		{
+			DoEffectHolding();
+		}
+	}
+}
+
+void CWeaponPhysCannon::InitHoldingBeams( void )
+{
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	if ( !pEffectModel )
+		return;
+
+	bool bUsesViewModel = ShouldDrawUsingViewModel();
+	int nFork1 = pEffectModel->LookupAttachment( "fork1t" );
+	int nFork2 = pEffectModel->LookupAttachment( "fork2t" );
+	int nFork3 = bUsesViewModel ? 0 : pEffectModel->LookupAttachment( "fork3t" );
+	if ( nFork1 <= 0 || nFork2 <= 0 || ( !bUsesViewModel && nFork3 <= 0 ) )
+		return;
+
+	m_Beams[0].Init( nFork1, 1, pEffectModel, bUsesViewModel );
+	m_Beams[1].Init( nFork2, 1, pEffectModel, bUsesViewModel );
+	m_Beams[0].SetVisible();
+	m_Beams[1].SetVisible();
+
+	if ( bUsesViewModel )
+	{
+		m_Beams[2].SetVisible( false );
+	}
+	else
+	{
+		m_Beams[2].Init( nFork3, 1, pEffectModel, false );
+		m_Beams[2].SetVisible();
+	}
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Closing effects
@@ -2783,6 +2947,7 @@ void CWeaponPhysCannon::DoEffectReady( void )
 		( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.0f, 1.0f );
 		( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 50, 1.0f );
 	}
+	m_bMotorSoundActive = false;
 
 #endif
 
@@ -2822,17 +2987,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 			m_Parameters[i].SetVisible();
 		}
 
-		// Create our beams
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		CBaseEntity *pBeamEnt = pOwner->GetViewModel();
-
-		// Setup the beams
-		m_Beams[0].Init( LookupAttachment( "fork1t" ), 1, pBeamEnt, true );
-		m_Beams[1].Init( LookupAttachment( "fork2t" ), 1, pBeamEnt, true );
-
-		// Set them visible
-		m_Beams[0].SetVisible();
-		m_Beams[1].SetVisible();
+		InitHoldingBeams();
 	}
 	else
 	{
@@ -2858,25 +3013,12 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 			m_Parameters[i].SetVisible();
 		}
 
-		// Setup the beams
-		m_Beams[0].Init( LookupAttachment( "fork1t" ), 1, this, false );
-		m_Beams[1].Init( LookupAttachment( "fork2t" ), 1, this, false );
-		m_Beams[2].Init( LookupAttachment( "fork3t" ), 1, this, false );
-
-		// Set them visible
-		m_Beams[0].SetVisible();
-		m_Beams[1].SetVisible();
-		m_Beams[2].SetVisible();
+		InitHoldingBeams();
 	}
 
 	if ( m_bOpen )
 	{
-		if ( GetMotorSound() )
-		{
-			( CSoundEnvelopeController::GetController() ).Play( GetMotorSound(), 0.0f, 50 );
-			( CSoundEnvelopeController::GetController() ).SoundChangePitch( GetMotorSound(), 100, 0.5f );
-			( CSoundEnvelopeController::GetController() ).SoundChangeVolume( GetMotorSound(), 0.8f, 0.5f );
-		}
+		StartMotorSound();
 	}
 
 #endif
@@ -2990,6 +3132,7 @@ void CWeaponPhysCannon::DoEffectNone( void )
 	{
 		( CSoundEnvelopeController::GetController() ).SoundFadeOut( GetMotorSound(), 0.1f );
 	}
+	m_bMotorSoundActive = false;
 #endif
 }
 
@@ -3049,7 +3192,7 @@ extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
 // Purpose: Gets the complete list of values needed to render an effect from an
 //			effect parameter
 //-----------------------------------------------------------------------------
-void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment )
+bool CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &color, float &scale, IMaterial **pMaterial, Vector &vecAttachment )
 {
 	const float dt = gpGlobals->curtime;
 
@@ -3072,21 +3215,18 @@ void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &col
 	int		attachment = m_Parameters[effectID].GetAttachment();
 	QAngle	angles;
 
-	// Format for first-person
+	C_BaseAnimating *pEffectModel = GetEffectModel();
+	if ( !pEffectModel || attachment <= 0 || !pEffectModel->GetAttachment( attachment, vecAttachment, angles ) )
+	{
+		return false;
+	}
+
 	if ( ShouldDrawUsingViewModel() )
 	{
-		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-		
-		if ( pOwner != NULL )
-		{
-			pOwner->GetViewModel()->GetAttachment( attachment, vecAttachment, angles );
-			::FormatViewModelAttachment( vecAttachment, true );
-		}
+		::FormatViewModelAttachment( vecAttachment, true );
 	}
-	else
-	{
-		GetAttachment( attachment, vecAttachment, angles );
-	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -3112,7 +3252,8 @@ void CWeaponPhysCannon::DrawEffectSprite( EffectType_t effectID )
 		return;
 
 	// Get all of our parameters
-	GetEffectParameters( effectID, color, scale, &pMaterial, vecAttachment );
+	if ( !GetEffectParameters( effectID, color, scale, &pMaterial, vecAttachment ) )
+		return;
 
 	// Msg( "Scale: %.2f\tAlpha: %.2f\n", scale, alpha );
 
@@ -3281,25 +3422,38 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 	if ( pWeapon == NULL )
 		return;
 
-	pWeapon->GetAttachment( 1, vecAttachment, vecAngles );
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *pOwnerPlayer = ToBasePlayer( pWeapon->GetOwner() );
+	bool bUseViewModel = pLocalPlayer && pOwnerPlayer &&
+		( pOwnerPlayer == pLocalPlayer ||
+		( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == pOwnerPlayer ) );
+	C_BaseAnimating *pEffectModel = pWeapon;
+
+	if ( bUseViewModel )
+	{
+		C_BaseViewModel *pViewModel = pOwnerPlayer->GetViewModel( 0, false );
+		if ( !pViewModel || pViewModel->GetWeapon() != pWeapon )
+			return;
+
+		pEffectModel = pViewModel;
+	}
+
+	if ( !pEffectModel->GetAttachment( 1, vecAttachment, vecAngles ) )
+		return;
+
+	pEnt = pEffectModel;
+
+	if ( bUseViewModel )
+	{
+		::FormatViewModelAttachment( vecAttachment, true );
+	}
 
 	Vector	dir = ( data.m_vOrigin - vecAttachment );
 	VectorNormalize( dir );
 
 	// Do special first-person fix-up
-	if ( pWeapon->GetOwner() == CBasePlayer::GetLocalPlayer() )
+	if ( bUseViewModel )
 	{
-		// Translate the attachment entity to the viewmodel
-		C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer *>(pWeapon->GetOwner());
-
-		if ( pPlayer )
-		{
-			pEnt = pPlayer->GetViewModel();
-		}
-
-		// Format attachment for first-person view!
-		::FormatViewModelAttachment( vecAttachment, true );
-
 		// Explosions at the impact point
 		FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
 

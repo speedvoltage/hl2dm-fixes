@@ -307,6 +307,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				
 				//FIXME: We actually want to stick (with hierarchy) to what we've hit
 				SetMoveType( MOVETYPE_NONE );
+				SetSolid( SOLID_NONE );
 			
 				Vector vForward;
 
@@ -487,7 +488,7 @@ acttable_t	CWeaponCrossbow::m_acttable[] =
 	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_CROSSBOW,				false },
 	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_CROSSBOW,				false },
 	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,	false },
-	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,			false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_AR2,				false },
 	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_CROSSBOW,					false },
 };
 
@@ -630,7 +631,7 @@ void CWeaponCrossbow::FireBolt( void )
 		else
 		{
 			WeaponSound( EMPTY );
-			m_flNextPrimaryAttack = 0.15;
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.15f;
 		}
 
 		return;
@@ -725,8 +726,6 @@ void CWeaponCrossbow::ToggleZoom( void )
 	if ( pPlayer == NULL )
 		return;
 
-#ifndef CLIENT_DLL
-
 	if ( m_bInZoom )
 	{
 		if ( pPlayer->SetFOV( this, 0, 0.2f ) )
@@ -741,7 +740,6 @@ void CWeaponCrossbow::ToggleZoom( void )
 			m_bInZoom = true;
 		}
 	}
-#endif
 }
 
 #define	BOLT_TIP_ATTACHMENT	2
@@ -807,6 +805,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		return;
 
 	CEffectData	data;
+	data.m_vOrigin = pOwner->GetAbsOrigin();
 
 #ifdef CLIENT_DLL
 	data.m_hEntity = pViewModel->GetRefEHandle();

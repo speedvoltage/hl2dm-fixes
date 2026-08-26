@@ -273,6 +273,7 @@ public:
 	CFuncConveyor();
 
 	void	Spawn( void );
+	void	OnRestore( void ) OVERRIDE;
 	void	Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void	UpdateSpeed( float flNewSpeed );
 
@@ -286,6 +287,8 @@ private:
 
 	Vector m_vecMoveDir;
 	CNetworkVar( float, m_flConveyorSpeed );
+	CNetworkVector( m_vecConveyorVelocity );
+	CNetworkVar( bool, m_bAffectsPlayerMovement );
 };
 
 LINK_ENTITY_TO_CLASS( func_conveyor, CFuncConveyor );
@@ -293,7 +296,7 @@ LINK_ENTITY_TO_CLASS( func_conveyor, CFuncConveyor );
 BEGIN_DATADESC( CFuncConveyor )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "ToggleDirection", InputToggleDirection ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "SetSpeed", InputSetSpeed ),
+	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetSpeed", InputSetSpeed ),
 
 	DEFINE_KEYFIELD( m_vecMoveDir, FIELD_VECTOR, "movedir" ),
 	DEFINE_FIELD( m_flConveyorSpeed, FIELD_FLOAT ),
@@ -303,12 +306,16 @@ END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST(CFuncConveyor, DT_FuncConveyor)
 	SendPropFloat( SENDINFO(m_flConveyorSpeed), 0, SPROP_NOSCALE ),
+	SendPropVector( SENDINFO(m_vecConveyorVelocity), -1, SPROP_NOSCALE ),
+	SendPropBool( SENDINFO(m_bAffectsPlayerMovement) ),
 END_SEND_TABLE()
 
 
 CFuncConveyor::CFuncConveyor()
 {
 	m_flConveyorSpeed = 0.0;
+	m_vecConveyorVelocity.Init();
+	m_bAffectsPlayerMovement = false;
 }
 
 void CFuncConveyor::Spawn( void )
@@ -319,8 +326,11 @@ void CFuncConveyor::Spawn( void )
 
 	BaseClass::Spawn();
 
-	if ( !HasSpawnFlags(SF_CONVEYOR_VISUAL) )
+	m_bAffectsPlayerMovement = !HasSpawnFlags( SF_CONVEYOR_VISUAL );
+	if ( m_bAffectsPlayerMovement )
 		AddFlag( FL_CONVEYOR );
+	else
+		RemoveFlag( FL_CONVEYOR );
 
 	// HACKHACK - This is to allow for some special effects
 	if ( HasSpawnFlags( SF_CONVEYOR_NOTSOLID ) )
@@ -334,10 +344,23 @@ void CFuncConveyor::Spawn( void )
 	UpdateSpeed( m_flSpeed );
 }
 
+void CFuncConveyor::OnRestore( void )
+{
+	BaseClass::OnRestore();
+	m_bAffectsPlayerMovement = !HasSpawnFlags( SF_CONVEYOR_VISUAL );
+	if ( m_bAffectsPlayerMovement )
+		AddFlag( FL_CONVEYOR );
+	else
+		RemoveFlag( FL_CONVEYOR );
+	UpdateSpeed( m_flSpeed );
+}
+
 
 void CFuncConveyor::UpdateSpeed( float flNewSpeed )
 {
+	m_flSpeed = flNewSpeed;
 	m_flConveyorSpeed = flNewSpeed;
+	m_vecConveyorVelocity = m_bAffectsPlayerMovement ? m_vecMoveDir * flNewSpeed : vec3_origin;
 }
 
 
@@ -366,7 +389,7 @@ void CFuncConveyor::InputSetSpeed( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CFuncConveyor::GetGroundVelocityToApply( Vector &vecGroundVel )
 {
-	vecGroundVel = m_vecMoveDir * m_flSpeed;
+	vecGroundVel = m_vecConveyorVelocity;
 }
 
 
@@ -1098,6 +1121,19 @@ void CFuncRotating::RotateMove( void )
 {
 	SetMoveDoneTime( 10 );
 
+	QAngle angles = GetLocalAngles();
+
+	if ( m_vecMoveAng.x )
+		angles.x = AngleNormalize( angles.x );
+
+	if ( m_vecMoveAng.y )
+		angles.y = AngleNormalize( angles.y );
+
+	if ( m_vecMoveAng.z )
+		angles.z = AngleNormalize( angles.z );
+
+	SetLocalAngles( angles );
+
 	if ( m_bStopAtStartPos )
 	{
 		SetMoveDoneTime( GetNextMoveInterval() );
@@ -1446,7 +1482,8 @@ bool CFuncVPhysicsClip::EntityPassesFilter( CBaseEntity *pOther )
 	if ( pFilter )
 		return pFilter->PassesFilter( this, pOther );
 
-	if ( pOther->GetMoveType() == MOVETYPE_VPHYSICS && pOther->VPhysicsGetObject()->IsMoveable() )
+	IPhysicsObject *pPhysicsObject = pOther->VPhysicsGetObject();
+	if ( pOther->GetMoveType() == MOVETYPE_VPHYSICS && pPhysicsObject && pPhysicsObject->IsMoveable() )
 		return true;
 	
 	return false;

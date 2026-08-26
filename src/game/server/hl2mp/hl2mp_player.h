@@ -52,6 +52,7 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 	DECLARE_ENT_SCRIPTDESC();
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_fIsWalking );
 
 	virtual void Precache( void );
 	virtual void Spawn( void );
@@ -109,7 +110,7 @@ public:
 
 	int	GetMaxAmmo( int iAmmoIndex ) const;
 	
-	void  DetonateTripmines( void );
+	void  DetonateTripmines( bool bPlaySound = true );
 
 	void Reset();
 
@@ -131,6 +132,7 @@ public:
 
 
 	virtual bool StartObserverMode( int mode );
+	virtual bool SetObserverMode( int mode ) OVERRIDE;
 	virtual void StopObserverMode( void );
 
 

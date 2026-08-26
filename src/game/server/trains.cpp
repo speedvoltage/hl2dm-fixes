@@ -1692,7 +1692,7 @@ void CFuncTrackTrain::Blocked( CBaseEntity *pOther )
 		}
 		return;
 	}
-	else
+	else if ( pOther->GetMoveType() != MOVETYPE_VPHYSICS )
 	{
 		Vector vecNewVelocity;
 		vecNewVelocity = pOther->GetAbsOrigin() - GetAbsOrigin();

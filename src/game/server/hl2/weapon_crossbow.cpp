@@ -341,6 +341,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 				
 				//FIXME: We actually want to stick (with hierarchy) to what we've hit
 				SetMoveType( MOVETYPE_NONE );
+				SetSolid( SOLID_NONE );
 			
 				Vector vForward;
 
@@ -813,6 +814,7 @@ void CWeaponCrossbow::DoLoadEffect( void )
 		return;
 
 	CEffectData	data;
+	data.m_vOrigin = pOwner->GetAbsOrigin();
 
 	data.m_nEntIndex = pViewModel->entindex();
 	data.m_nAttachmentIndex = 1;

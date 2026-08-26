@@ -287,6 +287,7 @@ public:
 	CSoundPatch *m_sndWaterSplashes;
 
 protected:
+	void				ResetLadderMove();
 	virtual void		PreThink( void );
 	virtual	void		PostThink( void );
 	virtual bool		HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);

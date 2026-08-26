@@ -109,7 +109,7 @@ void CWeaponAR2::Precache( void )
 void CWeaponAR2::ItemPostFrame( void )
 {
 	// See if we need to fire off our secondary round
-	if ( m_bShotDelayed && gpGlobals->curtime > m_flDelayedFire )
+	if ( m_bShotDelayed && gpGlobals->curtime >= m_flDelayedFire )
 	{
 		DelayedAttack();
 	}
@@ -161,6 +161,9 @@ Activity CWeaponAR2::GetPrimaryAttackActivity( void )
 //-----------------------------------------------------------------------------
 void CWeaponAR2::DoImpactEffect( trace_t &tr, int nDamageType )
 {
+	if ( tr.surface.flags & ( SURF_SKY | SURF_NODRAW ) )
+		return;
+
 	CEffectData data;
 
 	data.m_vOrigin = tr.endpos + ( tr.plane.normal * 1.0f );
@@ -223,7 +226,7 @@ void CWeaponAR2::DelayedAttack( void )
 
 //	pOwner->SnapEyeAngles( angles );
 	
-	pOwner->ViewPunch( QAngle( SharedRandomInt( "ar2pax", -8, -12 ), SharedRandomInt( "ar2pay", 1, 2 ), 0 ) );
+	pOwner->ViewPunch( QAngle( SharedRandomInt( "ar2pax", -12, -8 ), SharedRandomInt( "ar2pay", 1, 2 ), 0 ) );
 
 	// Decrease ammo
 	pOwner->RemoveAmmo( 1, m_iSecondaryAmmoType );
@@ -268,7 +271,7 @@ void CWeaponAR2::SecondaryAttack( void )
 // Purpose: Override if we're waiting to release a shot
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CWeaponAR2::CanHolster( void )
+bool CWeaponAR2::CanHolster( void ) const
 {
 	if ( m_bShotDelayed )
 		return false;

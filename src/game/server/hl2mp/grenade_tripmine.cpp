@@ -18,9 +18,9 @@
 
 extern const char* g_pModelNameLaser;
 
-ConVar    sk_plr_dmg_tripmine		( "sk_plr_dmg_tripmine","0");
+ConVar    sk_plr_dmg_tripmine		( "sk_plr_dmg_tripmine","200");
 ConVar    sk_npc_dmg_tripmine		( "sk_npc_dmg_tripmine","0");
-ConVar    sk_tripmine_radius		( "sk_tripmine_radius","0");
+ConVar    sk_tripmine_radius		( "sk_tripmine_radius","200");
 
 LINK_ENTITY_TO_CLASS( npc_tripmine, CTripmineGrenade );
 
@@ -32,8 +32,10 @@ BEGIN_DATADESC( CTripmineGrenade )
 	DEFINE_FIELD( m_vecEnd,		FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_flBeamLength, FIELD_FLOAT ),
 	DEFINE_FIELD( m_pBeam,		FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_posOwner,		FIELD_POSITION_VECTOR ),
-	DEFINE_FIELD( m_angleOwner,	FIELD_VECTOR ),
+	DEFINE_FIELD( m_hAttachedObject, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_bAttachedToEntity, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_vecAttachedOrigin, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_angAttachedAngles, FIELD_VECTOR ),
 
 	// Function Pointers
 	DEFINE_THINKFUNC( WarningThink ),
@@ -47,8 +49,11 @@ CTripmineGrenade::CTripmineGrenade()
 {
 	m_vecDir.Init();
 	m_vecEnd.Init();
-	m_posOwner.Init();
-	m_angleOwner.Init();
+	m_pBeam = NULL;
+	m_hAttachedObject = NULL;
+	m_bAttachedToEntity = false;
+	m_vecAttachedOrigin.Init();
+	m_angAttachedAngles.Init();
 }
 
 void CTripmineGrenade::Spawn( void )
@@ -65,8 +70,8 @@ void CTripmineGrenade::Spawn( void )
 
 	SetCycle( 0.0f );
 	m_nBody			= 3;
-	m_flDamage		= sk_plr_dmg_tripmine.GetFloat();
-	m_DmgRadius		= sk_tripmine_radius.GetFloat();
+	SetDamage( sk_plr_dmg_tripmine.GetFloat() );
+	SetDamageRadius( sk_tripmine_radius.GetFloat() );
 
 	ResetSequenceInfo( );
 	m_flPlaybackRate	= 0;
@@ -83,14 +88,13 @@ void CTripmineGrenade::Spawn( void )
 	m_iHealth = 1;
 
 	EmitSound( "TripmineGrenade.Place" );
-	SetDamage ( 200 );
 
 	// Tripmine sits at 90 on wall so rotate back to get m_vecDir
 	QAngle angles = GetAbsAngles();
 	angles.x -= 90;
 
 	AngleVectors( angles, &m_vecDir );
-	m_vecEnd = GetAbsOrigin() + m_vecDir * 2048;
+	m_vecEnd = GetAbsOrigin() + m_vecDir * MAX_TRACE_LENGTH;
 
 	AddEffects( EF_NOSHADOW );
 }
@@ -115,6 +119,12 @@ void CTripmineGrenade::WarningThink( void  )
 
 void CTripmineGrenade::PowerupThink( void  )
 {
+	if ( HasAttachedObjectMoved() )
+	{
+		Event_Killed( CTakeDamageInfo( (CBaseEntity *)m_hOwner, this, GetDamage(), DMG_BLAST ) );
+		return;
+	}
+
 	if (gpGlobals->curtime > m_flPowerUp)
 	{
 		MakeBeam( );
@@ -123,8 +133,41 @@ void CTripmineGrenade::PowerupThink( void  )
 
 		// play enabled sound
 		EmitSound( "TripmineGrenade.Activate" );
+		return;
 	}
 	SetNextThink( gpGlobals->curtime + 0.1f );
+}
+
+
+void CTripmineGrenade::AttachToEntity( CBaseEntity *pEntity )
+{
+	m_hAttachedObject = pEntity;
+	m_bAttachedToEntity = ( pEntity != NULL );
+
+	if ( pEntity )
+	{
+		m_vecAttachedOrigin = pEntity->GetAbsOrigin();
+		m_angAttachedAngles = pEntity->GetAbsAngles();
+	}
+}
+
+
+bool CTripmineGrenade::HasAttachedObjectMoved( void ) const
+{
+	if ( !m_bAttachedToEntity )
+		return false;
+
+	CBaseEntity *pAttachedObject = m_hAttachedObject.Get();
+	if ( !pAttachedObject )
+		return true;
+
+	if ( !VectorsAreEqual( pAttachedObject->GetAbsOrigin(), m_vecAttachedOrigin, 1.0f ) )
+		return true;
+
+	const QAngle &angles = pAttachedObject->GetAbsAngles();
+	return fabs( AngleDiff( angles.x, m_angAttachedAngles.x ) ) > 1.0f ||
+		fabs( AngleDiff( angles.y, m_angAttachedAngles.y ) ) > 1.0f ||
+		fabs( AngleDiff( angles.z, m_angAttachedAngles.z ) ) > 1.0f;
 }
 
 
@@ -144,25 +187,20 @@ void CTripmineGrenade::MakeBeam( void )
 
 	UTIL_TraceLine( GetAbsOrigin(), m_vecEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
-	m_flBeamLength = tr.fraction;
-
-
-
 	// If I hit a living thing, send the beam through me so it turns on briefly
 	// and then blows the living thing up
 	CBaseEntity *pEntity = tr.m_pEnt;
 	CBaseCombatCharacter *pBCC  = ToBaseCombatCharacter( pEntity );
 
-	// Draw length is not the beam length if entity is in the way
-	float drawLength = tr.fraction;
 	if (pBCC)
 	{
+		CBaseEntity *pOwner = GetOwnerEntity();
 		SetOwnerEntity( pBCC );
 		UTIL_TraceLine( GetAbsOrigin(), m_vecEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-		m_flBeamLength = tr.fraction;
-		SetOwnerEntity( NULL );
-		
+		SetOwnerEntity( pOwner );
 	}
+
+	m_flBeamLength = tr.fraction;
 
 	// set to follow laser spot
 	SetThink( &CTripmineGrenade::BeamBreakThink );
@@ -171,10 +209,8 @@ void CTripmineGrenade::MakeBeam( void )
 	// to appear if person right in front of it
 	SetNextThink( gpGlobals->curtime + 1.0f );
 
-	Vector vecTmpEnd = GetLocalOrigin() + m_vecDir * 2048 * drawLength;
-
 	m_pBeam = CBeam::BeamCreate( g_pModelNameLaser, 0.35 );
-	m_pBeam->PointEntInit( vecTmpEnd, this );
+	m_pBeam->PointEntInit( tr.endpos, this );
 	m_pBeam->SetColor( 255, 55, 52 );
 	m_pBeam->SetScrollRate( 25.6 );
 	m_pBeam->SetBrightness( 64 );
@@ -186,6 +222,13 @@ void CTripmineGrenade::MakeBeam( void )
 
 void CTripmineGrenade::BeamBreakThink( void  )
 {
+	if ( HasAttachedObjectMoved() )
+	{
+		m_iHealth = 0;
+		Event_Killed( CTakeDamageInfo( (CBaseEntity *)m_hOwner, this, GetDamage(), DMG_BLAST ) );
+		return;
+	}
+
 	// See if I can go solid yet (has dropper moved out of way?)
 	if (IsSolidFlagSet( FSOLID_NOT_SOLID ))
 	{
@@ -268,9 +311,8 @@ void CTripmineGrenade::DelayDeathThink( void )
 	UTIL_TraceLine ( GetAbsOrigin() + m_vecDir * 8, GetAbsOrigin() - m_vecDir * 64,  MASK_SOLID, this, COLLISION_GROUP_NONE, & tr);
 	UTIL_ScreenShake( GetAbsOrigin(), 25.0, 150.0, 1.0, 750, SHAKE_START );
 
-	ExplosionCreate( GetAbsOrigin() + m_vecDir * 8, GetAbsAngles(), m_hOwner, GetDamage(), 200, 
+	ExplosionCreate( GetAbsOrigin() + m_vecDir * 8, GetAbsAngles(), m_hOwner, GetDamage(), GetDamageRadius(),
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
 
 	UTIL_Remove( this );
 }
-
