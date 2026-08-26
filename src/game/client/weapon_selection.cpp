@@ -58,6 +58,26 @@ HOOK_COMMAND( invnext, NextWeapon );
 HOOK_COMMAND( invprev, PrevWeapon );
 HOOK_COMMAND( lastinv, LastWeapon );
 
+#ifdef HL2_CLIENT_DLL
+static void ClientUse( const CCommand &args )
+{
+	if ( args.ArgC() < 2 )
+		return;
+
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( !pPlayer )
+		return;
+
+	C_BaseCombatWeapon *pWeapon = pPlayer->Weapon_OwnsThisType( args[1] );
+	if ( !pWeapon )
+		return;
+
+	input->MakeWeaponSelection( pWeapon );
+}
+
+static ConCommand use( "use", ClientUse, "Use a particular weapon\t\nArguments: <weapon_name>" );
+#endif
+
 // instance info
 CBaseHudWeaponSelection *CBaseHudWeaponSelection::s_pInstance = NULL;
 CBaseHudWeaponSelection *CBaseHudWeaponSelection::GetInstance()
