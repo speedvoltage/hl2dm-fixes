@@ -114,6 +114,11 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 
 	m_pFlashlightBeam = NULL;
 
+	m_bDuckJumpInterp = false;
+	m_flFirstDuckJumpInterp = 0.0f;
+	m_flLastDuckJumpInterp = 0.0f;
+	m_flDuckJumpInterp = 0.0f;
+
 	SuitPower_Initialize();
 }
 
@@ -329,6 +334,66 @@ int C_HL2MP_Player::DrawModel( int flags )
 		return 0;
 
     return BaseClass::DrawModel(flags);
+}
+
+void C_HL2MP_Player::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
+{
+	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
+
+	if ( GetGroundEntity() == NULL )
+	{
+		Vector hullSizeNormal = VEC_HULL_MAX_SCALED( this ) - VEC_HULL_MIN_SCALED( this );
+		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED( this ) - VEC_DUCK_HULL_MIN_SCALED( this );
+		Vector duckOffset = hullSizeNormal - hullSizeCrouch;
+
+		if ( GetFlags() & FL_DUCKING )
+		{
+			if ( !m_bDuckJumpInterp )
+			{
+				m_flFirstDuckJumpInterp = gpGlobals->curtime;
+			}
+			else if ( m_flDuckJumpInterp < 0.0f )
+			{
+				m_flFirstDuckJumpInterp = gpGlobals->curtime + m_flDuckJumpInterp * 0.15f;
+			}
+
+			m_bDuckJumpInterp = true;
+			m_flLastDuckJumpInterp = gpGlobals->curtime;
+			m_flDuckJumpInterp = 1.0f - MIN( 0.15f, gpGlobals->curtime - m_flFirstDuckJumpInterp ) / 0.15f;
+		}
+		else if ( m_bDuckJumpInterp )
+		{
+			if ( m_flDuckJumpInterp > 0.0f )
+			{
+				m_flLastDuckJumpInterp = gpGlobals->curtime - m_flDuckJumpInterp * 0.15f;
+			}
+
+			m_flDuckJumpInterp = -( 1.0f - MIN( 0.15f, gpGlobals->curtime - m_flLastDuckJumpInterp ) / 0.15f );
+			if ( m_flDuckJumpInterp == 0.0f )
+			{
+				m_bDuckJumpInterp = false;
+			}
+		}
+
+		if ( m_bDuckJumpInterp && m_flDuckJumpInterp != 0.0f )
+		{
+			duckOffset *= m_flDuckJumpInterp;
+			for ( int i = 0; i < hdr->numbones(); i++ )
+			{
+				if ( !( hdr->boneFlags( i ) & boneMask ) )
+					continue;
+
+				matrix3x4_t &transform = GetBoneForWrite( i );
+				Vector bonePosition;
+				MatrixGetTranslation( transform, bonePosition );
+				MatrixSetTranslation( bonePosition - duckOffset, transform );
+			}
+		}
+	}
+	else if ( m_bDuckJumpInterp )
+	{
+		m_bDuckJumpInterp = false;
+	}
 }
 
 //-----------------------------------------------------------------------------
