@@ -8422,6 +8422,12 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		maxVelErrorSqr *= 0.25;
 	}
 
+#ifdef HL2MP
+	const bool bForceGroundUpdate = IsRideablePhysics(pPhysGround) && !m_touchedPhysObject;
+#else
+	const bool bForceGroundUpdate = pPhysGround && !m_touchedPhysObject;
+#endif
+
 	// player's physics was frozen, try moving to the game's simulated position if possible
 	if ( m_pPhysicsController->WasFrozen() )
 	{
@@ -8444,7 +8450,7 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 		}
 
 	}
-	if ( dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || (pPhysGround && !m_touchedPhysObject) )
+	if ( dist >= maxDistErrorSqr || deltaV >= maxVelErrorSqr || bForceGroundUpdate )
 	{
 		if ( m_touchedPhysObject || pPhysGround )
 		{
