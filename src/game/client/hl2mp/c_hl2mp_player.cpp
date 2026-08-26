@@ -114,10 +114,11 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 
 	m_pFlashlightBeam = NULL;
 
-	m_bDuckJumpInterp = false;
-	m_flFirstDuckJumpInterp = 0.0f;
-	m_flLastDuckJumpInterp = 0.0f;
+	m_bDuckJumpStateInitialized = false;
+	m_bWasDucked = false;
+	m_bWasAirborne = false;
 	m_flDuckJumpInterp = 0.0f;
+	m_flDuckJumpLastUpdateTime = 0.0f;
 
 	SuitPower_Initialize();
 }
@@ -340,60 +341,94 @@ void C_HL2MP_Player::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quatern
 {
 	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
 
-	if ( GetGroundEntity() == NULL )
+	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
+	bool bAirborne = GetGroundEntity() == NULL;
+	float flTimeSinceUpdate = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
+	if ( !m_bDuckJumpStateInitialized || flTimeSinceUpdate < 0.0f || flTimeSinceUpdate > 0.15f )
+	{
+		m_bDuckJumpStateInitialized = true;
+		m_bWasDucked = bDucked;
+		m_bWasAirborne = bAirborne;
+		m_flDuckJumpInterp = 0.0f;
+		m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+	}
+	else
+	{
+		UpdateDuckJumpInterp();
+
+		if ( bAirborne && m_bWasAirborne && bDucked != m_bWasDucked )
+		{
+			m_flDuckJumpInterp += bDucked ? 1.0f : -1.0f;
+			m_flDuckJumpInterp = clamp( m_flDuckJumpInterp, -1.0f, 1.0f );
+		}
+
+		if ( !bAirborne )
+		{
+			m_flDuckJumpInterp = 0.0f;
+		}
+	}
+
+	if ( bAirborne && m_flDuckJumpInterp != 0.0f )
 	{
 		Vector hullSizeNormal = VEC_HULL_MAX_SCALED( this ) - VEC_HULL_MIN_SCALED( this );
 		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED( this ) - VEC_DUCK_HULL_MIN_SCALED( this );
-		Vector duckOffset = hullSizeNormal - hullSizeCrouch;
+		Vector duckOffset = ( hullSizeNormal - hullSizeCrouch ) * m_flDuckJumpInterp;
 
-		if ( GetFlags() & FL_DUCKING )
+		for ( int i = 0; i < hdr->numbones(); i++ )
 		{
-			if ( !m_bDuckJumpInterp )
-			{
-				m_flFirstDuckJumpInterp = gpGlobals->curtime;
-			}
-			else if ( m_flDuckJumpInterp < 0.0f )
-			{
-				m_flFirstDuckJumpInterp = gpGlobals->curtime + m_flDuckJumpInterp * 0.15f;
-			}
+			if ( !( hdr->boneFlags( i ) & boneMask ) )
+				continue;
 
-			m_bDuckJumpInterp = true;
-			m_flLastDuckJumpInterp = gpGlobals->curtime;
-			m_flDuckJumpInterp = 1.0f - MIN( 0.15f, gpGlobals->curtime - m_flFirstDuckJumpInterp ) / 0.15f;
-		}
-		else if ( m_bDuckJumpInterp )
-		{
-			if ( m_flDuckJumpInterp > 0.0f )
-			{
-				m_flLastDuckJumpInterp = gpGlobals->curtime - m_flDuckJumpInterp * 0.15f;
-			}
-
-			m_flDuckJumpInterp = -( 1.0f - MIN( 0.15f, gpGlobals->curtime - m_flLastDuckJumpInterp ) / 0.15f );
-			if ( m_flDuckJumpInterp == 0.0f )
-			{
-				m_bDuckJumpInterp = false;
-			}
-		}
-
-		if ( m_bDuckJumpInterp && m_flDuckJumpInterp != 0.0f )
-		{
-			duckOffset *= m_flDuckJumpInterp;
-			for ( int i = 0; i < hdr->numbones(); i++ )
-			{
-				if ( !( hdr->boneFlags( i ) & boneMask ) )
-					continue;
-
-				matrix3x4_t &transform = GetBoneForWrite( i );
-				Vector bonePosition;
-				MatrixGetTranslation( transform, bonePosition );
-				MatrixSetTranslation( bonePosition - duckOffset, transform );
-			}
+			matrix3x4_t &transform = GetBoneForWrite( i );
+			Vector bonePosition;
+			MatrixGetTranslation( transform, bonePosition );
+			MatrixSetTranslation( bonePosition - duckOffset, transform );
 		}
 	}
-	else if ( m_bDuckJumpInterp )
+
+	m_bWasDucked = bDucked;
+	m_bWasAirborne = bAirborne;
+}
+
+void C_HL2MP_Player::UpdateDuckJumpInterp( void )
+{
+	float flElapsed = MAX( 0.0f, gpGlobals->curtime - m_flDuckJumpLastUpdateTime );
+	m_flDuckJumpInterp = Approach( 0.0f, m_flDuckJumpInterp, flElapsed / 0.15f );
+	m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+}
+
+void C_HL2MP_Player::ResetDuckJumpInterpState( void )
+{
+	m_bDuckJumpStateInitialized = false;
+	m_flDuckJumpInterp = 0.0f;
+	m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+}
+
+void C_HL2MP_Player::ResetLatched( void )
+{
+	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
+	bool bAirborne = GetGroundEntity() == NULL;
+	float flTimeSinceUpdate = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
+	if ( m_bDuckJumpStateInitialized && flTimeSinceUpdate >= 0.0f && flTimeSinceUpdate <= 0.15f )
 	{
-		m_bDuckJumpInterp = false;
+		UpdateDuckJumpInterp();
+		if ( bAirborne && bDucked != m_bWasDucked )
+		{
+			m_flDuckJumpInterp += bDucked ? 1.0f : -1.0f;
+			m_flDuckJumpInterp = clamp( m_flDuckJumpInterp, -1.0f, 1.0f );
+		}
 	}
+	else
+	{
+		m_bDuckJumpStateInitialized = true;
+		m_flDuckJumpInterp = 0.0f;
+		m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+	}
+
+	m_bWasDucked = bDucked;
+	m_bWasAirborne = bAirborne;
+
+	BaseClass::ResetLatched();
 }
 
 //-----------------------------------------------------------------------------
@@ -768,6 +803,8 @@ bool C_HL2MP_Player::ShouldDraw( void )
 
 void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
 {
+	ResetDuckJumpInterpState();
+
 	if ( state == SHOULDTRANSMIT_END )
 	{
 		if( m_pFlashlightBeam != NULL )
@@ -796,6 +833,7 @@ void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 	if ( m_iSpawnInterpCounter != m_iSpawnInterpCounterCache )
 	{
 		MoveToLastReceivedPosition( true );
+		ResetDuckJumpInterpState();
 		ResetLatched();
 		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
 	}
