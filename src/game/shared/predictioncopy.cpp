@@ -551,14 +551,28 @@ void CPredictionCopy::DescribeEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE
 	if ( !m_bErrorCheck )
 		return;
 
+	int i = 0;
 	if ( dt == DIFFERS )
 	{
-		int i = 0;
-		ReportFieldsDiffer( "EHandles differ (net) 0x%p (pred) 0x%p\n", (void const *)invalue[ i ].Get(), (void *)outvalue[ i ].Get() );
+		for ( ; i < count; i++ )
+		{
+			if ( outvalue[ i ].Get() == invalue[ i ].Get() )
+				continue;
+
+			if ( count > 1 )
+			{
+				ReportFieldsDiffer( "EHandles[%d] differ (net) %p (pred) %p\n", i, (void const *)invalue[ i ].Get(), (void *)outvalue[ i ].Get() );
+			}
+			else
+			{
+				ReportFieldsDiffer( "EHandles differ (net) %p (pred) %p\n", (void const *)invalue[ i ].Get(), (void *)outvalue[ i ].Get() );
+			}
+			break;
+		}
 	}
 
 #if defined( CLIENT_DLL )
-	C_BaseEntity *ent = outvalue[0].Get();
+	C_BaseEntity *ent = outvalue[i].Get();
 	if ( ent )
 	{
 		const char *classname = ent->GetClassname();
@@ -567,7 +581,7 @@ void CPredictionCopy::DescribeEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE
 			classname = typeid( *ent ).name();
 		}
 
-		DescribeFields( dt, "EHandle (0x%p->%s)", (void *)outvalue[ 0 ], classname );
+		DescribeFields( dt, "EHandle (%p->%s)", (void *)outvalue[ i ], classname );
 	}
 	else
 	{
@@ -575,7 +589,7 @@ void CPredictionCopy::DescribeEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE
 	}
 
 #else
-	DescribeFields( dt, "EHandle (0x%p)", (void *)outvalue[ 0 ] );
+	DescribeFields( dt, "EHandle (%p)", (void *)outvalue[ i ] );
 #endif
 
 }
@@ -595,7 +609,7 @@ void CPredictionCopy::WatchEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE co
 			classname = typeid( *ent ).name();
 		}
 
-		WatchMsg( "EHandle (0x%p->%s)", (void *)outvalue[ 0 ], classname );
+		WatchMsg( "EHandle (%p->%s)", (void *)outvalue[ 0 ], classname );
 	}
 	else
 	{
@@ -603,7 +617,7 @@ void CPredictionCopy::WatchEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE co
 	}
 
 #else
-	WatchMsg( "EHandle (0x%p)", (void *)outvalue[ 0 ] );
+	WatchMsg( "EHandle (%p)", (void *)outvalue[ 0 ] );
 #endif
 
 }
@@ -1878,7 +1892,7 @@ void CValueChangeTracker::GetValue( char *buf, size_t bufsize )
 		break;
 
 	case FIELD_EHANDLE:
-		Q_snprintf( buf, bufsize, "eh 0x%p", (void const *)((const EHANDLE *)pInputData)->Get() );
+		Q_snprintf( buf, bufsize, "eh %p", (void const *)((const EHANDLE *)pInputData)->Get() );
 		break;
 	}
 }
