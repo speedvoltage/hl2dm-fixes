@@ -639,6 +639,8 @@ void CHL2MP_Player::PlayerDeathThink()
 
 void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 {
+	NoteWeaponFired();
+
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( this, this->GetCurrentCommand() );
 
@@ -650,8 +652,6 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 	{
 		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 	}
-
-	NoteWeaponFired();
 
 	BaseClass::FireBullets( modinfo );
 
