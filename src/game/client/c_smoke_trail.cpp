@@ -706,13 +706,15 @@ void C_RocketTrail::Update( float fTimeDelta )
 		pParticle->m_flRollDelta	= 0.0f;
 	}
 
+	int numPuffs = 0;
+
 	// Add new particles (undamaged version)
 	if ( m_bEmit )
 	{
 		Vector	moveDiff	= GetAbsOrigin() - m_vecLastPosition;
 		float	moveLength	= VectorNormalize( moveDiff );
 
-		int	numPuffs = moveLength / ( m_StartSize / 2.0f );
+		numPuffs = moveLength / ( m_StartSize / 2.0f );
 
 		//debugoverlay->AddLineOverlay( m_vecLastPosition, GetAbsOrigin(), 255, 0, 0, true, 2.0f ); 
 		
@@ -721,7 +723,7 @@ void C_RocketTrail::Update( float fTimeDelta )
 			numPuffs = 50;
 
 		Vector			offsetColor;
-		float			step = moveLength / numPuffs;
+		float			step = numPuffs > 0 ? moveLength / numPuffs : 0.0f;
 
 		//Fill in the gaps
 		for ( i = 1; i < numPuffs+1; i++ )
@@ -816,7 +818,10 @@ void C_RocketTrail::Update( float fTimeDelta )
 		}
 	}
 
-	m_vecLastPosition = GetAbsOrigin();
+	if ( !m_bEmit || numPuffs > 0 )
+	{
+		m_vecLastPosition = GetAbsOrigin();
+	}
 }
 
 void C_RocketTrail::RenderParticles( CParticleRenderIterator *pIterator )
