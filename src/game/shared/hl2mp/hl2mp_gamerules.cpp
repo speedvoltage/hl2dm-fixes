@@ -763,6 +763,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		event->SetInt("userid", pVictim->GetUserID() );
 		event->SetInt("attacker", killer_ID );
 		event->SetString("weapon", killer_weapon_name );
+		event->SetBool( "headshot", pVictim->LastHitGroup() == HITGROUP_HEAD && ( info.GetDamageType() & DMG_BULLET ) );
 		event->SetInt( "priority", 7 );
 		gameeventmanager->FireEvent( event );
 	}

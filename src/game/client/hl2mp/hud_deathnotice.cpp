@@ -27,7 +27,7 @@ static ConVar hud_deathnotice_time( "hud_deathnotice_time", "6", 0 );
 struct DeathNoticePlayer
 {
 	char		szName[MAX_PLAYER_NAME_LENGTH];
-	int			iEntIndex;
+	int			iTeamNumber;
 };
 
 // Contents of each entry in our list of death notices
@@ -38,6 +38,7 @@ struct DeathNoticeItem
 	CHudTexture *iconDeath;
 	int			iSuicide;
 	float		flDisplayTime;
+	bool		bLocalPlayerInvolved;
 	bool		bHeadshot;
 };
 
@@ -58,24 +59,44 @@ public:
 
 	void SetColorForNoticePlayer( int iTeamNumber );
 	void RetireExpiredDeathNotices( void );
-	
+	void GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, int &iTall );
+	void GetBackgroundPolygonVerts( int x0, int y0, int x1, int y1, vgui::Vertex_t vert[] );
+	void CalcRoundedCorners( void );
+
 	virtual void FireGameEvent( IGameEvent * event );
 
 private:
 
-	CPanelAnimationVarAliasType( float, m_flLineHeight, "LineHeight", "15", "proportional_float" );
+	enum
+	{
+		NUM_CORNER_COORD = 10,
+		NUM_BACKGROUND_COORD = NUM_CORNER_COORD * 4,
+	};
+
+	CPanelAnimationVarAliasType( float, m_flLineHeight, "LineHeight", "16", "proportional_float" );
+
+	CPanelAnimationVarAliasType( float, m_flLineSpacing, "LineSpacing", "3", "proportional_float" );
+
+	CPanelAnimationVarAliasType( float, m_flCornerRadius, "CornerRadius", "3", "proportional_float" );
 
 	CPanelAnimationVar( float, m_flMaxDeathNotices, "MaxDeathNotices", "4" );
 
 	CPanelAnimationVar( bool, m_bRightJustify, "RightJustify", "1" );
 
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "HudNumbersTimer" );
+	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
+
+	CPanelAnimationVar( Color, m_clrIcon, "IconColor", "255 255 255 255" );
+
+	CPanelAnimationVar( Color, m_clrBackground, "BackgroundColor", "24 24 24 220" );
+
+	CPanelAnimationVar( Color, m_clrLocalPlayerOutline, "LocalPlayerOutlineColor", "255 0 0 255" );
 
 	// Texture for skull symbol
 	CHudTexture		*m_iconD_skull;  
 	CHudTexture		*m_iconD_headshot;  
 
 	CUtlVector<DeathNoticeItem> m_DeathNotices;
+	Vector2D m_CornerCoord[NUM_CORNER_COORD];
 };
 
 using namespace vgui;
@@ -108,6 +129,7 @@ void CHudDeathNotice::ApplySchemeSettings( IScheme *scheme )
 	SetPaintBackgroundEnabled( false );
 
 	SetSize( ScreenWidth(), ScreenHeight() );
+	CalcRoundedCorners();
 }
 
 //-----------------------------------------------------------------------------
@@ -124,6 +146,7 @@ void CHudDeathNotice::Init( void )
 void CHudDeathNotice::VidInit( void )
 {
 	m_iconD_skull = gHUD.GetIcon( "d_skull" );
+	m_iconD_headshot = m_iconD_skull;
 	m_DeathNotices.Purge();
 }
 
@@ -143,6 +166,52 @@ void CHudDeathNotice::SetColorForNoticePlayer( int iTeamNumber )
 	surface()->DrawSetTextColor( GameResources()->GetTeamColor( iTeamNumber ) );
 }
 
+void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, int &iTall )
+{
+	iWide = 0;
+	iTall = 0;
+
+	if ( !icon )
+		return;
+
+	if ( icon->bRenderUsingFont )
+	{
+		iWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
+		iTall = surface()->GetFontTall( icon->hFont );
+		return;
+	}
+
+	float flWide = icon->EffectiveWidth( 1.0f );
+	float flTall = icon->EffectiveHeight( 1.0f );
+	if ( flWide <= 0.0f || flTall <= 0.0f )
+		return;
+
+	float flScale = (float)iMaxTall / flTall;
+	iWide = MAX( 1, (int)( flWide * flScale ) );
+	iTall = MAX( 1, (int)( flTall * flScale ) );
+}
+
+void CHudDeathNotice::GetBackgroundPolygonVerts( int x0, int y0, int x1, int y1, Vertex_t vert[] )
+{
+	for ( int i = 0; i < NUM_CORNER_COORD; i++ )
+	{
+		int j = NUM_CORNER_COORD - 1 - i;
+		vert[i].Init( Vector2D( x0 + m_CornerCoord[i].x, y0 + m_CornerCoord[i].y ) );
+		vert[i + NUM_CORNER_COORD].Init( Vector2D( x1 - m_CornerCoord[j].x, y0 + m_CornerCoord[j].y ) );
+		vert[i + NUM_CORNER_COORD * 2].Init( Vector2D( x1 - m_CornerCoord[i].x, y1 - m_CornerCoord[i].y ) );
+		vert[i + NUM_CORNER_COORD * 3].Init( Vector2D( x0 + m_CornerCoord[j].x, y1 - m_CornerCoord[j].y ) );
+	}
+}
+
+void CHudDeathNotice::CalcRoundedCorners( void )
+{
+	for ( int i = 0; i < NUM_CORNER_COORD; i++ )
+	{
+		m_CornerCoord[i].x = m_flCornerRadius * ( 1.0f - cos( ( (float)i / ( NUM_CORNER_COORD - 1 ) ) * ( M_PI / 2.0f ) ) );
+		m_CornerCoord[i].y = m_flCornerRadius * ( 1.0f - sin( ( (float)i / ( NUM_CORNER_COORD - 1 ) ) * ( M_PI / 2.0f ) ) );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -151,103 +220,106 @@ void CHudDeathNotice::Paint()
 	if ( !m_iconD_skull )
 		return;
 
+	RetireExpiredDeathNotices();
+
 	int yStart = GetClientModeHL2MPNormal()->GetDeathMessageStartHeight();
 
 	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawSetTextColor( GameResources()->GetTeamColor( 0 ) );
-
+	int iLineTall = MAX( 1, (int)m_flLineHeight );
+	int iLineSpacing = MAX( 0, (int)m_flLineSpacing );
+	int iTextTall = surface()->GetFontTall( m_hTextFont );
+	int iHorizontalPadding = scheme()->GetProportionalScaledValue( 6 );
+	int iItemSpacing = scheme()->GetProportionalScaledValue( 3 );
+	int iScreenPadding = scheme()->GetProportionalScaledValue( 16 );
+	int iIconMaxTall = MAX( 1, iLineTall - scheme()->GetProportionalScaledValue( 2 ) );
+	int iOutlineWide = MAX( 1, scheme()->GetProportionalScaledValue( 1 ) );
 
 	int iCount = m_DeathNotices.Count();
 	for ( int i = 0; i < iCount; i++ )
 	{
-		CHudTexture *icon = m_DeathNotices[i].iconDeath;
+		DeathNoticeItem &notice = m_DeathNotices[i];
+		CHudTexture *icon = notice.iconDeath;
 		if ( !icon )
 			continue;
 
 		wchar_t victim[ 256 ];
 		wchar_t killer[ 256 ];
 
-		// Get the team numbers for the players involved
-		int iKillerTeam = 0;
-		int iVictimTeam = 0;
+		g_pVGuiLocalize->ConvertANSIToUnicode( notice.Victim.szName, victim, sizeof( victim ) );
+		g_pVGuiLocalize->ConvertANSIToUnicode( notice.Killer.szName, killer, sizeof( killer ) );
 
-		if( g_PR )
+		int iVictimWide = UTIL_ComputeStringWidth( m_hTextFont, victim );
+		int iKillerWide = notice.iSuicide ? 0 : UTIL_ComputeStringWidth( m_hTextFont, killer );
+		int iIconWide;
+		int iIconTall;
+		GetIconSize( icon, iIconMaxTall, iIconWide, iIconTall );
+
+		bool bDrawHeadshot = notice.bHeadshot && m_iconD_headshot && icon != m_iconD_skull;
+		int iHeadshotWide = 0;
+		int iHeadshotTall = 0;
+		if ( bDrawHeadshot )
 		{
-			iKillerTeam = g_PR->GetTeam( m_DeathNotices[i].Killer.iEntIndex );
-			iVictimTeam = g_PR->GetTeam( m_DeathNotices[i].Victim.iEntIndex );
+			GetIconSize( m_iconD_headshot, iIconMaxTall, iHeadshotWide, iHeadshotTall );
 		}
 
-		g_pVGuiLocalize->ConvertANSIToUnicode( m_DeathNotices[i].Victim.szName, victim, sizeof( victim ) );
-		g_pVGuiLocalize->ConvertANSIToUnicode( m_DeathNotices[i].Killer.szName, killer, sizeof( killer ) );
-
-		int nLinePadding = vgui::scheme()->GetProportionalScaledValue( 4 );
-
-		// Get the local position for this notice
-		int len = UTIL_ComputeStringWidth( m_hTextFont, victim );
-		int y = yStart + ( ( m_flLineHeight + nLinePadding ) * i);
-
-		int iconWide;
-		int iconTall;
-
-		if( icon->bRenderUsingFont )
+		int iContentWide = iVictimWide + iIconWide + iItemSpacing;
+		if ( !notice.iSuicide )
 		{
-			iconWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
-			iconTall = surface()->GetFontTall( icon->hFont );
+			iContentWide += iKillerWide + iItemSpacing;
 		}
-		else
+		if ( bDrawHeadshot )
 		{
-			float scale = ( (float)ScreenHeight() / 480.0f );	//scale based on 640x480
-			iconWide = (int)( scale * (float)icon->Width() );
-			iconTall = (int)( scale * (float)icon->Height() );
+			iContentWide += iHeadshotWide + iItemSpacing;
 		}
 
-		// misyl: Looks bad all crunched up in the corner.
-		int nPadding = vgui::scheme()->GetProportionalScaledValue( 16 );
+		int iTotalWide = iContentWide + iHorizontalPadding * 2;
+		int y = yStart + ( iLineTall + iLineSpacing ) * i;
+		int yText = y + ( iLineTall - iTextTall ) / 2;
+		int x = m_bRightJustify ? GetWide() - iTotalWide - iScreenPadding : iScreenPadding;
 
-		int x;
-		if ( m_bRightJustify )
+		Vertex_t background[NUM_BACKGROUND_COORD];
+		GetBackgroundPolygonVerts( x, y, x + iTotalWide, y + iLineTall, background );
+		surface()->DrawSetTexture( -1 );
+		surface()->DrawSetColor( notice.bLocalPlayerInvolved ? m_clrLocalPlayerOutline : m_clrBackground );
+		surface()->DrawTexturedPolygon( NUM_BACKGROUND_COORD, background );
+
+		if ( notice.bLocalPlayerInvolved )
 		{
-			x =	GetWide() - len - iconWide - nPadding;
+			GetBackgroundPolygonVerts( x + iOutlineWide, y + iOutlineWide, x + iTotalWide - iOutlineWide, y + iLineTall - iOutlineWide, background );
+			surface()->DrawSetColor( m_clrBackground );
+			surface()->DrawTexturedPolygon( NUM_BACKGROUND_COORD, background );
 		}
-		else
-		{
-			x = nPadding;
-		}
-		
-		// Only draw killers name if it wasn't a suicide
-		if ( !m_DeathNotices[i].iSuicide )
-		{
-			if ( m_bRightJustify )
-			{
-				x -= UTIL_ComputeStringWidth( m_hTextFont, killer );
-			}
 
-			SetColorForNoticePlayer( iKillerTeam );
+		x += iHorizontalPadding;
 
-			// Draw killer's name
-			surface()->DrawSetTextPos( x, y );
+		if ( !notice.iSuicide )
+		{
+			SetColorForNoticePlayer( notice.Killer.iTeamNumber );
+			surface()->DrawSetTextPos( x, yText );
 			surface()->DrawSetTextFont( m_hTextFont );
-			surface()->DrawUnicodeString( killer );
-			surface()->DrawGetTextPos( x, y );
+			surface()->DrawUnicodeString( killer, FONT_DRAW_NONADDITIVE );
+			x += iKillerWide + iItemSpacing;
 		}
 
-		Color iconColor( 255, 80, 0, 255 );
+		int yIcon = icon->bRenderUsingFont ? y : y + ( iLineTall - iIconTall ) / 2;
+		icon->DrawSelf( x, yIcon, iIconWide, iIconTall, m_clrIcon );
+		x += iIconWide;
 
-		// Draw death weapon
-		//If we're using a font char, this will ignore iconTall and iconWide
-		icon->DrawSelf( x, y, iconWide, iconTall, iconColor );
-		x += iconWide;		
+		if ( bDrawHeadshot )
+		{
+			x += iItemSpacing;
+			int yHeadshot = y + ( iLineTall - iHeadshotTall ) / 2;
+			m_iconD_headshot->DrawSelf( x, yHeadshot, iHeadshotWide, iHeadshotTall, m_clrIcon );
+			x += iHeadshotWide;
+		}
 
-		SetColorForNoticePlayer( iVictimTeam );
+		x += iItemSpacing;
 
-		// Draw victims name
-		surface()->DrawSetTextPos( x, y );
-		surface()->DrawSetTextFont( m_hTextFont );	//reset the font, draw icon can change it
-		surface()->DrawUnicodeString( victim );
+		SetColorForNoticePlayer( notice.Victim.iTeamNumber );
+		surface()->DrawSetTextPos( x, yText );
+		surface()->DrawSetTextFont( m_hTextFont );
+		surface()->DrawUnicodeString( victim, FONT_DRAW_NONADDITIVE );
 	}
-
-	// Now retire any death notices that have expired
-	RetireExpiredDeathNotices();
 }
 
 //-----------------------------------------------------------------------------
@@ -311,12 +383,15 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 	// Make a new death notice
 	DeathNoticeItem deathMsg;
-	deathMsg.Killer.iEntIndex = killer;
-	deathMsg.Victim.iEntIndex = victim;
+	deathMsg.Killer.iTeamNumber = killer > 0 ? g_PR->GetTeam( killer ) : 0;
+	deathMsg.Victim.iTeamNumber = victim > 0 ? g_PR->GetTeam( victim ) : 0;
 	Q_strncpy( deathMsg.Killer.szName, killer_name, MAX_PLAYER_NAME_LENGTH );
 	Q_strncpy( deathMsg.Victim.szName, victim_name, MAX_PLAYER_NAME_LENGTH );
 	deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
 	deathMsg.iSuicide = ( !killer || killer == victim );
+	int iLocalPlayerIndex = GetLocalPlayerIndex();
+	deathMsg.bLocalPlayerInvolved = iLocalPlayerIndex > 0 && ( killer == iLocalPlayerIndex || victim == iLocalPlayerIndex );
+	deathMsg.bHeadshot = !deathMsg.iSuicide && event->GetBool( "headshot" );
 
 	// Try and find the death identifier in the icon list
 	deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );
@@ -356,6 +431,3 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 	Msg( "%s", sDeathMsg );
 }
-
-
-
