@@ -420,6 +420,7 @@ public:
 	void Blocked( CBaseEntity *pOther );
 	void SetTargetSpeed( float flSpeed );
 	void UpdateSpeed( float flNewSpeed );
+	void StopLoopingSounds( void ) OVERRIDE;
 	
 	int	 DrawDebugTextOverlays(void);
 
@@ -761,6 +762,16 @@ void CFuncRotating::Spawn( )
 		m_vecClientAngles = GetLocalAngles();
 	}
 #endif
+}
+
+void CFuncRotating::StopLoopingSounds( void )
+{
+	if ( m_NoiseRunning != NULL_STRING )
+	{
+		StopSound( entindex(), CHAN_STATIC, STRING( m_NoiseRunning ) );
+	}
+
+	BaseClass::StopLoopingSounds();
 }
 
 //-----------------------------------------------------------------------------
