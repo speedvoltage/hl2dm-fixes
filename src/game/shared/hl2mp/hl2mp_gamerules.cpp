@@ -1172,7 +1172,8 @@ void CHL2MPRules::CleanUpMap()
 				CMapEntityRef &ref = g_MapEntityRefs[m_iIterator];
 				m_iIterator = g_MapEntityRefs.Next( m_iIterator );	// Seek to the next entity.
 
-				if ( ref.m_iEdict == -1 || engine->PEntityOfEntIndex( ref.m_iEdict ) )
+				if ( ref.m_iEdict < 0 || ref.m_iEdict >= gpGlobals->maxEntities ||
+					engine->PEntityOfEntIndex( ref.m_iEdict ) )
 				{
 					// Doh! The entity was delete and its slot was reused.
 					// Just use any old edict slot. This case sucks because we lose the baseline.
