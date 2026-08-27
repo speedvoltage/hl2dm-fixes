@@ -2673,7 +2673,9 @@ bool KeyValues::WriteAsBinary( CUtlBuffer &buffer )
 
 		case TYPE_UINT64:
 			{
-				buffer.PutDouble( *((double *)dat->m_sValue) );
+				int64 value;
+				memcpy( &value, dat->m_sValue, sizeof( value ) );
+				buffer.PutInt64( value );
 				break;
 			}
 
