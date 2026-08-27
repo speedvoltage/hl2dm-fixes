@@ -1550,6 +1550,13 @@ const char *CPropAirboat::GetTracerType( void )
 void CPropAirboat::DoMuzzleFlash( void )
 {
 	CEffectData data;
+	data.m_vOrigin = WorldSpaceCenter();
+	Vector vecAttachmentOrigin;
+	QAngle vecAttachmentAngles;
+	if ( m_nGunBarrelAttachment > 0 && GetAttachment( m_nGunBarrelAttachment, vecAttachmentOrigin, vecAttachmentAngles ) )
+	{
+		data.m_vOrigin = vecAttachmentOrigin;
+	}
 	data.m_nEntIndex = entindex();
 	data.m_nAttachmentIndex = m_nGunBarrelAttachment;
 	data.m_flScale = 1.0f;
@@ -2098,4 +2105,3 @@ void CPropAirboat::ApplyStressDamage( IPhysicsObject *pPhysics )
 		m_hPlayer->TakeDamage( dmgInfo );
 	}
 }
-
