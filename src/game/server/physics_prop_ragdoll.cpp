@@ -446,7 +446,11 @@ void CRagdollProp::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Reaso
 		}
 	}
 
-	PhysSetGameFlags( VPhysicsGetObject(), FVPHYSICS_WAS_THROWN );
+	IPhysicsObject *pPhysics = VPhysicsGetObject();
+	if ( pPhysics )
+	{
+		PhysSetGameFlags( pPhysics, FVPHYSICS_WAS_THROWN );
+	}
 	m_bFirstCollisionAfterLaunch = true;
 }
 
