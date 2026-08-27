@@ -382,6 +382,16 @@ void CWallHealth::Off(void)
 		SetThink( NULL );
 }
 
+void CWallHealth::StopLoopingSounds( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "WallHealth.LoopingContinueCharge" );
+	}
+
+	BaseClass::StopLoopingSounds();
+}
+
 LINK_ENTITY_TO_CLASS( item_healthcharger, CNewWallHealth);
 
 
@@ -672,3 +682,12 @@ void CNewWallHealth::Off(void)
 	}
 }
 
+void CNewWallHealth::StopLoopingSounds( void )
+{
+	if ( m_iOn > 1 )
+	{
+		StopSound( "WallHealth.LoopingContinueCharge" );
+	}
+
+	BaseClass::StopLoopingSounds();
+}
