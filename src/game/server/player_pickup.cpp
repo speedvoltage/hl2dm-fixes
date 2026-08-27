@@ -17,15 +17,22 @@ void Pickup_ForcePlayerToDropThisObject( CBaseEntity *pTarget )
 	if ( pTarget == NULL )
 		return;
 
-	IPhysicsObject *pPhysics = pTarget->VPhysicsGetObject();
-	
-	if ( pPhysics == NULL )
-		return;
-
-	if ( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
+	EHANDLE hTarget = pTarget;
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-		pPlayer->ForceDropOfCarriedPhysObjects( pTarget );
+		CBaseEntity *pHeldEntity = hTarget.Get();
+		if ( pHeldEntity == NULL )
+			return;
+
+		IPhysicsObject *pPhysics = pHeldEntity->VPhysicsGetObject();
+		if ( pPhysics == NULL || !FBitSet( pPhysics->GetGameFlags(), FVPHYSICS_PLAYER_HELD ) )
+			return;
+
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+		if ( pPlayer == NULL )
+			continue;
+
+		pPlayer->ForceDropOfCarriedPhysObjects( pHeldEntity );
 	}
 }
 

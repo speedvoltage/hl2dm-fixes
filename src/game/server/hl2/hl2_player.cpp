@@ -3194,6 +3194,11 @@ float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 //-----------------------------------------------------------------------------
 void CHL2_Player::ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldingThis )
 {
+	if ( pOnlyIfHoldingThis != NULL &&
+		 !IsHoldingEntity( pOnlyIfHoldingThis ) &&
+		 PhysCannonGetHeldEntity( GetActiveWeapon() ) != pOnlyIfHoldingThis )
+		return;
+
 	if ( PhysIsInCallback() )
 	{
 		variant_t value;
