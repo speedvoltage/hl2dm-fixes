@@ -182,6 +182,8 @@ void CUtlMemoryPool::AddNewBlob()
 	int blobSize = m_BlockSize * nElements;
 	CBlob *pBlob = (CBlob*)malloc( sizeof(CBlob) - 1 + blobSize + ( m_nAlignment - 1 ) );
 	Assert( pBlob );
+	if ( !pBlob )
+		return;
 	
 	// Link it in at the end of the blob list.
 	pBlob->m_NumBytes = blobSize;
@@ -308,5 +310,4 @@ void CUtlMemoryPool::Free( void *memBlock )
 	// the list head is now the new block
 	m_pHeadOfFreeList = memBlock;
 }
-
 
