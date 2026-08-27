@@ -1169,7 +1169,10 @@ void CPropAirboat::Think(void)
 	if ( ShouldForceExit() )
 	{
 		ClearForcedExit();
-		m_hPlayer->LeaveVehicle();
+		if ( m_hPlayer )
+		{
+			m_hPlayer->LeaveVehicle();
+		}
 	}
 
 	if ( HasGun() && ( m_nGunState == GUN_STATE_IDLE ) )
