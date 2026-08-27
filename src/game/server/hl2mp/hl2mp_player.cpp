@@ -1322,16 +1322,25 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 
 	CBaseEntity *pAttacker = info.GetAttacker();
 
-	if ( pAttacker )
+	if ( HL2MPRules()->IsTeamplay() )
 	{
-		int iScoreToAdd = 1;
+		CTeam *pVictimTeam = GetGlobalTeam( GetTeamNumber() );
+		CTeam *pAttackerTeam = NULL;
 
-		if ( pAttacker == this )
+		if ( pAttacker && pAttacker != this && !pAttacker->InSameTeam( this ) &&
+			pAttacker->GetTeamNumber() != TEAM_UNASSIGNED )
 		{
-			iScoreToAdd = -1;
+			pAttackerTeam = GetGlobalTeam( pAttacker->GetTeamNumber() );
 		}
 
-		GetGlobalTeam( pAttacker->GetTeamNumber() )->AddScore( iScoreToAdd );
+		if ( pAttackerTeam )
+		{
+			pAttackerTeam->AddScore( 1 );
+		}
+		else if ( pVictimTeam )
+		{
+			pVictimTeam->AddScore( -1 );
+		}
 	}
 
 	FlashlightTurnOff();
