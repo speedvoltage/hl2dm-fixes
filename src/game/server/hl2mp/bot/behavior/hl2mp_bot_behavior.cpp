@@ -281,7 +281,11 @@ Vector CHL2MPBotMainAction::SelectTargetPoint( const INextBot *meBot, const CBas
 						float flForceMax = physcannon_maxforce.GetFloat();
 						float flForce = flForceMax;
 
-						float mass = pHeldEntity->VPhysicsGetObject()->GetMass();
+						IPhysicsObject *pPhysicsObject = pHeldEntity->VPhysicsGetObject();
+						if ( pPhysicsObject == NULL )
+							return subject->WorldSpaceCenter();
+
+						float mass = pPhysicsObject->GetMass();
 						if ( mass > 100 )
 						{
 							mass = MIN( mass, 1000 );
