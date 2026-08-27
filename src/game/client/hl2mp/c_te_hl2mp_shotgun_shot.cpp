@@ -84,16 +84,26 @@ void C_TEHL2MPFireBullets::CreateEffects( void )
 					Vector vecDir = Manipulator.ApplySpread( Vector( m_flSpread, m_flSpread, m_flSpread ) );
 					Vector vecEnd = m_vecOrigin + vecDir * MAX_TRACE_LENGTH;
 					trace_t tr;
+					trace_t trHull;
+					trace_t trRay;
 					CTraceFilterSkipPlayerAndViewModelOnly traceFilter;
 
-					if( m_iShots > 1 && iShot % 2 )
+					UTIL_TraceHull( m_vecOrigin, vecEnd, Vector( -1.5f, -1.5f, -1.5f ), Vector( 1.5f, 1.5f, 1.5f ), MASK_SHOT, &traceFilter, &trHull );
+					UTIL_TraceLine( m_vecOrigin, vecEnd, MASK_SHOT, &traceFilter, &trRay );
+					const bool bHullHit = trHull.DidHit() && !trHull.startsolid && !trHull.allsolid;
+
+					if ( trRay.DidHit() && trRay.hitgroup == HITGROUP_HEAD &&
+						( !bHullHit || trRay.fraction <= trHull.fraction || trRay.m_pEnt == trHull.m_pEnt ) )
 					{
-						// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.
-						UTIL_TraceHull( m_vecOrigin, vecEnd, Vector( -3, -3, -3 ), Vector( 3, 3, 3 ), MASK_SHOT, &traceFilter, &tr );
+						tr = trRay;
+					}
+					else if ( bHullHit )
+					{
+						tr = trHull;
 					}
 					else
 					{
-						UTIL_TraceLine( m_vecOrigin, vecEnd, MASK_SHOT, &traceFilter, &tr);
+						tr = trRay;
 					}
 
 					if ( m_bDoTracers )
@@ -156,5 +166,4 @@ BEGIN_RECV_TABLE_NOBASE(C_TEHL2MPFireBullets, DT_TEHL2MPFireBullets )
 	RecvPropBool( RECVINFO( m_bDoImpacts ) ),
 	RecvPropBool( RECVINFO( m_bDoTracers ) ),
 END_RECV_TABLE()
-
 
