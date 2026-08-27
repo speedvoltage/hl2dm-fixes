@@ -252,7 +252,7 @@ void CMissile::DumbFire( void )
 	SetMoveType( MOVETYPE_FLY );
 
 	SetModel("models/weapons/w_missile.mdl");
-	UTIL_SetSize( this, vec3_origin, vec3_origin );
+	UTIL_SetSize( this, -Vector( 4, 4, 4 ), Vector( 4, 4, 4 ) );
 
 	EmitSound( "Missile.Ignite" );
 
@@ -360,7 +360,7 @@ void CMissile::ShotDown( void )
 void CMissile::DoExplosion( void )
 {
 	// Explode
-	ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetDamage() * 2, 
+	ExplosionCreate( WorldSpaceCenter(), GetAbsAngles(), GetOwnerEntity(), GetDamage(), GetDamage() * 2,
 		SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE, 0.0f, this);
 }
 
@@ -452,7 +452,7 @@ void CMissile::IgniteThink( void )
 {
 	SetMoveType( MOVETYPE_FLY );
 	SetModel("models/weapons/w_missile.mdl");
-	UTIL_SetSize( this, vec3_origin, vec3_origin );
+	UTIL_SetSize( this, -Vector( 4, 4, 4 ), Vector( 4, 4, 4 ) );
  	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 	//TODO: Play opening sound
