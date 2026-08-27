@@ -44,6 +44,7 @@ struct LadderMove_t
 	// Simulation info for forcing the player move
 	CNetworkVar(float, m_flStartTime);
 	CNetworkVar(float, m_flArrivalTime);
+	CNetworkVar(float, m_flNextLadderCheckTime);
 	CNetworkVector( m_vecGoalPosition );
 	CNetworkVector( m_vecStartPosition )
 

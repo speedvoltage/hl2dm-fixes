@@ -452,11 +452,14 @@ bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool stri
 		Vector org = spot->GetAbsOrigin() + Vector( 0, 0, 1 );
 
 		trace_t tr;
+		const bool bDucked = ( player->GetFlags() & FL_DUCKING ) != 0;
+		const Vector &vecMins = GetPlayerMins( bDucked );
+		const Vector &vecMaxs = GetPlayerMaxs( bDucked );
 		UTIL_TraceHull(
 			org, 
 			org, 
-			GetPlayerMins( ( player->GetFlags() & FL_DUCKING ) ? true : false ),
-			GetPlayerMaxs( ( player->GetFlags() & FL_DUCKING ) ? true : false ),
+			vecMins,
+			vecMaxs,
 			MASK_PLAYERSOLID,
 			player,
 			COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -464,6 +467,21 @@ bool CHL2GameMovement::ExitLadderViaDismountNode( CFuncLadder *ladder, bool stri
 
 		// Nope...
 		if ( tr.startsolid )
+		{
+			continue;
+		}
+
+		UTIL_TraceHull(
+			mv->GetAbsOrigin(),
+			org,
+			vecMins,
+			vecMaxs,
+			MASK_PLAYERSOLID,
+			player,
+			COLLISION_GROUP_PLAYER_MOVEMENT,
+			&tr );
+
+		if ( tr.fraction < 1.0f || tr.startsolid || tr.allsolid )
 		{
 			continue;
 		}
@@ -964,6 +982,11 @@ bool CHL2GameMovement::LadderMove( void )
 
 	if ( !ladder )
 	{
+		if ( gpGlobals->curtime < GetLadderMove()->m_flNextLadderCheckTime )
+		{
+			return false;
+		}
+
 		Findladder( 64.0f, &bestLadder, bestOrigin, NULL );
 	}
 

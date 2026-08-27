@@ -118,6 +118,7 @@ inline void CHL2GameMovement::SetLadder( CFuncLadder *ladder )
 	if ( !ladder && oldLadder )
 	{
 		oldLadder->PlayerGotOff( GetHL2Player() );
+		GetLadderMove()->m_flNextLadderCheckTime = gpGlobals->curtime + 0.5f;
 	}
 
 	GetHL2Player()->m_HL2Local.m_hLadder.Set( ladder );
