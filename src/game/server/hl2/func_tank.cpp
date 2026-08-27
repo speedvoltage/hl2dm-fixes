@@ -2180,11 +2180,19 @@ void CFuncTank::DoMuzzleFlash( void )
 	{
 		CBaseAnimating *pAnim = GetParent()->GetBaseAnimating();
 		pAnim->DoMuzzleFlash();
+		Vector vecMuzzleOrigin = pAnim->WorldSpaceCenter();
+		Vector vecAttachmentOrigin;
+		QAngle vecMuzzleAngles;
+		if ( m_nBarrelAttachment > 0 && pAnim->GetAttachment( m_nBarrelAttachment, vecAttachmentOrigin, vecMuzzleAngles ) )
+		{
+			vecMuzzleOrigin = vecAttachmentOrigin;
+		}
 
 		// Do the AR2 muzzle flash
 		if ( m_iEffectHandling == EH_COMBINE_CANNON )
 		{
 			CEffectData data;
+			data.m_vOrigin = vecMuzzleOrigin;
 			data.m_nAttachmentIndex = m_nBarrelAttachment;
 			data.m_nEntIndex = pAnim->entindex();
 			
@@ -2194,6 +2202,7 @@ void CFuncTank::DoMuzzleFlash( void )
 		else
 		{
 			CEffectData data;
+			data.m_vOrigin = vecMuzzleOrigin;
 			data.m_nEntIndex = pAnim->entindex();
 			data.m_nAttachmentIndex = m_nBarrelAttachment;
 			data.m_flScale = 1.0f;
@@ -2988,6 +2997,13 @@ void CFuncTankAirboatGun::DoMuzzleFlash( void )
 	if ( m_hAirboatGunModel && (m_nGunBarrelAttachment != 0) )
 	{
 		CEffectData data;
+		data.m_vOrigin = m_hAirboatGunModel->WorldSpaceCenter();
+		Vector vecAttachmentOrigin;
+		QAngle vecMuzzleAngles;
+		if ( m_hAirboatGunModel->GetAttachment( m_nGunBarrelAttachment, vecAttachmentOrigin, vecMuzzleAngles ) )
+		{
+			data.m_vOrigin = vecAttachmentOrigin;
+		}
 		data.m_nEntIndex = m_hAirboatGunModel->entindex();
 		data.m_nAttachmentIndex = m_nGunBarrelAttachment;
 		data.m_flScale = 1.0f;
