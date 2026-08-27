@@ -63,6 +63,7 @@ ConVar physcannon_pullforce( "physcannon_pullforce", "4000", FCVAR_REPLICATED | 
 ConVar physcannon_cone( "physcannon_cone", "0.97", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar physcannon_ball_cone( "physcannon_ball_cone", "0.997", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar player_throwforce( "player_throwforce", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar physcannon_poll_rate( "physcannon_poll_rate", "0", FCVAR_REPLICATED, "Seconds between physcannon object checks; zero polls every tick.", true, 0.0f, true, 0.1f );
 
 #ifndef CLIENT_DLL
 extern ConVar hl2_normspeed;
@@ -1598,6 +1599,7 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 	}
 	else
 	{
+		m_flNextSecondaryAttack = gpGlobals->curtime + GetPollingInterval();
 #ifndef CLIENT_DLL
 		// misyl: Disable pred filtering in this server-only section.
 		CDisablePredictionFiltering disablePred;
@@ -1616,7 +1618,6 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 			break;
 
 		case OBJECT_NOT_FOUND:
-			m_flNextSecondaryAttack = gpGlobals->curtime + 0.1f;
 			CloseElements();
 			break;
 
@@ -1629,6 +1630,12 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 #endif
 	}
 }	
+
+float CWeaponPhysCannon::GetPollingInterval( void ) const
+{
+	float flInterval = physcannon_poll_rate.GetFloat();
+	return flInterval > 0.0f ? MAX( flInterval, TICK_INTERVAL ) : TICK_INTERVAL;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1820,7 +1827,7 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	// If we're too far, simply start to pull the object towards us
 	Vector	pullDir = start - pEntity->WorldSpaceCenter();
 	VectorNormalize( pullDir );
-	pullDir *= physcannon_pullforce.GetFloat();
+	pullDir *= physcannon_pullforce.GetFloat() * ( GetPollingInterval() / 0.1f );
 	
 	float mass = PhysGetEntityMass( pEntity );
 	if ( mass < 50.0f )
