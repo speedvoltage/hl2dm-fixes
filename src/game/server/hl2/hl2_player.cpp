@@ -305,6 +305,7 @@ BEGIN_SIMPLE_DATADESC( LadderMove_t )
 	DEFINE_FIELD( m_bForceMount, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flStartTime, FIELD_TIME ),
 	DEFINE_FIELD( m_flArrivalTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flNextLadderCheckTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecGoalPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_vecStartPosition, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( m_hForceLadder, FIELD_EHANDLE ),
@@ -421,6 +422,7 @@ BEGIN_SEND_TABLE_NOBASE( LadderMove_t, DT_LadderMove )
 	SendPropBool( SENDINFO( m_bForceMount ) ),
 	SendPropFloat( SENDINFO( m_flStartTime ) ),
 	SendPropFloat( SENDINFO( m_flArrivalTime ) ),
+	SendPropFloat( SENDINFO( m_flNextLadderCheckTime ) ),
 	SendPropVector( SENDINFO( m_vecGoalPosition ) ),
 	SendPropVector( SENDINFO( m_vecStartPosition ) ),
 END_SEND_TABLE()
@@ -3619,6 +3621,7 @@ void CHL2_Player::ResetLadderMove()
 	LadderMove_t *pLadderMove = GetLadderMove();
 	pLadderMove->m_bForceLadderMove = false;
 	pLadderMove->m_bForceMount = false;
+	pLadderMove->m_flNextLadderCheckTime = 0.0f;
 	pLadderMove->m_hForceLadder = NULL;
 
 	if ( pLadderMove->m_hReservedSpot )
