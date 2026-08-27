@@ -183,8 +183,15 @@ void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, 
 
 	if ( icon->bRenderUsingFont )
 	{
-		float flWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
-		float flTall = surface()->GetFontTall( icon->hFont );
+		surface()->DrawSetTextFont( icon->hFont );
+		surface()->DrawSetTextPos( iMaxTall, iMaxTall );
+
+		CharRenderInfo info;
+		if ( !surface()->DrawGetUnicodeCharRenderInfo( icon->cCharacterInFont, info ) )
+			return;
+
+		float flWide = info.verts[1].m_Position.x - info.verts[0].m_Position.x;
+		float flTall = info.verts[1].m_Position.y - info.verts[0].m_Position.y;
 		if ( flWide <= 0.0f || flTall <= 0.0f )
 			return;
 
@@ -215,10 +222,6 @@ void CHudDeathNotice::DrawIcon( CHudTexture *icon, int x, int y, int iWide, int 
 		return;
 	}
 
-	int iFontTall = surface()->GetFontTall( icon->hFont );
-	if ( iFontTall <= 0 )
-		return;
-
 	surface()->DrawSetTextFont( icon->hFont );
 	surface()->DrawSetTextColor( color );
 	surface()->DrawSetTextPos( x, y );
@@ -226,12 +229,10 @@ void CHudDeathNotice::DrawIcon( CHudTexture *icon, int x, int y, int iWide, int 
 	CharRenderInfo info;
 	if ( surface()->DrawGetUnicodeCharRenderInfo( icon->cCharacterInFont, info ) )
 	{
-		float flScale = (float)iTall / iFontTall;
-		for ( int i = 0; i < 2; i++ )
-		{
-			info.verts[i].m_Position.x = x + ( info.verts[i].m_Position.x - x ) * flScale;
-			info.verts[i].m_Position.y = y + ( info.verts[i].m_Position.y - y ) * flScale;
-		}
+		info.verts[0].m_Position.x = x;
+		info.verts[0].m_Position.y = y;
+		info.verts[1].m_Position.x = x + iWide;
+		info.verts[1].m_Position.y = y + iTall;
 		surface()->DrawRenderCharFromInfo( info );
 	}
 }
