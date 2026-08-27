@@ -41,6 +41,7 @@
 #include "physics_collisionevent.h"
 #include "gamestats.h"
 #include "vehicle_base.h"
+#include "usermessages.h"
 
 #ifdef TF_DLL
 #include "nav_mesh/tf_nav_mesh.h"
@@ -1729,17 +1730,25 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 
 	if ( m_iszBreakModelMessage != NULL_STRING )
 	{
-		CPVSFilter filter( GetAbsOrigin() );
-		UserMessageBegin( filter, STRING( m_iszBreakModelMessage ) );
-		WRITE_SHORT( GetModelIndex() );
-		WRITE_VEC3COORD( GetAbsOrigin() );
-		WRITE_ANGLES( GetAbsAngles() );
-		MessageEnd();
+		const char *pszBreakModelMessage = STRING( m_iszBreakModelMessage );
+		if ( usermessages->LookupUserMessage( pszBreakModelMessage ) == -1 )
+		{
+			Warning( "CBreakableProp::Break invalid break model message: (%s)\n", pszBreakModelMessage );
+		}
+		else
+		{
+			CPVSFilter filter( GetAbsOrigin() );
+			UserMessageBegin( filter, pszBreakModelMessage );
+			WRITE_SHORT( GetModelIndex() );
+			WRITE_VEC3COORD( GetAbsOrigin() );
+			WRITE_ANGLES( GetAbsAngles() );
+			MessageEnd();
 
 #ifndef HL2MP
-		UTIL_Remove( this );
+			UTIL_Remove( this );
 #endif
-		return;
+			return;
+		}
 	}
 
 	// in multiplayer spawn break models as clientside temp ents
