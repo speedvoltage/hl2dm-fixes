@@ -429,6 +429,7 @@ protected:
 	bool			m_bMotorSoundActive;
 
 	void			NotifyShouldTransmit( ShouldTransmitState_t state );
+	void			ResetPredictedObject( void );
 
 #endif	// CLIENT_DLL
 
