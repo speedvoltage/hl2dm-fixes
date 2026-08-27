@@ -391,17 +391,16 @@ void CEnvMicrophone::Think(void)
 	while (nSound != SOUNDLIST_EMPTY)
 	{
 		CSound *pCurrentSound = CSoundEnt::SoundPointerForIndex(nSound);
+		if ( !pCurrentSound )
+			break;
 
-		if (pCurrentSound)
+		if (m_nSoundMask & pCurrentSound->SoundType())
 		{
-			if (m_nSoundMask & pCurrentSound->SoundType())
+			float flVolume = 0;
+			if (CanHearSound(pCurrentSound, flVolume) && (flVolume > flMaxVolume))
 			{
-				float flVolume = 0;
-				if (CanHearSound(pCurrentSound, flVolume) && (flVolume > flMaxVolume))
-				{
-					flMaxVolume = flVolume;
-					fHearSound = true;
-				}
+				flMaxVolume = flVolume;
+				fHearSound = true;
 			}
 		}
 
