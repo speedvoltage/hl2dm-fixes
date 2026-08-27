@@ -338,13 +338,15 @@ bool CWeapon_SLAM::AnyUndetonatedCharges(void)
 void CWeapon_SLAM::StartSatchelDetonate()
 {
 
-	if ( GetActivity() != ACT_SLAM_DETONATOR_IDLE && GetActivity() != ACT_SLAM_THROW_IDLE )
+	if ( GetActivity() != ACT_SLAM_STICKWALL_IDLE &&
+		 GetActivity() != ACT_SLAM_DETONATOR_IDLE &&
+		 GetActivity() != ACT_SLAM_THROW_IDLE )
 		 return;
 	
 	// -----------------------------------------
 	//  Play detonate animation
 	// -----------------------------------------
-	if (m_bNeedReload)
+	if ( m_bNeedReload || m_tSlamState == SLAM_TRIPMINE_READY )
 	{
 		SendWeaponAnim(ACT_SLAM_DETONATOR_DETONATE);
 	}
