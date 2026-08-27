@@ -935,7 +935,10 @@ void CFire::Update( float simTime )
 	{
 		m_flLastHeatLevel = m_flHeatLevel;
 		// Make the effect the appropriate size given the heat level
-		m_hEffect->Scale( strength, 0.5f );		
+		if ( m_hEffect )
+		{
+			m_hEffect->Scale( strength, 0.5f );
+		}
 	}
 	// add heat to myself (grow)
 	float addedHeat = (m_flAttackTime > 0) ? m_flMaxHeat / m_flAttackTime : m_flMaxHeat;
