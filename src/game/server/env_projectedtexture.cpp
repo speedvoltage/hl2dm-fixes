@@ -117,7 +117,7 @@ END_SEND_TABLE()
 //-----------------------------------------------------------------------------
 CEnvProjectedTexture::CEnvProjectedTexture( void )
 {
-	m_bState = true;
+	m_bState = false;
 	m_flLightFOV = 45.0f;
 	m_bEnableShadows = false;
 	m_bLightOnlyTarget = false;
@@ -259,12 +259,19 @@ void CC_CreateFlashlight( const CCommand &args )
 	Vector origin = pPlayer->EyePosition();		
 
 	CEnvProjectedTexture *pFlashlight = dynamic_cast< CEnvProjectedTexture * >( CreateEntityByName("env_projectedtexture") );
+	if ( !pFlashlight )
+		return;
+
 	if( args.ArgC() > 1 )
 	{
 		pFlashlight->SetName( AllocPooledString( args[1] ) );
 	}
 
+	pFlashlight->AddSpawnFlags( ENV_PROJECTEDTEXTURE_STARTON );
 	pFlashlight->Teleport( &origin, &angles, NULL );
+	if ( DispatchSpawn( pFlashlight ) < 0 )
+		return;
 
+	pFlashlight->Activate();
 }
 static ConCommand create_flashlight("create_flashlight", CC_CreateFlashlight, 0, FCVAR_CHEAT);
