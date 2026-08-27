@@ -715,8 +715,9 @@ CMissile *CMissile::Create( const Vector &vecOrigin, const QAngle &vecAngles, ed
 {
 	//CMissile *pMissile = (CMissile *)CreateEntityByName("rpg_missile" );
 	CMissile *pMissile = (CMissile *) CBaseEntity::Create( "rpg_missile", vecOrigin, vecAngles, CBaseEntity::Instance( pentOwner ) );
-	pMissile->SetOwnerEntity( Instance( pentOwner ) );
-	pMissile->Spawn();
+	if ( pMissile == NULL )
+		return NULL;
+
 	pMissile->AddEffects( EF_NOSHADOW );
 	
 	Vector vecForward;
@@ -962,8 +963,9 @@ LINK_ENTITY_TO_CLASS( apc_missile, CAPCMissile );
 CAPCMissile *CAPCMissile::Create( const Vector &vecOrigin, const QAngle &vecAngles, const Vector &vecVelocity, CBaseEntity *pOwner )
 {
 	CAPCMissile *pMissile = (CAPCMissile *)CBaseEntity::Create( "apc_missile", vecOrigin, vecAngles, pOwner );
-	pMissile->SetOwnerEntity( pOwner );
-	pMissile->Spawn();
+	if ( pMissile == NULL )
+		return NULL;
+
 	pMissile->SetAbsVelocity( vecVelocity );
 	pMissile->AddFlag( FL_NOTARGET );
 	pMissile->AddEffects( EF_NOSHADOW );
