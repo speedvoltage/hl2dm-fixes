@@ -38,7 +38,8 @@ struct DeathNoticeItem
 	CHudTexture *iconDeath;
 	int			iSuicide;
 	float		flDisplayTime;
-	bool		bLocalPlayerInvolved;
+	bool		bLocalPlayerKiller;
+	bool		bLocalPlayerVictim;
 	bool		bHeadshot;
 };
 
@@ -57,11 +58,13 @@ public:
 	virtual void Paint( void );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 
-	void SetColorForNoticePlayer( int iTeamNumber );
+	void SetColorForNoticePlayer( int iTeamNumber, float flAlpha );
 	void RetireExpiredDeathNotices( void );
 	void GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, int &iTall );
+	void DrawIcon( CHudTexture *icon, int x, int y, int iWide, int iTall, const Color &color );
 	void GetBackgroundPolygonVerts( int x0, int y0, int x1, int y1, vgui::Vertex_t vert[] );
 	void CalcRoundedCorners( void );
+	Color GetFadedColor( const Color &color, float flAlpha );
 
 	virtual void FireGameEvent( IGameEvent * event );
 
@@ -89,7 +92,11 @@ private:
 
 	CPanelAnimationVar( Color, m_clrBackground, "BackgroundColor", "24 24 24 220" );
 
+	CPanelAnimationVar( Color, m_clrLocalPlayerDeathBackground, "LocalPlayerDeathBackgroundColor", "72 16 16 220" );
+
 	CPanelAnimationVar( Color, m_clrLocalPlayerOutline, "LocalPlayerOutlineColor", "255 0 0 255" );
+
+	CPanelAnimationVar( float, m_flFadeOutTime, "FadeOutTime", "1.0" );
 
 	// Texture for skull symbol
 	CHudTexture		*m_iconD_skull;  
@@ -161,9 +168,9 @@ bool CHudDeathNotice::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudDeathNotice::SetColorForNoticePlayer( int iTeamNumber )
+void CHudDeathNotice::SetColorForNoticePlayer( int iTeamNumber, float flAlpha )
 {
-	surface()->DrawSetTextColor( GameResources()->GetTeamColor( iTeamNumber ) );
+	surface()->DrawSetTextColor( GetFadedColor( GameResources()->GetTeamColor( iTeamNumber ), flAlpha ) );
 }
 
 void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, int &iTall )
@@ -176,8 +183,14 @@ void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, 
 
 	if ( icon->bRenderUsingFont )
 	{
-		iWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
-		iTall = surface()->GetFontTall( icon->hFont );
+		float flWide = surface()->GetCharacterWidth( icon->hFont, icon->cCharacterInFont );
+		float flTall = surface()->GetFontTall( icon->hFont );
+		if ( flWide <= 0.0f || flTall <= 0.0f )
+			return;
+
+		float flScale = MIN( 1.0f, (float)iMaxTall / flTall );
+		iWide = MAX( 1, (int)( flWide * flScale ) );
+		iTall = MAX( 1, (int)( flTall * flScale ) );
 		return;
 	}
 
@@ -189,6 +202,38 @@ void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, 
 	float flScale = (float)iMaxTall / flTall;
 	iWide = MAX( 1, (int)( flWide * flScale ) );
 	iTall = MAX( 1, (int)( flTall * flScale ) );
+}
+
+void CHudDeathNotice::DrawIcon( CHudTexture *icon, int x, int y, int iWide, int iTall, const Color &color )
+{
+	if ( !icon )
+		return;
+
+	if ( !icon->bRenderUsingFont )
+	{
+		icon->DrawSelf( x, y, iWide, iTall, color );
+		return;
+	}
+
+	int iFontTall = surface()->GetFontTall( icon->hFont );
+	if ( iFontTall <= 0 )
+		return;
+
+	surface()->DrawSetTextFont( icon->hFont );
+	surface()->DrawSetTextColor( color );
+	surface()->DrawSetTextPos( x, y );
+
+	CharRenderInfo info;
+	if ( surface()->DrawGetUnicodeCharRenderInfo( icon->cCharacterInFont, info ) )
+	{
+		float flScale = (float)iTall / iFontTall;
+		for ( int i = 0; i < 2; i++ )
+		{
+			info.verts[i].m_Position.x = x + ( info.verts[i].m_Position.x - x ) * flScale;
+			info.verts[i].m_Position.y = y + ( info.verts[i].m_Position.y - y ) * flScale;
+		}
+		surface()->DrawRenderCharFromInfo( info );
+	}
 }
 
 void CHudDeathNotice::GetBackgroundPolygonVerts( int x0, int y0, int x1, int y1, Vertex_t vert[] )
@@ -210,6 +255,11 @@ void CHudDeathNotice::CalcRoundedCorners( void )
 		m_CornerCoord[i].x = m_flCornerRadius * ( 1.0f - cos( ( (float)i / ( NUM_CORNER_COORD - 1 ) ) * ( M_PI / 2.0f ) ) );
 		m_CornerCoord[i].y = m_flCornerRadius * ( 1.0f - sin( ( (float)i / ( NUM_CORNER_COORD - 1 ) ) * ( M_PI / 2.0f ) ) );
 	}
+}
+
+Color CHudDeathNotice::GetFadedColor( const Color &color, float flAlpha )
+{
+	return Color( color.r(), color.g(), color.b(), (int)( color.a() * flAlpha ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -241,6 +291,12 @@ void CHudDeathNotice::Paint()
 		CHudTexture *icon = notice.iconDeath;
 		if ( !icon )
 			continue;
+
+		float flAlpha = 1.0f;
+		if ( m_flFadeOutTime > 0.0f )
+		{
+			flAlpha = clamp( ( notice.flDisplayTime - gpGlobals->curtime ) / m_flFadeOutTime, 0.0f, 1.0f );
+		}
 
 		wchar_t victim[ 256 ];
 		wchar_t killer[ 256 ];
@@ -280,42 +336,56 @@ void CHudDeathNotice::Paint()
 		Vertex_t background[NUM_BACKGROUND_COORD];
 		GetBackgroundPolygonVerts( x, y, x + iTotalWide, y + iLineTall, background );
 		surface()->DrawSetTexture( -1 );
-		surface()->DrawSetColor( notice.bLocalPlayerInvolved ? m_clrLocalPlayerOutline : m_clrBackground );
+		Color backgroundColor = notice.bLocalPlayerVictim ? m_clrLocalPlayerDeathBackground : m_clrBackground;
+		surface()->DrawSetColor( GetFadedColor( backgroundColor, flAlpha ) );
 		surface()->DrawTexturedPolygon( NUM_BACKGROUND_COORD, background );
 
-		if ( notice.bLocalPlayerInvolved )
+		if ( notice.bLocalPlayerKiller || notice.bLocalPlayerVictim )
 		{
-			GetBackgroundPolygonVerts( x + iOutlineWide, y + iOutlineWide, x + iTotalWide - iOutlineWide, y + iLineTall - iOutlineWide, background );
-			surface()->DrawSetColor( m_clrBackground );
-			surface()->DrawTexturedPolygon( NUM_BACKGROUND_COORD, background );
+			int outlineX[NUM_BACKGROUND_COORD + 1];
+			int outlineY[NUM_BACKGROUND_COORD + 1];
+			surface()->DrawSetColor( GetFadedColor( m_clrLocalPlayerOutline, flAlpha ) );
+			for ( int j = 0; j < iOutlineWide; j++ )
+			{
+				GetBackgroundPolygonVerts( x + j, y + j, x + iTotalWide - j, y + iLineTall - j, background );
+				for ( int k = 0; k < NUM_BACKGROUND_COORD; k++ )
+				{
+					outlineX[k] = (int)background[k].m_Position.x;
+					outlineY[k] = (int)background[k].m_Position.y;
+				}
+				outlineX[NUM_BACKGROUND_COORD] = outlineX[0];
+				outlineY[NUM_BACKGROUND_COORD] = outlineY[0];
+				surface()->DrawPolyLine( outlineX, outlineY, NUM_BACKGROUND_COORD + 1 );
+			}
 		}
 
 		x += iHorizontalPadding;
 
 		if ( !notice.iSuicide )
 		{
-			SetColorForNoticePlayer( notice.Killer.iTeamNumber );
+			SetColorForNoticePlayer( notice.Killer.iTeamNumber, flAlpha );
 			surface()->DrawSetTextPos( x, yText );
 			surface()->DrawSetTextFont( m_hTextFont );
 			surface()->DrawUnicodeString( killer, FONT_DRAW_NONADDITIVE );
 			x += iKillerWide + iItemSpacing;
 		}
 
-		int yIcon = icon->bRenderUsingFont ? y : y + ( iLineTall - iIconTall ) / 2;
-		icon->DrawSelf( x, yIcon, iIconWide, iIconTall, m_clrIcon );
+		Color iconColor = GetFadedColor( m_clrIcon, flAlpha );
+		int yIcon = y + ( iLineTall - iIconTall ) / 2;
+		DrawIcon( icon, x, yIcon, iIconWide, iIconTall, iconColor );
 		x += iIconWide;
 
 		if ( bDrawHeadshot )
 		{
 			x += iItemSpacing;
 			int yHeadshot = y + ( iLineTall - iHeadshotTall ) / 2;
-			m_iconD_headshot->DrawSelf( x, yHeadshot, iHeadshotWide, iHeadshotTall, m_clrIcon );
+			DrawIcon( m_iconD_headshot, x, yHeadshot, iHeadshotWide, iHeadshotTall, iconColor );
 			x += iHeadshotWide;
 		}
 
 		x += iItemSpacing;
 
-		SetColorForNoticePlayer( notice.Victim.iTeamNumber );
+		SetColorForNoticePlayer( notice.Victim.iTeamNumber, flAlpha );
 		surface()->DrawSetTextPos( x, yText );
 		surface()->DrawSetTextFont( m_hTextFont );
 		surface()->DrawUnicodeString( victim, FONT_DRAW_NONADDITIVE );
@@ -390,7 +460,8 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	deathMsg.flDisplayTime = gpGlobals->curtime + hud_deathnotice_time.GetFloat();
 	deathMsg.iSuicide = ( !killer || killer == victim );
 	int iLocalPlayerIndex = GetLocalPlayerIndex();
-	deathMsg.bLocalPlayerInvolved = iLocalPlayerIndex > 0 && ( killer == iLocalPlayerIndex || victim == iLocalPlayerIndex );
+	deathMsg.bLocalPlayerKiller = iLocalPlayerIndex > 0 && !deathMsg.iSuicide && killer == iLocalPlayerIndex;
+	deathMsg.bLocalPlayerVictim = iLocalPlayerIndex > 0 && victim == iLocalPlayerIndex;
 	deathMsg.bHeadshot = !deathMsg.iSuicide && event->GetBool( "headshot" );
 
 	// Try and find the death identifier in the icon list
