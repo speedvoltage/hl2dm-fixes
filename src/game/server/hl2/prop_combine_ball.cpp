@@ -1461,7 +1461,7 @@ void CPropCombineBall::DeflectTowardEnemy( float flSpeed, int index, gamevcollis
 		float flMaxDot = 0.966f;
 		if ( !WasWeaponLaunched() )
 		{
-			float flMaxDot = sk_combineball_seek_angle.GetFloat();
+			flMaxDot = sk_combineball_seek_angle.GetFloat();
 			float flGuideFactor = sk_combineball_guidefactor.GetFloat();
 			for ( int i = m_nBounceCount; --i >= 0; )
 			{
