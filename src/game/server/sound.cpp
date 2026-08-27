@@ -1450,17 +1450,21 @@ void UTIL_EmitSoundSuit(edict_t *entity, const char *sample)
 
 	if (fvol > 0.05)
 	{
-		CPASAttenuationFilter filter( GetContainingEntity( entity ) );
-		filter.MakeReliable();
+		CBasePlayer *pPlayer = ToBasePlayer( GetContainingEntity( entity ) );
+		if ( pPlayer )
+		{
+			CSingleUserRecipientFilter filter( pPlayer );
+			filter.MakeReliable();
 
-		EmitSound_t ep;
-		ep.m_nChannel = CHAN_STATIC;
-		ep.m_pSoundName = sample;
-		ep.m_flVolume = fvol;
-		ep.m_SoundLevel = SNDLVL_NORM;
-		ep.m_nPitch = pitch;
+			EmitSound_t ep;
+			ep.m_nChannel = CHAN_STATIC;
+			ep.m_pSoundName = sample;
+			ep.m_flVolume = fvol;
+			ep.m_SoundLevel = SNDLVL_NORM;
+			ep.m_nPitch = pitch;
 
-		CBaseEntity::EmitSound( filter, ENTINDEX(entity), ep );
+			CBaseEntity::EmitSound( filter, ENTINDEX(entity), ep );
+		}
 	}
 }
 
