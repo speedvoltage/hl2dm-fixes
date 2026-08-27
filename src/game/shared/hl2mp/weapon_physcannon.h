@@ -331,6 +331,7 @@ protected:
 #endif	// !CLIENT_DLL
 
 	void	UpdateObject( void );
+	float	GetPollingInterval( void ) const;
 	void	DetachObject( bool playSound = true, bool wasLaunched = false );
 	void	LaunchObject( const Vector &vecDir, float flForce );
 	void	StartEffects( void );	// Initialize all sprites and beams
