@@ -649,6 +649,9 @@ void CTriggerRemove::Touch( CBaseEntity *pOther )
 	if (!PassesTriggerFilters(pOther))
 		return;
 
+	if ( pOther->IsPlayer() )
+		return;
+
 	UTIL_Remove( pOther );
 }
 
