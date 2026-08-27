@@ -80,6 +80,8 @@ private:
 
 	CPanelAnimationVarAliasType( float, m_flLineSpacing, "LineSpacing", "3", "proportional_float" );
 
+	CPanelAnimationVarAliasType( float, m_flFontIconVerticalOffset, "FontIconVerticalOffset", "4", "proportional_float" );
+
 	CPanelAnimationVarAliasType( float, m_flCornerRadius, "CornerRadius", "3", "proportional_float" );
 
 	CPanelAnimationVar( float, m_flMaxDeathNotices, "MaxDeathNotices", "4" );
@@ -221,6 +223,8 @@ void CHudDeathNotice::DrawIcon( CHudTexture *icon, int x, int y, int iWide, int 
 		icon->DrawSelf( x, y, iWide, iTall, color );
 		return;
 	}
+
+	y += (int)m_flFontIconVerticalOffset;
 
 	surface()->DrawSetTextFont( icon->hFont );
 	surface()->DrawSetTextColor( color );
