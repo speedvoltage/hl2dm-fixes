@@ -140,9 +140,9 @@ void CWeapon357::PrimaryAttack( void )
 	{
 		QAngle angles;
 		engine->GetViewAngles( angles );
-		angles.x += random->RandomInt( -1, 1 );
-		angles.y += random->RandomInt( -1, 1 );
-		angles.z += 0.0f;
+		angles.x += SharedRandomInt( "357disorientpitch", -1, 1 );
+		angles.y += SharedRandomInt( "357disorientyaw", -1, 1 );
+		angles.z = 0.0f;
 		engine->SetViewAngles( angles );
 	}
 #endif // CLIENT_DLL
