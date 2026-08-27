@@ -1783,6 +1783,9 @@ bool CHL2MPBot::IsLineOfFireClear( const Vector &where ) const
 // Return true if a weapon has no obstructions along the line between the given point and entity
 bool CHL2MPBot::IsLineOfFireClear( const Vector &from, CBaseEntity *who ) const
 {
+	if ( who == NULL || who->IsMarkedForDeletion() )
+		return false;
+
 	trace_t trace;
 	NextBotTraceFilterIgnoreActors botFilter( NULL, COLLISION_GROUP_NONE );
 	CTraceFilterIgnoreFriendlyCombatItems ignoreFriendlyCombatFilter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
