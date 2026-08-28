@@ -3159,16 +3159,6 @@ void CTriggerCamera::Enable( void )
 		m_pPath = NULL;
 	}
 
-	m_flStopTime = gpGlobals->curtime;
-	if ( m_pPath )
-	{
-		if ( m_pPath->m_flSpeed != 0 )
-			m_targetSpeed = m_pPath->m_flSpeed;
-		
-		m_flStopTime += m_pPath->GetDelay();
-	}
-
-
 	// copy over player information. If we're interpolating from
 	// the player position, do something more elaborate.
 #if HL2_EPISODIC
@@ -3196,6 +3186,18 @@ void CTriggerCamera::Enable( void )
 		SetAbsVelocity( vec3_origin );
 	}
 
+	m_flStopTime = gpGlobals->curtime;
+	m_moveDistance = 0;
+	if ( m_pPath )
+	{
+		if ( m_pPath->m_flSpeed != 0 )
+			m_targetSpeed = m_pPath->m_flSpeed;
+
+		m_vecMoveDir = m_pPath->GetLocalOrigin() - GetLocalOrigin();
+		m_moveDistance = VectorNormalize( m_vecMoveDir );
+		m_flStopTime += m_pPath->GetDelay();
+	}
+
 
 	pPlayer->SetViewEntity( this );
 
@@ -3205,15 +3207,9 @@ void CTriggerCamera::Enable( void )
 		pPlayer->GetActiveWeapon()->AddEffects( EF_NODRAW );
 	}
 
-	// Only track if we have a target
-	if ( m_hTarget )
-	{
-		// follow the player down
-		SetThink( &CTriggerCamera::FollowTarget );
-		SetNextThink( gpGlobals->curtime );
-	}
+	SetThink( &CTriggerCamera::FollowTarget );
+	SetNextThink( gpGlobals->curtime );
 
-	m_moveDistance = 0;
 	Move();
 
 	DispatchUpdateTransmitState();
@@ -3281,13 +3277,7 @@ void CTriggerCamera::FollowTarget( )
 	if (m_hPlayer == NULL)
 		return;
 
-	if ( m_hTarget == NULL )
-	{
-		Disable();
-		return;
-	}
-
-	if ( !HasSpawnFlags(SF_CAMERA_PLAYER_INFINITE_WAIT) && (!m_hTarget || m_flReturnTime < gpGlobals->curtime) )
+	if ( !HasSpawnFlags(SF_CAMERA_PLAYER_INFINITE_WAIT) && m_flReturnTime < gpGlobals->curtime )
 	{
 		Disable();
 		return;
