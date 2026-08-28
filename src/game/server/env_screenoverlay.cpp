@@ -159,7 +159,11 @@ int CEnvScreenOverlay::UpdateTransmitState()
 void CEnvScreenOverlay::InputSwitchOverlay( inputdata_t &inputdata )
 {
 	int iNewOverlay = inputdata.value.Int() - 1;
-	iNewOverlay = abs( iNewOverlay );
+	if ( iNewOverlay < 0 || iNewOverlay >= MAX_SCREEN_OVERLAYS )
+	{
+		Warning("env_screenoverlay %s cannot switch to overlay %d.\n", STRING(GetEntityName()), inputdata.value.Int() );
+		return;
+	}
 
 	if ( m_iszOverlayNames[iNewOverlay] == NULL_STRING )
 	{
