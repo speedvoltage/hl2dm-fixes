@@ -1001,6 +1001,7 @@ void CEventQueue::ServiceEvents( void )
 #endif
 	{
 		MDLCACHE_CRITICAL_SECTION();
+		RemoveEvent( pe );
 
 		bool targetFound = false;
 
@@ -1065,8 +1066,6 @@ void CEventQueue::ServiceEvents( void )
 			ADD_DEBUG_HISTORY( HISTORY_ENTITY_IO, szBuffer );
 		}
 
-		// remove the event from the list (remembering that the queue may have been added to)
-		RemoveEvent( pe );
 		delete pe;
 
 		//
@@ -1953,4 +1952,3 @@ void CEntityList::DeleteEntity( CBaseEntity *pEnt )
 		e = e->pNext;
 	}
 }
-
