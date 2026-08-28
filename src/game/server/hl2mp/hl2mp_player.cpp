@@ -1298,6 +1298,17 @@ void CHL2MP_Player::DetonateTripmines( void )
 
 void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 {
+	if ( IsOnFire() )
+	{
+		CBaseEntity *pEffectEntity = GetEffectEntity();
+		if ( pEffectEntity )
+		{
+			UTIL_Remove( pEffectEntity );
+		}
+		SetEffectEntity( NULL );
+		Extinguish();
+	}
+
 	//update damage info with our accumulated physics force
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
