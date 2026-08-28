@@ -1457,12 +1457,15 @@ CBaseEntity* CHL2MP_Player::EntSelectSpawnPoint( void )
 		goto ReturnSpot;
 	}
 
-	if ( !pSpot  )
+	if ( !pSpot )
 	{
 		pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_start" );
 
-		if ( pSpot )
-			goto ReturnSpot;
+		if ( !pSpot )
+		{
+			Warning( "No valid player spawn point found; using the world origin.\n" );
+			pSpot = CBaseEntity::Instance( INDEXENT( 0 ) );
+		}
 	}
 
 ReturnSpot:
