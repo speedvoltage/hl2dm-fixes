@@ -34,7 +34,15 @@ float GetCurrentGravity( void )
 	return sv_gravity.GetFloat();
 }
 
-ConVar	sv_gravity		( "sv_gravity", DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity." );
+static void GravityChanged_Callback( IConVar *pVar, const char *pOldString, float flOldValue )
+{
+	if ( physenv )
+	{
+		physenv->SetGravity( Vector( 0, 0, -static_cast< ConVar * >( pVar )->GetFloat() ) );
+	}
+}
+
+ConVar	sv_gravity		( "sv_gravity", DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity.", GravityChanged_Callback );
 
 #if defined( DOD_DLL ) || defined( CSTRIKE_DLL ) || defined( HL1MP_DLL )
 ConVar	sv_stopspeed	( "sv_stopspeed","100", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minimum stopping speed when on ground." );
