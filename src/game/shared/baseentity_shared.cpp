@@ -1833,6 +1833,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		if ( bStartedInWater )
 		{
 #ifdef GAME_DLL
+			CDisablePredictionFiltering disablePred;
 			Vector vBubbleStart = info.m_vecSrc;
 			Vector vBubbleEnd = tr.endpos;
 
@@ -2077,9 +2078,9 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 //-----------------------------------------------------------------------------
 bool CBaseEntity::ShouldDrawUnderwaterBulletBubbles()
 {
-#if defined( HL2_DLL ) && defined( GAME_DLL )
-	CBaseEntity *pPlayer = ( gpGlobals->maxClients == 1 ) ? UTIL_GetLocalPlayer() : NULL;
-	return pPlayer && (pPlayer->GetWaterLevel() == 3);
+#if ( defined( HL2_DLL ) || defined( HL2MP ) ) && defined( GAME_DLL )
+	CBaseEntity *pPlayer = ( gpGlobals->maxClients == 1 ) ? UTIL_GetLocalPlayer() : this;
+	return pPlayer && ( pPlayer->GetWaterLevel() == 3 );
 #else
 	return false;
 #endif
@@ -2120,6 +2121,7 @@ bool CBaseEntity::HandleShotImpactingWater( const FireBulletsInfo_t &info,
 #ifdef GAME_DLL
 	if ( ShouldDrawUnderwaterBulletBubbles() )
 	{
+		CDisablePredictionFiltering disablePred;
 		CWaterBullet *pWaterBullet = ( CWaterBullet * )CreateEntityByName( "waterbullet" );
 		if ( pWaterBullet )
 		{
