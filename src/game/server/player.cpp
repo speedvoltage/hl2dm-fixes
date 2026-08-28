@@ -8183,6 +8183,22 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 		SendPropInt		(SENDINFO(deadflag),	1, SPROP_UNSIGNED ),
 	END_SEND_TABLE()
 
+#ifdef HL2MP
+static void SendProxy_HL2MPAmmo( const SendProp *pProp, const void *pStruct, const void *pVarData, DVariant *pOut, int iElement, int objectID )
+{
+	pOut->m_Int = *(const int *)pVarData;
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex( objectID );
+	if ( !pPlayer || ( pPlayer->GetObserverMode() != OBS_MODE_CHASE && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE ) )
+		return;
+
+	CBasePlayer *pTarget = ToBasePlayer( pPlayer->GetObserverTarget() );
+	int iAmmoIndex = pProp->GetOffset() / sizeof( int );
+	if ( pTarget && iAmmoIndex >= 0 && iAmmoIndex < MAX_AMMO_SLOTS )
+		pOut->m_Int = pTarget->GetAmmoCount( iAmmoIndex );
+}
+#endif
+
 // -------------------------------------------------------------------------------- //
 // This data only gets sent to clients that ARE this player entity.
 // -------------------------------------------------------------------------------- //
@@ -8200,7 +8216,11 @@ void CMovementSpeedMod::InputSpeedMod(inputdata_t &data)
 
 		SendPropFloat		( SENDINFO(m_flFriction),		8,	SPROP_ROUNDDOWN,	0.0f,	4.0f),
 
+#ifdef HL2MP
+		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), -1, SPROP_VARINT | SPROP_UNSIGNED, SendProxy_HL2MPAmmo ) ),
+#else
 		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), -1, SPROP_VARINT | SPROP_UNSIGNED ) ),
+#endif
 			
 		SendPropInt			( SENDINFO( m_fOnTarget ), 2, SPROP_UNSIGNED ),
 
