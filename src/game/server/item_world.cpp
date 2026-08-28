@@ -123,6 +123,9 @@ END_DATADESC()
 CItem::CItem()
 {
 	m_bActivateWhenAtRest = false;
+#if defined( HL2MP ) || defined( TF_DLL )
+	m_flNextResetCheckTime = 0.0f;
+#endif
 }
 
 bool CItem::CreateItemVPhysicsObject( void )
