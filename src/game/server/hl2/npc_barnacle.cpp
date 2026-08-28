@@ -441,9 +441,17 @@ void CNPC_Barnacle::BarnacleThink ( void )
 	CBaseEntity *pTouchEnt;
 	float flLength;
 
- 	SetNextThink( gpGlobals->curtime + 0.1f );
+	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	UpdateTongue();
+
+	CBasePlayer *pEnemyPlayer = ToBasePlayer( GetEnemy() );
+	if ( pEnemyPlayer && pEnemyPlayer->IsObserver() )
+	{
+		LostPrey( true );
+		m_flDigestFinish = 0.0f;
+		return;
+	}
 
 	// AI Disabled, don't do anything?
 	if ( CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI )
