@@ -1130,10 +1130,10 @@ int CBaseEntity::DrawDebugTextOverlays(void)
 }
 
 
-void CBaseEntity::SetParent( string_t newParent, CBaseEntity *pActivator, int iAttachment )
+void CBaseEntity::SetParent( string_t newParent, CBaseEntity *pActivator, int iAttachment, CBaseEntity *pCaller )
 {
 	// find and notify the new parent
-	CBaseEntity *pParent = gEntList.FindEntityByName( NULL, newParent, NULL, pActivator );
+	CBaseEntity *pParent = gEntList.FindEntityByName( NULL, newParent, this, pActivator, pCaller );
 
 	// debug check
 	if ( newParent != NULL_STRING && pParent == NULL )
@@ -1143,7 +1143,7 @@ void CBaseEntity::SetParent( string_t newParent, CBaseEntity *pActivator, int iA
 	else
 	{
 		// make sure there isn't any ambiguity
-		if ( gEntList.FindEntityByName( pParent, newParent, NULL, pActivator ) )
+		if ( gEntList.FindEntityByName( pParent, newParent, this, pActivator, pCaller ) )
 		{
 			Msg( "Entity %s(%s) has ambigious parent %s\n", STRING(m_iClassname), GetDebugName(), STRING(newParent) );
 		}
@@ -4665,7 +4665,7 @@ void CBaseEntity::InputSetParent( inputdata_t &inputdata )
 		m_iParentAttachment = 0;
 	}
 
-	SetParent( inputdata.value.StringID(), inputdata.pActivator );
+	SetParent( inputdata.value.StringID(), inputdata.pActivator, -1, inputdata.pCaller );
 }
 
 //------------------------------------------------------------------------------
