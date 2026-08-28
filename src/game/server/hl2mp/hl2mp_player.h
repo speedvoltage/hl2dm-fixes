@@ -155,6 +155,7 @@ private:
 
 	float m_flNextModelChangeTime;
 	float m_flNextTeamChangeTime;
+	bool m_bGivingDefaultItems;
 
 	float m_flSlamProtectTime;	
 

@@ -148,6 +148,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
+	m_bGivingDefaultItems = false;
 
 	m_iSpawnInterpCounter = 0;
 
@@ -345,8 +346,10 @@ void CHL2MP_Player::Spawn(void)
 		RemoveSolidFlags( FSOLID_NOT_SOLID );
 
 		RemoveEffects( EF_NODRAW );
-		
+
+		m_bGivingDefaultItems = true;
 		GiveDefaultItems();
+		m_bGivingDefaultItems = false;
 	}
 
 	SetNumAnimOverlays( 3 );
@@ -926,7 +929,7 @@ bool CHL2MP_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	}
 
 	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-	if( !pWeapon->FVisible( this, MASK_SOLID ) && !(GetFlags() & FL_NOTARGET) )
+	if ( !m_bGivingDefaultItems && !pWeapon->FVisible( this, MASK_SOLID ) && !( GetFlags() & FL_NOTARGET ) )
 	{
 		return false;
 	}
