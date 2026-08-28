@@ -30,6 +30,10 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+#ifdef HL2MP
+ConVar sv_hl2mp_item_pickup_through_glass( "sv_hl2mp_item_pickup_through_glass", "0", FCVAR_NOTIFY, "Allow HL2MP items to be picked up through glass." );
+#endif
+
 class CWorldItem : public CBaseAnimating
 {
 	DECLARE_DATADESC();
@@ -349,7 +353,7 @@ void CItem::FallThink ( void )
 //			*pPlayer - player attempting the pickup
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
+static bool ItemCanBeTouchedByPlayerWithMask( CBaseEntity *pItem, CBasePlayer *pPlayer, unsigned int nTraceMask )
 {
 	if ( pItem == NULL || pPlayer == NULL )
 		return false;
@@ -392,7 +396,7 @@ bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
 	// Trace between to see if we're occluded
 	trace_t tr;
 	CTraceFilterSkipTwoEntities filter( pPlayer, pItem, COLLISION_GROUP_PLAYER_MOVEMENT );
-	UTIL_TraceLine( vecStartPos, vecEndPos, MASK_SOLID, &filter, &tr );
+	UTIL_TraceLine( vecStartPos, vecEndPos, nTraceMask, &filter, &tr );
 
 	// Occluded
 	// FIXME: For now, we exclude starting in solid because there are cases where this doesn't matter
@@ -410,6 +414,11 @@ bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
 	return true;
 }
 
+bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
+{
+	return ItemCanBeTouchedByPlayerWithMask( pItem, pPlayer, MASK_SOLID );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Whether or not the item can be touched and picked up by the player, taking
 //			into account obstructions and other hinderances
@@ -417,7 +426,16 @@ bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 bool CItem::ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer )
 {
+#ifdef HL2MP
+	unsigned int nTraceMask = MASK_SOLID;
+	if ( sv_hl2mp_item_pickup_through_glass.GetBool() )
+	{
+		nTraceMask &= ~CONTENTS_WINDOW;
+	}
+	return ItemCanBeTouchedByPlayerWithMask( this, pPlayer, nTraceMask );
+#else
 	return UTIL_ItemCanBeTouchedByPlayer( this, pPlayer );
+#endif
 }
 
 //-----------------------------------------------------------------------------
