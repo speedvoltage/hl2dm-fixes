@@ -74,7 +74,7 @@ private:
 	void	RollGrenade( CBasePlayer *pPlayer );
 	void	LobGrenade( CBasePlayer *pPlayer );
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
-	void	CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc );
+	void	CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc, const QAngle &angles = vec3_angle );
 
 	CNetworkVar( bool,	m_bRedraw );	//Draw the weapon again after throwing a grenade
 	
@@ -392,11 +392,19 @@ void CWeaponFrag::ItemPostFrame( void )
 }
 
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
-void CWeaponFrag::CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc )
+void CWeaponFrag::CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc, const QAngle &angles )
 {
+	matrix3x4_t rotation;
+	AngleMatrix( angles, rotation );
+
+	Vector vecMins;
+	Vector vecMaxs;
+	RotateAABB( rotation, Vector( -GRENADE_RADIUS - 2, -GRENADE_RADIUS - 2, -2 ),
+		Vector( GRENADE_RADIUS + 2, GRENADE_RADIUS + 2, GRENADE_RADIUS * 2 + 2 ), vecMins, vecMaxs );
+
 	trace_t tr;
 
-	UTIL_TraceHull( vecEye, vecSrc, -Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), 
+	UTIL_TraceHull( vecEye, vecSrc, vecMins, vecMaxs,
 		pPlayer->PhysicsSolidMaskForEntity(), pPlayer, pPlayer->GetCollisionGroup(), &tr );
 	
 	if ( tr.DidHit() )
@@ -527,7 +535,6 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 		CrossProduct( tr.plane.normal, tangent, vecFacing );
 	}
 	vecSrc += (vecFacing * 18.0);
-	CheckThrowPosition( pPlayer, pPlayer->WorldSpaceCenter(), vecSrc );
 
 	Vector vecThrow;
 	pPlayer->GetVelocity( &vecThrow, NULL );
@@ -536,6 +543,7 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	QAngle orientation(0,pPlayer->GetLocalAngles().y,-90);
 	// roll it
 	AngularImpulse rotSpeed(0,0,720);
+	CheckThrowPosition( pPlayer, pPlayer->WorldSpaceCenter(), vecSrc, orientation );
 	CBaseGrenade *pGrenade = Fraggrenade_Create( vecSrc, orientation, vecThrow, rotSpeed, pPlayer, GRENADE_TIMER, false );
 
 	if ( pGrenade )
