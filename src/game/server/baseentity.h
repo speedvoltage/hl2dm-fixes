@@ -604,7 +604,7 @@ public:
 	CBaseEntity *NextMovePeer( void );
 
 	void		SetName( string_t newTarget );
-	void		SetParent( string_t newParent, CBaseEntity *pActivator, int iAttachment = -1 );
+	void		SetParent( string_t newParent, CBaseEntity *pActivator, int iAttachment = -1, CBaseEntity *pCaller = NULL );
 	
 	// Set the movement parent. Your local origin and angles will become relative to this parent.
 	// If iAttachment is a valid attachment on the parent, then your local origin and angles 
