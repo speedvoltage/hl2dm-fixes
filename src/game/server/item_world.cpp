@@ -30,6 +30,10 @@
 
 #define ITEM_PICKUP_BOX_BLOAT		24
 
+#ifdef HL2MP
+ConVar sv_hl2mp_item_playerclip( "sv_hl2mp_item_playerclip", "0", FCVAR_NOTIFY, "Allow HL2MP items to ignore player-clip brushes." );
+#endif
+
 class CWorldItem : public CBaseAnimating
 {
 	DECLARE_DATADESC();
@@ -217,7 +221,14 @@ void CItem::Spawn( void )
 
 unsigned int CItem::PhysicsSolidMaskForEntity( void ) const
 { 
-	return BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_PLAYERCLIP;
+	unsigned int nMask = BaseClass::PhysicsSolidMaskForEntity();
+#ifdef HL2MP
+	if ( !sv_hl2mp_item_playerclip.GetBool() )
+#endif
+	{
+		nMask |= CONTENTS_PLAYERCLIP;
+	}
+	return nMask;
 }
 
 void CItem::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
