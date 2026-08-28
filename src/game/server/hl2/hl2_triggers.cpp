@@ -309,7 +309,17 @@ public:
 	void EndTouch(CBaseEntity *pOther);
 
 private:
+	struct PendingStrip_t
+	{
+		EHANDLE hCharacter;
+	};
+
+	bool QueueCharacter( CBaseCombatCharacter *pCharacter );
+	void StripCharacterWeapons( CBaseCombatCharacter *pCharacter );
+	void WeaponStripThink();
+
 	bool m_bKillWeapons;
+	CUtlVector< PendingStrip_t > m_PendingStrips;
 };
 
 
@@ -320,7 +330,24 @@ LINK_ENTITY_TO_CLASS( trigger_weapon_strip, CTriggerWeaponStrip );
 
 BEGIN_DATADESC( CTriggerWeaponStrip )
 	DEFINE_KEYFIELD( m_bKillWeapons,	FIELD_BOOLEAN, "KillWeapons" ),
+	DEFINE_THINKFUNC( WeaponStripThink ),
 END_DATADESC()
+
+static const char *s_pWeaponStripThinkContext = "WeaponStripThinkContext";
+
+bool CTriggerWeaponStrip::QueueCharacter( CBaseCombatCharacter *pCharacter )
+{
+	for ( int i = 0; i < m_PendingStrips.Count(); ++i )
+	{
+		if ( m_PendingStrips[i].hCharacter.Get() == pCharacter )
+			return false;
+	}
+
+	PendingStrip_t pending;
+	pending.hCharacter = pCharacter;
+	m_PendingStrips.AddToTail( pending );
+	return true;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -334,7 +361,31 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 		return;
 
 	CBaseCombatCharacter *pCharacter = pOther->MyCombatCharacterPointer();
-	
+	if ( !pCharacter )
+		return;
+
+	if ( pCharacter->IsPlayer() )
+	{
+		static_cast< CBasePlayer * >( pCharacter )->ForceDropOfCarriedPhysObjects();
+	}
+
+	bool bQueueWasEmpty = m_PendingStrips.Count() == 0;
+	if ( QueueCharacter( pCharacter ) && bQueueWasEmpty )
+	{
+		SetContextThink( &CTriggerWeaponStrip::WeaponStripThink, gpGlobals->curtime + gpGlobals->interval_per_tick, s_pWeaponStripThinkContext );
+	}
+}
+
+void CTriggerWeaponStrip::StripCharacterWeapons( CBaseCombatCharacter *pCharacter )
+{
+	if ( !pCharacter )
+		return;
+
+	if ( pCharacter->IsPlayer() )
+	{
+		static_cast< CBasePlayer * >( pCharacter )->ForceDropOfCarriedPhysObjects();
+	}
+
 	if ( m_bKillWeapons )
 	{
 		for ( int i = 0 ; i < pCharacter->WeaponCount(); ++i )
@@ -360,7 +411,31 @@ void CTriggerWeaponStrip::StartTouch(CBaseEntity *pOther)
 		}
 
 		pCharacter->Weapon_DropAll( true );
-		pCharacter->SetPreventWeaponPickup( true );
+		pCharacter->SetPreventWeaponPickup( IsTouching( pCharacter ) );
+	}
+}
+
+void CTriggerWeaponStrip::WeaponStripThink()
+{
+	CUtlVector< PendingStrip_t > pending;
+	for ( int i = 0; i < m_PendingStrips.Count(); ++i )
+	{
+		pending.AddToTail( m_PendingStrips[i] );
+	}
+	m_PendingStrips.RemoveAll();
+
+	for ( int i = 0; i < pending.Count(); ++i )
+	{
+		StripCharacterWeapons( static_cast< CBaseCombatCharacter * >( pending[i].hCharacter.Get() ) );
+	}
+
+	if ( m_PendingStrips.Count() > 0 )
+	{
+		SetContextThink( &CTriggerWeaponStrip::WeaponStripThink, gpGlobals->curtime + gpGlobals->interval_per_tick, s_pWeaponStripThinkContext );
+	}
+	else
+	{
+		SetContextThink( NULL, 0, s_pWeaponStripThinkContext );
 	}
 }
 
