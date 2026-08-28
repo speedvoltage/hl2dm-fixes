@@ -7761,7 +7761,17 @@ public:
 	void InputStripWeaponsAndSuit(inputdata_t &data);
 
 	void StripWeapons(inputdata_t &data, bool stripSuit);
+	void StripWeaponsThink();
 	DECLARE_DATADESC();
+
+private:
+	struct PendingStrip_t
+	{
+		EHANDLE hPlayer;
+		bool bStripSuit;
+	};
+
+	CUtlVector< PendingStrip_t > m_PendingStrips;
 };
 
 LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons );
@@ -7769,7 +7779,10 @@ LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons );
 BEGIN_DATADESC( CStripWeapons )
 	DEFINE_INPUTFUNC( FIELD_VOID, "Strip", InputStripWeapons ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StripWeaponsAndSuit", InputStripWeaponsAndSuit ),
+	DEFINE_THINKFUNC( StripWeaponsThink ),
 END_DATADESC()
+
+static const char *s_pPlayerWeaponStripThinkContext = "PlayerWeaponStripThinkContext";
 	
 BEGIN_ENT_SCRIPTDESC( CBasePlayer, CBaseCombatCharacter, "The player entity." )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsPlayerNoclipping, "IsNoclipping", "Returns true if the player is in noclip mode." ) 
@@ -7809,7 +7822,55 @@ void CStripWeapons::StripWeapons(inputdata_t &data, bool stripSuit)
 
 	if ( pPlayer )
 	{
-		pPlayer->RemoveAllItems( stripSuit );
+		pPlayer->ForceDropOfCarriedPhysObjects();
+
+		for ( int i = 0; i < m_PendingStrips.Count(); ++i )
+		{
+			if ( m_PendingStrips[i].hPlayer.Get() == pPlayer )
+			{
+				m_PendingStrips[i].bStripSuit |= stripSuit;
+				return;
+			}
+		}
+
+		bool bQueueWasEmpty = m_PendingStrips.Count() == 0;
+		PendingStrip_t pending;
+		pending.hPlayer = pPlayer;
+		pending.bStripSuit = stripSuit;
+		m_PendingStrips.AddToTail( pending );
+
+		if ( bQueueWasEmpty )
+		{
+			SetContextThink( &CStripWeapons::StripWeaponsThink, gpGlobals->curtime + gpGlobals->interval_per_tick, s_pPlayerWeaponStripThinkContext );
+		}
+	}
+}
+
+void CStripWeapons::StripWeaponsThink()
+{
+	CUtlVector< PendingStrip_t > pending;
+	for ( int i = 0; i < m_PendingStrips.Count(); ++i )
+	{
+		pending.AddToTail( m_PendingStrips[i] );
+	}
+	m_PendingStrips.RemoveAll();
+
+	for ( int i = 0; i < pending.Count(); ++i )
+	{
+		CBasePlayer *pPlayer = static_cast< CBasePlayer * >( pending[i].hPlayer.Get() );
+		if ( pPlayer )
+		{
+			pPlayer->RemoveAllItems( pending[i].bStripSuit );
+		}
+	}
+
+	if ( m_PendingStrips.Count() > 0 )
+	{
+		SetContextThink( &CStripWeapons::StripWeaponsThink, gpGlobals->curtime + gpGlobals->interval_per_tick, s_pPlayerWeaponStripThinkContext );
+	}
+	else
+	{
+		SetContextThink( NULL, 0, s_pPlayerWeaponStripThinkContext );
 	}
 }
 
