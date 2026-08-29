@@ -36,6 +36,7 @@ public:
 private:
 	void ApplyPush( C_BasePlayer *pPlayer );
 	bool IsTouching( C_BasePlayer *pPlayer );
+	bool IsTouchingActivator( C_BasePlayer *pPlayer );
 
 	static CUtlVector<C_TriggerPush *> s_TriggerPushes;
 
@@ -43,6 +44,9 @@ private:
 	float m_flPushSpeed;
 	int m_spawnflags;
 	bool m_bPushOnceFired;
+	int m_nTouchActivatorModelIndex;
+	Vector m_vecTouchActivatorOrigin;
+	QAngle m_angTouchActivatorAngles;
 };
 
 CUtlVector<C_TriggerPush *> C_TriggerPush::s_TriggerPushes;
@@ -52,6 +56,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_TriggerPush, DT_TriggerPush, CTriggerPush )
 	RecvPropFloat( RECVINFO( m_flPushSpeed ) ),
 	RecvPropInt( RECVINFO( m_spawnflags ) ),
 	RecvPropBool( RECVINFO( m_bPushOnceFired ) ),
+	RecvPropInt( RECVINFO( m_nTouchActivatorModelIndex ) ),
+	RecvPropVector( RECVINFO( m_vecTouchActivatorOrigin ) ),
+	RecvPropQAngles( RECVINFO( m_angTouchActivatorAngles ) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_TriggerPush )
@@ -59,14 +66,20 @@ BEGIN_PREDICTION_DATA( C_TriggerPush )
 	DEFINE_PRED_FIELD( m_flPushSpeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_spawnflags, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_bPushOnceFired, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nTouchActivatorModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_vecTouchActivatorOrigin, FIELD_VECTOR, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_angTouchActivatorAngles, FIELD_VECTOR, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 END_PREDICTION_DATA()
 
 C_TriggerPush::C_TriggerPush()
 	: m_flPushSpeed( 0.0f ),
 	  m_spawnflags( 0 ),
-	  m_bPushOnceFired( false )
+	  m_bPushOnceFired( false ),
+	  m_nTouchActivatorModelIndex( 0 )
 {
 	m_vecAbsPushDir.Init();
+	m_vecTouchActivatorOrigin.Init();
+	m_angTouchActivatorAngles.Init();
 	SetPredictionEligible( true );
 }
 
@@ -109,9 +122,28 @@ bool C_TriggerPush::IsTouching( C_BasePlayer *pPlayer )
 	return ( trace.contents & MASK_SOLID ) != 0;
 }
 
+bool C_TriggerPush::IsTouchingActivator( C_BasePlayer *pPlayer )
+{
+	if ( m_nTouchActivatorModelIndex <= 0 )
+		return false;
+
+	vcollide_t *pCollide = modelinfo->GetVCollide( m_nTouchActivatorModelIndex );
+	if ( !pCollide || pCollide->solidCount <= 0 || !pCollide->solids[0] )
+		return false;
+
+	Ray_t ray;
+	trace_t trace;
+	ray.Init( pPlayer->GetAbsOrigin(), pPlayer->GetAbsOrigin(), pPlayer->WorldAlignMins(), pPlayer->WorldAlignMaxs() );
+	physcollision->TraceBox( ray, pCollide->solids[0], m_vecTouchActivatorOrigin, m_angTouchActivatorAngles, &trace );
+	return trace.startsolid;
+}
+
 void C_TriggerPush::ApplyPush( C_BasePlayer *pPlayer )
 {
-	if ( IsDormant() || !IsSolidFlagSet( FSOLID_TRIGGER ) || !IsTouching( pPlayer ) )
+	if ( IsDormant() || !IsTouching( pPlayer ) )
+		return;
+
+	if ( !IsSolidFlagSet( FSOLID_TRIGGER ) && !IsTouchingActivator( pPlayer ) )
 		return;
 
 	if ( m_spawnflags & SF_TRIG_PUSH_ONCE )

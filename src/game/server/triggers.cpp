@@ -2202,10 +2202,15 @@ public:
 	CNetworkVector( m_vecAbsPushDir );
 
 	DECLARE_DATADESC();
+
+	void FindTouchActivator( void );
 	
 	float m_flAlternateTicksFix; // Scale factor to apply to the push speed when running with alternate ticks
 	CNetworkVar( float, m_flPushSpeed );
 	CNetworkVar( bool, m_bPushOnceFired );
+	CNetworkVar( int, m_nTouchActivatorModelIndex );
+	CNetworkVector( m_vecTouchActivatorOrigin );
+	CNetworkQAngle( m_angTouchActivatorAngles );
 };
 
 BEGIN_DATADESC( CTriggerPush )
@@ -2214,6 +2219,9 @@ BEGIN_DATADESC( CTriggerPush )
 	DEFINE_KEYFIELD( m_flAlternateTicksFix, FIELD_FLOAT, "alternateticksfix" ),
 	DEFINE_FIELD( m_flPushSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( m_bPushOnceFired, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_nTouchActivatorModelIndex, FIELD_MODELINDEX ),
+	DEFINE_FIELD( m_vecTouchActivatorOrigin, FIELD_VECTOR ),
+	DEFINE_FIELD( m_angTouchActivatorAngles, FIELD_VECTOR ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_push, CTriggerPush );
@@ -2223,6 +2231,9 @@ IMPLEMENT_SERVERCLASS_ST( CTriggerPush, DT_TriggerPush )
 	SendPropFloat( SENDINFO( m_flPushSpeed ), 0, SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_spawnflags ), 13, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bPushOnceFired ) ),
+	SendPropModelIndex( SENDINFO( m_nTouchActivatorModelIndex ) ),
+	SendPropVector( SENDINFO( m_vecTouchActivatorOrigin ), -1, SPROP_NOSCALE ),
+	SendPropQAngles( SENDINFO( m_angTouchActivatorAngles ), 0, SPROP_NOSCALE ),
 END_SEND_TABLE()
 
 CTriggerPush::CTriggerPush()
@@ -2230,6 +2241,9 @@ CTriggerPush::CTriggerPush()
 	m_vecAbsPushDir.Init();
 	m_flPushSpeed = 0.0f;
 	m_bPushOnceFired = false;
+	m_nTouchActivatorModelIndex = 0;
+	m_vecTouchActivatorOrigin.Init();
+	m_angTouchActivatorAngles.Init();
 }
 
 
@@ -2295,6 +2309,90 @@ void CTriggerPush::Activate()
 	}
 	
 	BaseClass::Activate();
+	FindTouchActivator();
+}
+
+
+void CTriggerPush::FindTouchActivator( void )
+{
+	m_nTouchActivatorModelIndex = 0;
+	m_vecTouchActivatorOrigin.Init();
+	m_angTouchActivatorAngles.Init();
+
+	if ( GetEntityName() == NULL_STRING )
+		return;
+
+	CBaseEntity *pNamedEntity = gEntList.FindEntityByName( NULL, GetEntityName() );
+	if ( pNamedEntity != this || gEntList.FindEntityByName( pNamedEntity, GetEntityName() ) )
+		return;
+
+	CTriggerMultiple *pTouchActivator = NULL;
+	CBaseEntity *pEntity = NULL;
+	while ( ( pEntity = gEntList.FindEntityByClassname( pEntity, "trigger_multiple" ) ) != NULL )
+	{
+		CTriggerMultiple *pTrigger = static_cast<CTriggerMultiple *>( pEntity );
+		if ( pTrigger->GetSpawnFlags() != SF_TRIGGER_ALLOW_CLIENTS ||
+			 pTrigger->m_bDisabled || pTrigger->m_iFilterName != NULL_STRING ||
+			 pTrigger->GetEntityName() != NULL_STRING || pTrigger->m_iParent != NULL_STRING ||
+			 pTrigger->GetMoveParent() || pTrigger->GetMoveType() != MOVETYPE_NONE ||
+			 pTrigger->GetSolid() != SOLID_BSP || !pTrigger->IsSolidFlagSet( FSOLID_TRIGGER ) )
+		{
+			continue;
+		}
+
+		CBaseEntityOutput *pStartOutput = pTrigger->FindNamedOutput( "OnStartTouch" );
+		CBaseEntityOutput *pEndOutput = pTrigger->FindNamedOutput( "OnEndTouch" );
+		if ( !pStartOutput || !pEndOutput )
+			continue;
+
+		bool bEnablesPush = false;
+		for ( CEventAction *pAction = pStartOutput->GetFirstAction(); pAction; pAction = pAction->m_pNext )
+		{
+			if ( pAction->m_nTimesToFire == EVENT_FIRE_ALWAYS && pAction->m_flDelay == 0.0f &&
+				 pAction->m_iParameter == NULL_STRING &&
+				 !Q_stricmp( STRING( pAction->m_iTarget ), STRING( GetEntityName() ) ) &&
+				 !Q_stricmp( STRING( pAction->m_iTargetInput ), "Enable" ) )
+			{
+				bEnablesPush = true;
+				break;
+			}
+		}
+
+		if ( !bEnablesPush )
+			continue;
+
+		bool bDisablesPush = false;
+		for ( CEventAction *pAction = pEndOutput->GetFirstAction(); pAction; pAction = pAction->m_pNext )
+		{
+			if ( pAction->m_nTimesToFire == EVENT_FIRE_ALWAYS && pAction->m_flDelay >= 0.0f &&
+				 pAction->m_iParameter == NULL_STRING &&
+				 !Q_stricmp( STRING( pAction->m_iTarget ), STRING( GetEntityName() ) ) &&
+				 !Q_stricmp( STRING( pAction->m_iTargetInput ), "Disable" ) )
+			{
+				bDisablesPush = true;
+				break;
+			}
+		}
+
+		if ( !bDisablesPush )
+			continue;
+
+		if ( pTouchActivator )
+			return;
+
+		pTouchActivator = pTrigger;
+	}
+
+	if ( !pTouchActivator )
+		return;
+
+	vcollide_t *pCollide = modelinfo->GetVCollide( pTouchActivator->GetModelIndex() );
+	if ( !pCollide || pCollide->solidCount <= 0 || !pCollide->solids[0] )
+		return;
+
+	m_nTouchActivatorModelIndex = pTouchActivator->GetModelIndex();
+	m_vecTouchActivatorOrigin = pTouchActivator->CollisionProp()->GetCollisionOrigin();
+	m_angTouchActivatorAngles = pTouchActivator->CollisionProp()->GetCollisionAngles();
 }
 
 
