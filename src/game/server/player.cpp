@@ -8557,8 +8557,16 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	}
 
 #ifdef HL2MP
+	bool bIncomingLightPhysicsGround = false;
+	if ( bLightPhysicsGround )
+	{
+		Vector groundVelocity;
+		pPhysGround->GetVelocityAtPoint( GetAbsOrigin(), &groundVelocity );
+		bIncomingLightPhysicsGround = groundVelocity.z - GetAbsVelocity().z > VPHYS_MAX_VEL;
+	}
+
 	const bool bForceGroundUpdate = bRideableGround && !m_touchedPhysObject;
-	const bool bIgnoreGroundShadowFeedback = bLightPhysicsGround && !m_touchedPhysObject;
+	const bool bIgnoreGroundShadowFeedback = bLightPhysicsGround && !m_touchedPhysObject && !bIncomingLightPhysicsGround;
 	const bool bPositionError = dist >= maxDistErrorSqr || bForceGroundUpdate;
 	const bool bVelocityError = deltaV >= maxVelErrorSqr;
 	const bool bCoupledShadowCorrection = !(GetFlags() & FL_ONGROUND) || bPenetrating || bCheckStuck ||
