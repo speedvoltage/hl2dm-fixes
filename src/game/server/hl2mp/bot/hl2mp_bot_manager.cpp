@@ -218,6 +218,8 @@ void CHL2MPBotManager::MaintainBotQuota()
 			return;
 	}
 
+	const bool bTeamplay = HL2MPRules()->IsTeamplay();
+
 	// We want to balance based on who's playing on game teams not necessary who's on team spectator, etc.
 	int nConnectedClients = 0;
 	int nHL2MPBots = 0;
@@ -237,22 +239,27 @@ void CHL2MPBotManager::MaintainBotQuota()
 		if ( !pPlayer->IsConnected() )
 			continue;
 
+		const int iTeam = pPlayer->GetTeamNumber();
+		const bool bOnGameTeam = bTeamplay
+			? ( iTeam == TEAM_REBELS || iTeam == TEAM_COMBINE )
+			: ( iTeam == TEAM_UNASSIGNED );
+
 		CHL2MPBot* pBot = dynamic_cast<CHL2MPBot*>( pPlayer );
 		if ( pBot && pBot->HasAttribute( CHL2MPBot::QUOTA_MANANGED ) )
 		{
 			nHL2MPBots++;
-			if ( pPlayer->GetTeamNumber() == TEAM_REBELS || pPlayer->GetTeamNumber() == TEAM_COMBINE )
+			if ( bOnGameTeam )
 			{
 				nHL2MPBotsOnGameTeams++;
 			}
 		}
 		else
 		{
-			if ( pPlayer->GetTeamNumber() == TEAM_REBELS || pPlayer->GetTeamNumber() == TEAM_COMBINE )
+			if ( bOnGameTeam )
 			{
 				nNonHL2MPBotsOnGameTeams++;
 			}
-			else if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
+			else if ( iTeam == TEAM_SPECTATOR )
 			{
 				nSpectators++;
 			}
@@ -307,7 +314,7 @@ void CHL2MPBotManager::MaintainBotQuota()
 
 			int iTeam = TEAM_UNASSIGNED;
 
-			if ( HL2MPRules()->IsTeamplay() && iTeam == TEAM_UNASSIGNED )
+			if ( bTeamplay && iTeam == TEAM_UNASSIGNED )
 			{
 				CTeam* pRebels = GetGlobalTeam( TEAM_REBELS );
 				CTeam* pCombine = GetGlobalTeam( TEAM_COMBINE );
@@ -335,8 +342,15 @@ void CHL2MPBotManager::MaintainBotQuota()
 			CreateBotName( pBot->GetTeamNumber(), skill, name, sizeof( name ) );
 			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", pszModel );
 			engine->SetFakeClientConVarValue( pBot->edict(), "name", name );
-			pBot->HandleCommand_JoinTeam( iTeam );
-			pBot->ChangeTeam( iTeam );
+
+			if ( bTeamplay )
+			{
+				pBot->HandleCommand_JoinTeam( iTeam );
+			}
+			else
+			{
+				pBot->ChangeTeam( TEAM_UNASSIGNED );
+			}
 		}
 	}
 	else if ( desiredBotCount < nHL2MPBotsOnGameTeams )
@@ -484,7 +498,8 @@ CHL2MPBot* CHL2MPBotManager::GetAvailableBotFromPool()
 		if ( ( pBot->GetFlags() & FL_FAKECLIENT ) == 0 )
 			continue;
 
-		if ( pBot->GetTeamNumber() == TEAM_SPECTATOR || pBot->GetTeamNumber() == TEAM_UNASSIGNED )
+		if ( pBot->GetTeamNumber() == TEAM_SPECTATOR ||
+			( HL2MPRules()->IsTeamplay() && pBot->GetTeamNumber() == TEAM_UNASSIGNED ) )
 		{
 			pBot->ClearAttribute( CHL2MPBot::QUOTA_MANANGED );
 			return pBot;
@@ -616,9 +631,9 @@ CON_COMMAND_F( hl2mp_bot_debug_stuck_log, "Given a server logfile, visually disp
 					{
 						stuckEvent->m_isGoalValid = true;
 
-						stuckEvent->m_goalSpot.x = (float)atof( goal );
-						stuckEvent->m_goalSpot.y = (float)atof( strtok( NULL, ") (\"" ) );
-						stuckEvent->m_goalSpot.z = (float)atof( strtok( NULL, ") (\"" ) );
+						stuckEvent->m_stuckSpot.x = (float)atof( goal );
+						stuckEvent->m_stuckSpot.y = (float)atof( strtok( NULL, ") (\"" ) );
+						stuckEvent->m_stuckSpot.z = (float)atof( strtok( NULL, ") (\"" ) );
 					}
 					else
 					{
