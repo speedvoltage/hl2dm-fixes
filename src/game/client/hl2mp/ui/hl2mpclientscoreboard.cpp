@@ -7,6 +7,7 @@
 #include "hl2mp_gamerules.h"
 
 #include <KeyValues.h>
+#include <tier1/strtools.h>
 
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
@@ -474,8 +475,13 @@ void CHL2MPClientScoreBoardDialog::UpdateMatchInfo()
 	}
 
 	wchar_t mapName[128];
-	const char *levelName = engine->GetLevelNameShort();
-	g_pVGuiLocalize->ConvertANSIToUnicode( levelName && levelName[0] ? levelName : "-", mapName, sizeof( mapName ) );
+	char shortLevelName[MAX_PATH] = "-";
+	const char *levelName = engine->GetLevelName();
+	if ( levelName && levelName[0] )
+	{
+		V_FileBase( levelName, shortLevelName, sizeof( shortLevelName ) );
+	}
+	g_pVGuiLocalize->ConvertANSIToUnicode( shortLevelName, mapName, sizeof( mapName ) );
 
 	const bool teamplay = HL2MPRules() && HL2MPRules()->IsTeamplay();
 	const wchar_t *modeName = g_pVGuiLocalize->Find( teamplay ? "#ScoreBoard_TeamDeathmatch" : "#ScoreBoard_Deathmatch" );
