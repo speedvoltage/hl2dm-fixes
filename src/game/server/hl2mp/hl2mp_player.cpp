@@ -1180,9 +1180,6 @@ public:
 	}
 
 public:
-	// In case the client has the player entity, we transmit the player index.
-	// In case the client doesn't have it, we transmit the player's model index, origin, and angles
-	// so they can create a ragdoll in the right place.
 	CNetworkHandle( CBaseEntity, m_hPlayer );	// networked entity handle 
 	CNetworkVector( m_vecRagdollVelocity );
 	CNetworkVector( m_vecRagdollOrigin );
@@ -1190,12 +1187,9 @@ public:
 
 LINK_ENTITY_TO_CLASS( hl2mp_ragdoll, CHL2MPRagdoll );
 
-IMPLEMENT_SERVERCLASS_ST_NOBASE( CHL2MPRagdoll, DT_HL2MPRagdoll )
+IMPLEMENT_SERVERCLASS_ST( CHL2MPRagdoll, DT_HL2MPRagdoll )
 	SendPropVector( SENDINFO(m_vecRagdollOrigin), -1,  SPROP_COORD ),
 	SendPropEHandle( SENDINFO( m_hPlayer ) ),
-	SendPropModelIndex( SENDINFO( m_nModelIndex ) ),
-	SendPropInt		( SENDINFO(m_nForceBone), 8, 0 ),
-	SendPropVector	( SENDINFO(m_vecForce), -1, SPROP_NOSCALE ),
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) )
 END_SEND_TABLE()
 
@@ -1219,13 +1213,50 @@ void CHL2MP_Player::CreateRagdollEntity( void )
 
 	if ( pRagdoll )
 	{
+		pRagdoll->CopyAnimationDataFrom( this );
+		pRagdoll->SetPlaybackRate( GetPlaybackRate() );
+		pRagdoll->SetModelScale( GetModelScale(), 0.0f );
+		pRagdoll->SetHitboxSet( GetHitboxSet() );
+		pRagdoll->SetAbsOrigin( GetAbsOrigin() );
+		pRagdoll->SetAbsAngles( GetAbsAngles() );
+		pRagdoll->SetAbsVelocity( GetAbsVelocity() );
+
+		CStudioHdr *pStudioHdr = GetModelPtr();
+		if ( pStudioHdr )
+		{
+			const int nPoseParameters = MIN( pStudioHdr->GetNumPoseParameters(), CBaseAnimating::NUM_POSEPAREMETERS );
+			for ( int i = 0; i < nPoseParameters; ++i )
+			{
+				pRagdoll->SetPoseParameter( i, GetPoseParameter( i ) );
+			}
+		}
+
+		for ( int i = 0; i < CBaseAnimating::NUM_BONECTRLS; ++i )
+		{
+			pRagdoll->SetBoneController( i, GetBoneController( i ) );
+		}
+
+		const int nOverlays = GetNumAnimOverlays();
+		pRagdoll->SetNumAnimOverlays( nOverlays );
+		for ( int i = 0; i < nOverlays; ++i )
+		{
+			CAnimationLayer *pSourceLayer = GetAnimOverlay( i );
+			CAnimationLayer *pRagdollLayer = pRagdoll->GetAnimOverlay( i );
+			if ( !pSourceLayer || !pRagdollLayer )
+				continue;
+
+			pRagdollLayer->m_nSequence = pSourceLayer->m_nSequence;
+			pRagdollLayer->m_flCycle = pSourceLayer->m_flCycle;
+			pRagdollLayer->m_flPrevCycle = pSourceLayer->m_flPrevCycle;
+			pRagdollLayer->m_flWeight = pSourceLayer->m_flWeight;
+			pRagdollLayer->m_nOrder = pSourceLayer->m_nOrder;
+		}
+
 		pRagdoll->m_hPlayer = this;
 		pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
-		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
-		pRagdoll->SetAbsOrigin( GetAbsOrigin() );
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -1337,11 +1368,11 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
 
-	SetNumAnimOverlays( 0 );
-
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
 	CreateRagdollEntity();
+
+	SetNumAnimOverlays( 0 );
 
 	DetonateTripmines();
 

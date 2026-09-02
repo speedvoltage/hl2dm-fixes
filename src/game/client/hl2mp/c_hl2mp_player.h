@@ -205,7 +205,6 @@ private:
 	
 	C_HL2MPRagdoll( const C_HL2MPRagdoll & ) {}
 
-	void Interp_Copy( C_BaseAnimatingOverlay *pDestinationEntity );
 	void CreateHL2MPRagdoll( void );
 
 private:

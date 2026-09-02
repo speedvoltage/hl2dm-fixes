@@ -1079,12 +1079,9 @@ IRagdoll* C_HL2MP_Player::GetRepresentativeRagdoll() const
 //HL2MPRAGDOLL
 
 
-IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_HL2MPRagdoll, DT_HL2MPRagdoll, CHL2MPRagdoll )
+IMPLEMENT_CLIENTCLASS_DT( C_HL2MPRagdoll, DT_HL2MPRagdoll, CHL2MPRagdoll )
 	RecvPropVector( RECVINFO(m_vecRagdollOrigin) ),
 	RecvPropEHandle( RECVINFO( m_hPlayer ) ),
-	RecvPropInt( RECVINFO( m_nModelIndex ) ),
-	RecvPropInt( RECVINFO(m_nForceBone) ),
-	RecvPropVector( RECVINFO(m_vecForce) ),
 	RecvPropVector( RECVINFO( m_vecRagdollVelocity ) )
 END_RECV_TABLE()
 
@@ -1102,31 +1099,6 @@ C_HL2MPRagdoll::~C_HL2MPRagdoll()
 	if ( m_hPlayer )
 	{
 		m_hPlayer->CreateModelInstance();
-	}
-}
-
-void C_HL2MPRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
-{
-	if ( !pSourceEntity )
-		return;
-	
-	VarMapping_t *pSrc = pSourceEntity->GetVarMapping();
-	VarMapping_t *pDest = GetVarMapping();
-    	
-	// Find all the VarMapEntry_t's that represent the same variable.
-	for ( int i = 0; i < pDest->m_Entries.Count(); i++ )
-	{
-		VarMapEntry_t *pDestEntry = &pDest->m_Entries[i];
-		const char *pszName = pDestEntry->watcher->GetDebugName();
-		for ( int j=0; j < pSrc->m_Entries.Count(); j++ )
-		{
-			VarMapEntry_t *pSrcEntry = &pSrc->m_Entries[j];
-			if ( !Q_strcmp( pSrcEntry->watcher->GetDebugName(), pszName ) )
-			{
-				pDestEntry->watcher->Copy( pSrcEntry->watcher );
-				break;
-			}
-		}
 	}
 }
 
@@ -1168,84 +1140,48 @@ void C_HL2MPRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, const char *
 
 void C_HL2MPRagdoll::CreateHL2MPRagdoll( void )
 {
-	// First, initialize all our data. If we have the player's entity on our client,
-	// then we can make ourselves start out exactly where the player is.
 	C_HL2MP_Player *pPlayer = dynamic_cast< C_HL2MP_Player* >( m_hPlayer.Get() );
-	
 	if ( pPlayer && !pPlayer->IsDormant() )
 	{
-		// move my current model instance to the ragdoll's so decals are preserved.
 		pPlayer->SnatchModelInstance( this );
-
-		VarMapping_t *varMap = GetVarMapping();
-
-		// Copy all the interpolated vars from the player entity.
-		// The entity uses the interpolated history to get bone velocity.
-		bool bRemotePlayer = (pPlayer != C_BasePlayer::GetLocalPlayer());			
-		if ( bRemotePlayer )
-		{
-			Interp_Copy( pPlayer );
-
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-			GetRotationInterpolator().Reset();
-
-			m_flAnimTime = pPlayer->m_flAnimTime;
-			SetSequence( pPlayer->GetSequence() );
-			m_flPlaybackRate = pPlayer->GetPlaybackRate();
-		}
-		else
-		{
-			// This is the local player, so set them in a default
-			// pose and slam their velocity, angles and origin
-			SetAbsOrigin( m_vecRagdollOrigin );
-			
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-
-			SetAbsVelocity( m_vecRagdollVelocity );
-
-			int iSeq = pPlayer->GetSequence();
-			if ( iSeq == -1 )
-			{
-				Assert( false );	// missing walk_lower?
-				iSeq = 0;
-			}
-			
-			SetSequence( iSeq );	// walk_lower, basic pose
-			SetCycle( 0.0 );
-
-			Interp_Reset( varMap );
-		}		
-	}
-	else
-	{
-		// overwrite network origin so later interpolation will
-		// use this position
-		SetNetworkOrigin( m_vecRagdollOrigin );
-
-		SetAbsOrigin( m_vecRagdollOrigin );
-		SetAbsVelocity( m_vecRagdollVelocity );
-
-		Interp_Reset( GetVarMapping() );
-		
 	}
 
-	SetModelIndex( m_nModelIndex );
+	SetNetworkOrigin( m_vecRagdollOrigin );
+	MoveToLastReceivedPosition( true );
+	SetAbsVelocity( m_vecRagdollVelocity );
+	Interp_Reset( GetVarMapping() );
+	GetRotationInterpolator().Reset();
 
-	// Make us a ragdoll..
 	m_nRenderFX = kRenderFxRagdoll;
+
+	CStudioHdr *pStudioHdr = GetModelPtr();
+	if ( !pStudioHdr )
+		return;
 
 	matrix3x4_t boneDelta0[MAXSTUDIOBONES];
 	matrix3x4_t boneDelta1[MAXSTUDIOBONES];
 	matrix3x4_t currentBones[MAXSTUDIOBONES];
 	const float boneDt = 0.05f;
 
-	if ( pPlayer && !pPlayer->IsDormant() )
+	const float flPlaybackRate = GetPlaybackRate();
+	SetPlaybackRate( 0.0f );
+	InvalidateBoneCache();
+	const bool bSetupBones = SetupBones( currentBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, gpGlobals->curtime );
+	SetPlaybackRate( flPlaybackRate );
+
+	if ( !bSetupBones )
+		return;
+
+	const int nBones = MIN( pStudioHdr->numbones(), MAXSTUDIOBONES );
+	memcpy( boneDelta0, currentBones, sizeof( matrix3x4_t ) * nBones );
+	memcpy( boneDelta1, currentBones, sizeof( matrix3x4_t ) * nBones );
+
+	const Vector vecFrameMove = m_vecRagdollVelocity * boneDt;
+	for ( int i = 0; i < nBones; ++i )
 	{
-		pPlayer->GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
-	}
-	else
-	{
-		GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
+		Vector vecOrigin;
+		MatrixGetTranslation( boneDelta0[i], vecOrigin );
+		MatrixSetTranslation( vecOrigin - vecFrameMove, boneDelta0[i] );
 	}
 
 	InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt );
