@@ -8499,9 +8499,6 @@ void CBasePlayer::VPhysicsShadowUpdate( IPhysicsObject *pPhysics )
 	if ( m_afPhysicsFlags & PFLAG_GAMEPHYSICS_ROTPUSH )
 	{
 		bCheckStuck = true;
-#ifdef HL2MP
-		m_touchedPhysObject = true;
-#endif
 		m_afPhysicsFlags &= ~PFLAG_GAMEPHYSICS_ROTPUSH;
 	}
 	if ( (bControllerContact && !bLightPhysicsGround) || (m_afPhysicsFlags & PFLAG_VPHYSICS_MOTIONCONTROLLER) )

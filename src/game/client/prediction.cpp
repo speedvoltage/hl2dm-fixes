@@ -1601,10 +1601,13 @@ bool CPrediction::PerformPrediction( bool received_new_world_update, C_BasePlaye
 
 	entity = localPlayer->GetGroundEntity();
 
-	while ( entity && entity->entindex() > 0 )
+	if ( entity && entity->GetMoveType() == MOVETYPE_VPHYSICS )
 	{
-		entity->MoveToLastReceivedPosition();
-		entity = entity->GetMoveParent();
+		while ( entity && entity->entindex() > 0 )
+		{
+			entity->MoveToLastReceivedPosition();
+			entity = entity->GetMoveParent();
+		}
 	}
 
 	//Msg( "%i/%i tickbase %i\n",
