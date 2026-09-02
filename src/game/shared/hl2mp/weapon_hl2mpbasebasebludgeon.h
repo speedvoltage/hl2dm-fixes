@@ -42,6 +42,7 @@ public:
 	virtual	void	SecondaryAttack( void );
 	
 	virtual void	ItemPostFrame( void );
+	virtual bool	HasSecondaryAttack( void ) const { return false; }
 
 	//Functions to select animation sequences 
 	virtual Activity	GetPrimaryAttackActivity( void )	{	return	ACT_VM_HITCENTER;	}

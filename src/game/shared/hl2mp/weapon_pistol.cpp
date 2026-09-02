@@ -53,6 +53,7 @@ public:
 	Activity	GetPrimaryAttackActivity( void );
 
 	virtual bool Reload( void );
+	virtual bool HasSecondaryAttack( void ) const { return false; }
 
 	virtual const Vector& GetBulletSpread( void )
 	{		
@@ -269,13 +270,6 @@ void CWeaponPistol::ItemPostFrame( void )
 	if ( pOwner == NULL )
 		return;
 	
-	if ( pOwner->m_nButtons & IN_ATTACK2 )
-	{
-		m_flLastAttackTime = gpGlobals->curtime + PISTOL_FASTEST_REFIRE_TIME;
-		m_flSoonestPrimaryAttack = gpGlobals->curtime + PISTOL_FASTEST_REFIRE_TIME;
-		m_flNextPrimaryAttack = gpGlobals->curtime + PISTOL_FASTEST_REFIRE_TIME;
-	}
-
 	//Allow a refire as fast as the player can click
 	if ( ( ( pOwner->m_nButtons & IN_ATTACK ) == false ) && ( m_flSoonestPrimaryAttack < gpGlobals->curtime ) )
 	{

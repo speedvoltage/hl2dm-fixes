@@ -83,7 +83,7 @@ void CBaseHL2MPBludgeonWeapon::ItemPostFrame( void )
 	{
 		PrimaryAttack();
 	} 
-	else if ( (pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) )
+	else if ( HasSecondaryAttack() && (pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) )
 	{
 		SecondaryAttack();
 	}
