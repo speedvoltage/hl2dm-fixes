@@ -631,9 +631,9 @@ CON_COMMAND_F( hl2mp_bot_debug_stuck_log, "Given a server logfile, visually disp
 					{
 						stuckEvent->m_isGoalValid = true;
 
-						stuckEvent->m_stuckSpot.x = (float)atof( goal );
-						stuckEvent->m_stuckSpot.y = (float)atof( strtok( NULL, ") (\"" ) );
-						stuckEvent->m_stuckSpot.z = (float)atof( strtok( NULL, ") (\"" ) );
+						stuckEvent->m_goalSpot.x = (float)atof( goal );
+						stuckEvent->m_goalSpot.y = (float)atof( strtok( NULL, ") (\"" ) );
+						stuckEvent->m_goalSpot.z = (float)atof( strtok( NULL, ") (\"" ) );
 					}
 					else
 					{
