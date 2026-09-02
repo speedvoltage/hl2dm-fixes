@@ -13,6 +13,7 @@
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include <vgui_controls/Label.h>
+#include <vgui_controls/ScrollBar.h>
 #include <vgui_controls/SectionedListPanel.h>
 
 using namespace vgui;
@@ -409,6 +410,10 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 	}
 
 	m_pPlayerList->ClearSelection();
+	m_pPlayerList->ClearAllColorOverrideForCell();
+
+	const bool teamplay = HL2MPRules() && HL2MPRules()->IsTeamplay();
+	IGameResources *resources = GameResources();
 
 	for ( int playerIndex = 1; playerIndex <= gpGlobals->maxClients; ++playerIndex )
 	{
@@ -444,6 +449,15 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 
 		m_pPlayerList->SetItemFgColor( itemID, spectator ? m_spectatorTextColor : m_playerTextColor );
+		if ( teamplay && !spectator && resources )
+		{
+			char nameColumnName[] = "name";
+			const int nameColumn = m_pPlayerList->GetColumnIndexByName( sectionID, nameColumnName );
+			if ( nameColumn >= 0 )
+			{
+				m_pPlayerList->SetColorOverrideForCell( sectionID, itemID, nameColumn, resources->GetTeamColor( g_PR->GetTeam( playerIndex ) ) );
+			}
+		}
 		m_pPlayerList->SetItemBgColor( itemID, playerIndex == localPlayer->entindex() ? m_localPlayerBackgroundColor : Color( 0, 0, 0, 0 ) );
 		playerData->deleteThis();
 	}
@@ -528,7 +542,9 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 	const int deathWide = scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_DEATH_WIDTH );
 	const int pingWide = scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH );
 	const int avatarWide = ShowAvatars() ? m_iAvatarWidth * 2 : 0;
-	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 180 ), listWide - avatarWide - scoreWide - deathWide - pingWide );
+	const int scrollWide = m_pPlayerList->GetScrollBar() ? m_pPlayerList->GetScrollBar()->GetWide() : 0;
+	const int columnAreaWide = MAX( 0, listWide - 10 - scrollWide );
+	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 180 ), columnAreaWide - avatarWide - scoreWide - deathWide - pingWide );
 
 	const int activeSections[] =
 	{
@@ -551,6 +567,6 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "ping", pingWide );
 	}
 
-	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "name", listWide );
+	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "name", columnAreaWide );
 	m_pPlayerList->InvalidateLayout();
 }
