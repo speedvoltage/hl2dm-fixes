@@ -36,6 +36,7 @@ public:
 	void	PrimaryAttack( void );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
+	virtual bool HasSecondaryAttack( void ) const { return false; }
 
 #ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();

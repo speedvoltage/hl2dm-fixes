@@ -5,6 +5,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "in_buttons.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 
 #include "hl2mp_player_shared.h"
@@ -61,6 +62,30 @@ CBaseHL2MPCombatWeapon::CBaseHL2MPCombatWeapon( void )
 	m_bLowered = false;
 	m_flRaiseTime = 0.0f;
 	m_flHolsterTime = 0.0f;
+}
+
+void CBaseHL2MPCombatWeapon::ItemPostFrame( void )
+{
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if ( !pOwner || HasSecondaryAttack() )
+	{
+		BaseClass::ItemPostFrame();
+		return;
+	}
+
+	const int nButtons = pOwner->m_nButtons;
+	const int nButtonsPressed = pOwner->m_afButtonPressed;
+	const int nButtonsReleased = pOwner->m_afButtonReleased;
+
+	pOwner->m_nButtons &= ~IN_ATTACK2;
+	pOwner->m_afButtonPressed &= ~IN_ATTACK2;
+	pOwner->m_afButtonReleased &= ~IN_ATTACK2;
+
+	BaseClass::ItemPostFrame();
+
+	pOwner->m_nButtons = nButtons;
+	pOwner->m_afButtonPressed = nButtonsPressed;
+	pOwner->m_afButtonReleased = nButtonsReleased;
 }
 
 //-----------------------------------------------------------------------------
