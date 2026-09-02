@@ -64,6 +64,9 @@ public:
 	bool operator ==( const CPredictableId& other ) const;
 	bool operator !=( const CPredictableId& other ) const;
 private:
+	static uint32	GetField( uint32 value, uint32 mask, int shift );
+	static void		SetField( uint32 &value, uint32 mask, int shift, uint32 field );
+
 	void			SetCommandNumber( int commandNumber );
 	void			SetPlayer( int playerIndex );
 	void			SetHash( uint32 hash );

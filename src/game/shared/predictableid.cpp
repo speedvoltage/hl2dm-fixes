@@ -25,30 +25,39 @@ namespace
 	const uint32 PREDICTABLE_ID_COMMAND_MASK = 0x0000ffc0u;
 	const uint32 PREDICTABLE_ID_HASH_MASK = 0x0fff0000u;
 	const uint32 PREDICTABLE_ID_INSTANCE_MASK = 0xf0000000u;
+	const int PREDICTABLE_ID_HASH_COUNT = 4096;
+	const int PREDICTABLE_ID_INSTANCE_COUNT = 16;
 	COMPILE_TIME_ASSERT( ( PREDICTABLE_ID_ACK_MASK | PREDICTABLE_ID_PLAYER_MASK | PREDICTABLE_ID_COMMAND_MASK | PREDICTABLE_ID_HASH_MASK | PREDICTABLE_ID_INSTANCE_MASK ) == 0xffffffffu );
-
-	uint32 GetPredictableIdField( uint32 value, uint32 mask, int shift )
-	{
-		return ( value & mask ) >> shift;
-	}
-
-	void SetPredictableIdField( uint32 &value, uint32 mask, int shift, uint32 field )
-	{
-		value = ( value & ~mask ) | ( ( field << shift ) & mask );
-	}
 
 	const char *FindStableModulePath( const char *module )
 	{
-		const char *stablePath = module;
+		const char *stablePath = NULL;
 		int moduleLength = Q_strlen( module );
 
-		for ( int i = 0; i + 5 <= moduleLength; ++i )
+		for ( int i = 0; i + 4 <= moduleLength; ++i )
 		{
 			bool segmentStart = i == 0 || module[ i - 1 ] == '/' || module[ i - 1 ] == '\\';
-			bool segmentEnd = module[ i + 4 ] == '/' || module[ i + 4 ] == '\\';
+			bool segmentEnd = i + 4 == moduleLength || module[ i + 4 ] == '/' || module[ i + 4 ] == '\\';
 			if ( segmentStart && segmentEnd && !Q_strnicmp( module + i, "game", 4 ) )
 			{
 				stablePath = module + i;
+			}
+		}
+
+		if ( stablePath )
+			return stablePath;
+
+		stablePath = module;
+		int separators = 0;
+		for ( int i = moduleLength - 1; i >= 0; --i )
+		{
+			if ( module[ i ] != '/' && module[ i ] != '\\' )
+				continue;
+
+			if ( ++separators == 3 )
+			{
+				stablePath = module + i + 1;
+				break;
 			}
 		}
 
@@ -74,70 +83,59 @@ public:
 		Reset( -1 );
 	}
 
-	void	Reset( int command )
+	void Reset( int command )
 	{
 		m_nCurrentCommand = command;
-		m_nCount = 0;
-		memset( m_Entries, 0, sizeof( m_Entries ) );
+		memset( m_InstanceMasks, 0, sizeof( m_InstanceMasks ) );
 	}
 
-	int		AddEntry( int command, int hash )
+	void AddEntry( int command, int hash, int &allocatedHash, int &instance )
 	{
-		// Clear list if command number changes
 		if ( command != m_nCurrentCommand )
 		{
 			Reset( command );
 		}
 
-		entry *e = FindOrAddEntry( hash );
-		if ( !e )
-			return 0;
-		Assert( e->count < 16 );
-		e->count++;
-		return e->count-1;
+		int firstHash = hash & ( PREDICTABLE_ID_HASH_COUNT - 1 );
+		for ( int probe = 0; probe < PREDICTABLE_ID_HASH_COUNT; ++probe )
+		{
+			int candidateHash = ( firstHash + probe ) & ( PREDICTABLE_ID_HASH_COUNT - 1 );
+			uint16 mask = m_InstanceMasks[ candidateHash ];
+			if ( mask == 0xffffu )
+				continue;
+
+			for ( int candidateInstance = 0; candidateInstance < PREDICTABLE_ID_INSTANCE_COUNT; ++candidateInstance )
+			{
+				uint16 bit = (uint16)( 1u << candidateInstance );
+				if ( mask & bit )
+					continue;
+
+				m_InstanceMasks[ candidateHash ] |= bit;
+				allocatedHash = candidateHash;
+				instance = candidateInstance;
+				return;
+			}
+		}
+
+		Error( "CPredictableIdHelper exhausted all predictable identifiers for command %d\n", command );
 	}
 
 private:
-
-	enum
-	{
-		MAX_ENTRIES = 256,
-	};
-
-	struct entry
-	{
-		int		hash;
-		int		count;
-	};
-
-	entry			*FindOrAddEntry( int hash )
-	{
-		int i;
-		for ( i = 0; i < m_nCount; i++ )
-		{
-			entry *e = &m_Entries[ i ];
-			if ( e->hash == hash )
-				return e;
-		}
-
-		if ( m_nCount >= MAX_ENTRIES )
-		{
-			Assert( m_nCount < MAX_ENTRIES );
-			return NULL;
-		}
-
-		entry *e = &m_Entries[ m_nCount++ ];
-		e->hash = hash;
-		e->count = 0;
-		return e;
-	}
-
-	int				m_nCurrentCommand;
-	int				m_nCount;
-	entry			m_Entries[ MAX_ENTRIES ];
+	int m_nCurrentCommand;
+	uint16 m_InstanceMasks[ PREDICTABLE_ID_HASH_COUNT ];
 };
 
 static CPredictableIdHelper g_Helper;
+
+uint32 CPredictableId::GetField( uint32 value, uint32 mask, int shift )
+{
+	return ( value & mask ) >> shift;
+}
+
+void CPredictableId::SetField( uint32 &value, uint32 mask, int shift, uint32 field )
+{
+	value = ( value & ~mask ) | ( ( field << shift ) & mask );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -172,7 +170,7 @@ void CPredictableId::SetPlayer( int playerIndex )
 {
 	Assert( playerIndex >= 0 );
 	Assert( playerIndex <= 31 );
-	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT, (uint32)playerIndex );
+	SetField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT, (uint32)playerIndex );
 }
 
 //-----------------------------------------------------------------------------
@@ -181,7 +179,7 @@ void CPredictableId::SetPlayer( int playerIndex )
 //-----------------------------------------------------------------------------
 int CPredictableId::GetPlayer( void ) const
 {
-	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT );
+	return (int)GetField( m_PredictableID, PREDICTABLE_ID_PLAYER_MASK, PREDICTABLE_ID_PLAYER_SHIFT );
 }
 
 //-----------------------------------------------------------------------------
@@ -190,7 +188,7 @@ int CPredictableId::GetPlayer( void ) const
 //-----------------------------------------------------------------------------
 int CPredictableId::GetCommandNumber( void ) const
 {
-	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT );
+	return (int)GetField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT );
 }
 
 //-----------------------------------------------------------------------------
@@ -200,13 +198,14 @@ int CPredictableId::GetCommandNumber( void ) const
 void CPredictableId::SetCommandNumber( int commandNumber )
 {
 	Assert( commandNumber >= 0 );
-	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT, (uint32)commandNumber );
+	// The 10-bit command field intentionally stores the usercmd sequence modulo 1024.
+	SetField( m_PredictableID, PREDICTABLE_ID_COMMAND_MASK, PREDICTABLE_ID_COMMAND_SHIFT, (uint32)commandNumber );
 }
 
 /*
 bool CPredictableId::IsCommandNumberEqual( int testNumber ) const
 {
-	if ( ( testNumber & ((1<<10) - 1) ) == m_PredictableID.command )
+	if ( ( testNumber & ((1<<10) - 1) ) == GetCommandNumber() )
 		return true;
 
 	return false;
@@ -259,12 +258,11 @@ void CPredictableId::Init( int player, int command, const char *classname, const
 	SetPlayer( player );
 	SetCommandNumber( command );
 
-	SetHash( ClassFileLineHash( classname, module, line ) );
+	int hash = (int)( ClassFileLineHash( classname, module, line ) & ( PREDICTABLE_ID_HASH_COUNT - 1 ) );
+	int instance = 0;
+	g_Helper.AddEntry( command, hash, hash, instance );
 
-	// Use helper to determine instance number this command
-	int instance = g_Helper.AddEntry( command, GetHash() );
-
-	// Set appropriate instance number
+	SetHash( (uint32)hash );
 	SetInstanceNumber( instance );
 }
 
@@ -274,12 +272,12 @@ void CPredictableId::Init( int player, int command, const char *classname, const
 //-----------------------------------------------------------------------------
 int CPredictableId::GetHash( void ) const
 {
-	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT );
+	return (int)GetField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT );
 }
 
 void CPredictableId::SetHash( uint32 hash )
 {
-	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT, hash );
+	SetField( m_PredictableID, PREDICTABLE_ID_HASH_MASK, PREDICTABLE_ID_HASH_SHIFT, hash );
 }
 
 //-----------------------------------------------------------------------------
@@ -290,7 +288,7 @@ void CPredictableId::SetInstanceNumber( int counter )
 {
 	Assert( counter >= 0 );
 	Assert( counter <= 15 );
-	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT, (uint32)counter );
+	SetField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT, (uint32)counter );
 }
 
 //-----------------------------------------------------------------------------
@@ -299,7 +297,7 @@ void CPredictableId::SetInstanceNumber( int counter )
 //-----------------------------------------------------------------------------
 int CPredictableId::GetInstanceNumber( void ) const
 {
-	return (int)GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT );
+	return (int)GetField( m_PredictableID, PREDICTABLE_ID_INSTANCE_MASK, PREDICTABLE_ID_INSTANCE_SHIFT );
 }
 
 // Client only
@@ -309,7 +307,7 @@ int CPredictableId::GetInstanceNumber( void ) const
 //-----------------------------------------------------------------------------
 void CPredictableId::SetAcknowledged( bool ack )
 {
-	SetPredictableIdField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT, ack ? 1u : 0u );
+	SetField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT, ack ? 1u : 0u );
 }
 
 //-----------------------------------------------------------------------------
@@ -318,7 +316,7 @@ void CPredictableId::SetAcknowledged( bool ack )
 //-----------------------------------------------------------------------------
 bool CPredictableId::GetAcknowledged( void ) const
 {
-	return GetPredictableIdField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT ) != 0;
+	return GetField( m_PredictableID, PREDICTABLE_ID_ACK_MASK, PREDICTABLE_ID_ACK_SHIFT ) != 0;
 }
 
 //-----------------------------------------------------------------------------
