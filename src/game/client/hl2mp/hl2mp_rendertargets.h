@@ -1,0 +1,23 @@
+#ifndef HL2MP_RENDERTARGETS_H
+#define HL2MP_RENDERTARGETS_H
+#ifdef _WIN32
+#pragma once
+#endif
+
+#include "baseclientrendertargets.h"
+
+class CHL2MPRenderTargets : public CBaseClientRenderTargets
+{
+	DECLARE_CLASS_GAMEROOT( CHL2MPRenderTargets, CBaseClientRenderTargets );
+
+public:
+	virtual void InitClientRenderTargets( IMaterialSystem *pMaterialSystem, IMaterialSystemHardwareConfig *pHardwareConfig );
+	virtual void ShutdownClientRenderTargets();
+
+private:
+	ITexture *CreateProjectileCameraTexture( IMaterialSystem *pMaterialSystem );
+
+	CTextureReference m_ProjectileCameraTexture;
+};
+
+#endif

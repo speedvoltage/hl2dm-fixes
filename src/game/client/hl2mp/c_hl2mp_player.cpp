@@ -25,6 +25,8 @@
 #define MsgPredTest2(...)
 
 ConVar sv_infinite_aux_power( "sv_infinite_aux_power", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
+ConVar sv_projectile_camera( "sv_projectile_camera", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Allow clients to display a camera following their projectiles." );
+ConVar cl_projectile_camera( "cl_projectile_camera", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Display the projectile camera when the server allows it.", true, 0, true, 1 );
 
 LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 
@@ -35,6 +37,7 @@ BEGIN_RECV_TABLE_NOBASE( C_HL2MP_Player, DT_HL2MPLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropEHandle( RECVINFO( m_hProjectileCameraTarget ) ),
 END_RECV_TABLE()
 
 // all players except the local player
@@ -104,6 +107,7 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 {
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
+	m_hProjectileCameraTarget = NULL;
 
 	m_angEyeAngles.Init();
 

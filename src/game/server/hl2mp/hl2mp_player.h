@@ -77,6 +77,7 @@ public:
 	virtual void UpdateOnRemove( void );
 	virtual void DeathSound( const CTakeDamageInfo &info );
 	virtual CBaseEntity* EntSelectSpawnPoint( void );
+	virtual void SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize ) OVERRIDE;
 		
 	int FlashlightIsOn( void );
 	void FlashlightTurnOn( void );
@@ -94,6 +95,7 @@ public:
 	void GiveDefaultItems( void );
 
 	void NoteWeaponFired( void );
+	void SetProjectileCameraTarget( CBaseEntity *pProjectile );
 
 	void ResetAnimation( void );
 	void SetPlayerModel( void );
@@ -138,6 +140,7 @@ public:
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
+	CNetworkHandle( CBaseEntity, m_hProjectileCameraTarget );
 
 	virtual bool	CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 

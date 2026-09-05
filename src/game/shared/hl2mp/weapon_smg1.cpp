@@ -229,6 +229,12 @@ void CWeaponSMG1::SecondaryAttack( void )
 	pGrenade->SetThrower( GetOwner() );
 	pGrenade->SetDamage( SMG1_GRENADE_DAMAGE );
 	pGrenade->SetDamageRadius( SMG1_GRENADE_RADIUS );
+
+	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pPlayer );
+	if ( pHL2MPPlayer )
+	{
+		pHL2MPPlayer->SetProjectileCameraTarget( pGrenade );
+	}
 #endif
 
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );

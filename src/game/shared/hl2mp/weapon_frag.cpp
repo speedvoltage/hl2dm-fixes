@@ -452,6 +452,12 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 		
 		pGrenade->SetDamage( GetHL2MPWpnData().m_iPlayerDamage );
 		pGrenade->SetDamageRadius( GRENADE_DAMAGE_RADIUS );
+
+		CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pPlayer );
+		if ( pHL2MPPlayer )
+		{
+			pHL2MPPlayer->SetProjectileCameraTarget( pGrenade );
+		}
 	}
 #endif
 
@@ -490,6 +496,12 @@ void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 	{
 		pGrenade->SetDamage( GetHL2MPWpnData().m_iPlayerDamage );
 		pGrenade->SetDamageRadius( GRENADE_DAMAGE_RADIUS );
+
+		CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pPlayer );
+		if ( pHL2MPPlayer )
+		{
+			pHL2MPPlayer->SetProjectileCameraTarget( pGrenade );
+		}
 	}
 #endif
 
@@ -542,6 +554,12 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 	{
 		pGrenade->SetDamage( GetHL2MPWpnData().m_iPlayerDamage );
 		pGrenade->SetDamageRadius( GRENADE_DAMAGE_RADIUS );
+
+		CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pPlayer );
+		if ( pHL2MPPlayer )
+		{
+			pHL2MPPlayer->SetProjectileCameraTarget( pGrenade );
+		}
 	}
 
 #endif
@@ -553,4 +571,3 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 
 	m_bRedraw = true;
 }
-

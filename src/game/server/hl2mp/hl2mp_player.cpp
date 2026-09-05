@@ -36,6 +36,7 @@ CBaseEntity	 *g_pLastRebelSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
 
 ConVar hl2mp_spawn_frag_fallback_radius( "hl2mp_spawn_frag_fallback_radius", "48", FCVAR_NONE, "If no spawns are available, kill players with this radius to allow new players to spawn." );
+ConVar sv_projectile_camera( "sv_projectile_camera", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Allow clients to display a camera following their projectiles." );
 
 #define HL2MP_COMMAND_MAX_RATE 0.3
 
@@ -54,6 +55,7 @@ BEGIN_SEND_TABLE_NOBASE( CHL2MP_Player, DT_HL2MPLocalPlayerExclusive )
 
 	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
+	SendPropEHandle( SENDINFO( m_hProjectileCameraTarget ) ),
 
 END_SEND_TABLE()
 
@@ -150,6 +152,7 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 	m_flNextTeamChangeTime = 0.0f;
 
 	m_iSpawnInterpCounter = 0;
+	m_hProjectileCameraTarget = NULL;
 
     m_bEnterObserver = false;
 	m_bReady = false;
@@ -334,6 +337,7 @@ void CHL2MP_Player::Spawn(void)
 {
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
+	m_hProjectileCameraTarget = NULL;
 
 	PickDefaultSpawnTeam();
 
@@ -376,6 +380,25 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	m_bReady = false;
+}
+
+void CHL2MP_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize )
+{
+	BaseClass::SetupVisibility( pViewEntity, pvs, pvssize );
+
+	if ( !sv_projectile_camera.GetBool() || !m_hProjectileCameraTarget )
+		return;
+
+	const char *pClientSetting = engine->GetClientConVarValue( entindex(), "cl_projectile_camera" );
+	if ( !pClientSetting || !Q_atoi( pClientSetting ) )
+		return;
+
+	engine->AddOriginToPVS( m_hProjectileCameraTarget->WorldSpaceCenter() );
+}
+
+void CHL2MP_Player::SetProjectileCameraTarget( CBaseEntity *pProjectile )
+{
+	m_hProjectileCameraTarget = pProjectile;
 }
 
 bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )

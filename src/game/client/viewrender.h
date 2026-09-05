@@ -436,6 +436,11 @@ private:
 	bool			DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_PointCamera *pCameraEnt, const CViewSetup &cameraView, C_BasePlayer *localPlayer, 
 						int x, int y, int width, int height );
 
+#ifdef HL2MP
+	void			RenderProjectileCamera( const CViewSetup &cameraView );
+	void			DrawProjectileCameraOverlay( const CViewSetup &view );
+#endif
+
 	// Drawing primitives
 	bool			ShouldDrawViewModel( bool drawViewmodel );
 	void			DrawViewModels( const CViewSetup &view, bool drawViewmodel );
@@ -488,6 +493,10 @@ private:
 	CMaterialReference	m_ScreenOverlayMaterial;
 	CMaterialReference m_UnderWaterOverlayMaterial;
 
+#ifdef HL2MP
+	CMaterialReference	m_ProjectileCameraMaterial;
+#endif
+
 	CMaterialReference	m_ScriptOverlayMaterial;
 	char m_szCurrentScriptMaterialName[ MAX_PATH ];
 
@@ -522,6 +531,17 @@ private:
 
 	bool			m_rbTakeFreezeFrame[ STEREO_EYE_MAX ];
 	float			m_flFreezeFrameUntil;
+
+#ifdef HL2MP
+	CHandle<C_BaseEntity>	m_hProjectileCameraTarget;
+	Vector				m_vecProjectileCameraTargetOrigin;
+	Vector				m_vecProjectileCameraOrigin;
+	Vector				m_vecProjectileCameraForward;
+	QAngle				m_angProjectileCamera;
+	float				m_flProjectileCameraStopTime;
+	float				m_flProjectileCameraLastRenderTime;
+	bool				m_bProjectileCameraInitialized;
+#endif
 
 #if defined( REPLAY_ENABLED )
 	CReplayScreenshotTaker	*m_pReplayScreenshotTaker;

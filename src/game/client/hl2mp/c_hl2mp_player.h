@@ -36,6 +36,8 @@ public:
 };
 
 extern ConVar hl2_sprintspeed;
+extern ConVar sv_projectile_camera;
+extern ConVar cl_projectile_camera;
 
 //=============================================================================
 // >> HL2MP_Player
@@ -56,6 +58,7 @@ public:
 	void ClientThink( void );
 
 	static C_HL2MP_Player* GetLocalHL2MPPlayer();
+	C_BaseEntity *GetProjectileCameraTarget() const { return m_hProjectileCameraTarget.Get(); }
 	
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
@@ -131,6 +134,7 @@ private:
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	EHANDLE	m_hRagdoll;
+	EHANDLE	m_hProjectileCameraTarget;
 
 	int	m_headYawPoseParam;
 	int	m_headPitchPoseParam;

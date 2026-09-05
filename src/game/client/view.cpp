@@ -301,6 +301,17 @@ void CViewRender::Init( void )
 
 	m_TranslucentSingleColor.Init( "debug/debugtranslucentsinglecolor", TEXTURE_GROUP_OTHER );
 	m_ModulateSingleColor.Init( "engine/modulatesinglecolor", TEXTURE_GROUP_OTHER );
+
+#ifdef HL2MP
+	KeyValues *pProjectileCameraMaterial = new KeyValues( "UnlitGeneric" );
+	pProjectileCameraMaterial->SetString( "$basetexture", "_rt_ProjectileCamera" );
+	pProjectileCameraMaterial->SetInt( "$nocull", 1 );
+	pProjectileCameraMaterial->SetInt( "$nofog", 1 );
+	pProjectileCameraMaterial->SetInt( "$ignorez", 1 );
+	pProjectileCameraMaterial->SetInt( "$translucent", 1 );
+	m_ProjectileCameraMaterial.Init( "HL2MPProjectileCamera", TEXTURE_GROUP_OTHER, pProjectileCameraMaterial );
+	m_ProjectileCameraMaterial->Refresh();
+#endif
 	
 	extern CMaterialReference g_material_WriteZ;
 	g_material_WriteZ.Init( "engine/writez", TEXTURE_GROUP_OTHER );
@@ -337,6 +348,13 @@ void CViewRender::LevelInit( void )
 	}
 	m_flFreezeFrameUntil = 0;
 
+#ifdef HL2MP
+	m_hProjectileCameraTarget = NULL;
+	m_flProjectileCameraStopTime = -1.0f;
+	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_bProjectileCameraInitialized = false;
+#endif
+
 	// Clear our overlay materials
 	m_ScreenOverlayMaterial.Init( NULL );
 
@@ -353,6 +371,9 @@ void CViewRender::Shutdown( void )
 	m_ModulateSingleColor.Shutdown( );
 	m_ScreenOverlayMaterial.Shutdown();
 	m_UnderWaterOverlayMaterial.Shutdown();
+#ifdef HL2MP
+	m_ProjectileCameraMaterial.Shutdown();
+#endif
 	beams->ShutdownBeams();
 	tempents->Shutdown();
 }
@@ -1301,4 +1322,3 @@ CON_COMMAND( getpos, "dump position and angles to the console" )
 	Warning( "%s %f %f %f;", pCommand1, vecOrigin.x, vecOrigin.y, vecOrigin.z );
 	Warning( "%s %f %f %f\n", pCommand2, angles.x, angles.y, angles.z );
 }
-

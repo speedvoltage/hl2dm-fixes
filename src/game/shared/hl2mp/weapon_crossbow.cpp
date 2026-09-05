@@ -659,6 +659,12 @@ void CWeaponCrossbow::FireBolt( void )
 		pBolt->SetAbsVelocity( vecAiming * BOLT_AIR_VELOCITY );
 	}
 
+	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pOwner );
+	if ( pHL2MPPlayer )
+	{
+		pHL2MPPlayer->SetProjectileCameraTarget( pBolt );
+	}
+
 #endif
 
 	m_iClip1--;

@@ -32,6 +32,7 @@
 	#include "smoke_trail.h"
 	#include "collisionutils.h"
 	#include "hl2_shareddefs.h"
+	#include "hl2mp_player.h"
 #endif
 
 #include "debugoverlay_shared.h"
@@ -1472,6 +1473,12 @@ void CWeaponRPG::PrimaryAttack( void )
 	pMissile->SetDamage( GetHL2MPWpnData().m_iPlayerDamage );
 
 	m_hMissile = pMissile;
+
+	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pOwner );
+	if ( pHL2MPPlayer )
+	{
+		pHL2MPPlayer->SetProjectileCameraTarget( pMissile );
+	}
 #endif
 
 	DecrementAmmo( GetOwner() );

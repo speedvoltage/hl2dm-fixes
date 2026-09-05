@@ -202,12 +202,17 @@ void CWeaponAR2::DelayedAttack( void )
 
 #ifndef CLIENT_DLL
 	// Fire the combine ball
-	CreateCombineBall(	vecSrc, 
-						vecVelocity, 
-						sk_weapon_ar2_alt_fire_radius.GetFloat(), 
-						sk_weapon_ar2_alt_fire_mass.GetFloat(),
-						sk_weapon_ar2_alt_fire_duration.GetFloat(),
-						pOwner );
+	CBaseEntity *pBall = CreateCombineBall( vecSrc,
+		vecVelocity,
+		sk_weapon_ar2_alt_fire_radius.GetFloat(),
+		sk_weapon_ar2_alt_fire_mass.GetFloat(),
+		sk_weapon_ar2_alt_fire_duration.GetFloat(),
+		pOwner );
+	CHL2MP_Player *pHL2MPPlayer = ToHL2MPPlayer( pOwner );
+	if ( pHL2MPPlayer )
+	{
+		pHL2MPPlayer->SetProjectileCameraTarget( pBall );
+	}
 
 	// View effects
 	color32 white = {255, 255, 255, 64};

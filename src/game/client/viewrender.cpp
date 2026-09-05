@@ -56,6 +56,10 @@
 #ifdef TF_CLIENT_DLL
 #include "tf/c_tf_player.h"
 #endif
+#ifdef HL2MP
+#include "cdll_util.h"
+#include "hl2mp/c_hl2mp_player.h"
+#endif
 
 #ifdef PORTAL
 //#include "C_Portal_Player.h"
@@ -941,6 +945,17 @@ CViewRender::CViewRender()
 	m_pCurrentlyDrawingEntity = NULL;
 
 	m_szCurrentScriptMaterialName[0] = '\0';
+
+#ifdef HL2MP
+	m_hProjectileCameraTarget = NULL;
+	m_vecProjectileCameraTargetOrigin.Init();
+	m_vecProjectileCameraOrigin.Init();
+	m_vecProjectileCameraForward.Init( 1.0f, 0.0f, 0.0f );
+	m_angProjectileCamera.Init();
+	m_flProjectileCameraStopTime = -1.0f;
+	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_bProjectileCameraInitialized = false;
+#endif
 }
 
 
@@ -954,6 +969,13 @@ void CViewRender::LevelShutdown( void )
 
 	m_ScriptOverlayMaterial.Shutdown();
 	m_szCurrentScriptMaterialName[0] = '\0';
+
+#ifdef HL2MP
+	m_hProjectileCameraTarget = NULL;
+	m_flProjectileCameraStopTime = -1.0f;
+	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_bProjectileCameraInitialized = false;
+#endif
 }
 
 
@@ -2081,6 +2103,13 @@ void CViewRender::RenderView( const CViewSetup &viewRender, int nClearFlags, int
 		}
 	#endif
 
+	#ifdef HL2MP
+		if ( ( whatToDraw & RENDERVIEW_SUPPRESSMONITORRENDERING ) == 0 )
+		{
+			RenderProjectileCamera( viewRender );
+		}
+	#endif
+
 		g_bRenderingView = true;
 
 		// Must be first 
@@ -2471,6 +2500,9 @@ void CViewRender::Render2DEffectsPreHUD( const CViewSetup &viewRender )
 //-----------------------------------------------------------------------------
 void CViewRender::Render2DEffectsPostHUD( const CViewSetup &viewRender )
 {
+#ifdef HL2MP
+	DrawProjectileCameraOverlay( viewRender );
+#endif
 }
 
 
@@ -3313,6 +3345,163 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 
 #endif // USE_MONITORS
 }
+
+#ifdef HL2MP
+void CViewRender::RenderProjectileCamera( const CViewSetup &cameraView )
+{
+	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() )
+	{
+		m_flProjectileCameraLastRenderTime = -1.0f;
+		m_bProjectileCameraInitialized = false;
+		return;
+	}
+
+	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	C_BaseEntity *pTarget = pPlayer ? pPlayer->GetProjectileCameraTarget() : NULL;
+	if ( !pTarget || pTarget->IsDormant() )
+		return;
+
+	if ( m_hProjectileCameraTarget.Get() != pTarget )
+	{
+		m_hProjectileCameraTarget = pTarget;
+		m_vecProjectileCameraTargetOrigin = pTarget->WorldSpaceCenter();
+		m_flProjectileCameraStopTime = -1.0f;
+		m_bProjectileCameraInitialized = false;
+	}
+
+	Vector vecTargetOrigin = pTarget->WorldSpaceCenter();
+	Vector vecDirection = pTarget->GetAbsVelocity();
+	if ( vecDirection.LengthSqr() < 64.0f && m_bProjectileCameraInitialized && gpGlobals->frametime > 0.0f )
+	{
+		vecDirection = ( vecTargetOrigin - m_vecProjectileCameraTargetOrigin ) / gpGlobals->frametime;
+	}
+	m_vecProjectileCameraTargetOrigin = vecTargetOrigin;
+
+	float flSpeed = VectorNormalize( vecDirection );
+	if ( flSpeed >= 8.0f )
+	{
+		m_flProjectileCameraStopTime = -1.0f;
+
+		if ( m_bProjectileCameraInitialized )
+		{
+			float flDirectionBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
+			VectorLerp( m_vecProjectileCameraForward, vecDirection, flDirectionBlend, m_vecProjectileCameraForward );
+			VectorNormalize( m_vecProjectileCameraForward );
+		}
+		else
+		{
+			m_vecProjectileCameraForward = vecDirection;
+		}
+	}
+	else
+	{
+		if ( m_flProjectileCameraStopTime < 0.0f )
+		{
+			m_flProjectileCameraStopTime = gpGlobals->curtime;
+		}
+		else if ( gpGlobals->curtime - m_flProjectileCameraStopTime >= 0.1f )
+		{
+			return;
+		}
+
+		if ( !m_bProjectileCameraInitialized )
+		{
+			AngleVectors( pTarget->GetAbsAngles(), &m_vecProjectileCameraForward );
+		}
+	}
+
+	Vector vecDesiredOrigin = vecTargetOrigin - m_vecProjectileCameraForward * 112.0f + Vector( 0.0f, 0.0f, 40.0f );
+	float flCameraBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
+	Vector vecBlendedOrigin = vecDesiredOrigin;
+	if ( m_bProjectileCameraInitialized )
+	{
+		VectorLerp( m_vecProjectileCameraOrigin, vecDesiredOrigin, flCameraBlend, vecBlendedOrigin );
+	}
+
+	trace_t trace;
+	UTIL_TraceHull( vecTargetOrigin, vecBlendedOrigin, Vector( -4.0f, -4.0f, -4.0f ), Vector( 4.0f, 4.0f, 4.0f ), MASK_SOLID_BRUSHONLY, pTarget, COLLISION_GROUP_NONE, &trace );
+	m_vecProjectileCameraOrigin = trace.endpos;
+	if ( trace.fraction < 1.0f )
+	{
+		m_vecProjectileCameraOrigin += trace.plane.normal * 4.0f;
+	}
+
+	QAngle angDesired;
+	VectorAngles( vecTargetOrigin + m_vecProjectileCameraForward * 96.0f - m_vecProjectileCameraOrigin, angDesired );
+	if ( m_bProjectileCameraInitialized )
+	{
+		InterpolateAngles( m_angProjectileCamera, angDesired, m_angProjectileCamera, flCameraBlend );
+	}
+	else
+	{
+		m_angProjectileCamera = angDesired;
+		m_bProjectileCameraInitialized = true;
+	}
+
+	ITexture *pRenderTarget = GetProjectileCameraTexture();
+	if ( !pRenderTarget || IsErrorTexture( pRenderTarget ) )
+		return;
+
+	CViewSetup projectileView = cameraView;
+	projectileView.x = 0;
+	projectileView.y = 0;
+	projectileView.width = pRenderTarget->GetActualWidth();
+	projectileView.height = pRenderTarget->GetActualHeight();
+	projectileView.origin = m_vecProjectileCameraOrigin;
+	projectileView.angles = m_angProjectileCamera;
+	projectileView.fov = 75.0f;
+	projectileView.m_bOrtho = false;
+	projectileView.m_flAspectRatio = 16.0f / 9.0f;
+	projectileView.m_bViewToProjectionOverride = false;
+	projectileView.m_eStereoEye = STEREO_EYE_MONO;
+
+	bool bWasRenderingCameraView = g_bRenderingCameraView;
+	g_bRenderingCameraView = true;
+
+	Frustum frustum;
+	render->Push3DView( projectileView, VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pRenderTarget, (VPlane *)frustum );
+	ViewDrawScene( false, SKYBOX_2DSKYBOX_VISIBLE, projectileView, 0, VIEW_MONITOR );
+	render->PopView( frustum );
+
+	g_bRenderingCameraView = bWasRenderingCameraView;
+	m_flProjectileCameraLastRenderTime = gpGlobals->curtime;
+}
+
+void CViewRender::DrawProjectileCameraOverlay( const CViewSetup &viewRender )
+{
+	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() || m_flProjectileCameraLastRenderTime < 0.0f || !m_ProjectileCameraMaterial.IsValid() )
+		return;
+
+	float flAlpha = 1.0f - ( gpGlobals->curtime - m_flProjectileCameraLastRenderTime ) / 0.5f;
+	flAlpha = clamp( flAlpha, 0.0f, 1.0f );
+	if ( flAlpha <= 0.0f )
+		return;
+
+	ITexture *pRenderTarget = GetProjectileCameraTexture();
+	if ( !pRenderTarget || IsErrorTexture( pRenderTarget ) )
+		return;
+
+	int nWidth = MAX( 1, viewRender.width / 4 );
+	int nHeight = MAX( 1, nWidth * 9 / 16 );
+	int nMargin = MAX( 8, viewRender.width / 80 );
+	int nBorder = MAX( 2, viewRender.height / 540 );
+	int x = viewRender.x + nMargin;
+	int y = viewRender.y + nMargin;
+
+	CMatRenderContextPtr pRenderContext( materials );
+	m_TranslucentSingleColor->ColorModulate( 0.04f, 0.04f, 0.04f );
+	m_TranslucentSingleColor->AlphaModulate( flAlpha * 0.9f );
+	m_TranslucentSingleColor->SetMaterialVarFlag( MATERIAL_VAR_IGNOREZ, true );
+	pRenderContext->DrawScreenSpaceRectangle( m_TranslucentSingleColor, x - nBorder, y - nBorder, nWidth + nBorder * 2, nHeight + nBorder * 2, 0, 0, 1, 1, 1, 1 );
+	m_TranslucentSingleColor->ColorModulate( 1.0f, 1.0f, 1.0f );
+	m_TranslucentSingleColor->AlphaModulate( 1.0f );
+
+	m_ProjectileCameraMaterial->ColorModulate( 1.0f, 1.0f, 1.0f );
+	m_ProjectileCameraMaterial->AlphaModulate( flAlpha );
+	pRenderContext->DrawScreenSpaceRectangle( m_ProjectileCameraMaterial, x, y, nWidth, nHeight, 0, 0, pRenderTarget->GetActualWidth() - 1, pRenderTarget->GetActualHeight() - 1, pRenderTarget->GetActualWidth(), pRenderTarget->GetActualHeight() );
+	m_ProjectileCameraMaterial->AlphaModulate( 1.0f );
+}
+#endif
 
 
 //-----------------------------------------------------------------------------

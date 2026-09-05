@@ -80,6 +80,21 @@ ITexture *GetCameraTexture( void )
 	return s_pCameraTexture;
 }
 
+#ifdef HL2MP
+static CTextureReference s_pProjectileCameraTexture;
+ITexture *GetProjectileCameraTexture( void )
+{
+	if ( !s_pProjectileCameraTexture )
+	{
+		s_pProjectileCameraTexture.Init( materials->FindTexture( "_rt_ProjectileCamera", TEXTURE_GROUP_RENDER_TARGET ) );
+		Assert( !IsErrorTexture( s_pProjectileCameraTexture ) );
+		AddReleaseFunc();
+	}
+
+	return s_pProjectileCameraTexture;
+}
+#endif
+
 //=============================================================================
 // Full Frame Depth Texture
 //=============================================================================
@@ -247,6 +262,9 @@ void ReleaseRenderTargets( void )
 {
 	s_pPowerOfTwoFrameBufferTexture.Shutdown();
 	s_pCameraTexture.Shutdown();
+#ifdef HL2MP
+	s_pProjectileCameraTexture.Shutdown();
+#endif
 	s_pWaterReflectionTexture.Shutdown();
 	s_pWaterRefractionTexture.Shutdown();
 	s_pQuarterSizedFB0.Shutdown();
