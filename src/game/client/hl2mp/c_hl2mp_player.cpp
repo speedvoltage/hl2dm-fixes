@@ -220,7 +220,11 @@ void C_HL2MP_Player::UpdateSpectatorGlow( bool bViewerCanSeeOutlines )
 		return;
 
 	const Color &teamColor = pGameResources->GetTeamColor( iTeam );
-	m_SpectatorGlowObject.SetColor( Vector( teamColor.r() / 255.0f, teamColor.g() / 255.0f, teamColor.b() / 255.0f ) );
+	const Color &rebelColor = pGameResources->GetTeamColor( TEAM_REBELS );
+	float flLuminance = teamColor.r() * 0.2126f + teamColor.g() * 0.7152f + teamColor.b() * 0.0722f;
+	float flRebelLuminance = rebelColor.r() * 0.2126f + rebelColor.g() * 0.7152f + rebelColor.b() * 0.0722f;
+	float flScale = flLuminance > 0.0f ? MIN( 1.0f, flRebelLuminance / flLuminance ) : 1.0f;
+	m_SpectatorGlowObject.SetColor( Vector( teamColor.r() * flScale / 255.0f, teamColor.g() * flScale / 255.0f, teamColor.b() * flScale / 255.0f ) );
 }
 
 void C_HL2MP_Player::Initialize( void )
