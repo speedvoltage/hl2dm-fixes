@@ -14,11 +14,12 @@
 #include "utlvector.h"
 #include "mathlib/vector.h"
 
-#ifdef GLOWS_ENABLE
+#if defined( GLOWS_ENABLE ) || defined( HL2MP_GLOWS_ENABLE )
 
 class C_BaseEntity;
 class CViewSetup;
 class CMatRenderContextPtr;
+class ITexture;
 
 static const int GLOW_FOR_ALL_SPLIT_SCREEN_SLOTS = -1;
 
@@ -118,6 +119,9 @@ public:
 private:
 
 	void RenderGlowModels( const CViewSetup *pSetup, int nSplitScreenSlot, CMatRenderContextPtr &pRenderContext );
+#ifdef HL2MP_GLOWS_ENABLE
+	void DownSampleAndBlurRT( const CViewSetup *pSetup, CMatRenderContextPtr &pRenderContext, float flBloomScale, ITexture *pRtFullFrame, ITexture *pRtQuarterSize0, ITexture *pRtQuarterSize1 );
+#endif
 	void ApplyEntityGlowEffects( const CViewSetup *pSetup, int nSplitScreenSlot, CMatRenderContextPtr &pRenderContext, float flBloomScale, int x, int y, int w, int h );
 
 	struct GlowObjectDefinition_t
@@ -214,6 +218,6 @@ private:
 	CGlowObject& operator=( const CGlowObject &other );
 };
 
-#endif // GLOWS_ENABLE
+#endif
 
 #endif // GLOW_OUTLINE_EFFECT_H

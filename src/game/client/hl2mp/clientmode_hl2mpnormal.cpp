@@ -18,13 +18,27 @@
 #include "hl2mpclientscoreboard.h"
 #include "hl2mptextwindow.h"
 #include "ienginevgui.h"
+#include "c_hl2mp_player.h"
+#include "glow_outline_effect.h"
+#include "hl2mp_gamerules.h"
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheHL2MPSpectatorGlowEffects )
+	CLIENTEFFECT_MATERIAL( "dev/glow_blur_x" )
+	CLIENTEFFECT_MATERIAL( "dev/glow_blur_y" )
+	CLIENTEFFECT_MATERIAL( "dev/glow_color" )
+	CLIENTEFFECT_MATERIAL( "dev/glow_downsample" )
+	CLIENTEFFECT_MATERIAL( "dev/halo_add_to_screen" )
+CLIENTEFFECT_REGISTER_END()
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------
 vgui::HScheme g_hVGuiCombineScheme = 0;
+
+ConVar cl_spectator_team_outlines( "cl_spectator_team_outlines", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show team-colored player outlines while spectating or watching SourceTV." );
 
 
 // Instance the singleton and expose the interface to it.
@@ -124,5 +138,30 @@ void ClientModeHL2MPNormal::Init()
 	}
 }
 
+bool ClientModeHL2MPNormal::DoPostScreenSpaceEffects( const CViewSetup *pSetup )
+{
+	if ( !BaseClass::DoPostScreenSpaceEffects( pSetup ) )
+		return false;
+
+	C_HL2MP_Player *pLocalPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
+	bool bViewerCanSeeOutlines = cl_spectator_team_outlines.GetBool() &&
+		( engine->IsHLTV() || ( pLocalPlayer && pLocalPlayer->GetTeamNumber() == TEAM_SPECTATOR ) );
+
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		C_HL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+		{
+			pPlayer->UpdateSpectatorGlow( bViewerCanSeeOutlines );
+		}
+	}
+
+	if ( bViewerCanSeeOutlines )
+	{
+		g_GlowObjectManager.RenderGlowEffects( pSetup, 0 );
+	}
+
+	return true;
+}
 
 

@@ -13,6 +13,7 @@ class C_HL2MP_Player;
 #include "c_basehlplayer.h"
 #include "hl2mp_player_shared.h"
 #include "beamdraw.h"
+#include "glow_outline_effect.h"
 
 //=============================================================================
 //=============================================================================
@@ -54,6 +55,7 @@ public:
 	~C_HL2MP_Player( void );
 
 	void ClientThink( void );
+	void UpdateSpectatorGlow( bool bViewerCanSeeOutlines );
 
 	static C_HL2MP_Player* GetLocalHL2MPPlayer();
 	
@@ -161,6 +163,7 @@ private:
 	CNetworkVar( HL2MPPlayerState, m_iPlayerState );	
 
 	bool m_fIsWalking = false;
+	CGlowObject m_SpectatorGlowObject;
 };
 
 inline C_HL2MP_Player *ToHL2MPPlayer( CBaseEntity *pEntity )

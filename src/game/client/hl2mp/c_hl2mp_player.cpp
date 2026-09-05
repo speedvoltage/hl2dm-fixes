@@ -14,6 +14,7 @@
 #include "iviewrender_beams.h"			// flashlight beam
 #include "r_efx.h"
 #include "dlight.h"
+#include <igameresources.h>
 
 // Don't alias here
 #if defined( CHL2MP_Player )
@@ -100,7 +101,10 @@ void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flD
 #endif
 CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 units in 15 seconds (plus three padded seconds)
 
-C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles( "C_HL2MP_Player::m_iv_angEyeAngles" )
+C_HL2MP_Player::C_HL2MP_Player() :
+	m_PlayerAnimState( this ),
+	m_iv_angEyeAngles( "C_HL2MP_Player::m_iv_angEyeAngles" ),
+	m_SpectatorGlowObject( this )
 {
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
@@ -197,6 +201,21 @@ void C_HL2MP_Player::TraceAttack( const CTakeDamageInfo &info, const Vector &vec
 C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 {
 	return (C_HL2MP_Player*)C_BasePlayer::GetLocalPlayer();
+}
+
+void C_HL2MP_Player::UpdateSpectatorGlow( bool bViewerCanSeeOutlines )
+{
+	int iTeam = GetTeamNumber();
+	IGameResources *pGameResources = GameResources();
+	bool bRender = bViewerCanSeeOutlines && pGameResources && IsAlive() && !IsDormant() &&
+		( iTeam == TEAM_COMBINE || iTeam == TEAM_REBELS );
+
+	m_SpectatorGlowObject.SetRenderFlags( bRender, false );
+	if ( !bRender )
+		return;
+
+	const Color &teamColor = pGameResources->GetTeamColor( iTeam );
+	m_SpectatorGlowObject.SetColor( Vector( teamColor.r() / 255.0f, teamColor.g() / 255.0f, teamColor.b() / 255.0f ) );
 }
 
 void C_HL2MP_Player::Initialize( void )
