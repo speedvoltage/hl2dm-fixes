@@ -206,11 +206,15 @@ C_HL2MP_Player* C_HL2MP_Player::GetLocalHL2MPPlayer()
 void C_HL2MP_Player::UpdateSpectatorGlow( bool bViewerCanSeeOutlines )
 {
 	int iTeam = GetTeamNumber();
-	IGameResources *pGameResources = GameResources();
-	bool bRender = bViewerCanSeeOutlines && pGameResources && IsAlive() && !IsDormant() &&
-		( iTeam == TEAM_COMBINE || iTeam == TEAM_REBELS );
+	if ( iTeam != TEAM_COMBINE && iTeam != TEAM_REBELS )
+	{
+		iTeam = TEAM_UNASSIGNED;
+	}
 
-	m_SpectatorGlowObject.SetRenderFlags( bRender, false );
+	IGameResources *pGameResources = GameResources();
+	bool bRender = bViewerCanSeeOutlines && pGameResources && IsAlive() && !IsDormant();
+
+	m_SpectatorGlowObject.SetRenderFlags( bRender, bRender );
 	if ( !bRender )
 		return;
 
