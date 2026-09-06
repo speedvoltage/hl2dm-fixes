@@ -1489,7 +1489,7 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 			//  above based on outgoing_command - incoming_acknowledged - 1
 			skipahead = ( m_nCommandsPredicted - m_nServerCommandsAcknowledged );
 
-			//Msg( "%i/%i no world, skip to %i restore from slot %i\n", 
+			//Msg( "%i/%i optimize2, skip to %i restore from slot %i\n", 
 			//	gpGlobals->framecount,
 			//	gpGlobals->tickcount,
 			//	skipahead,
@@ -1543,6 +1543,7 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 								{
 									entity->ResetLatched();
 									break;
+								}
 							}
 						}
 					}
