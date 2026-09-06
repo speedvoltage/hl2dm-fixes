@@ -10,6 +10,7 @@
 #include "weapon_rpg.h"
 
 #ifdef CLIENT_DLL
+	#include "prediction.h"
 	#include "c_hl2mp_player.h"
 	#include "model_types.h"
 	#include "beamdraw.h"
@@ -1383,6 +1384,9 @@ void CWeaponRPG::OnDataChanged( DataUpdateType_t updateType )
 
 void CWeaponRPG::UpdateGuidingSound( void )
 {
+	if ( prediction->InPrediction() && !prediction->IsFirstTimePredicted() )
+		return;
+
 	if ( m_bGuidingSoundState == m_bGuiding )
 		return;
 
