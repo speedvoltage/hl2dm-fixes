@@ -413,7 +413,11 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 
 
 
 IMPLEMENT_SERVERCLASS_ST(CHL2_Player, DT_HL2_Player)
+#ifdef HL2MP
+	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendPlayerLocalDataTable),
+#else
 	SendPropDataTable(SENDINFO_DT(m_HL2Local), &REFERENCE_SEND_TABLE(DT_HL2Local), SendProxy_SendLocalDataTable),
+#endif
 	SendPropBool( SENDINFO(m_fIsSprinting) ),
 END_SEND_TABLE()
 
@@ -2023,12 +2027,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		CPASAttenuationFilter filter( this, "ItemBattery.Touch" );
 		EmitSound( filter, entindex(), "ItemBattery.Touch" );
 
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
-
-		UserMessageBegin( user, "ItemPickup" );
-			WRITE_STRING( "item_battery" );
-		MessageEnd();
+		SendPlayerHudItemPickup( this, "item_battery" );
 
 		
 		// Suit reports new power level
@@ -2654,11 +2653,7 @@ int CHL2_Player::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound)
 	if ( nCount > 0 && nAdd == 0 )
 	{
 		// we've been denied the pickup, display a hud icon to show that
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
-		UserMessageBegin( user, "AmmoDenied" );
-			WRITE_SHORT( nAmmoIndex );
-		MessageEnd();
+		SendPlayerHudAmmoDenied( this, nAmmoIndex );
 	}
 
 	//

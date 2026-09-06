@@ -89,6 +89,16 @@ CBaseHudWeaponSelection *GetHudWeaponSelection()
 	return CBaseHudWeaponSelection::GetInstance();
 }
 
+static bool IsReadOnlySpectatorHud()
+{
+#ifdef HL2MP
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	return pPlayer && pPlayer->IsObserver();
+#else
+	return false;
+#endif
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -158,7 +168,14 @@ void CBaseHudWeaponSelection::OnThink( void )
 {
 	// Don't allow weapon selection if we're frozen in place
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer->GetFlags() & FL_FROZEN || pPlayer->IsPlayerDead() )
+	if ( IsReadOnlySpectatorHud() )
+	{
+		if ( IsInSelectionMode() )
+			HideSelection();
+		return;
+	}
+
+	if ( pPlayer && ( pPlayer->GetFlags() & FL_FROZEN || pPlayer->IsPlayerDead() ) )
 	{
 		if ( IsInSelectionMode() )
 		{
@@ -173,7 +190,7 @@ void CBaseHudWeaponSelection::OnThink( void )
 void CBaseHudWeaponSelection::ProcessInput()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
+	if ( !pPlayer || IsReadOnlySpectatorHud() )
 		return;
 
 	int nFastswitchMode = hud_fastswitch.GetInt();
@@ -505,6 +522,9 @@ void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 		return;
 	}
 
+	if ( IsReadOnlySpectatorHud() )
+		return;
+
 	// If we're not allowed to draw, ignore weapon selections
 	if ( !BaseClass::ShouldDraw() )
 	{
@@ -528,6 +548,9 @@ void CBaseHudWeaponSelection::UserCmd_Close(void)
 //-----------------------------------------------------------------------------
 void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 {
+	if ( IsReadOnlySpectatorHud() )
+		return;
+
 	// If we're not allowed to draw, ignore weapon selections
 	if ( !BaseClass::ShouldDraw() )
 		return;
@@ -551,6 +574,9 @@ void CBaseHudWeaponSelection::UserCmd_NextWeapon(void)
 //-----------------------------------------------------------------------------
 void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 {
+	if ( IsReadOnlySpectatorHud() )
+		return;
+
 	// If we're not allowed to draw, ignore weapon selections
 	if ( !BaseClass::ShouldDraw() )
 		return;
@@ -575,6 +601,9 @@ void CBaseHudWeaponSelection::UserCmd_PrevWeapon(void)
 //-----------------------------------------------------------------------------
 void CBaseHudWeaponSelection::UserCmd_LastWeapon(void)
 {
+	if ( IsReadOnlySpectatorHud() )
+		return;
+
 	// If we're not allowed to draw, ignore weapon selections
 	if ( !BaseClass::ShouldDraw() )
 		return;
