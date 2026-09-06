@@ -65,14 +65,19 @@ static void ClientUse( const CCommand &args )
 		return;
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
+	if ( !pPlayer || pPlayer->IsObserver() )
 		return;
 
-	C_BaseCombatWeapon *pWeapon = pPlayer->Weapon_OwnsThisType( args[1] );
-	if ( !pWeapon )
-		return;
+	for ( int i = 0; i < MAX_WEAPONS; ++i )
+	{
+		C_BaseCombatWeapon *pWeapon = pPlayer->GetWeapon( i );
+		if ( !pWeapon || Q_stricmp( pWeapon->GetClassname(), args[1] ) || pWeapon->GetSubType() != 0 )
+			continue;
 
-	input->MakeWeaponSelection( pWeapon );
+		if ( pPlayer->Weapon_ShouldSelectItem( pWeapon ) )
+			input->MakeWeaponSelection( pWeapon );
+		return;
+	}
 }
 
 static ConCommand use( "use", ClientUse, "Use a particular weapon\t\nArguments: <weapon_name>", FCVAR_SERVER_CAN_EXECUTE );
