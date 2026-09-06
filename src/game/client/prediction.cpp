@@ -885,10 +885,9 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	Q_snprintf( sz, sizeof( sz ), "runcommand%04d", ucmd->command_number );
 	PREDICTION_TRACKVALUECHANGESCOPE( sz );
 #endif
-	CUserCmd effectiveCmd( *ucmd );
-	effectiveCmd.buttons |= player->m_afButtonForced;
-	effectiveCmd.buttons &= ~player->m_afButtonDisabled;
-	ucmd = &effectiveCmd;
+	const int nOriginalButtons = ucmd->buttons;
+	ucmd->buttons |= player->m_afButtonForced;
+	ucmd->buttons &= ~player->m_afButtonDisabled;
 
 	StartCommand( player, ucmd );
 
@@ -974,6 +973,7 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	g_pGameMovement->FinishTrackPredictionErrors( player );
 
 	FinishCommand( player );
+	ucmd->buttons = nOriginalButtons;
 
 	if ( gpGlobals->frametime > 0 )
 	{
@@ -1489,7 +1489,7 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 			//  above based on outgoing_command - incoming_acknowledged - 1
 			skipahead = ( m_nCommandsPredicted - m_nServerCommandsAcknowledged );
 
-			//Msg( "%i/%i optimize2, skip to %i restore from slot %i\n", 
+			//Msg( "%i/%i no world, skip to %i restore from slot %i\n", 
 			//	gpGlobals->framecount,
 			//	gpGlobals->tickcount,
 			//	skipahead,
@@ -1543,7 +1543,6 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 								{
 									entity->ResetLatched();
 									break;
-								}
 							}
 						}
 					}
