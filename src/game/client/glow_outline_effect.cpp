@@ -17,7 +17,9 @@
 
 #if defined( GLOWS_ENABLE ) || defined( HL2MP_GLOWS_ENABLE )
 
+#ifdef GLOWS_ENABLE
 ConVar glow_outline_effect_enable( "glow_outline_effect_enable", "1", FCVAR_ARCHIVE, "Enable entity outline glow effects." );
+#endif
 ConVar glow_outline_effect_width( "glow_outline_width", "10.0f", FCVAR_CHEAT, "Width of glow outline effect in screen space." );
 
 extern bool g_bDumpRenderTargets; // in viewpostprocess.cpp
@@ -59,19 +61,21 @@ struct ShaderStencilState_t
 
 void CGlowObjectManager::RenderGlowEffects( const CViewSetup *pSetup, int nSplitScreenSlot )
 {
-	if ( g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() )
-	{
-		if ( glow_outline_effect_enable.GetBool() )
-		{
-			CMatRenderContextPtr pRenderContext( materials );
+	if ( !g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_0() )
+		return;
 
-			int nX, nY, nWidth, nHeight;
-			pRenderContext->GetViewport( nX, nY, nWidth, nHeight );
+#ifdef GLOWS_ENABLE
+	if ( !glow_outline_effect_enable.GetBool() )
+		return;
+#endif
 
-			PIXEvent _pixEvent( pRenderContext, "EntityGlowEffects" );
-			ApplyEntityGlowEffects( pSetup, nSplitScreenSlot, pRenderContext, glow_outline_effect_width.GetFloat(), nX, nY, nWidth, nHeight );
-		}
-	}
+	CMatRenderContextPtr pRenderContext( materials );
+
+	int nX, nY, nWidth, nHeight;
+	pRenderContext->GetViewport( nX, nY, nWidth, nHeight );
+
+	PIXEvent _pixEvent( pRenderContext, "EntityGlowEffects" );
+	ApplyEntityGlowEffects( pSetup, nSplitScreenSlot, pRenderContext, glow_outline_effect_width.GetFloat(), nX, nY, nWidth, nHeight );
 }
 
 static void SetRenderTargetAndViewPort( ITexture *rt, int w, int h )
