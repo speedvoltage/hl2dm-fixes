@@ -15,6 +15,7 @@
 #include "vgui/ILocalize.h"
 #include "vgui/ISurface.h"
 #include "vgui_controls/CheckButton.h"
+#include "vgui_controls/Label.h"
 #include "vgui_controls/RichText.h"
 #include "vgui_controls/TextEntry.h"
 #include "c_team.h"
@@ -31,6 +32,7 @@ DECLARE_HUD_MESSAGE( CHudChat, SayText2 );
 DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
 
 ConVar cl_chat_timestamps( "cl_chat_timestamps", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show local timestamps in text chat." );
+ConVar cl_chatbox_style( "cl_chatbox_style", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Chat presentation style: 0 = classic, 1 = modern.", true, 0, true, 1 );
 ConVar cl_chat_window_x( "cl_chat_window_x", "-1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Normalized horizontal position of the chat window." );
 ConVar cl_chat_window_y( "cl_chat_window_y", "-1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Normalized vertical position of the chat window." );
 ConVar cl_chat_window_w( "cl_chat_window_w", "-1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Normalized width of the chat window." );
@@ -76,6 +78,26 @@ CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 	m_iMinWindowTall = 260;
 	m_iHeaderTall = 26;
 	m_iResizeGripSize = 7;
+	m_iLastStyle = cl_chatbox_style.GetInt();
+
+	m_clrPanel = Color( 18, 19, 18, 238 );
+	m_clrPanelBorder = Color( 92, 88, 78, 190 );
+	m_clrAccent = Color( 232, 112, 32, 255 );
+	m_clrText = Color( 232, 232, 226, 255 );
+	m_clrSecondaryText = Color( 168, 171, 165, 255 );
+
+	m_pTitleLabel = new vgui::Label( this, "ChatWindowTitle", "CHAT" );
+	m_pTitleLabel->SetMouseInputEnabled( false );
+	m_pTitleLabel->SetKeyBoardInputEnabled( false );
+	m_pTitleLabel->SetVisible( false );
+
+	m_pFilterTitle = new vgui::Label( m_pFilterPanel, "ChatFilterTitle", "CHAT FILTERS" );
+	m_pFilterTitle->SetMouseInputEnabled( false );
+	m_pFilterTitle->SetKeyBoardInputEnabled( false );
+
+	m_pFilterAccent = new vgui::Panel( m_pFilterPanel, "ChatFilterAccent" );
+	m_pFilterAccent->SetMouseInputEnabled( false );
+	m_pFilterAccent->SetKeyBoardInputEnabled( false );
 }
 
 void CHudChat::CreateChatInputLine( void )
@@ -95,32 +117,47 @@ void CHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 	m_bWindowBoundsInitialized = false;
 
-	if ( m_ChatLine )
+	if ( cl_chatbox_style.GetBool() )
 	{
-		m_ChatLine->SetPaintBackgroundEnabled( true );
-		m_ChatLine->SetPaintBorderEnabled( true );
+		SetPaintBackgroundType( 0 );
+		SetPaintBackgroundEnabled( true );
+		SetPaintBorderEnabled( true );
+		SetBorder( NULL );
+		SetBgColor( Color( 0, 0, 0, 0 ) );
+		ApplyModernStyle();
 	}
-	if ( m_pChatInput )
+	else
 	{
-		m_pChatInput->SetPaintBackgroundEnabled( true );
-		m_pChatInput->SetPaintBorderEnabled( true );
-	}
-	if ( GetChatHistory() )
-	{
-		GetChatHistory()->SetPaintBackgroundEnabled( true );
-		GetChatHistory()->SetPaintBorderEnabled( true );
-	}
-	if ( m_pFiltersButton )
-	{
-		m_pFiltersButton->SetText( "Filters" );
-		m_pFiltersButton->SetPaintBackgroundEnabled( true );
-		m_pFiltersButton->SetPaintBorderEnabled( true );
-	}
-	if ( m_pFilterPanel )
-	{
-		m_pFilterPanel->SetPaintBackgroundType( 2 );
-		m_pFilterPanel->SetPaintBackgroundEnabled( true );
-		m_pFilterPanel->SetPaintBorderEnabled( true );
+		if ( m_ChatLine )
+		{
+			m_ChatLine->SetPaintBackgroundEnabled( true );
+			m_ChatLine->SetPaintBorderEnabled( true );
+		}
+		if ( m_pChatInput )
+		{
+			m_pChatInput->SetPaintBackgroundEnabled( true );
+			m_pChatInput->SetPaintBorderEnabled( true );
+		}
+		if ( GetChatHistory() )
+		{
+			GetChatHistory()->SetPaintBackgroundEnabled( true );
+			GetChatHistory()->SetPaintBorderEnabled( true );
+		}
+		m_pTitleLabel->SetVisible( false );
+		m_pFilterTitle->SetVisible( false );
+		m_pFilterAccent->SetVisible( false );
+		if ( m_pFiltersButton )
+		{
+			m_pFiltersButton->SetText( "Filters" );
+			m_pFiltersButton->SetPaintBackgroundEnabled( true );
+			m_pFiltersButton->SetPaintBorderEnabled( true );
+		}
+		if ( m_pFilterPanel )
+		{
+			m_pFilterPanel->SetPaintBackgroundType( 2 );
+			m_pFilterPanel->SetPaintBackgroundEnabled( true );
+			m_pFilterPanel->SetPaintBorderEnabled( true );
+		}
 	}
 	UpdateLayout();
 }
@@ -129,6 +166,52 @@ void CHudChat::PerformLayout( void )
 {
 	BaseClass::PerformLayout();
 	UpdateLayout();
+}
+
+void CHudChat::PaintBackground( void )
+{
+	if ( !cl_chatbox_style.GetBool() )
+	{
+		BaseClass::PaintBackground();
+		return;
+	}
+
+	if ( GetMessageMode() == MM_NONE )
+		return;
+
+	int wide, tall;
+	GetSize( wide, tall );
+
+	vgui::surface()->DrawSetColor( m_clrPanel );
+	vgui::surface()->DrawFilledRect( 0, 0, wide, tall );
+	vgui::surface()->DrawSetColor( Color( 24, 25, 23, 245 ) );
+	vgui::surface()->DrawFilledRect( 1, 2, wide - 1, m_iHeaderTall );
+
+	vgui::surface()->DrawSetColor( m_clrAccent );
+	vgui::surface()->DrawFilledRect( 0, 0, wide, 2 );
+
+	vgui::surface()->DrawSetColor( m_clrPanelBorder );
+	vgui::surface()->DrawFilledRect( 1, m_iHeaderTall, wide - 1, m_iHeaderTall + 1 );
+}
+
+void CHudChat::PaintBorder( void )
+{
+	if ( !cl_chatbox_style.GetBool() )
+	{
+		BaseClass::PaintBorder();
+		return;
+	}
+
+	if ( GetMessageMode() == MM_NONE )
+		return;
+
+	int wide, tall;
+	GetSize( wide, tall );
+
+	vgui::surface()->DrawSetColor( m_clrPanelBorder );
+	vgui::surface()->DrawOutlinedRect( 0, 0, wide, tall );
+	vgui::surface()->DrawLine( wide - 14, tall - 3, wide - 3, tall - 14 );
+	vgui::surface()->DrawLine( wide - 9, tall - 3, wide - 3, tall - 9 );
 }
 
 void CHudChat::Init( void )
@@ -150,6 +233,16 @@ void CHudChat::Reset( void )
 void CHudChat::OnTick( void )
 {
 	BaseClass::OnTick();
+
+	const int style = cl_chatbox_style.GetInt();
+	if ( style != m_iLastStyle )
+	{
+		FinishWindowDrag( true );
+		m_iLastStyle = style;
+		InvalidateLayout( true, true );
+		UpdateMessageModePrompt();
+		UpdateLayout();
+	}
 
 	int screenWide, screenTall;
 	vgui::surface()->GetScreenSize( screenWide, screenTall );
@@ -178,6 +271,10 @@ void CHudChat::StartMessageMode( int iMessageModeType )
 {
 	BaseClass::StartMessageMode( iMessageModeType );
 	UpdateMessageModePrompt();
+	if ( cl_chatbox_style.GetBool() )
+	{
+		ApplyModernStyle();
+	}
 	UpdateLayout();
 
 	if ( GetChatHistory() )
@@ -321,7 +418,7 @@ void CHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, ... )
 
 	if ( useFilterColor )
 	{
-		SetCustomColor( g_ColorYellow );
+		SetCustomColor( cl_chatbox_style.GetBool() ? m_clrAccent : g_ColorYellow );
 	}
 
 	if ( cl_chat_timestamps.GetBool() )
@@ -367,11 +464,16 @@ int CHudChat::GetChatInputOffset( void )
 		return 0;
 }
 
+Color CHudChat::GetDefaultTextColor( void )
+{
+	return cl_chatbox_style.GetBool() ? m_clrText : BaseClass::GetDefaultTextColor();
+}
+
 Color CHudChat::GetClientColor( int clientIndex )
 {
 	if ( clientIndex == 0 ) // console msg
 	{
-		return g_ColorYellow;
+		return cl_chatbox_style.GetBool() ? m_clrAccent : g_ColorYellow;
 	}
 	else if( g_PR )
 	{
@@ -379,14 +481,14 @@ Color CHudChat::GetClientColor( int clientIndex )
 		{
 		case TEAM_COMBINE:
 			return g_ColorBlue;
-			case TEAM_REBELS:
-				return g_ColorRed;
-			default:
-				return g_ColorYellow;
-			}
+		case TEAM_REBELS:
+			return g_ColorRed;
+		default:
+			return cl_chatbox_style.GetBool() ? Color( 224, 154, 82, 255 ) : g_ColorYellow;
 		}
+	}
 
-	return g_ColorYellow;
+	return cl_chatbox_style.GetBool() ? m_clrAccent : g_ColorYellow;
 }
 void CHudChat::UpdateLayout( void )
 {
@@ -403,9 +505,11 @@ void CHudChat::UpdateLayout( void )
 	const int filterWide = MAX( 68, (int)( 82 * scale ) );
 	const int filterTall = MAX( 22, (int)( 26 * scale ) );
 	const int filterPad = MAX( 8, (int)( 10 * scale ) );
+	const int filterTitleTall = MAX( 24, (int)( 28 * scale ) );
 	const int filterRowGap = MAX( 1, (int)( 2 * scale ) );
 	const int minFilterRowTall = MAX( 18, (int)( 20 * scale ) );
-	const int filterContentTop = filterPad;
+	const bool modern = cl_chatbox_style.GetBool();
+	const int filterContentTop = modern ? filterTitleTall : filterPad;
 	const int minFilterPanelTall = filterContentTop + filterPad + filterRowGap * 5 + minFilterRowTall * 6;
 	m_iWindowMargin = MAX( 12, (int)( 22 * scale ) );
 	m_iMinWindowWide = MIN( screenWide - m_iWindowMargin * 2, (int)( 440 * scale ) );
@@ -422,6 +526,8 @@ void CHudChat::UpdateLayout( void )
 	GetSize( panelWide, panelTall );
 
 	const bool active = GetMessageMode() != MM_NONE;
+	m_pTitleLabel->SetVisible( active && modern );
+	m_pTitleLabel->SetBounds( pad, 2, panelWide - pad * 2, m_iHeaderTall - 2 );
 	if ( active )
 	{
 		const int historyY = m_iHeaderTall + gap;
@@ -441,6 +547,14 @@ void CHudChat::UpdateLayout( void )
 			const int filterRowTall = MAX( minFilterRowTall, ( filterPanelTall - filterContentTop - filterPad - filterRowGap * 5 ) / 6 );
 			m_pFilterPanel->SetBounds( panelWide - pad - filterPanelWide, panelTall - pad - inputTall - gap - filterPanelTall, filterPanelWide, filterPanelTall );
 			m_pFilterPanel->SetZPos( 100 );
+
+			m_pFilterAccent->SetVisible( modern );
+			m_pFilterTitle->SetVisible( modern );
+			if ( modern )
+			{
+				m_pFilterAccent->SetBounds( 0, 0, filterPanelWide, 2 );
+				m_pFilterTitle->SetBounds( filterPad, 2, filterPanelWide - filterPad * 2, filterTitleTall - 2 );
+			}
 
 			int filterRow = 0;
 			for ( int i = 0; i < m_pFilterPanel->GetChildCount(); ++i )
@@ -561,20 +675,134 @@ void CHudChat::UpdateMessageModePrompt( void )
 	if ( !m_pChatInput )
 		return;
 
-	const wchar_t *prompt = NULL;
+	if ( !cl_chatbox_style.GetBool() )
+	{
+		const wchar_t *prompt = NULL;
+		switch ( GetMessageMode() )
+		{
+		case MM_SAY:
+			prompt = g_pVGuiLocalize->Find( "#chat_say" );
+			m_pChatInput->SetPrompt( prompt ? prompt : L"Say :" );
+			break;
+		case MM_SAY_TEAM:
+			prompt = g_pVGuiLocalize->Find( "#chat_say_team" );
+			m_pChatInput->SetPrompt( prompt ? prompt : L"Say (TEAM) :" );
+			break;
+		case MM_SAY_PARTY:
+			prompt = g_pVGuiLocalize->Find( "#chat_say_party" );
+			m_pChatInput->SetPrompt( prompt ? prompt : L"Say (PARTY) :" );
+			break;
+		}
+		return;
+	}
+
 	switch ( GetMessageMode() )
 	{
-	case MM_SAY:
-		prompt = g_pVGuiLocalize->Find( "#chat_say" );
-		m_pChatInput->SetPrompt( prompt ? prompt : L"Say :" );
-		break;
 	case MM_SAY_TEAM:
-		prompt = g_pVGuiLocalize->Find( "#chat_say_team" );
-		m_pChatInput->SetPrompt( prompt ? prompt : L"Say (TEAM) :" );
+		m_pChatInput->SetPrompt( L"TEAM" );
 		break;
 	case MM_SAY_PARTY:
-		prompt = g_pVGuiLocalize->Find( "#chat_say_party" );
-		m_pChatInput->SetPrompt( prompt ? prompt : L"Say (PARTY) :" );
+		m_pChatInput->SetPrompt( L"PARTY" );
 		break;
+	default:
+		m_pChatInput->SetPrompt( L"ALL" );
+		break;
+	}
+}
+
+void CHudChat::ApplyModernStyle( void )
+{
+	if ( m_ChatLine )
+	{
+		m_ChatLine->SetPaintBackgroundEnabled( false );
+		m_ChatLine->SetPaintBorderEnabled( false );
+		m_ChatLine->SetBorder( NULL );
+		m_ChatLine->SetFgColor( m_clrText );
+	}
+
+	if ( m_pChatInput )
+	{
+		m_pChatInput->SetPaintBackgroundEnabled( false );
+		m_pChatInput->SetPaintBorderEnabled( false );
+		m_pChatInput->SetBorder( NULL );
+
+		vgui::Label *prompt = m_pChatInput->GetPrompt();
+		prompt->SetPaintBackgroundEnabled( false );
+		prompt->SetFgColor( m_clrAccent );
+		prompt->SetContentAlignment( vgui::Label::a_center );
+		prompt->SetTextInset( 0, 0 );
+
+		vgui::Panel *input = m_pChatInput->GetInputPanel();
+		input->SetPaintBackgroundEnabled( true );
+		input->SetPaintBorderEnabled( false );
+		input->SetBorder( NULL );
+		input->SetBgColor( Color( 8, 9, 8, 215 ) );
+		input->SetFgColor( Color( 238, 238, 232, 255 ) );
+	}
+
+	if ( GetChatHistory() )
+	{
+		GetChatHistory()->SetPaintBackgroundEnabled( false );
+		GetChatHistory()->SetPaintBorderEnabled( false );
+		GetChatHistory()->SetBorder( NULL );
+		GetChatHistory()->SetFgColor( m_clrText );
+	}
+
+	if ( m_pFiltersButton )
+	{
+		m_pFiltersButton->SetText( "FILTERS" );
+		m_pFiltersButton->SetPaintBackgroundEnabled( true );
+		m_pFiltersButton->SetPaintBorderEnabled( false );
+		m_pFiltersButton->SetBorder( NULL );
+		m_pFiltersButton->SetDefaultColor( m_clrSecondaryText, Color( 35, 36, 34, 235 ) );
+		m_pFiltersButton->SetArmedColor( m_clrText, Color( 49, 50, 47, 245 ) );
+		m_pFiltersButton->SetDepressedColor( m_clrAccent, Color( 28, 29, 27, 250 ) );
+		m_pFiltersButton->SetVisible( GetMessageMode() != MM_NONE );
+	}
+
+	m_pTitleLabel->SetPaintBackgroundEnabled( false );
+	m_pTitleLabel->SetPaintBorderEnabled( false );
+	m_pTitleLabel->SetBorder( NULL );
+	m_pTitleLabel->SetFgColor( m_clrSecondaryText );
+	m_pTitleLabel->SetContentAlignment( vgui::Label::a_west );
+	m_pTitleLabel->SetTextInset( 0, 0 );
+	if ( m_pFiltersButton )
+		m_pTitleLabel->SetFont( m_pFiltersButton->GetFont() );
+
+	if ( m_pFilterPanel )
+	{
+		m_pFilterPanel->SetPaintBackgroundType( 0 );
+		m_pFilterPanel->SetPaintBackgroundEnabled( true );
+		m_pFilterPanel->SetPaintBorderEnabled( false );
+		m_pFilterPanel->SetBorder( NULL );
+		m_pFilterPanel->SetBgColor( Color( 20, 21, 20, 252 ) );
+
+		m_pFilterAccent->SetPaintBackgroundEnabled( true );
+		m_pFilterAccent->SetBgColor( m_clrAccent );
+		m_pFilterTitle->SetPaintBackgroundEnabled( false );
+		m_pFilterTitle->SetPaintBorderEnabled( false );
+		m_pFilterTitle->SetBorder( NULL );
+		m_pFilterTitle->SetFgColor( m_clrSecondaryText );
+		m_pFilterTitle->SetContentAlignment( vgui::Label::a_west );
+		m_pFilterTitle->SetTextInset( 0, 0 );
+		if ( m_pFiltersButton )
+			m_pFilterTitle->SetFont( m_pFiltersButton->GetFont() );
+
+		for ( int i = 0; i < m_pFilterPanel->GetChildCount(); ++i )
+		{
+			vgui::CheckButton *button = dynamic_cast< vgui::CheckButton * >( m_pFilterPanel->GetChild( i ) );
+			if ( !button )
+				continue;
+
+			button->SetPaintBackgroundEnabled( true );
+			button->SetPaintBorderEnabled( false );
+			button->SetBorder( NULL );
+			button->SetDefaultColor( m_clrText, Color( 29, 30, 28, 245 ) );
+			button->SetArmedColor( m_clrText, Color( 43, 44, 41, 250 ) );
+			button->SetDepressedColor( m_clrAccent, Color( 36, 37, 34, 252 ) );
+			button->SetSelectedColor( m_clrText, Color( 32, 33, 30, 248 ) );
+			button->GetCheckImage()->SetColor( m_clrAccent );
+			button->GetCheckImage()->_bgColor = Color( 12, 13, 12, 255 );
+		}
 	}
 }

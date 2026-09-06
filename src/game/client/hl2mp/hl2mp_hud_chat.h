@@ -57,6 +57,8 @@ public:
 	virtual void	Reset( void );
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void PerformLayout( void );
+	virtual void PaintBackground( void );
+	virtual void PaintBorder( void );
 	virtual void OnTick( void );
 	virtual void StartMessageMode( int iMessageModeType );
 	virtual void StopMessageMode( void );
@@ -68,6 +70,7 @@ public:
 
 	int				GetChatInputOffset( void );
 
+	virtual Color GetDefaultTextColor( void );
 	virtual Color	GetClientColor( int clientIndex );
 
 private:
@@ -83,6 +86,7 @@ private:
 
 	void UpdateLayout( void );
 	void UpdateMessageModePrompt( void );
+	void ApplyModernStyle( void );
 	void RestoreWindowBounds( int screenWide, int screenTall, float scale );
 	void SaveWindowBounds( void );
 	int GetWindowDragMode( int x, int y );
@@ -105,6 +109,17 @@ private:
 	int m_iMinWindowTall;
 	int m_iHeaderTall;
 	int m_iResizeGripSize;
+	int m_iLastStyle;
+
+	vgui::Label *m_pTitleLabel;
+	vgui::Label *m_pFilterTitle;
+	vgui::Panel *m_pFilterAccent;
+
+	Color m_clrPanel;
+	Color m_clrPanelBorder;
+	Color m_clrAccent;
+	Color m_clrText;
+	Color m_clrSecondaryText;
 };
 
 #endif	//CS_HUD_CHAT_H
