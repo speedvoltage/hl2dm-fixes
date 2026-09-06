@@ -45,6 +45,7 @@ protected:
 	void PaintBorder() OVERRIDE;
 	void ApplySchemeSettings( vgui::IScheme *pScheme ) OVERRIDE;
 	void PerformLayout() OVERRIDE;
+	void OnThink() OVERRIDE;
 
 private:
 	void AddHeader() OVERRIDE; // add the start header of the scoreboard
@@ -67,8 +68,13 @@ private:
 	// rounded corners
 	Color m_bgColor;
 	Color					 m_borderColor;
+	Color m_accentColor;
+	Color m_playerTextColor;
+	Color m_secondaryTextColor;
 	Color m_spectatorTextColor;
 	Color m_dividerColor;
+	Color m_localPlayerBackgroundColor;
+	int m_iLastStyle;
 };
 
 #endif // CHL2MPCLIENTSCOREBOARDDIALOG_H

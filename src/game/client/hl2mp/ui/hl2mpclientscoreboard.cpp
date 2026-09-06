@@ -23,6 +23,8 @@
 
 using namespace vgui;
 
+ConVar cl_scoreboard_style( "cl_scoreboard_style", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Scoreboard presentation style: 0 = classic, 1 = modern.", true, 0, true, 1 );
+
 // id's of sections used in the scoreboard
 enum EScoreboardSections
 {
@@ -86,8 +88,13 @@ CHL2MPClientScoreBoardDialog::CHL2MPClientScoreBoardDialog( IViewPort *pViewPort
 	m_pServerName( NULL ),
 	m_bgColor( 18, 19, 18, 238 ),
 	m_borderColor( 92, 88, 78, 190 ),
+	m_accentColor( 232, 112, 32, 255 ),
+	m_playerTextColor( 232, 232, 226, 255 ),
+	m_secondaryTextColor( 174, 176, 170, 255 ),
 	m_spectatorTextColor( 148, 151, 146, 255 ),
-	m_dividerColor( 128, 128, 128, 96 )
+	m_dividerColor( 128, 128, 128, 96 ),
+	m_localPlayerBackgroundColor( 232, 112, 32, 48 ),
+	m_iLastStyle( cl_scoreboard_style.GetInt() )
 {
 	SetProportional( true );
 	m_bAllowGrowth = false;
@@ -109,6 +116,20 @@ void CHL2MPClientScoreBoardDialog::Update()
 	BaseClass::Update();
 	UpdateMatchInfo();
 	InvalidateLayout();
+}
+
+void CHL2MPClientScoreBoardDialog::OnThink()
+{
+	BaseClass::OnThink();
+
+	const int style = cl_scoreboard_style.GetInt();
+	if ( style != m_iLastStyle )
+	{
+		m_iLastStyle = style;
+		InvalidateLayout( true, true );
+		Reset();
+		Update();
+	}
 }
 
 void CHL2MPClientScoreBoardDialog::FireGameEvent( IGameEvent *event )
@@ -135,6 +156,19 @@ void CHL2MPClientScoreBoardDialog::FireGameEvent( IGameEvent *event )
 //-----------------------------------------------------------------------------
 void CHL2MPClientScoreBoardDialog::PaintBackground()
 {
+	if ( cl_scoreboard_style.GetBool() )
+	{
+		int wide, tall;
+		GetSize( wide, tall );
+
+		surface()->DrawSetColor( m_bgColor );
+		surface()->DrawFilledRect( 0, 0, wide, tall );
+
+		surface()->DrawSetColor( m_accentColor );
+		surface()->DrawFilledRect( 0, 0, wide, 2 );
+		return;
+	}
+
 	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
 	m_pPlayerList->SetBorder(NULL);
 
@@ -255,6 +289,16 @@ void CHL2MPClientScoreBoardDialog::PaintBackground()
 //-----------------------------------------------------------------------------
 void CHL2MPClientScoreBoardDialog::PaintBorder()
 {
+	if ( cl_scoreboard_style.GetBool() )
+	{
+		int wide, tall;
+		GetSize( wide, tall );
+
+		surface()->DrawSetColor( m_borderColor );
+		surface()->DrawOutlinedRect( 0, 0, wide, tall );
+		return;
+	}
+
 	int x1, x2, y1, y2;
 	surface()->DrawSetColor(m_borderColor);
 	surface()->DrawSetTextColor(m_borderColor);
@@ -380,12 +424,22 @@ void CHL2MPClientScoreBoardDialog::PaintBorder()
 void CHL2MPClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
+	const bool modern = cl_scoreboard_style.GetBool();
 	const Color classicBackground = GetSchemeColor( "SectionedListPanel.BgColor", GetBgColor(), pScheme );
 
 	SetBgColor( Color( 0, 0, 0, 0 ) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
-	m_bgColor = classicBackground;
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
+	SetBorder( modern ? NULL : pScheme->GetBorder( "BaseBorder" ) );
+
+	if ( modern )
+	{
+		m_bgColor = Color( 18, 19, 18, 238 );
+		m_borderColor = Color( 92, 88, 78, 190 );
+	}
+	else
+	{
+		m_bgColor = classicBackground;
+		m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
+	}
 
 	m_pPlayerList->SetProportional( true );
 	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
@@ -415,7 +469,7 @@ void CHL2MPClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	if ( m_pServerName )
 	{
 		m_pServerName->SetFont( titleFont );
-		m_pServerName->SetFgColor( pScheme->GetColor( "FgColor", Color( 255, 255, 255, 255 ) ) );
+		m_pServerName->SetFgColor( modern ? m_playerTextColor : pScheme->GetColor( "FgColor", Color( 255, 255, 255, 255 ) ) );
 		m_pServerName->SetPaintBackgroundEnabled( false );
 		m_pServerName->SetContentAlignment( Label::a_west );
 	}
@@ -584,11 +638,12 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 //-----------------------------------------------------------------------------
 void CHL2MPClientScoreBoardDialog::AddHeader()
 {
+	const bool modern = cl_scoreboard_style.GetBool();
 	const int timeWide = scheme()->GetProportionalScaledValueEx( GetScheme(), 80 );
 	const int infoWide = MAX( 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_NAME_WIDTH ) - timeWide );
 	m_pPlayerList->AddSection( SCORESECTION_HEADER, new CHL2MPScoreboardHeader( m_pPlayerList, "", SCORESECTION_HEADER ) );
 	m_pPlayerList->SetSectionAlwaysVisible( SCORESECTION_HEADER );
-	m_pPlayerList->SetSectionFgColor( SCORESECTION_HEADER, scheme()->GetIScheme( GetScheme() )->GetColor( "FgColor", Color( 255, 255, 255, 255 ) ) );
+	m_pPlayerList->SetSectionFgColor( SCORESECTION_HEADER, modern ? m_secondaryTextColor : scheme()->GetIScheme( GetScheme() )->GetColor( "FgColor", Color( 255, 255, 255, 255 ) ) );
 	m_pPlayerList->SetSectionDividerColor( SCORESECTION_HEADER, m_dividerColor );
 	m_pPlayerList->SetSectionDrawDividerBar( SCORESECTION_HEADER, true );
 
@@ -629,7 +684,7 @@ void CHL2MPClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
 	m_pPlayerList->AddColumnToSection( sectionID, "ping", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH ) );
 
 	IGameResources *resources = GameResources();
-	const Color sectionColor = resources ? resources->GetTeamColor( teamNumber ) : scheme()->GetIScheme( GetScheme() )->GetColor( "FgColor", Color( 255, 255, 255, 255 ) );
+	const Color sectionColor = resources ? resources->GetTeamColor( teamNumber ) : m_accentColor;
 	m_pPlayerList->SetSectionFgColor( sectionID, sectionColor );
 	if ( teamNumber == TEAM_COMBINE || teamNumber == TEAM_REBELS )
 	{
@@ -693,6 +748,7 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 	}
 
 	m_pPlayerList->ClearSelection();
+	const bool modern = cl_scoreboard_style.GetBool();
 	int selectedRow = -1;
 
 	const bool teamplay = HL2MPRules() && HL2MPRules()->IsTeamplay();
@@ -731,15 +787,15 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 			m_pPlayerList->ModifyItem( itemID, sectionID, playerData );
 		}
 
-		Color playerColor = spectator ? m_spectatorTextColor : scheme()->GetIScheme( GetScheme() )->GetColor( "FgColor", Color( 255, 255, 255, 255 ) );
+		Color playerColor = spectator ? m_spectatorTextColor : m_accentColor;
 		if ( !spectator && resources )
 		{
 			playerColor = resources->GetTeamColor( teamplay ? g_PR->GetTeam( playerIndex ) : TEAM_UNASSIGNED );
 		}
 
 		m_pPlayerList->SetItemFgColor( itemID, playerColor );
-		m_pPlayerList->SetItemBgColor( itemID, Color( 0, 0, 0, 0 ) );
-		if ( playerIndex == localPlayer->entindex() )
+		m_pPlayerList->SetItemBgColor( itemID, modern && playerIndex == localPlayer->entindex() ? m_localPlayerBackgroundColor : Color( 0, 0, 0, 0 ) );
+		if ( !modern && playerIndex == localPlayer->entindex() )
 		{
 			selectedRow = itemID;
 		}
