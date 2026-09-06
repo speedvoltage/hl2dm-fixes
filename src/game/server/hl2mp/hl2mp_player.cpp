@@ -169,6 +169,20 @@ void CHL2MP_Player::UpdateOnRemove( void )
 	BaseClass::UpdateOnRemove();
 }
 
+int CHL2MP_Player::ShouldTransmit( const CCheckTransmitInfo *pInfo )
+{
+	if ( IsAlive() && pInfo && pInfo->m_pClientEnt )
+	{
+		CBasePlayer *pRecipientPlayer = ToBasePlayer( CBaseEntity::Instance( pInfo->m_pClientEnt ) );
+		if ( pRecipientPlayer && ( pRecipientPlayer->IsHLTV() || pRecipientPlayer->GetTeamNumber() == TEAM_SPECTATOR ) )
+		{
+			return FL_EDICT_ALWAYS;
+		}
+	}
+
+	return BaseClass::ShouldTransmit( pInfo );
+}
+
 void CHL2MP_Player::Precache( void )
 {
 	BaseClass::Precache();
