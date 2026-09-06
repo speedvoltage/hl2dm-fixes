@@ -33,7 +33,11 @@ namespace vgui
 	class ComboBox;
 }
 
+#ifdef HL2MP
+#define BLACK_BAR_COLOR	Color(18, 19, 18, 238)
+#else
 #define BLACK_BAR_COLOR	Color(0, 0, 0, 196)
+#endif
 
 class IBaseFileSystem;
 
@@ -67,7 +71,7 @@ public:
 	
 	virtual bool ShouldShowPlayerLabel( int specmode );
 
-	virtual Color GetBlackBarColor( void ) { return BLACK_BAR_COLOR; }
+	virtual Color GetBlackBarColor( void );
 
 	virtual const char *GetResFile( void );
 
@@ -77,6 +81,7 @@ protected:
 
 	void SetLabelText(const char *textEntryName, const char *text);
 	void SetLabelText(const char *textEntryName, wchar_t *text);
+	void SetControlBounds(const char *controlName, int x, int y, int wide, int tall);
 	void MoveLabelToFront(const char *textEntryName);
 	void UpdateTimer();
 	void SetLogoImage(const char *image);
@@ -98,11 +103,28 @@ protected:
 	vgui::ImagePanel *m_pBannerImage;
 	vgui::Label *m_pPlayerLabel;
 
+#ifdef HL2MP
+	vgui::Panel *m_pObserverPanel;
+	vgui::Panel *m_pAuxPowerTrack;
+	vgui::Panel *m_pAuxPowerFill;
+	vgui::Label *m_pModeLabel;
+	vgui::Label *m_pWeaponLabel;
+	vgui::Label *m_pHealthLabel;
+	vgui::Label *m_pArmorLabel;
+	vgui::Label *m_pAmmoLabel;
+	vgui::Label *m_pReserveLabel;
+	vgui::Label *m_pObserverModeLabel;
+	vgui::Label *m_pObserverHintLabel;
+#endif
+
 	IViewPort *m_pViewPort;
 
 	// bool m_bHelpShown;
 	// bool m_bInsetVisible;
 	bool m_bSpecScoreboard;
+#ifdef HL2MP
+	int m_iLastStyle;
+#endif
 
 	int m_iWasSteamController = -1;
 };
@@ -159,6 +181,9 @@ private:
 	IViewPort *m_pViewPort;
 	ButtonCode_t m_iDuckKey;
 	bool m_bDuckKeyReleased;
+#ifdef HL2MP
+	int m_iLastStyle;
+#endif
 };
 
 extern CSpectatorGUI * g_pSpectatorGUI;

@@ -92,6 +92,10 @@ void CHudBattery::VidInit( void )
 //-----------------------------------------------------------------------------
 bool CHudBattery::ShouldDraw( void )
 {
+#ifdef HL2MP
+	if ( IsLocalPlayerSpectator() && cl_spectatorgui_style.GetInt() != 0 )
+		return false;
+#endif
 	bool bNeedsDraw = ( m_iBat != m_iNewBat ) || ( GetAlpha() > 0 );
 
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
@@ -103,7 +107,7 @@ bool CHudBattery::ShouldDraw( void )
 void CHudBattery::OnThink( void )
 {
 #ifdef HL2MP
-	if ( IsLocalPlayerSpectator() )
+	if ( IsLocalPlayerSpectator() && cl_spectatorgui_style.GetInt() == 0 )
 	{
 		C_BasePlayer *pPlayer = GetHudPlayer();
 		if ( pPlayer )

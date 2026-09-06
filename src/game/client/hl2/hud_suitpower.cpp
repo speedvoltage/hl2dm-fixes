@@ -60,6 +60,11 @@ void CHudSuitPower::Reset( void )
 //-----------------------------------------------------------------------------
 bool CHudSuitPower::ShouldDraw()
 {
+#ifdef HL2MP
+	if ( IsLocalPlayerSpectator() && cl_spectatorgui_style.GetInt() != 0 )
+		return false;
+#endif
+
 	bool bNeedsDraw = false;
 
 	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)GetHudPlayer();

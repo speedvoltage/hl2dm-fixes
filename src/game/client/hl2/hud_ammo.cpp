@@ -99,6 +99,10 @@ void CHudAmmo::VidInit( void )
 
 bool CHudAmmo::ShouldDraw( void )
 {
+#ifdef HL2MP
+	if ( IsLocalPlayerSpectator() && cl_spectatorgui_style.GetInt() != 0 )
+		return false;
+#endif
 	return CHudElement::ShouldDraw();
 }
 
@@ -389,6 +393,10 @@ public:
 
 	bool ShouldDraw( void )
 	{
+#ifdef HL2MP
+		if ( IsLocalPlayerSpectator() && cl_spectatorgui_style.GetInt() != 0 )
+			return false;
+#endif
 		return CHudElement::ShouldDraw();
 	}
 

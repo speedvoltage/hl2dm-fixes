@@ -114,6 +114,10 @@ bool GetTargetInHudSpace( C_BaseEntity *pTargetEntity, int& iX, int& iY, Vector 
 
 // prints messages through the HUD (stub in client .dll right now )
 C_BasePlayer *GetHudPlayer( void );
+#ifdef HL2MP
+class ConVar;
+extern ConVar cl_spectatorgui_style;
+#endif
 void ClientPrint( C_BasePlayer *player, int msg_dest, const char *msg_name, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL );
 
 // Pass in an array of pointers and an array size, it fills the array and returns the number inserted

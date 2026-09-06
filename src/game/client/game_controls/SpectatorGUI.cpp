@@ -41,6 +41,12 @@
 #include <shareddefs.h>
 #include <igameresources.h>
 
+#ifdef HL2MP
+#include "c_basecombatweapon.h"
+#include "c_basehlplayer.h"
+#include "iclientvehicle.h"
+#endif
+
 #ifdef TF_CLIENT_DLL
 #include "tf_gamerules.h"
 void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );
@@ -121,6 +127,9 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 {
 	m_iDuckKey = BUTTON_CODE_INVALID;
 	m_bDuckKeyReleased = false;
+#ifdef HL2MP
+	m_iLastStyle = cl_spectatorgui_style.GetInt();
+#endif
 		
 	m_pViewPort = pViewPort;
 
@@ -179,14 +188,28 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	m_pViewOptions->SetMenu( menu );	// attach menu to combo box
 #endif
 
+#ifdef HL2MP
+	LoadControlSettings( cl_spectatorgui_style.GetInt() == 1 ? "Resource/UI/BottomSpectatorModern.res" : "Resource/UI/BottomSpectator.res" );
+#else
 	LoadControlSettings( "Resource/UI/BottomSpectator.res" );
+#endif
 
 	ListenForGameEvent( "spec_target_updated" );
 }
 
 void CSpectatorMenu::ApplySchemeSettings(IScheme *pScheme)
 {
+#ifdef HL2MP
+	LoadControlSettings( cl_spectatorgui_style.GetInt() == 1 ? "Resource/UI/BottomSpectatorModern.res" : "Resource/UI/BottomSpectator.res" );
+#endif
 	BaseClass::ApplySchemeSettings(pScheme);
+#ifdef HL2MP
+	if ( cl_spectatorgui_style.GetInt() == 1 )
+	{
+		SetPaintBackgroundEnabled( false );
+		SetBorder( NULL );
+	}
+#endif
 	// need to MakeReadyForUse() on the menus so we can set their bg color before they are displayed
 	m_pConfigSettings->GetMenu()->MakeReadyForUse();
 	m_pViewOptions->GetMenu()->MakeReadyForUse();
@@ -210,7 +233,36 @@ void CSpectatorMenu::PerformLayout()
 	int w,h;
 	GetHudSize(w, h);
 
+#ifdef HL2MP
+	if ( cl_spectatorgui_style.GetInt() != 1 )
+	{
+		SetSize( w, GetTall() );
+		return;
+	}
+
+	int nCardWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 288 );
+	int nCardTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 46 );
+	int nMargin = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 );
+	int nCardGap = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 4 );
+	int nControlGap = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 4 );
+	int nButtonWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 22 );
+	int nControlTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 22 );
+	int nSideWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 168 );
+	int nAvailableSideWide = ( w - nCardWide ) / 2 - nMargin - nCardGap;
+	nSideWide = MIN( nSideWide, nAvailableSideWide );
+	int nComboWide = MAX( vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 64 ), nSideWide - nButtonWide - nControlGap );
+	nSideWide = nButtonWide + nControlGap + nComboWide;
+
+	int nWide = nCardWide + ( nCardGap + nSideWide ) * 2;
+	int nRightX = nSideWide + nCardGap + nCardWide + nCardGap;
+	SetBounds( ( w - nWide ) / 2, h - nCardTall - nMargin + ( nCardTall - nControlTall ) / 2, nWide, nControlTall );
+	m_pLeftButton->SetBounds( 0, 0, nButtonWide, nControlTall );
+	m_pPlayerList->SetBounds( nButtonWide + nControlGap, 0, nComboWide, nControlTall );
+	m_pViewOptions->SetBounds( nRightX, 0, nComboWide, nControlTall );
+	m_pRightButton->SetBounds( nRightX + nComboWide + nControlGap, 0, nButtonWide, nControlTall );
+#else
 	SetSize(w,GetTall());
+#endif
 }
 
 
@@ -336,6 +388,14 @@ void CSpectatorMenu::OnThink()
 {
 	BaseClass::OnThink();
 
+#ifdef HL2MP
+	if ( m_iLastStyle != cl_spectatorgui_style.GetInt() )
+	{
+		m_iLastStyle = cl_spectatorgui_style.GetInt();
+		InvalidateLayout( true, true );
+	}
+#endif
+
 	if ( !IsVisible() )
 		return;
 
@@ -351,6 +411,14 @@ void CSpectatorMenu::OnThink()
 
 void CSpectatorMenu::ShowPanel(bool bShow)
 {
+#ifdef HL2MP
+	if ( m_iLastStyle != cl_spectatorgui_style.GetInt() )
+	{
+		m_iLastStyle = cl_spectatorgui_style.GetInt();
+		InvalidateLayout( true, true );
+	}
+#endif
+
 	if ( BaseClass::IsVisible() == bShow )
 		return;
 
@@ -501,6 +569,9 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 //	m_iDuckKey = KEY_NONE;
 	SetSize( 10, 10 ); // Quiet "parent not sized yet" spew
 	m_bSpecScoreboard = false;
+#ifdef HL2MP
+	m_iLastStyle = cl_spectatorgui_style.GetInt();
+#endif
 
 	m_pViewPort = pViewPort;
 	g_pSpectatorGUI = this;
@@ -516,8 +587,24 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 	SetKeyBoardInputEnabled( false );
 
 	m_pTopBar = new Panel( this, "topbar" );
+#ifdef HL2MP
+	m_pBottomBarBlank = new EditablePanel( this, "bottombarblank" );
+	m_pObserverPanel = new EditablePanel( this, "observerpanel" );
+	m_pPlayerLabel = new Label( m_pBottomBarBlank, "playerlabel", "" );
+	m_pModeLabel = new Label( m_pBottomBarBlank, "modelabel", "" );
+	m_pWeaponLabel = new Label( m_pBottomBarBlank, "weaponlabel", "" );
+	m_pHealthLabel = new Label( m_pBottomBarBlank, "healthvalue", "" );
+	m_pArmorLabel = new Label( m_pBottomBarBlank, "armorvalue", "" );
+	m_pAmmoLabel = new Label( m_pBottomBarBlank, "ammovalue", "" );
+	m_pReserveLabel = new Label( m_pBottomBarBlank, "reservevalue", "" );
+	m_pAuxPowerTrack = new EditablePanel( m_pBottomBarBlank, "auxpowertrack" );
+	m_pAuxPowerFill = new Panel( m_pAuxPowerTrack, "auxpowerfill" );
+	m_pObserverModeLabel = new Label( m_pObserverPanel, "observermode", "" );
+	m_pObserverHintLabel = new Label( m_pObserverPanel, "observerhint", "" );
+#else
 	m_pBottomBarBlank = new Panel( this, "bottombarblank" );
 	m_pPlayerLabel = new Label( this, "playerlabel", "" );
+#endif
 
 	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
 	m_pPlayerLabel->SetVisible( false );
@@ -553,6 +640,11 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 {
 	KeyValues *pConditions = NULL;
 
+#ifdef HL2MP
+	const int style = cl_spectatorgui_style.GetInt();
+	m_pPlayerLabel->SetParent( style == 1 ? m_pBottomBarBlank : this );
+#endif
+
 #ifdef TF_CLIENT_DLL
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 	{
@@ -572,10 +664,84 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 	SetBgColor(Color( 0,0,0,0 ) ); // make the background transparent
 
 #ifdef HL2MP
-	m_pTopBar->SetVisible( false );
-	m_pTopBar->SetPaintBackgroundEnabled( false );
-	m_pBottomBarBlank->SetVisible( false );
-	m_pBottomBarBlank->SetPaintBackgroundEnabled( false );
+	if ( style == 1 )
+	{
+		m_pTopBar->SetVisible( false );
+		m_pTopBar->SetPaintBackgroundEnabled( false );
+		m_pBottomBarBlank->SetVisible( false );
+		m_pBottomBarBlank->SetBgColor( Color( 18, 19, 18, 238 ) );
+		m_pBottomBarBlank->SetPaintBackgroundEnabled( true );
+		m_pObserverPanel->SetVisible( false );
+		m_pObserverPanel->SetBgColor( Color( 18, 19, 18, 222 ) );
+		m_pObserverPanel->SetPaintBackgroundEnabled( true );
+		m_pAuxPowerTrack->SetBgColor( Color( 86, 84, 78, 190 ) );
+		m_pAuxPowerTrack->SetPaintBackgroundEnabled( true );
+		m_pAuxPowerFill->SetBgColor( Color( 232, 112, 32, 255 ) );
+		m_pAuxPowerFill->SetPaintBackgroundEnabled( true );
+
+		HFont hDefault = pScheme->GetFont( "Default", true );
+		HFont hSmall = pScheme->GetFont( "DefaultSmall", true );
+		HFont hNumbers = pScheme->GetFont( "HudNumbersSmall", true );
+		if ( hNumbers == INVALID_FONT )
+			hNumbers = hDefault;
+
+		m_pModeLabel->SetFont( hSmall );
+		m_pModeLabel->SetFgColor( Color( 232, 112, 32, 255 ) );
+		m_pModeLabel->SetContentAlignment( Label::a_center );
+		m_pPlayerLabel->SetFont( hDefault );
+		m_pPlayerLabel->SetFgColor( Color( 232, 232, 226, 255 ) );
+		m_pPlayerLabel->SetContentAlignment( Label::a_center );
+		m_pWeaponLabel->SetFont( hSmall );
+		m_pWeaponLabel->SetFgColor( Color( 174, 176, 170, 255 ) );
+		m_pWeaponLabel->SetContentAlignment( Label::a_center );
+		m_pHealthLabel->SetFont( hNumbers );
+		m_pHealthLabel->SetFgColor( Color( 232, 232, 226, 255 ) );
+		m_pHealthLabel->SetContentAlignment( Label::a_center );
+		m_pArmorLabel->SetFont( hSmall );
+		m_pArmorLabel->SetFgColor( Color( 174, 176, 170, 255 ) );
+		m_pArmorLabel->SetContentAlignment( Label::a_center );
+		m_pAmmoLabel->SetFont( hNumbers );
+		m_pAmmoLabel->SetFgColor( Color( 232, 232, 226, 255 ) );
+		m_pAmmoLabel->SetContentAlignment( Label::a_center );
+		m_pReserveLabel->SetFont( hSmall );
+		m_pReserveLabel->SetFgColor( Color( 174, 176, 170, 255 ) );
+		m_pReserveLabel->SetContentAlignment( Label::a_center );
+		m_pModeLabel->SetVisible( true );
+		m_pWeaponLabel->SetVisible( true );
+		m_pHealthLabel->SetVisible( true );
+		m_pArmorLabel->SetVisible( true );
+		m_pAmmoLabel->SetVisible( true );
+		m_pReserveLabel->SetVisible( true );
+		m_pAuxPowerTrack->SetVisible( true );
+		m_pAuxPowerFill->SetVisible( true );
+		m_pObserverModeLabel->SetFont( hSmall );
+		m_pObserverModeLabel->SetFgColor( Color( 232, 112, 32, 255 ) );
+		m_pObserverModeLabel->SetContentAlignment( Label::a_west );
+		m_pObserverModeLabel->SetVisible( true );
+		m_pObserverHintLabel->SetFont( hSmall );
+		m_pObserverHintLabel->SetFgColor( Color( 174, 176, 170, 255 ) );
+		m_pObserverHintLabel->SetContentAlignment( Label::a_east );
+		m_pObserverHintLabel->SetVisible( true );
+	}
+	else
+	{
+		m_pTopBar->SetVisible( false );
+		m_pTopBar->SetPaintBackgroundEnabled( false );
+		m_pBottomBarBlank->SetVisible( false );
+		m_pBottomBarBlank->SetPaintBackgroundEnabled( false );
+		m_pObserverPanel->SetVisible( false );
+		m_pObserverPanel->SetPaintBackgroundEnabled( false );
+		m_pModeLabel->SetVisible( false );
+		m_pWeaponLabel->SetVisible( false );
+		m_pHealthLabel->SetVisible( false );
+		m_pArmorLabel->SetVisible( false );
+		m_pAmmoLabel->SetVisible( false );
+		m_pReserveLabel->SetVisible( false );
+		m_pAuxPowerTrack->SetVisible( false );
+		m_pAuxPowerFill->SetVisible( false );
+		m_pObserverModeLabel->SetVisible( false );
+		m_pObserverHintLabel->SetVisible( false );
+	}
 
 	static const char * const classicControls[] =
 	{
@@ -586,6 +752,17 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 		Panel *pControl = FindChildByName( classicControls[i], true );
 		if ( pControl )
 			pControl->SetVisible( false );
+	}
+
+	static const char * const modernControls[] =
+	{
+		"cardcenter", "cardaccent", "leftdivider", "rightdivider", "healthcaption", "auxcaption", "ammocaption", "observeraccent"
+	};
+	for ( int i = 0; i < (int)ARRAYSIZE( modernControls ); ++i )
+	{
+		Panel *pControl = FindChildByName( modernControls[i], true );
+		if ( pControl )
+			pControl->SetVisible( style == 1 );
 	}
 #else
 	m_pBottomBarBlank->SetVisible( true );
@@ -617,9 +794,49 @@ void CSpectatorGUI::PerformLayout()
 	SetBounds(0,0,w,h);
 
 #ifdef HL2MP
-	const int nNameWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 350 );
-	const int nNameTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 26 );
-	m_pPlayerLabel->SetBounds( ( w - nNameWide ) / 2, h - nNameTall - vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 13 ), nNameWide, nNameTall );
+	const int style = cl_spectatorgui_style.GetInt();
+	if ( style == 0 )
+	{
+		const int nNameWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 350 );
+		const int nNameTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 26 );
+		m_pPlayerLabel->SetBounds( ( w - nNameWide ) / 2, h - nNameTall - vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 13 ), nNameWide, nNameTall );
+		UpdatePlayerCard();
+		return;
+	}
+
+	int nMargin = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 );
+	int nCardWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 288 );
+	int nCardTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 46 );
+	int nSideWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 64 );
+	int nCenterWide = nCardWide - nSideWide * 2;
+	int nAccentTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 2 );
+	int nDividerWide = MAX( 1, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 1 ) );
+	int nCardX = ( w - nCardWide ) / 2;
+	int nCardY = h - nCardTall - nMargin;
+
+	m_pBottomBarBlank->SetBounds( nCardX, nCardY, nCardWide, nCardTall );
+	SetControlBounds( "cardcenter", nSideWide, nAccentTall, nCenterWide, nCardTall - nAccentTall );
+	SetControlBounds( "cardaccent", 0, 0, nCardWide, nAccentTall );
+	SetControlBounds( "leftdivider", nSideWide, nAccentTall, nDividerWide, nCardTall - nAccentTall );
+	SetControlBounds( "rightdivider", nCardWide - nSideWide - nDividerWide, nAccentTall, nDividerWide, nCardTall - nAccentTall );
+	SetControlBounds( "healthcaption", 0, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 3 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 ) );
+	m_pHealthLabel->SetBounds( 0, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 9 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 25 ) );
+	m_pArmorLabel->SetBounds( 0, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 34 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 9 ) );
+	m_pModeLabel->SetBounds( nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 3 ), nCenterWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 ) );
+	m_pPlayerLabel->SetBounds( nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 10 ), nCenterWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 14 ) );
+	m_pWeaponLabel->SetBounds( nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 23 ), nCenterWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 10 ) );
+	SetControlBounds( "auxcaption", nSideWide + vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 7 ), vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 35 ), vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 19 ), vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 ) );
+	m_pAuxPowerTrack->SetBounds( nSideWide + vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 29 ), vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 38 ), nCenterWide - vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 36 ), MAX( 1, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 2 ) ) );
+	SetControlBounds( "ammocaption", nCardWide - nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 3 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 ) );
+	m_pAmmoLabel->SetBounds( nCardWide - nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 9 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 25 ) );
+	m_pReserveLabel->SetBounds( nCardWide - nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 34 ), nSideWide, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 9 ) );
+
+	int nObserverWide = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 204 );
+	int nObserverTall = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 18 );
+	m_pObserverPanel->SetBounds( ( w - nObserverWide ) / 2, h - nObserverTall - nMargin, nObserverWide, nObserverTall );
+	SetControlBounds( "observeraccent", 0, 0, nObserverWide, nAccentTall );
+	m_pObserverModeLabel->SetBounds( vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 7 ), nAccentTall, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 68 ), nObserverTall - nAccentTall );
+	m_pObserverHintLabel->SetBounds( vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 75 ), nAccentTall, nObserverWide - vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 82 ), nObserverTall - nAccentTall );
 	UpdatePlayerCard();
 #else
 	// stretch the bottom bar across the screen
@@ -635,6 +852,15 @@ void CSpectatorGUI::PerformLayout()
 void CSpectatorGUI::OnThink()
 {
 	BaseClass::OnThink();
+
+#ifdef HL2MP
+	if ( m_iLastStyle != cl_spectatorgui_style.GetInt() )
+	{
+		m_iLastStyle = cl_spectatorgui_style.GetInt();
+		InvalidateLayout( true, true );
+		Update();
+	}
+#endif
 
 	if ( IsVisible() )
 	{
@@ -695,6 +921,13 @@ void CSpectatorGUI::SetLabelText(const char *textEntryName, wchar_t *text)
 	}
 }
 
+void CSpectatorGUI::SetControlBounds(const char *controlName, int x, int y, int wide, int tall)
+{
+	Panel *pControl = FindChildByName( controlName, true );
+	if ( pControl )
+		pControl->SetBounds( x, y, wide, tall );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Sets the text of a control by name
 //-----------------------------------------------------------------------------
@@ -712,6 +945,14 @@ void CSpectatorGUI::MoveLabelToFront(const char *textEntryName)
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::ShowPanel(bool bShow)
 {
+#ifdef HL2MP
+	if ( m_iLastStyle != cl_spectatorgui_style.GetInt() )
+	{
+		m_iLastStyle = cl_spectatorgui_style.GetInt();
+		InvalidateLayout( true, true );
+	}
+#endif
+
 	if ( bShow && !IsVisible() )
 	{
 		// Josh: Someone made this InvalidateLayout with reloadScheme = true
@@ -752,15 +993,27 @@ bool CSpectatorGUI::ShouldShowPlayerLabel( int specmode )
 int CSpectatorGUI::GetBottomBarHeight()
 {
 #ifdef HL2MP
-	return 0;
-#else
-	return m_pBottomBarBlank->IsVisible() ? m_pBottomBarBlank->GetTall() : 0;
+	if ( cl_spectatorgui_style.GetInt() == 0 )
+		return 0;
+	if ( m_pObserverPanel->IsVisible() )
+		return m_pObserverPanel->GetTall();
 #endif
+	return m_pBottomBarBlank->IsVisible() ? m_pBottomBarBlank->GetTall() : 0;
+}
+
+Color CSpectatorGUI::GetBlackBarColor()
+{
+#ifdef HL2MP
+	if ( cl_spectatorgui_style.GetInt() == 1 )
+		return Color( 18, 19, 18, 238 );
+#endif
+	return BLACK_BAR_COLOR;
 }
 
 #ifdef HL2MP
 void CSpectatorGUI::UpdatePlayerCard()
 {
+	const int style = cl_spectatorgui_style.GetInt();
 	int specmode = engine->IsHLTV() ? HLTVCamera()->GetMode() : GetSpectatorMode();
 	int playernum = GetSpectatorTarget();
 	if ( engine->IsHLTV() )
@@ -774,18 +1027,151 @@ void CSpectatorGUI::UpdatePlayerCard()
 
 	IGameResources *gr = GameResources();
 	bool bShowPlayerCard = pPlayer && !pPlayer->IsObserver() && gr && gr->IsConnected( playernum );
+	m_pBottomBarBlank->SetVisible( style == 1 && bShowPlayerCard );
+	m_pObserverPanel->SetVisible( style == 1 && !bShowPlayerCard );
 	m_pPlayerLabel->SetVisible( bShowPlayerCard );
 
 	if ( !bShowPlayerCard )
 	{
 		m_pPlayerLabel->SetText( "" );
+		if ( style == 0 )
+			return;
+
+		if ( specmode >= 0 && specmode < (int)ARRAYSIZE( s_SpectatorModes ) && s_SpectatorModes[specmode][0] )
+			m_pObserverModeLabel->SetText( s_SpectatorModes[specmode] );
+		else
+			m_pObserverModeLabel->SetText( "OBSERVER" );
+
+		wchar_t wszControls[128];
+		UTIL_ReplaceKeyBindings( L"%+duck% MENU   %+jump% MODE", 0, wszControls, sizeof( wszControls ), GAME_ACTION_SET_SPECTATOR );
+		m_pObserverHintLabel->SetText( wszControls );
 		return;
 	}
 
-	wchar_t wszPlayerName[128];
-	g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName( playernum ) ), wszPlayerName, sizeof( wszPlayerName ) );
-	m_pPlayerLabel->SetText( wszPlayerName );
-	m_pPlayerLabel->SetFgColor( gr->GetTeamColor( gr->GetTeam( playernum ) ) );
+	if ( gr )
+	{
+		wchar_t wszPlayerName[128];
+		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName( playernum ) ), wszPlayerName, sizeof( wszPlayerName ) );
+		m_pPlayerLabel->SetText( wszPlayerName );
+		m_pPlayerLabel->SetFgColor( style == 0 ? gr->GetTeamColor( gr->GetTeam( playernum ) ) : Color( 232, 232, 226, 255 ) );
+	}
+	else
+	{
+		m_pPlayerLabel->SetText( "" );
+	}
+
+	if ( style == 0 )
+		return;
+
+	if ( specmode >= 0 && specmode < (int)ARRAYSIZE( s_SpectatorModes ) && s_SpectatorModes[specmode][0] )
+		m_pModeLabel->SetText( s_SpectatorModes[specmode] );
+	else
+		m_pModeLabel->SetText( "SPECTATING" );
+
+	char szValue[32];
+	Q_snprintf( szValue, sizeof( szValue ), "%d", MAX( pPlayer->GetHealth(), 0 ) );
+	m_pHealthLabel->SetText( szValue );
+	Q_snprintf( szValue, sizeof( szValue ), "SUIT %d", MAX( pPlayer->ArmorValue(), 0 ) );
+	m_pArmorLabel->SetText( szValue );
+
+	int iAmmo = -1;
+	int iReserve = -1;
+	int iAltAmmo = -1;
+	IClientVehicle *pVehicle = pPlayer->GetVehicle();
+	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+
+	if ( pVehicle && pVehicle->GetPrimaryAmmoType() >= 0 )
+	{
+		m_pWeaponLabel->SetText( "VEHICLE" );
+		iAmmo = pVehicle->GetPrimaryAmmoClip();
+		if ( iAmmo < 0 )
+			iAmmo = pVehicle->GetPrimaryAmmoCount();
+		else
+			iReserve = pVehicle->GetPrimaryAmmoCount();
+	}
+	else if ( pWeapon )
+	{
+		static const char * const s_WeaponNames[][2] =
+		{
+			{ "weapon_crowbar", "Crowbar" },
+			{ "weapon_stunstick", "Stunstick" },
+			{ "weapon_physcannon", "Gravity Gun" },
+			{ "weapon_pistol", "Pistol" },
+			{ "weapon_357", ".357" },
+			{ "weapon_smg1", "SMG" },
+			{ "weapon_ar2", "AR2" },
+			{ "weapon_shotgun", "Shotgun" },
+			{ "weapon_crossbow", "Crossbow" },
+			{ "weapon_frag", "Frag" },
+			{ "weapon_rpg", "RPG" },
+			{ "weapon_slam", "SLAM" },
+		};
+
+		const char *pszClassName = pWeapon->GetName();
+		const char *pszWeaponName = NULL;
+		for ( int i = 0; i < (int)ARRAYSIZE( s_WeaponNames ); ++i )
+		{
+			if ( FStrEq( pszClassName, s_WeaponNames[i][0] ) )
+			{
+				pszWeaponName = s_WeaponNames[i][1];
+				break;
+			}
+		}
+
+		if ( !pszWeaponName )
+		{
+			pszWeaponName = pszClassName;
+			if ( !Q_strnicmp( pszWeaponName, "weapon_", 7 ) )
+				pszWeaponName += 7;
+		}
+
+		m_pWeaponLabel->SetText( pszWeaponName );
+		if ( pWeapon->UsesPrimaryAmmo() )
+		{
+			if ( pWeapon->UsesClipsForAmmo1() )
+			{
+				iAmmo = pWeapon->Clip1();
+				iReserve = pPlayer->GetAmmoCount( pWeapon->GetPrimaryAmmoType() );
+			}
+			else
+			{
+				iAmmo = pPlayer->GetAmmoCount( pWeapon->GetPrimaryAmmoType() );
+			}
+		}
+
+		if ( pWeapon->UsesSecondaryAmmo() )
+			iAltAmmo = pPlayer->GetAmmoCount( pWeapon->GetSecondaryAmmoType() );
+	}
+	else
+	{
+		m_pWeaponLabel->SetText( "" );
+	}
+
+	if ( iAmmo >= 0 )
+	{
+		Q_snprintf( szValue, sizeof( szValue ), "%d", iAmmo );
+		m_pAmmoLabel->SetText( szValue );
+	}
+	else
+	{
+		m_pAmmoLabel->SetText( "--" );
+	}
+
+	if ( iReserve >= 0 && iAltAmmo >= 0 )
+		Q_snprintf( szValue, sizeof( szValue ), "R:%d  A:%d", iReserve, iAltAmmo );
+	else if ( iReserve >= 0 )
+		Q_snprintf( szValue, sizeof( szValue ), "R:%d", iReserve );
+	else if ( iAltAmmo >= 0 )
+		Q_snprintf( szValue, sizeof( szValue ), "A:%d", iAltAmmo );
+	else
+		szValue[0] = '\0';
+	m_pReserveLabel->SetText( szValue );
+
+	C_BaseHLPlayer *pHL2Player = static_cast<C_BaseHLPlayer *>( pPlayer );
+	float flSuitPower = clamp( pHL2Player->m_HL2Local.m_flSuitPower, 0.0f, 100.0f );
+	int nTrackWide, nTrackTall;
+	m_pAuxPowerTrack->GetSize( nTrackWide, nTrackTall );
+	m_pAuxPowerFill->SetSize( (int)( nTrackWide * flSuitPower / 100.0f + 0.5f ), nTrackTall );
 }
 #endif
 
@@ -907,7 +1293,7 @@ void CSpectatorGUI::Update()
 const char * CSpectatorGUI::GetResFile( void )
 {
 #ifdef HL2MP
-	return "Resource/UI/Spectator.res";
+	return cl_spectatorgui_style.GetInt() == 1 ? "Resource/UI/SpectatorModern.res" : "Resource/UI/Spectator.res";
 #else
 	if ( ::input->IsSteamControllerActive() )
 	{
@@ -974,7 +1360,6 @@ CON_COMMAND_F( spec_next, "Spectate next player", FCVAR_CLIENTCMD_CAN_EXECUTE )
 		ForwardSpecCmdToServer( args );
 	}
 }
-
 CON_COMMAND_F( spec_prev, "Spectate previous player", FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();

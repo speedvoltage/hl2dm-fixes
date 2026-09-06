@@ -33,6 +33,9 @@
 #include "tier0/memdbgon.h"
 
 ConVar localplayer_visionflags( "localplayer_visionflags", "0", FCVAR_DEVELOPMENTONLY );
+#ifdef HL2MP
+ConVar cl_spectatorgui_style( "cl_spectatorgui_style", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Spectator HUD presentation style: 0 = barless with gameplay HUD, 1 = modern.", true, 0, true, 1 );
+#endif
 
 //-----------------------------------------------------------------------------
 // ConVars
