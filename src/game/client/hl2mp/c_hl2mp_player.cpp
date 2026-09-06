@@ -104,7 +104,7 @@ CSuitPowerDevice SuitDeviceBreather( bits_SUIT_DEVICE_BREATHER, 6.7f );		// 100 
 C_HL2MP_Player::C_HL2MP_Player() :
 	m_PlayerAnimState( this ),
 	m_iv_angEyeAngles( "C_HL2MP_Player::m_iv_angEyeAngles" ),
-	m_SpectatorGlowObject( this )
+	m_SpectatorGlowObject( NULL )
 {
 	m_iIDEntIndex = 0;
 	m_iSpawnInterpCounterCache = 0;
@@ -201,6 +201,7 @@ void C_HL2MP_Player::UpdateSpectatorGlow( bool bViewerCanSeeOutlines )
 	IGameResources *pGameResources = GameResources();
 	bool bRender = bViewerCanSeeOutlines && pGameResources && IsAlive() && !IsDormant();
 
+	m_SpectatorGlowObject.SetEntity( bRender ? this : NULL );
 	m_SpectatorGlowObject.SetRenderFlags( bRender, bRender );
 	if ( !bRender )
 		return;
