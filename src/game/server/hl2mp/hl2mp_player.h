@@ -148,6 +148,9 @@ public:
 	bool IsThreatFiringAtMe( CBaseEntity* threat ) const;
 private:
 
+	Vector m_vecProjectileCameraOrigin;
+	float m_flProjectileCameraLastUpdateTime;
+
 	CNetworkQAngle( m_angEyeAngles );
 	CPlayerAnimState   m_PlayerAnimState;
 

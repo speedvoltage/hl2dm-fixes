@@ -38,6 +38,8 @@ public:
 extern ConVar hl2_sprintspeed;
 extern ConVar sv_projectile_camera;
 extern ConVar cl_projectile_camera;
+extern ConVar cl_projectile_camera_fade_delay;
+extern ConVar cl_projectile_camera_freeze;
 
 //=============================================================================
 // >> HL2MP_Player

@@ -351,7 +351,7 @@ void CViewRender::LevelInit( void )
 #ifdef HL2MP
 	m_hProjectileCameraTarget = NULL;
 	m_flProjectileCameraStopTime = -1.0f;
-	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_flProjectileCameraLastTrackTime = -1.0f;
 	m_bProjectileCameraInitialized = false;
 #endif
 

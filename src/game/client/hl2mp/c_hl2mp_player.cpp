@@ -27,6 +27,8 @@
 ConVar sv_infinite_aux_power( "sv_infinite_aux_power", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 ConVar sv_projectile_camera( "sv_projectile_camera", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Allow clients to display a camera following their projectiles." );
 ConVar cl_projectile_camera( "cl_projectile_camera", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Display the projectile camera when the server allows it.", true, 0, true, 1 );
+ConVar cl_projectile_camera_fade_delay( "cl_projectile_camera_fade_delay", "5", FCVAR_ARCHIVE | FCVAR_USERINFO, "Seconds to keep the projectile camera visible after tracking stops, before fading out.", true, 0, true, 60 );
+ConVar cl_projectile_camera_freeze( "cl_projectile_camera_freeze", "0", FCVAR_ARCHIVE, "Freeze the last projectile camera frame when tracking stops instead of keeping the view live.", true, 0, true, 1 );
 
 LINK_ENTITY_TO_CLASS( player, C_HL2MP_Player );
 

@@ -153,6 +153,8 @@ CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 
 	m_iSpawnInterpCounter = 0;
 	m_hProjectileCameraTarget = NULL;
+	m_vecProjectileCameraOrigin.Init();
+	m_flProjectileCameraLastUpdateTime = -1.0f;
 
     m_bEnterObserver = false;
 	m_bReady = false;
@@ -338,6 +340,7 @@ void CHL2MP_Player::Spawn(void)
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
 	m_hProjectileCameraTarget = NULL;
+	m_flProjectileCameraLastUpdateTime = -1.0f;
 
 	PickDefaultSpawnTeam();
 
@@ -386,19 +389,39 @@ void CHL2MP_Player::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pv
 {
 	BaseClass::SetupVisibility( pViewEntity, pvs, pvssize );
 
-	if ( !sv_projectile_camera.GetBool() || !m_hProjectileCameraTarget )
+	if ( !sv_projectile_camera.GetBool() )
+	{
+		m_flProjectileCameraLastUpdateTime = -1.0f;
 		return;
+	}
 
 	const char *pClientSetting = engine->GetClientConVarValue( entindex(), "cl_projectile_camera" );
 	if ( !pClientSetting || !Q_atoi( pClientSetting ) )
+	{
+		m_flProjectileCameraLastUpdateTime = -1.0f;
 		return;
+	}
 
-	engine->AddOriginToPVS( m_hProjectileCameraTarget->WorldSpaceCenter() );
+	if ( m_hProjectileCameraTarget )
+	{
+		m_vecProjectileCameraOrigin = m_hProjectileCameraTarget->WorldSpaceCenter();
+		m_flProjectileCameraLastUpdateTime = gpGlobals->curtime;
+	}
+	else
+	{
+		const char *pFadeDelay = engine->GetClientConVarValue( entindex(), "cl_projectile_camera_fade_delay" );
+		float flFadeDelay = pFadeDelay && *pFadeDelay ? clamp( Q_atof( pFadeDelay ), 0.0f, 60.0f ) : 5.0f;
+		if ( m_flProjectileCameraLastUpdateTime < 0.0f || gpGlobals->curtime - m_flProjectileCameraLastUpdateTime >= flFadeDelay + 0.5f )
+			return;
+	}
+
+	engine->AddOriginToPVS( m_vecProjectileCameraOrigin );
 }
 
 void CHL2MP_Player::SetProjectileCameraTarget( CBaseEntity *pProjectile )
 {
 	m_hProjectileCameraTarget = pProjectile;
+	m_flProjectileCameraLastUpdateTime = -1.0f;
 }
 
 bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )

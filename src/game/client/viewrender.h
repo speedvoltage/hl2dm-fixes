@@ -539,7 +539,7 @@ private:
 	Vector				m_vecProjectileCameraForward;
 	QAngle				m_angProjectileCamera;
 	float				m_flProjectileCameraStopTime;
-	float				m_flProjectileCameraLastRenderTime;
+	float				m_flProjectileCameraLastTrackTime;
 	bool				m_bProjectileCameraInitialized;
 #endif
 

@@ -953,7 +953,7 @@ CViewRender::CViewRender()
 	m_vecProjectileCameraForward.Init( 1.0f, 0.0f, 0.0f );
 	m_angProjectileCamera.Init();
 	m_flProjectileCameraStopTime = -1.0f;
-	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_flProjectileCameraLastTrackTime = -1.0f;
 	m_bProjectileCameraInitialized = false;
 #endif
 }
@@ -973,7 +973,7 @@ void CViewRender::LevelShutdown( void )
 #ifdef HL2MP
 	m_hProjectileCameraTarget = NULL;
 	m_flProjectileCameraStopTime = -1.0f;
-	m_flProjectileCameraLastRenderTime = -1.0f;
+	m_flProjectileCameraLastTrackTime = -1.0f;
 	m_bProjectileCameraInitialized = false;
 #endif
 }
@@ -3349,94 +3349,102 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 #ifdef HL2MP
 void CViewRender::RenderProjectileCamera( const CViewSetup &cameraView )
 {
-	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() )
-	{
-		m_flProjectileCameraLastRenderTime = -1.0f;
-		m_bProjectileCameraInitialized = false;
-		return;
-	}
-
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
-	C_BaseEntity *pTarget = pPlayer ? pPlayer->GetProjectileCameraTarget() : NULL;
-	if ( !pTarget || pTarget->IsDormant() )
-		return;
-
-	if ( m_hProjectileCameraTarget.Get() != pTarget )
+	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() || !pPlayer )
 	{
-		m_hProjectileCameraTarget = pTarget;
-		m_vecProjectileCameraTargetOrigin = pTarget->WorldSpaceCenter();
+		m_hProjectileCameraTarget = NULL;
 		m_flProjectileCameraStopTime = -1.0f;
+		m_flProjectileCameraLastTrackTime = -1.0f;
 		m_bProjectileCameraInitialized = false;
+		return;
 	}
 
-	Vector vecTargetOrigin = pTarget->WorldSpaceCenter();
-	Vector vecDirection = pTarget->GetAbsVelocity();
-	if ( vecDirection.LengthSqr() < 64.0f && m_bProjectileCameraInitialized && gpGlobals->frametime > 0.0f )
+	C_BaseEntity *pTarget = pPlayer->GetProjectileCameraTarget();
+	bool bTracking = pTarget && !pTarget->IsDormant();
+	if ( bTracking )
 	{
-		vecDirection = ( vecTargetOrigin - m_vecProjectileCameraTargetOrigin ) / gpGlobals->frametime;
-	}
-	m_vecProjectileCameraTargetOrigin = vecTargetOrigin;
-
-	float flSpeed = VectorNormalize( vecDirection );
-	if ( flSpeed >= 8.0f )
-	{
-		m_flProjectileCameraStopTime = -1.0f;
-
-		if ( m_bProjectileCameraInitialized )
+		if ( m_hProjectileCameraTarget.Get() != pTarget )
 		{
-			float flDirectionBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
-			VectorLerp( m_vecProjectileCameraForward, vecDirection, flDirectionBlend, m_vecProjectileCameraForward );
-			VectorNormalize( m_vecProjectileCameraForward );
+			m_hProjectileCameraTarget = pTarget;
+			m_vecProjectileCameraTargetOrigin = pTarget->WorldSpaceCenter();
+			m_flProjectileCameraStopTime = -1.0f;
+			m_flProjectileCameraLastTrackTime = -1.0f;
+			m_bProjectileCameraInitialized = false;
+		}
+
+		Vector vecTargetOrigin = pTarget->WorldSpaceCenter();
+		Vector vecDirection = pTarget->GetAbsVelocity();
+		if ( vecDirection.LengthSqr() < 64.0f && m_bProjectileCameraInitialized && gpGlobals->frametime > 0.0f )
+		{
+			vecDirection = ( vecTargetOrigin - m_vecProjectileCameraTargetOrigin ) / gpGlobals->frametime;
+		}
+		m_vecProjectileCameraTargetOrigin = vecTargetOrigin;
+
+		float flSpeed = VectorNormalize( vecDirection );
+		if ( flSpeed >= 8.0f )
+		{
+			m_flProjectileCameraStopTime = -1.0f;
+
+			if ( m_bProjectileCameraInitialized )
+			{
+				float flDirectionBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
+				VectorLerp( m_vecProjectileCameraForward, vecDirection, flDirectionBlend, m_vecProjectileCameraForward );
+				VectorNormalize( m_vecProjectileCameraForward );
+			}
+			else
+			{
+				m_vecProjectileCameraForward = vecDirection;
+			}
 		}
 		else
 		{
-			m_vecProjectileCameraForward = vecDirection;
+			if ( m_flProjectileCameraStopTime < 0.0f )
+			{
+				m_flProjectileCameraStopTime = gpGlobals->curtime;
+			}
+			bTracking = gpGlobals->curtime - m_flProjectileCameraStopTime < 0.1f;
+
+			if ( !m_bProjectileCameraInitialized )
+			{
+				AngleVectors( pTarget->GetAbsAngles(), &m_vecProjectileCameraForward );
+			}
 		}
-	}
-	else
-	{
-		if ( m_flProjectileCameraStopTime < 0.0f )
+
+		if ( bTracking )
 		{
-			m_flProjectileCameraStopTime = gpGlobals->curtime;
+			Vector vecDesiredOrigin = vecTargetOrigin - m_vecProjectileCameraForward * 112.0f + Vector( 0.0f, 0.0f, 40.0f );
+			float flCameraBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
+			Vector vecBlendedOrigin = vecDesiredOrigin;
+			if ( m_bProjectileCameraInitialized )
+			{
+				VectorLerp( m_vecProjectileCameraOrigin, vecDesiredOrigin, flCameraBlend, vecBlendedOrigin );
+			}
+
+			trace_t trace;
+			UTIL_TraceHull( vecTargetOrigin, vecBlendedOrigin, Vector( -4.0f, -4.0f, -4.0f ), Vector( 4.0f, 4.0f, 4.0f ), MASK_SOLID_BRUSHONLY, pTarget, COLLISION_GROUP_NONE, &trace );
+			m_vecProjectileCameraOrigin = trace.endpos;
+			if ( trace.fraction < 1.0f )
+			{
+				m_vecProjectileCameraOrigin += trace.plane.normal * 4.0f;
+			}
+
+			QAngle angDesired;
+			VectorAngles( vecTargetOrigin + m_vecProjectileCameraForward * 96.0f - m_vecProjectileCameraOrigin, angDesired );
+			if ( m_bProjectileCameraInitialized )
+			{
+				InterpolateAngles( m_angProjectileCamera, angDesired, m_angProjectileCamera, flCameraBlend );
+			}
+			else
+			{
+				m_angProjectileCamera = angDesired;
+				m_bProjectileCameraInitialized = true;
+			}
 		}
-		else if ( gpGlobals->curtime - m_flProjectileCameraStopTime >= 0.1f )
-		{
-			return;
-		}
-
-		if ( !m_bProjectileCameraInitialized )
-		{
-			AngleVectors( pTarget->GetAbsAngles(), &m_vecProjectileCameraForward );
-		}
 	}
 
-	Vector vecDesiredOrigin = vecTargetOrigin - m_vecProjectileCameraForward * 112.0f + Vector( 0.0f, 0.0f, 40.0f );
-	float flCameraBlend = 1.0f - ExponentialDecay( 0.04f, gpGlobals->frametime );
-	Vector vecBlendedOrigin = vecDesiredOrigin;
-	if ( m_bProjectileCameraInitialized )
-	{
-		VectorLerp( m_vecProjectileCameraOrigin, vecDesiredOrigin, flCameraBlend, vecBlendedOrigin );
-	}
-
-	trace_t trace;
-	UTIL_TraceHull( vecTargetOrigin, vecBlendedOrigin, Vector( -4.0f, -4.0f, -4.0f ), Vector( 4.0f, 4.0f, 4.0f ), MASK_SOLID_BRUSHONLY, pTarget, COLLISION_GROUP_NONE, &trace );
-	m_vecProjectileCameraOrigin = trace.endpos;
-	if ( trace.fraction < 1.0f )
-	{
-		m_vecProjectileCameraOrigin += trace.plane.normal * 4.0f;
-	}
-
-	QAngle angDesired;
-	VectorAngles( vecTargetOrigin + m_vecProjectileCameraForward * 96.0f - m_vecProjectileCameraOrigin, angDesired );
-	if ( m_bProjectileCameraInitialized )
-	{
-		InterpolateAngles( m_angProjectileCamera, angDesired, m_angProjectileCamera, flCameraBlend );
-	}
-	else
-	{
-		m_angProjectileCamera = angDesired;
-		m_bProjectileCameraInitialized = true;
-	}
+	if ( !bTracking && ( m_flProjectileCameraLastTrackTime < 0.0f ||
+		gpGlobals->curtime - m_flProjectileCameraLastTrackTime >= cl_projectile_camera_fade_delay.GetFloat() + 0.5f || cl_projectile_camera_freeze.GetBool() ) )
+		return;
 
 	ITexture *pRenderTarget = GetProjectileCameraTexture();
 	if ( !pRenderTarget || IsErrorTexture( pRenderTarget ) )
@@ -3464,15 +3472,18 @@ void CViewRender::RenderProjectileCamera( const CViewSetup &cameraView )
 	render->PopView( frustum );
 
 	g_bRenderingCameraView = bWasRenderingCameraView;
-	m_flProjectileCameraLastRenderTime = gpGlobals->curtime;
+	if ( bTracking )
+	{
+		m_flProjectileCameraLastTrackTime = gpGlobals->curtime;
+	}
 }
 
 void CViewRender::DrawProjectileCameraOverlay( const CViewSetup &viewRender )
 {
-	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() || m_flProjectileCameraLastRenderTime < 0.0f || !m_ProjectileCameraMaterial.IsValid() )
+	if ( !sv_projectile_camera.GetBool() || !cl_projectile_camera.GetBool() || m_flProjectileCameraLastTrackTime < 0.0f || !m_ProjectileCameraMaterial.IsValid() )
 		return;
 
-	float flAlpha = 1.0f - ( gpGlobals->curtime - m_flProjectileCameraLastRenderTime ) / 0.5f;
+	float flAlpha = 1.0f - ( gpGlobals->curtime - m_flProjectileCameraLastTrackTime - cl_projectile_camera_fade_delay.GetFloat() ) / 0.5f;
 	flAlpha = clamp( flAlpha, 0.0f, 1.0f );
 	if ( flAlpha <= 0.0f )
 		return;
