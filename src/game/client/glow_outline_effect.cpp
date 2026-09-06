@@ -15,7 +15,7 @@
 
 #define FULL_FRAME_TEXTURE "_rt_FullFrameFB"
 
-#ifdef GLOWS_ENABLE
+#if defined( GLOWS_ENABLE ) || defined( HL2MP_GLOWS_ENABLE )
 
 ConVar glow_outline_effect_enable( "glow_outline_effect_enable", "1", FCVAR_ARCHIVE, "Enable entity outline glow effects." );
 ConVar glow_outline_effect_width( "glow_outline_width", "10.0f", FCVAR_CHEAT, "Width of glow outline effect in screen space." );
@@ -152,6 +152,58 @@ void CGlowObjectManager::RenderGlowModels( const CViewSetup *pSetup, int nSplitS
 	pRenderContext->PopRenderTargetAndViewport();
 }
 
+#ifdef HL2MP_GLOWS_ENABLE
+void CGlowObjectManager::DownSampleAndBlurRT( const CViewSetup *pSetup, CMatRenderContextPtr &pRenderContext, float flBloomScale, ITexture *pRtFullFrame, ITexture *pRtQuarterSize0, ITexture *pRtQuarterSize1 )
+{
+	static bool s_bFirstPass = true;
+
+	pRenderContext->PushRenderTargetAndViewport();
+
+	int nSrcWidth = pSetup->width;
+	int nSrcHeight = pSetup->height;
+	int nQuarterWidth = nSrcWidth / 4;
+	int nQuarterHeight = nSrcHeight / 4;
+
+	IMaterial *pMatDownsample = materials->FindMaterial( "dev/glow_downsample", TEXTURE_GROUP_OTHER, true );
+	IMaterial *pMatBlurX = materials->FindMaterial( "dev/glow_blur_x", TEXTURE_GROUP_OTHER, true );
+	IMaterial *pMatBlurY = materials->FindMaterial( "dev/glow_blur_y", TEXTURE_GROUP_OTHER, true );
+
+	if ( pRtQuarterSize0->GetActualWidth() != nQuarterWidth || pRtQuarterSize0->GetActualHeight() != nQuarterHeight )
+	{
+		SetRenderTargetAndViewPort( pRtQuarterSize0, pRtQuarterSize0->GetActualWidth(), pRtQuarterSize0->GetActualHeight() );
+		pRenderContext->ClearColor3ub( 0, 0, 0 );
+		pRenderContext->ClearBuffers( true, false, false );
+	}
+
+	SetRenderTargetAndViewPort( pRtQuarterSize0, nQuarterWidth, nQuarterHeight );
+	pRenderContext->DrawScreenSpaceRectangle( pMatDownsample, 0, 0, nQuarterWidth, nQuarterHeight,
+		0, 0, nSrcWidth - 4, nSrcHeight - 4,
+		pRtFullFrame->GetActualWidth(), pRtFullFrame->GetActualHeight() );
+
+	if ( s_bFirstPass || pRtQuarterSize1->GetActualWidth() != nQuarterWidth || pRtQuarterSize1->GetActualHeight() != nQuarterHeight )
+	{
+		s_bFirstPass = false;
+		SetRenderTargetAndViewPort( pRtQuarterSize1, pRtQuarterSize1->GetActualWidth(), pRtQuarterSize1->GetActualHeight() );
+		pRenderContext->ClearColor3ub( 0, 0, 0 );
+		pRenderContext->ClearBuffers( true, false, false );
+	}
+
+	SetRenderTargetAndViewPort( pRtQuarterSize1, nQuarterWidth, nQuarterHeight );
+	pRenderContext->DrawScreenSpaceRectangle( pMatBlurX, 0, 0, nQuarterWidth, nQuarterHeight,
+		0, 0, nQuarterWidth - 1, nQuarterHeight - 1,
+		pRtQuarterSize0->GetActualWidth(), pRtQuarterSize0->GetActualHeight() );
+
+	SetRenderTargetAndViewPort( pRtQuarterSize0, nQuarterWidth, nQuarterHeight );
+	IMaterialVar *pBloomAmountVar = pMatBlurY->FindVar( "$bloomamount", NULL );
+	pBloomAmountVar->SetFloatValue( flBloomScale );
+	pRenderContext->DrawScreenSpaceRectangle( pMatBlurY, 0, 0, nQuarterWidth, nQuarterHeight,
+		0, 0, nQuarterWidth - 1, nQuarterHeight - 1,
+		pRtQuarterSize1->GetActualWidth(), pRtQuarterSize1->GetActualHeight() );
+
+	pRenderContext->PopRenderTargetAndViewport();
+}
+#endif
+
 void CGlowObjectManager::ApplyEntityGlowEffects( const CViewSetup *pSetup, int nSplitScreenSlot, CMatRenderContextPtr &pRenderContext, float flBloomScale, int x, int y, int w, int h )
 {
 	//=======================================================//
@@ -276,6 +328,12 @@ void CGlowObjectManager::ApplyEntityGlowEffects( const CViewSetup *pSetup, int n
 	// Get material and texture pointers
 	ITexture *pRtQuarterSize1 = materials->FindTexture( "_rt_SmallFB1", TEXTURE_GROUP_RENDER_TARGET );
 
+#ifdef HL2MP_GLOWS_ENABLE
+	ITexture *pRtFullFrame = materials->FindTexture( FULL_FRAME_TEXTURE, TEXTURE_GROUP_RENDER_TARGET );
+	ITexture *pRtQuarterSize0 = materials->FindTexture( "_rt_SmallFB0", TEXTURE_GROUP_RENDER_TARGET );
+	DownSampleAndBlurRT( pSetup, pRenderContext, flBloomScale, pRtFullFrame, pRtQuarterSize0, pRtQuarterSize1 );
+#endif
+
 	{
 		//=======================================================================================================//
 		// At this point, pRtQuarterSize0 is filled with the fully colored glow around everything as solid glowy //
@@ -328,4 +386,4 @@ void CGlowObjectManager::GlowObjectDefinition_t::DrawModel()
 	}
 }
 
-#endif // GLOWS_ENABLE
+#endif
