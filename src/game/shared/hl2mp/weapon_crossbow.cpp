@@ -9,6 +9,8 @@
 #include "in_buttons.h"
 
 #ifdef CLIENT_DLL
+	#include "animation.h"
+	#include "baseviewmodel_shared.h"
 	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
 #else
@@ -433,6 +435,10 @@ private:
 	void	SetChargerState( ChargerState_t state );
 	void	DoLoadEffect( void );
 
+#ifdef CLIENT_DLL
+	void	UpdateLoadSound( void );
+#endif
+
 #ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
 #endif
@@ -596,6 +602,10 @@ void CWeaponCrossbow::CheckZoomToggle( void )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::ItemBusyFrame( void )
 {
+#ifdef CLIENT_DLL
+	UpdateLoadSound();
+#endif
+
 	// Allow zoom toggling even when we're reloading
 	CheckZoomToggle();
 }
@@ -605,6 +615,10 @@ void CWeaponCrossbow::ItemBusyFrame( void )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::ItemPostFrame( void )
 {
+#ifdef CLIENT_DLL
+	UpdateLoadSound();
+#endif
+
 	// Allow zoom toggling
 	CheckZoomToggle();
 
@@ -615,6 +629,34 @@ void CWeaponCrossbow::ItemPostFrame( void )
 
 	BaseClass::ItemPostFrame();
 }
+
+#ifdef CLIENT_DLL
+void CWeaponCrossbow::UpdateLoadSound( void )
+{
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	CBaseViewModel *pViewModel = pPlayer ? pPlayer->GetViewModel( m_nViewModelIndex ) : NULL;
+	if ( !pViewModel || pPlayer != CBasePlayer::GetLocalPlayer() || pViewModel->GetOwningWeapon() != this || gpGlobals->frametime <= 0.0f )
+		return;
+
+	MDLCACHE_CRITICAL_SECTION();
+	CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
+	int nSequence = pViewModel->GetSequence();
+	if ( !pStudioHdr || nSequence < 0 || nSequence >= pStudioHdr->GetNumSeq() )
+		return;
+
+	float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
+	int nTick = TIME_TO_TICKS( gpGlobals->curtime );
+	float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - pViewModel->GetAnimTime() ) * flCycleRate;
+	float flEndCycle = ( TICKS_TO_TIME( nTick ) - pViewModel->GetAnimTime() ) * flCycleRate;
+	animevent_t event;
+	int nEvent = 0;
+	while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
+	{
+		if ( event.event == EVENT_WEAPON_THROW )
+			WeaponSound( SPECIAL1 );
+	}
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -851,8 +893,6 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 	switch( m_nChargeState )
 	{
 	case CHARGER_STATE_START_LOAD:
-	
-		WeaponSound( SPECIAL1 );
 		
 		// Shoot some sparks and draw a beam between the two outer points
 		DoLoadEffect();
@@ -924,6 +964,9 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
 {
+	if ( pEvent->event == EVENT_WEAPON_THROW && m_nChargeState != CHARGER_STATE_START_LOAD )
+		WeaponSound( SPECIAL1 );
+
 	// misyl: Disable pred filtering in this server-only section.
 	CDisablePredictionFiltering disablePred;
 
