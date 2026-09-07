@@ -919,18 +919,28 @@ void CWeaponCrossbow::ViewModelDrawn( C_BaseViewModel *pViewModel )
 			nBrightness = (int) RemapValClamped( flElapsed, 0.0f, 1.0f, 32.0f, 80.0f );
 		}
 
-		spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE ) ),
-			pViewModel->GetAbsOrigin(), pViewModel->GetAbsAngles(), 0.0f, pViewModel, BOLT_TIP_ATTACHMENT,
-			kRenderTransAdd, kRenderFxNoDissipation, nBrightness, 255, 128, 0, flScale );
+		Vector vecOrigin;
+		if ( pViewModel->GetAttachment( BOLT_TIP_ATTACHMENT, vecOrigin ) )
+		{
+			pViewModel->UncorrectViewModelAttachment( vecOrigin );
+			spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE ) ),
+				vecOrigin, pViewModel->GetAbsAngles(), 0.0f, NULL, 0,
+				kRenderTransAdd, kRenderFxNoDissipation, nBrightness, 255, 128, 0, flScale );
+		}
 	}
 
 	float flElapsed = flTime - m_flLoadTime;
 	if ( m_flLoadTime >= 0.0f && flElapsed >= 0.0f && flElapsed < 0.26f )
 	{
 		int nBrightness = (int) RemapValClamped( flElapsed, 0.01f, 0.26f, 128.0f, 0.0f );
-		spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE2 ) ),
-			pViewModel->GetAbsOrigin(), pViewModel->GetAbsAngles(), 0.0f, pViewModel, 1,
-			kRenderTransAdd, kRenderFxNone, nBrightness, 255, 255, 255, 0.2f );
+		Vector vecOrigin;
+		if ( pViewModel->GetAttachment( 1, vecOrigin ) )
+		{
+			pViewModel->UncorrectViewModelAttachment( vecOrigin );
+			spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE2 ) ),
+				vecOrigin, pViewModel->GetAbsAngles(), 0.0f, NULL, 0,
+				kRenderTransAdd, kRenderFxNone, nBrightness, 255, 255, 255, 0.2f );
+		}
 	}
 }
 #else
