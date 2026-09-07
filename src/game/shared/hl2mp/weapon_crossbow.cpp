@@ -7,12 +7,15 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
+#include "animation.h"
+#include "baseviewmodel_shared.h"
+#include "datacache/imdlcache.h"
 
 #ifdef CLIENT_DLL
-	#include "animation.h"
-	#include "baseviewmodel_shared.h"
 	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
+	#include "c_sprite.h"
+	#include "engine/ivmodelinfo.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
@@ -407,8 +410,11 @@ public:
 	virtual void	ItemPostFrame( void );
 	virtual void	ItemBusyFrame( void );
 	virtual bool	SendWeaponAnim( int iActivity );
+	virtual void	SendViewModelAnim( int nSequence );
 
-#ifndef CLIENT_DLL
+#ifdef CLIENT_DLL
+	virtual void ViewModelDrawn( C_BaseViewModel *pViewModel );
+#else
 	virtual void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
 #endif
 
@@ -432,13 +438,9 @@ private:
 		CHARGER_STATE_OFF,
 	};
 
-	void	CreateChargerEffects( void );
 	void	SetChargerState( ChargerState_t state );
 	void	DoLoadEffect( void );
-
-#ifdef CLIENT_DLL
-	void	UpdateLoadSound( void );
-#endif
+	void	UpdateLoadEffects( void );
 
 #ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
@@ -447,11 +449,10 @@ private:
 private:
 	
 	// Charger effects
-	ChargerState_t		m_nChargeState;
-
-#ifndef CLIENT_DLL
-	CHandle<CSprite>	m_hChargerSprite;
-#endif
+	CNetworkVar( int,	m_nChargeState );
+	CNetworkVar( float,	m_flChargeTime );
+	CNetworkVar( float,	m_flLoadTime );
+	CNetworkVar( float,	m_flAnimStartTime );
 
 	CNetworkVar( bool,	m_bInZoom );
 	CNetworkVar( bool,	m_bMustReload );
@@ -465,9 +466,17 @@ BEGIN_NETWORK_TABLE( CWeaponCrossbow, DT_WeaponCrossbow )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bInZoom ) ),
 	RecvPropBool( RECVINFO( m_bMustReload ) ),
+	RecvPropInt( RECVINFO( m_nChargeState ) ),
+	RecvPropFloat( RECVINFO( m_flChargeTime ) ),
+	RecvPropFloat( RECVINFO( m_flLoadTime ) ),
+	RecvPropFloat( RECVINFO( m_flAnimStartTime ) ),
 #else
 	SendPropBool( SENDINFO( m_bInZoom ) ),
 	SendPropBool( SENDINFO( m_bMustReload ) ),
+	SendPropInt( SENDINFO( m_nChargeState ), 3, SPROP_UNSIGNED ),
+	SendPropFloat( SENDINFO( m_flChargeTime ), 0, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO( m_flLoadTime ), 0, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO( m_flAnimStartTime ), 0, SPROP_NOSCALE ),
 #endif
 END_NETWORK_TABLE()
 
@@ -475,7 +484,10 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA( CWeaponCrossbow )
 	DEFINE_PRED_FIELD( m_bInZoom, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bMustReload, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_FIELD( m_nChargeState, FIELD_INTEGER ),
+	DEFINE_PRED_FIELD( m_nChargeState, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD_TOL( m_flChargeTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
+	DEFINE_PRED_FIELD_TOL( m_flLoadTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
+	DEFINE_PRED_FIELD_TOL( m_flAnimStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
 
 	// misyl: Can't predict this easily as it comes from some animevent stuff...
 	DEFINE_PRED_FIELD( m_nSkin, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
@@ -513,6 +525,9 @@ CWeaponCrossbow::CWeaponCrossbow( void )
 	m_bInZoom			= false;
 	m_bMustReload		= false;
 	m_nChargeState		= CHARGER_STATE_OFF;
+	m_flChargeTime		= 0.0f;
+	m_flLoadTime			= -1.0f;
+	m_flAnimStartTime	= 0.0f;
 }
 
 #define	CROSSBOW_GLOW_SPRITE	"sprites/light_glow02_noz.vmt"
@@ -605,9 +620,7 @@ void CWeaponCrossbow::CheckZoomToggle( void )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::ItemBusyFrame( void )
 {
-#ifdef CLIENT_DLL
-	UpdateLoadSound();
-#endif
+	UpdateLoadEffects();
 
 	// Allow zoom toggling even when we're reloading
 	CheckZoomToggle();
@@ -618,9 +631,7 @@ void CWeaponCrossbow::ItemBusyFrame( void )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::ItemPostFrame( void )
 {
-#ifdef CLIENT_DLL
-	UpdateLoadSound();
-#endif
+	UpdateLoadEffects();
 
 	// Allow zoom toggling
 	CheckZoomToggle();
@@ -633,13 +644,17 @@ void CWeaponCrossbow::ItemPostFrame( void )
 	BaseClass::ItemPostFrame();
 }
 
-#ifdef CLIENT_DLL
-void CWeaponCrossbow::UpdateLoadSound( void )
+void CWeaponCrossbow::UpdateLoadEffects( void )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 	CBaseViewModel *pViewModel = pPlayer ? pPlayer->GetViewModel( m_nViewModelIndex ) : NULL;
-	if ( !pViewModel || pPlayer != CBasePlayer::GetLocalPlayer() || pViewModel->GetOwningWeapon() != this || gpGlobals->frametime <= 0.0f )
+	if ( !pViewModel || pViewModel->GetOwningWeapon() != this || gpGlobals->frametime <= 0.0f )
 		return;
+
+#ifdef CLIENT_DLL
+	if ( pPlayer != CBasePlayer::GetLocalPlayer() )
+		return;
+#endif
 
 	MDLCACHE_CRITICAL_SECTION();
 	CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
@@ -649,17 +664,26 @@ void CWeaponCrossbow::UpdateLoadSound( void )
 
 	float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
 	int nTick = TIME_TO_TICKS( gpGlobals->curtime );
-	float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - pViewModel->GetAnimTime() ) * flCycleRate;
-	float flEndCycle = ( TICKS_TO_TIME( nTick ) - pViewModel->GetAnimTime() ) * flCycleRate;
+	float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - m_flAnimStartTime ) * flCycleRate;
+	float flEndCycle = ( TICKS_TO_TIME( nTick ) - m_flAnimStartTime ) * flCycleRate;
 	animevent_t event;
 	int nEvent = 0;
 	while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
 	{
-		if ( event.event == EVENT_WEAPON_THROW )
-			WeaponSound( SPECIAL1 );
+		switch ( event.event )
+		{
+		case EVENT_WEAPON_THROW:
+			SetChargerState( CHARGER_STATE_START_LOAD );
+			break;
+		case EVENT_WEAPON_THROW2:
+			SetChargerState( CHARGER_STATE_START_CHARGE );
+			break;
+		case EVENT_WEAPON_THROW3:
+			SetChargerState( CHARGER_STATE_READY );
+			break;
+		}
 	}
 }
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -725,7 +749,6 @@ void CWeaponCrossbow::FireBolt( void )
 
 	DoLoadEffect();
 	SetChargerState( CHARGER_STATE_DISCHARGE );
-	SetSkin( BOLT_SKIN_NORMAL );
 }
 
 //-----------------------------------------------------------------------------
@@ -734,14 +757,11 @@ void CWeaponCrossbow::FireBolt( void )
 //-----------------------------------------------------------------------------
 bool CWeaponCrossbow::Deploy( void )
 {
-	if ( m_iClip1 <= 0 )
-	{
-		return DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), ACT_CROSSBOW_DRAW_UNLOADED, (char*)GetAnimPrefix() );
-	}
-
-	SetSkin( BOLT_SKIN_GLOW );
-
-	return BaseClass::Deploy();
+	bool bDeployed = m_iClip1 > 0 ? BaseClass::Deploy() :
+		DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), ACT_CROSSBOW_DRAW_UNLOADED, (char*)GetAnimPrefix() );
+	if ( bDeployed )
+		SetSkin( m_iClip1 > 0 ? BOLT_SKIN_GLOW : BOLT_SKIN_NORMAL );
+	return bDeployed;
 }
 
 //-----------------------------------------------------------------------------
@@ -757,7 +777,6 @@ bool CWeaponCrossbow::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	SetChargerState( CHARGER_STATE_OFF );
-	SetSkin( BOLT_SKIN_NORMAL );
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -792,30 +811,6 @@ void CWeaponCrossbow::ToggleZoom( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponCrossbow::CreateChargerEffects( void )
-{
-#ifndef CLIENT_DLL
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-
-	if ( m_hChargerSprite != NULL )
-		return;
-
-	m_hChargerSprite = CSprite::SpriteCreate( CROSSBOW_GLOW_SPRITE, GetAbsOrigin(), false );
-
-	if ( m_hChargerSprite )
-	{
-		m_hChargerSprite->SetAttachment( pOwner->GetViewModel(), BOLT_TIP_ATTACHMENT );
-		m_hChargerSprite->SetTransparency( kRenderTransAdd, 255, 128, 0, 255, kRenderFxNoDissipation );
-		m_hChargerSprite->SetBrightness( 0 );
-		m_hChargerSprite->SetScale( 0.1f );
-		m_hChargerSprite->TurnOff();
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 // Input  : skinNum - 
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::SetSkin( int skinNum )
@@ -825,9 +820,9 @@ void CWeaponCrossbow::SetSkin( int skinNum )
 	if ( pOwner == NULL )
 		return;
 
-	CBaseViewModel *pViewModel = pOwner->GetViewModel();
+	CBaseViewModel *pViewModel = pOwner->GetViewModel( m_nViewModelIndex );
 
-	if ( pViewModel == NULL )
+	if ( pViewModel == NULL || pViewModel->GetOwningWeapon() != this )
 		return;
 
 	pViewModel->m_nSkin = skinNum;
@@ -845,10 +840,12 @@ void CWeaponCrossbow::DoLoadEffect( void )
 	if ( pOwner == NULL )
 		return;
 
-	CBaseViewModel *pViewModel = pOwner->GetViewModel();
+	CBaseViewModel *pViewModel = pOwner->GetViewModel( m_nViewModelIndex );
 
-	if ( pViewModel == NULL )
+	if ( pViewModel == NULL || pViewModel->GetOwningWeapon() != this )
 		return;
+
+	m_flLoadTime = gpGlobals->curtime;
 
 	CEffectData	data;
 	data.m_vOrigin = pOwner->GetAbsOrigin();
@@ -861,21 +858,6 @@ void CWeaponCrossbow::DoLoadEffect( void )
 	data.m_nAttachmentIndex = 1;
 
 	DispatchEffect( "CrossbowLoad", data );
-
-#ifndef CLIENT_DLL
-
-	CSprite *pBlast = CSprite::SpriteCreate( CROSSBOW_GLOW_SPRITE2, GetAbsOrigin(), false );
-
-	if ( pBlast )
-	{
-		pBlast->SetAttachment( pOwner->GetViewModel(), 1 );
-		pBlast->SetTransparency( kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone );
-		pBlast->SetBrightness( 128 );
-		pBlast->SetScale( 0.2f );
-		pBlast->FadeOutFromSpawn();
-	}
-#endif
-	
 }
 
 //-----------------------------------------------------------------------------
@@ -884,82 +866,74 @@ void CWeaponCrossbow::DoLoadEffect( void )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 {
-	// Make sure we're setup
-	CreateChargerEffects();
+	if ( state == CHARGER_STATE_DISCHARGE || state == CHARGER_STATE_OFF )
+		SetSkin( BOLT_SKIN_NORMAL );
+	if ( state == CHARGER_STATE_OFF )
+		m_flLoadTime = -1.0f;
 
 	// Don't do this twice
 	if ( state == m_nChargeState )
 		return;
 
 	m_nChargeState = state;
+	m_flChargeTime = gpGlobals->curtime;
 
-	switch( m_nChargeState )
+	if ( state == CHARGER_STATE_START_LOAD )
 	{
-	case CHARGER_STATE_START_LOAD:
-		
-		// Shoot some sparks and draw a beam between the two outer points
+		WeaponSound( SPECIAL1 );
 		DoLoadEffect();
-		
-		break;
-#ifndef CLIENT_DLL
-	case CHARGER_STATE_START_CHARGE:
-		{
-			if ( m_hChargerSprite == NULL )
-				break;
-			
-			m_hChargerSprite->SetBrightness( 32, 0.5f );
-			m_hChargerSprite->SetScale( 0.025f, 0.5f );
-			m_hChargerSprite->TurnOn();
-		}
-
-		break;
-
-	case CHARGER_STATE_READY:
-		{
-			// Get fully charged
-			if ( m_hChargerSprite == NULL )
-				break;
-			
-			m_hChargerSprite->SetBrightness( 80, 1.0f );
-			m_hChargerSprite->SetScale( 0.1f, 0.5f );
-			m_hChargerSprite->TurnOn();
-		}
-
-		break;
-
-	case CHARGER_STATE_DISCHARGE:
-		{
-			SetSkin( BOLT_SKIN_NORMAL );
-			
-			if ( m_hChargerSprite == NULL )
-				break;
-			
-			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
-		}
-
-		break;
-#endif
-	case CHARGER_STATE_OFF:
-		{
-			SetSkin( BOLT_SKIN_NORMAL );
-
-#ifndef CLIENT_DLL
-			if ( m_hChargerSprite == NULL )
-				break;
-			
-			m_hChargerSprite->SetBrightness( 0 );
-			m_hChargerSprite->TurnOff();
-#endif
-		}
-		break;
-
-	default:
-		break;
 	}
 }
 
-#ifndef CLIENT_DLL
+#ifdef CLIENT_DLL
+void CWeaponCrossbow::ViewModelDrawn( C_BaseViewModel *pViewModel )
+{
+	BaseClass::ViewModelDrawn( pViewModel );
+
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if ( !pOwner || pOwner->GetActiveWeapon() != this || pViewModel->GetOwningWeapon() != this )
+		return;
+
+	float flTime = gpGlobals->curtime;
+	if ( pOwner == CBasePlayer::GetLocalPlayer() && ( pViewModel->GetPredictable() || pViewModel->IsClientCreated() ) )
+	{
+		flTime = pOwner->GetFinalPredictedTime();
+		if ( !engine->IsPaused() )
+			flTime += gpGlobals->interpolation_amount * TICK_INTERVAL;
+	}
+
+	C_SpriteRenderer spriteRenderer = {};
+	if ( m_nChargeState == CHARGER_STATE_START_CHARGE || m_nChargeState == CHARGER_STATE_READY )
+	{
+		float flElapsed = flTime - m_flChargeTime;
+		float flScale;
+		int nBrightness;
+		if ( m_nChargeState == CHARGER_STATE_START_CHARGE )
+		{
+			flScale = RemapValClamped( flElapsed, 0.0f, 0.5f, 0.1f, 0.025f );
+			nBrightness = (int) RemapValClamped( flElapsed, 0.0f, 0.5f, 0.0f, 32.0f );
+		}
+		else
+		{
+			flScale = RemapValClamped( flElapsed, 0.0f, 0.5f, 0.025f, 0.1f );
+			nBrightness = (int) RemapValClamped( flElapsed, 0.0f, 1.0f, 32.0f, 80.0f );
+		}
+
+		spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE ) ),
+			pViewModel->GetAbsOrigin(), pViewModel->GetAbsAngles(), 0.0f, pViewModel, BOLT_TIP_ATTACHMENT,
+			kRenderTransAdd, kRenderFxNoDissipation, nBrightness, 255, 128, 0, flScale );
+	}
+
+	float flElapsed = flTime - m_flLoadTime;
+	if ( m_flLoadTime >= 0.0f && flElapsed >= 0.0f && flElapsed < 0.26f )
+	{
+		int nBrightness = (int) RemapValClamped( flElapsed, 0.01f, 0.26f, 128.0f, 0.0f );
+		spriteRenderer.DrawSprite( pViewModel, modelinfo->GetModel( modelinfo->GetModelIndex( CROSSBOW_GLOW_SPRITE2 ) ),
+			pViewModel->GetAbsOrigin(), pViewModel->GetAbsAngles(), 0.0f, pViewModel, 1,
+			kRenderTransAdd, kRenderFxNone, nBrightness, 255, 255, 255, 0.2f );
+	}
+}
+#else
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pEvent - 
@@ -967,33 +941,29 @@ void CWeaponCrossbow::SetChargerState( ChargerState_t state )
 //-----------------------------------------------------------------------------
 void CWeaponCrossbow::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
 {
-	if ( pEvent->event == EVENT_WEAPON_THROW && m_nChargeState != CHARGER_STATE_START_LOAD )
-		WeaponSound( SPECIAL1 );
-
-	// misyl: Disable pred filtering in this server-only section.
-	CDisablePredictionFiltering disablePred;
-
 	switch( pEvent->event )
 	{
 	case EVENT_WEAPON_THROW:
-		SetChargerState( CHARGER_STATE_START_LOAD );
-		break;
-
 	case EVENT_WEAPON_THROW2:
-		SetChargerState( CHARGER_STATE_START_CHARGE );
-		break;
-	
 	case EVENT_WEAPON_THROW3:
-		SetChargerState( CHARGER_STATE_READY );
-		break;
-
-	default:
-		BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
-		break;
+		return;
 	}
+
+	CDisablePredictionFiltering disablePred;
+	BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
 }
 
 #endif
+
+void CWeaponCrossbow::SendViewModelAnim( int nSequence )
+{
+	BaseClass::SendViewModelAnim( nSequence );
+
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CBaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( m_nViewModelIndex ) : NULL;
+	if ( nSequence >= 0 && pViewModel && pViewModel->GetOwningWeapon() == this && pViewModel->GetSequence() == nSequence )
+		m_flAnimStartTime = gpGlobals->curtime;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Set the desired activity for the weapon and its viewmodel counterpart
