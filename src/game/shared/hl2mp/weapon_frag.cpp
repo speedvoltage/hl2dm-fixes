@@ -7,10 +7,11 @@
 #include "cbase.h"
 #include "npcevent.h"
 #include "in_buttons.h"
+#include "animation.h"
+#include "baseviewmodel_shared.h"
+#include "datacache/imdlcache.h"
 
 #ifdef CLIENT_DLL
-	#include "animation.h"
-	#include "baseviewmodel_shared.h"
 	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
 #else
@@ -27,6 +28,7 @@
 #include "tier0/memdbgon.h"
 
 #define GRENADE_TIMER	2.5f //Seconds
+#define RETHROW_DELAY	0.5f
 
 #define GRENADE_PAUSED_NO			0
 #define GRENADE_PAUSED_PRIMARY		1
@@ -58,6 +60,7 @@ public:
 	void	SecondaryAttack( void );
 	void	DecrementAmmo( CBaseCombatCharacter *pOwner );
 	void	ItemPostFrame( void );
+	void	SendViewModelAnim( int nSequence );
 
 	bool	Deploy( void );
 	bool	Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
@@ -82,6 +85,7 @@ private:
 	
 	CNetworkVar( int,	m_AttackPaused );
 	CNetworkVar( bool,	m_fDrawbackFinished );
+	CNetworkVar( float,	m_flAnimStartTime );
 
 	CWeaponFrag( const CWeaponFrag & );
 
@@ -115,19 +119,22 @@ BEGIN_NETWORK_TABLE( CWeaponFrag, DT_WeaponFrag )
 	RecvPropBool( RECVINFO( m_bRedraw ) ),
 	RecvPropBool( RECVINFO( m_fDrawbackFinished ) ),
 	RecvPropInt( RECVINFO( m_AttackPaused ) ),
+	RecvPropFloat( RECVINFO( m_flAnimStartTime ) ),
 #else
 	SendPropBool( SENDINFO( m_bRedraw ) ),
 	SendPropBool( SENDINFO( m_fDrawbackFinished ) ),
 	SendPropInt( SENDINFO( m_AttackPaused ) ),
+	SendPropFloat( SENDINFO( m_flAnimStartTime ), 0, SPROP_NOSCALE ),
 #endif
 	
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponFrag )
-	DEFINE_PRED_FIELD( m_bRedraw, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
-	DEFINE_PRED_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
-	DEFINE_PRED_FIELD( m_AttackPaused, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_bRedraw, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_AttackPaused, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD_TOL( m_flAnimStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
 END_PREDICTION_DATA()
 #endif
 
@@ -138,6 +145,9 @@ CWeaponFrag::CWeaponFrag( void ) :
 	CBaseHL2MPCombatWeapon()
 {
 	m_bRedraw = false;
+	m_fDrawbackFinished = false;
+	m_AttackPaused = GRENADE_PAUSED_NO;
+	m_flAnimStartTime = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -163,44 +173,17 @@ void CWeaponFrag::Precache( void )
 //-----------------------------------------------------------------------------
 void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	bool fThrewGrenade = false;
-
 	switch( pEvent->event )
 	{
 		case EVENT_WEAPON_SEQUENCE_FINISHED:
-			m_fDrawbackFinished = true;
-			break;
-
 		case EVENT_WEAPON_THROW:
-			ThrowGrenade( pOwner );
-			DecrementAmmo( pOwner );
-			fThrewGrenade = true;
-			break;
-
 		case EVENT_WEAPON_THROW2:
-			RollGrenade( pOwner );
-			DecrementAmmo( pOwner );
-			fThrewGrenade = true;
-			break;
-
 		case EVENT_WEAPON_THROW3:
-			LobGrenade( pOwner );
-			DecrementAmmo( pOwner );
-			fThrewGrenade = true;
-			break;
+			return;
 
 		default:
 			BaseClass::Operator_HandleAnimEvent( pEvent, pOperator );
 			break;
-	}
-
-#define RETHROW_DELAY	0.5
-	if( fThrewGrenade )
-	{
-		m_flNextPrimaryAttack	= gpGlobals->curtime + RETHROW_DELAY;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + RETHROW_DELAY;
-		m_flTimeWeaponIdle = FLT_MAX; //NOTE: This is set once the animation has finished up!
 	}
 }
 
@@ -339,12 +322,30 @@ void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CWeaponFrag::SendViewModelAnim( int nSequence )
+{
+	BaseClass::SendViewModelAnim( nSequence );
+
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CBaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( m_nViewModelIndex ) : NULL;
+	if ( nSequence >= 0 && pViewModel && pViewModel->GetOwningWeapon() == this && pViewModel->GetSequence() == nSequence )
+		m_flAnimStartTime = gpGlobals->curtime;
+}
+
 void CWeaponFrag::ItemPostFrame( void )
 {
-#ifdef CLIENT_DLL
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	CBaseViewModel *pViewModel = pPlayer ? pPlayer->GetViewModel( m_nViewModelIndex ) : NULL;
-	if ( pViewModel && pPlayer == CBasePlayer::GetLocalPlayer() && pViewModel->GetOwningWeapon() == this && gpGlobals->frametime > 0.0f )
+	if ( !pPlayer )
+		return;
+
+#ifdef CLIENT_DLL
+	if ( pPlayer != CBasePlayer::GetLocalPlayer() )
+		return;
+#endif
+
+	bool bSequenceFinished = false;
+	CBaseViewModel *pViewModel = pPlayer->GetViewModel( m_nViewModelIndex );
+	if ( pViewModel && pViewModel->GetOwningWeapon() == this && gpGlobals->frametime > 0.0f )
 	{
 		MDLCACHE_CRITICAL_SECTION();
 		CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
@@ -353,8 +354,9 @@ void CWeaponFrag::ItemPostFrame( void )
 		{
 			float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
 			int nTick = TIME_TO_TICKS( gpGlobals->curtime );
-			float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - pViewModel->GetAnimTime() ) * flCycleRate;
-			float flEndCycle = ( TICKS_TO_TIME( nTick ) - pViewModel->GetAnimTime() ) * flCycleRate;
+			float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - m_flAnimStartTime ) * flCycleRate;
+			float flEndCycle = ( TICKS_TO_TIME( nTick ) - m_flAnimStartTime ) * flCycleRate;
+			bSequenceFinished = flEndCycle >= 1.0f;
 			animevent_t event;
 			int nEvent = 0;
 			while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
@@ -363,16 +365,31 @@ void CWeaponFrag::ItemPostFrame( void )
 				{
 				case EVENT_WEAPON_SEQUENCE_FINISHED:
 					m_fDrawbackFinished = true;
+					continue;
+
+				case EVENT_WEAPON_THROW:
+					ThrowGrenade( pPlayer );
 					break;
 
 				case EVENT_WEAPON_THROW2:
-					WeaponSound( SPECIAL1 );
+					RollGrenade( pPlayer );
 					break;
+
+				case EVENT_WEAPON_THROW3:
+					LobGrenade( pPlayer );
+					break;
+
+				default:
+					continue;
 				}
+
+				DecrementAmmo( pPlayer );
+				m_flNextPrimaryAttack = gpGlobals->curtime + RETHROW_DELAY;
+				m_flNextSecondaryAttack = gpGlobals->curtime + RETHROW_DELAY;
+				m_flTimeWeaponIdle = FLT_MAX;
 			}
 		}
 	}
-#endif
 
 	if( m_fDrawbackFinished )
 	{
@@ -417,13 +434,8 @@ void CWeaponFrag::ItemPostFrame( void )
 
 	BaseClass::ItemPostFrame();
 
-	if ( m_bRedraw )
-	{
-		if ( IsViewModelSequenceFinished() )
-		{
-			Reload();
-		}
-	}
+	if ( m_bRedraw && bSequenceFinished )
+		Reload();
 }
 
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
