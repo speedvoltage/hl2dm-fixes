@@ -2816,6 +2816,7 @@ void CWeaponPhysCannon::RefreshEffectAttachments( void )
 		m_Beams[1].Release();
 		m_Beams[2].Release();
 		m_hEffectModel = pEffectModel;
+		UpdateVisibility();
 	}
 
 	if ( !pEffectModel )
@@ -3312,6 +3313,9 @@ void CWeaponPhysCannon::DrawEffects( void )
 //-----------------------------------------------------------------------------
 int CWeaponPhysCannon::DrawModel( int flags )
 {
+	if ( ShouldDraw() == false )
+		return 0;
+
 	// Only render these on the transparent pass
 	if ( flags & STUDIO_TRANSPARENCY )
 	{
