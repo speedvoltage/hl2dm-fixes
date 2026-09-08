@@ -2085,6 +2085,9 @@ void CWeaponRPG::DrawEffects( void )
 //-----------------------------------------------------------------------------
 int	CWeaponRPG::DrawModel( int flags )
 {
+	if ( ShouldDraw() == false )
+		return 0;
+
 	// Only render these on the transparent pass
 	if ( flags & STUDIO_TRANSPARENCY )
 	{
