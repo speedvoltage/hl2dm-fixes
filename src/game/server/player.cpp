@@ -2444,7 +2444,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 
 	m_iObserverMode = mode;
 
-#ifdef HL2MP
+#if defined( HL2MP ) || defined( TF_DLL )
 	NetworkStateChanged( &m_Local.m_flFOVRate );
 #endif
 	
@@ -2759,7 +2759,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	// set new target
 	m_hObserverTarget.Set( target ); 
 
-#ifdef HL2MP
+#if defined( HL2MP ) || defined( TF_DLL )
 	NetworkStateChanged( &m_Local.m_flFOVRate );
 #endif
 

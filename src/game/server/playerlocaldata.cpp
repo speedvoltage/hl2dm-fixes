@@ -20,7 +20,7 @@
 
 //=============================================================================
 
-#ifdef HL2MP
+#if defined( HL2MP ) || defined( TF_DLL )
 static void SendProxy_FOVRate( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
 {
 	pOut->m_Float = *( float * )pData;
@@ -43,7 +43,7 @@ BEGIN_SEND_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	SendPropArray3  (SENDINFO_ARRAY3(m_chAreaPortalBits), SendPropInt(SENDINFO_ARRAY(m_chAreaPortalBits), 8, SPROP_UNSIGNED)),
 	
 	SendPropInt		(SENDINFO(m_iHideHUD), HIDEHUD_BITCOUNT, SPROP_UNSIGNED),
-#ifdef HL2MP
+#if defined( HL2MP ) || defined( TF_DLL )
 	SendPropFloat	(SENDINFO(m_flFOVRate), 0, SPROP_NOSCALE, 0.0f, HIGH_DEFAULT, SendProxy_FOVRate ),
 #else
 	SendPropFloat	(SENDINFO(m_flFOVRate), 0, SPROP_NOSCALE ),

@@ -759,7 +759,7 @@ public:
 	bool	IsLerpingFOV( void ) const;
 	int		GetFOV( void );														// Get the current FOV value
 	int		GetDefaultFOV( void ) const;										// Default FOV if not specified otherwise
-#ifdef HL2MP
+#if defined( HL2MP ) || defined( TF_DLL )
 	float	GetFOVRate( void ) const { return m_Local.m_flFOVRate; }
 #endif
 	int		GetFOVForNetworking( void );										// Get the current FOV used for network computations

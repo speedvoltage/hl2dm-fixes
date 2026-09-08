@@ -271,7 +271,7 @@ inline bool IsIndexIntoPlayerArrayValid( int iIndex )
 
 #define MAX_PLACE_NAME_LENGTH		18
 
-#if defined( HL2MP )
+#if defined( HL2MP ) || defined( TF_DLL ) || defined( TF_CLIENT_DLL )
 	#define MAX_FOV						110
 #else
 	#define MAX_FOV						90
