@@ -2497,7 +2497,6 @@ float C_BasePlayer::GetFOV( void )
 		// get fov from observer target. Not if target is observer itself
 		if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
 		{
-#if defined( HL2MP ) || defined( TF_CLIENT_DLL )
 			if ( engine->IsHLTV()
 #if defined( REPLAY_ENABLED )
 				 || g_pEngineClientReplay->IsPlayingReplayDemo()
@@ -2525,9 +2524,6 @@ float C_BasePlayer::GetFOV( void )
 			}
 
 			return fFOV;
-#else
-			return pTargetPlayer->GetFOV();
-#endif
 		}
 	}
 

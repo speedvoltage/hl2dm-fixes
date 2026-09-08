@@ -729,12 +729,10 @@ void CViewRender::SetUpViews()
 	const float flViewModelFOV = g_pClientMode->GetViewModelFOV();
 	viewEye.fovViewmodel = MAX( flViewModelFOV - flFOVOffset, 0.1f );
 
-#if defined( HL2MP ) || defined( TF_CLIENT_DLL )
 	if ( engine->IsHLTV() && HLTVCamera()->GetMode() == OBS_MODE_IN_EYE )
 	{
 		viewEye.fovViewmodel = clamp( flViewModelFOV * ( viewEye.fov / 90.0f ), 0.1f, 179.9f );
 	}
-#endif
 
 	if ( UseVR() )
 	{

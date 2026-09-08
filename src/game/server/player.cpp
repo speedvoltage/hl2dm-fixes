@@ -2444,9 +2444,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 
 	m_iObserverMode = mode;
 
-#if defined( HL2MP ) || defined( TF_DLL )
 	NetworkStateChanged( &m_Local.m_flFOVRate );
-#endif
 	
 	switch ( mode )
 	{
@@ -2759,9 +2757,7 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	// set new target
 	m_hObserverTarget.Set( target ); 
 
-#if defined( HL2MP ) || defined( TF_DLL )
 	NetworkStateChanged( &m_Local.m_flFOVRate );
-#endif
 
 	// reset fov to default
 	SetFOV( this, 0 );	

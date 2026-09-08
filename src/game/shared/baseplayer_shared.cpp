@@ -1876,18 +1876,6 @@ bool CBasePlayer::IsLerpingFOV( void ) const
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetDefaultFOV( void ) const
 {
-#if defined( CLIENT_DLL ) && !defined( HL2MP ) && !defined( TF_CLIENT_DLL )
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
-
-		if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
-		{
-			return pTargetPlayer->GetDefaultFOV();
-		}
-	}
-#endif
-
 	int iFOV = ( m_iDefaultFOV == 0 ) ? g_pGameRules->DefaultFOV() : m_iDefaultFOV;
 	if ( iFOV > MAX_FOV )
 		iFOV = MAX_FOV;
@@ -1987,7 +1975,7 @@ bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate, int 
 
 	m_Local.m_flFOVRate	= zoomRate;
 
-#if defined( GAME_DLL ) && ( defined( HL2MP ) || defined( TF_DLL ) )
+#ifdef GAME_DLL
 	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
 		CBasePlayer *pObserver = UTIL_PlayerByIndex( i );
