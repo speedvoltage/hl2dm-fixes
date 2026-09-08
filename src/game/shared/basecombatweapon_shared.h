@@ -210,6 +210,9 @@ public:
 	virtual void			SendViewModelAnim( int nSequence );
 	float					GetViewModelSequenceDuration();	// Return how long the current view model sequence is.
 	bool					IsViewModelSequenceFinished( void ) const; // Returns if the viewmodel's current animation is finished
+	using BaseClass::SequenceDuration;
+	float					SequenceDuration( void );
+	float					SequenceDuration( int iSequence );
 
 	virtual void			SetViewModel();
 
@@ -605,6 +608,8 @@ public:
 	virtual bool			UsesCenterFireProjectile( void ) const { return false; }
 
 private:
+	CBaseAnimating			*GetWeaponAnimationSource();
+
 	Activity				m_Activity;
 	int						m_nIdealSequence;
 	Activity				m_IdealActivity;
