@@ -570,7 +570,7 @@ void CWeaponCrossbow::PrimaryAttack( void )
 	// Signal a reload
 	m_bMustReload = true;
 
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration( ACT_VM_PRIMARYATTACK ) );
+	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 
 #ifdef GAME_DLL
 	CBasePlayer *player = ToBasePlayer( GetOwner() );
@@ -758,9 +758,13 @@ void CWeaponCrossbow::FireBolt( void )
 bool CWeaponCrossbow::Deploy( void )
 {
 	bool bDeployed = m_iClip1 > 0 ? BaseClass::Deploy() :
-		DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), ACT_CROSSBOW_DRAW_UNLOADED, (char*)GetAnimPrefix() );
+		DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), ACT_VM_FIDGET, (char*)GetAnimPrefix() );
 	if ( bDeployed )
+	{
 		SetSkin( m_iClip1 > 0 ? BOLT_SKIN_GLOW : BOLT_SKIN_NORMAL );
+		if ( m_iClip1 <= 0 )
+			Reload();
+	}
 	return bDeployed;
 }
 
