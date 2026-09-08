@@ -55,6 +55,9 @@ CHudServerInfo::CHudServerInfo( const char *pElementName ) : CHudElement( pEleme
 
 bool CHudServerInfo::ShouldDraw()
 {
+	if ( mp_timelimit.GetInt() <= 0 && fraglimit.GetFloat() <= 0.0f )
+		return false;
+
 	return cl_show_server_info.GetBool() && HL2MPRules() && g_PR && CHudElement::ShouldDraw();
 }
 
@@ -104,12 +107,15 @@ void CHudServerInfo::Paint()
 	if ( !pRules || !pPlayer || !g_PR )
 		return;
 
-	wchar_t wszTime[32] = L"--:--:--";
+	wchar_t wszTime[32] = L"--:--";
 	float flTimeLeft = pRules->GetMapRemainingTime();
 	if ( mp_timelimit.GetInt() > 0 && IsFinite( flTimeLeft ) )
 	{
 		int iSeconds = (int)ceil( clamp( (double)flTimeLeft, 0.0, (double)INT_MAX ) );
-		V_snwprintf( wszTime, ARRAYSIZE( wszTime ), L"%02d:%02d:%02d", iSeconds / 3600, ( iSeconds / 60 ) % 60, iSeconds % 60 );
+		if ( iSeconds >= 3600 )
+			V_snwprintf( wszTime, ARRAYSIZE( wszTime ), L"%02d:%02d:%02d", iSeconds / 3600, ( iSeconds / 60 ) % 60, iSeconds % 60 );
+		else
+			V_snwprintf( wszTime, ARRAYSIZE( wszTime ), L"%02d:%02d", iSeconds / 60, iSeconds % 60 );
 	}
 
 	int iPlayer = pPlayer->entindex();
@@ -164,7 +170,7 @@ void CHudServerInfo::Paint()
 		C_Team *pTeams[2] = { pCombine, pRebels };
 		int iSideWide = 0;
 		int iCenterWide, iWide, iTall;
-		vgui::surface()->GetTextSize( m_hFont, L"00:00:00", iCenterWide, iTall );
+		vgui::surface()->GetTextSize( m_hFont, L"00:00", iCenterWide, iTall );
 		vgui::surface()->GetTextSize( m_hFont, wszTime, iWide, iTall );
 		iCenterWide = MAX( iCenterWide, iWide );
 		vgui::surface()->GetTextSize( m_hSmallFont, wszFrags, iWide, iTall );
