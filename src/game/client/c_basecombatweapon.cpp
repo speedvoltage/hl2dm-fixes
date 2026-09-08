@@ -154,13 +154,11 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 			}
 		}
 	}
-	else // weapon carried by other player or not at all
+
+	int overrideModelIndex = bIsLocalPlayer && !ShouldDrawLocalPlayerViewModel() ? GetWorldModelIndex() : CalcOverrideModelIndex();
+	if( overrideModelIndex != -1 && overrideModelIndex != GetModelIndex() )
 	{
-		int overrideModelIndex = CalcOverrideModelIndex();
-		if( overrideModelIndex != -1 && overrideModelIndex != GetModelIndex() )
-		{
-			SetModelIndex( overrideModelIndex );
-		}
+		SetModelIndex( overrideModelIndex );
 	}
 
 	if ( updateType == DATA_UPDATE_CREATED )
@@ -505,11 +503,9 @@ int C_BaseCombatWeapon::DrawModel( int flags )
 int C_BaseCombatWeapon::CalcOverrideModelIndex() 
 { 
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-	if ( localplayer && 
-		localplayer == GetOwner() &&
-		ShouldDrawLocalPlayerViewModel() )
+	if ( localplayer && localplayer == GetOwner() )
 	{
-		return BaseClass::CalcOverrideModelIndex();
+		return m_iViewModelIndex;
 	}
 	else
 	{
