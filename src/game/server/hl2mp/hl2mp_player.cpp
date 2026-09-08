@@ -1203,6 +1203,8 @@ public:
 LINK_ENTITY_TO_CLASS( hl2mp_ragdoll, CHL2MPRagdoll );
 
 IMPLEMENT_SERVERCLASS_ST( CHL2MPRagdoll, DT_HL2MPRagdoll )
+	SendPropExclude( "DT_BaseEntity", "m_nRenderFX" ),
+	SendPropExclude( "DT_BaseEntity", "m_CollisionGroup" ),
 	SendPropVector( SENDINFO(m_vecRagdollOrigin), -1,  SPROP_COORD ),
 	SendPropEHandle( SENDINFO( m_hPlayer ) ),
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) )
