@@ -37,7 +37,7 @@ CLIENTEFFECT_REGISTER_END()
 // Globals
 //-----------------------------------------------------------------------------
 vgui::HScheme g_hVGuiCombineScheme = 0;
-ConVar fov_desired( "fov_desired", "75", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 70.0, true, 110.0 );
+ConVar fov_desired( "fov_desired", "90", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 70.0, true, 110.0 );
 
 ConVar cl_spectator_team_outlines( "cl_spectator_team_outlines", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show team-colored player outlines while spectating or watching SourceTV." );
 
