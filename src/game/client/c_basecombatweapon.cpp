@@ -158,10 +158,13 @@ void C_BaseCombatWeapon::OnDataChanged( DataUpdateType_t updateType )
 			pPlayer->EmitSound( "Player.PickupWeapon" );
 	}
 
-	int overrideModelIndex = bIsLocalPlayer && !ShouldDrawLocalPlayerViewModel() ? GetWorldModelIndex() : CalcOverrideModelIndex();
-	if( overrideModelIndex != -1 && overrideModelIndex != GetModelIndex() )
+	if ( !bDrawsLocalViewModel )
 	{
-		SetModelIndex( overrideModelIndex );
+		int overrideModelIndex = CalcOverrideModelIndex();
+		if( overrideModelIndex != -1 && overrideModelIndex != GetModelIndex() )
+		{
+			SetModelIndex( overrideModelIndex );
+		}
 	}
 
 	if ( updateType == DATA_UPDATE_CREATED )
@@ -509,9 +512,11 @@ int C_BaseCombatWeapon::DrawModel( int flags )
 int C_BaseCombatWeapon::CalcOverrideModelIndex() 
 { 
 	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-	if ( localplayer && localplayer == GetOwner() )
+	if ( localplayer && 
+		localplayer == GetOwner() &&
+		ShouldDrawLocalPlayerViewModel() )
 	{
-		return m_iViewModelIndex;
+		return BaseClass::CalcOverrideModelIndex();
 	}
 	else
 	{
