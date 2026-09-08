@@ -52,6 +52,8 @@ extern CBaseEntity	 *g_pLastRebelSpawn;
 #endif
 
 
+ConVar sv_hitmarkers( "sv_hitmarkers", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow clients to display damage numbers when hitting enemy players." );
+
 REGISTER_GAMERULES_CLASS( CHL2MPRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )

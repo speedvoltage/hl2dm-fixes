@@ -55,4 +55,8 @@ void RegisterUserMessages( void )
 	RegisterHapticMessages();
 #endif
 	RegisterScriptMessages();
+
+#ifdef HL2MP
+	usermessages->Register( "DamageHit", 16 );
+#endif
 }
