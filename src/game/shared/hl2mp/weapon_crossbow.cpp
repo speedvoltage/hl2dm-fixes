@@ -570,7 +570,7 @@ void CWeaponCrossbow::PrimaryAttack( void )
 	// Signal a reload
 	m_bMustReload = true;
 
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	SetWeaponIdleTime( gpGlobals->curtime + 0.1f );
 
 #ifdef GAME_DLL
 	CBasePlayer *player = ToBasePlayer( GetOwner() );
