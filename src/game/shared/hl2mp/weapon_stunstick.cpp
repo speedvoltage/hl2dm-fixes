@@ -114,6 +114,7 @@ private:
 	int						m_BeamCenterAttachment;						// "Core" of the effect (center of the head)
 
 	void	SetupAttachmentPoints( void );
+	bool	GetEffectAttachment( int attachmentID, Vector &absOrigin, QAngle &absAngles );
 	void	DrawFirstPersonEffects( void );
 	void	DrawThirdPersonEffects( void );
 	void	DrawEffects( void );
@@ -495,27 +496,26 @@ bool CWeaponStunStick::GetStunState( void )
 //-----------------------------------------------------------------------------
 // Purpose: Get the attachment point on a viewmodel that a base weapon is using
 //-----------------------------------------------------------------------------
-bool UTIL_GetWeaponAttachment( C_BaseCombatWeapon *pWeapon, int attachmentID, Vector &absOrigin, QAngle &absAngles )
+bool C_WeaponStunStick::GetEffectAttachment( int attachmentID, Vector &absOrigin, QAngle &absAngles )
 {
+	if ( attachmentID <= 0 )
+		return false;
+
 	// This is already correct in third-person
-	if ( pWeapon && pWeapon->ShouldDrawUsingViewModel() == false )
+	if ( ShouldDrawUsingViewModel() == false )
 	{
-		return pWeapon->GetAttachment( attachmentID, absOrigin, absAngles );
+		return GetAttachment( attachmentID, absOrigin, absAngles );
 	}
 
 	// Otherwise we need to translate the attachment to the viewmodel's version and reformat it
-	CBasePlayer *pOwner = ToBasePlayer( pWeapon->GetOwner() );
-	
-	if ( pOwner != NULL )
-	{
-		int ret = pOwner->GetViewModel()->GetAttachment( attachmentID, absOrigin, absAngles );
-		FormatViewModelAttachment( absOrigin, true );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	C_BaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( m_nViewModelIndex, false ) : NULL;
 
-		return ret;
-	}
+	if ( !pViewModel || pViewModel->GetOwningWeapon() != this || !pViewModel->GetAttachment( attachmentID, absOrigin, absAngles ) )
+		return false;
 
-	// Wasn't found
-	return false;
+	pViewModel->UncorrectViewModelAttachment( absOrigin );
+	return true;
 }
 
 #define	BEAM_ATTACH_CORE_NAME	"sparkrear"
@@ -611,13 +611,15 @@ void C_WeaponStunStick::ClientThink( void )
 			// Inner beams
 			BeamInfo_t beamInfo;
 
-			int attachment = random->RandomInt( 0, 15 );
+			int attachment = random->RandomInt( 1, (NUM_BEAM_ATTACHMENTS*2)+1 );
 
-			UTIL_GetWeaponAttachment( this, attachment, vecOrigin, vecAngles );
+			if ( !GetEffectAttachment( attachment, vecOrigin, vecAngles ) )
+				return;
+
 			::FormatViewModelAttachment( vecOrigin, false );
 
 			CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-			CBaseEntity *pBeamEnt = pOwner->GetViewModel();
+			CBaseEntity *pBeamEnt = pOwner->GetViewModel( m_nViewModelIndex, false );
 
 			beamInfo.m_vecStart = vec3_origin;
 			beamInfo.m_pStartEnt= pBeamEnt;
@@ -719,7 +721,9 @@ void C_WeaponStunStick::DrawThirdPersonEffects( void )
 	}
 	
 	// Draw an all encompassing glow around the entire head
-	UTIL_GetWeaponAttachment( this, m_BeamCenterAttachment, vecOrigin, vecAngles );
+	if ( !GetEffectAttachment( m_BeamCenterAttachment, vecOrigin, vecAngles ) )
+		return;
+
 	DrawHalo( pMaterial, vecOrigin, scale, color );
 
 	if ( InSwing() )
@@ -731,7 +735,9 @@ void C_WeaponStunStick::DrawThirdPersonEffects( void )
 		scale = random->RandomFloat( 4.0f, 6.0f );
 
 		// Draw an all encompassing glow around the entire head
-		UTIL_GetWeaponAttachment( this, m_BeamCenterAttachment, vecOrigin, vecAngles );
+		if ( !GetEffectAttachment( m_BeamCenterAttachment, vecOrigin, vecAngles ) )
+			return;
+
 		DrawHalo( pMaterial, vecOrigin, scale, color );
 
 		// Update our effects
@@ -740,7 +746,8 @@ void C_WeaponStunStick::DrawThirdPersonEffects( void )
 			Vector	vecOrigin;
 			QAngle	vecAngles;
 
-			GetAttachment( 1, vecOrigin, vecAngles );
+			if ( !GetAttachment( 1, vecOrigin, vecAngles ) )
+				return;
 
 			Vector	vForward;
 			AngleVectors( vecAngles, &vForward );
@@ -815,15 +822,14 @@ void C_WeaponStunStick::DrawFirstPersonEffects( void )
 		scale = 20.0f;
 	}
 	
-	if ( color[0] > 0.0f )
+	if ( color[0] > 0.0f && GetEffectAttachment( m_BeamCenterAttachment, vecOrigin, vecAngles ) )
 	{
 		// Draw an all encompassing glow around the entire head
-		UTIL_GetWeaponAttachment( this, m_BeamCenterAttachment, vecOrigin, vecAngles );
 		DrawHalo( pMaterial, vecOrigin, scale, color );
 	}
 
 	// Draw bright points at each attachment location
-	for ( int i = 0; i < (NUM_BEAM_ATTACHMENTS*2)+1; i++ )
+	for ( int i = 1; i <= (NUM_BEAM_ATTACHMENTS*2)+1; i++ )
 	{
 		if ( InSwing() )
 		{
@@ -836,9 +842,8 @@ void C_WeaponStunStick::DrawFirstPersonEffects( void )
 			scale = random->RandomFloat( 4.0f, 5.0f ) * fadeAmount;
 		}
 
-		if ( color[0] > 0.0f )
+		if ( color[0] > 0.0f && GetEffectAttachment( i, vecOrigin, vecAngles ) )
 		{
-			UTIL_GetWeaponAttachment( this, i, vecOrigin, vecAngles );
 			DrawHalo( pMaterial, vecOrigin, scale, color );
 		}
 	}
