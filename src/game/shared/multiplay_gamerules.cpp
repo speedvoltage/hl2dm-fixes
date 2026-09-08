@@ -13,6 +13,7 @@
 #include <KeyValues.h>
 #include "filesystem.h"
 #include "mp_shareddefs.h"
+#include "movevars_shared.h"
 #include "utlbuffer.h"
 
 #ifdef CLIENT_DLL
@@ -1107,7 +1108,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 	bool CMultiplayRules::PlayFootstepSounds( CBasePlayer *pl )
 	{
-		if ( footsteps.GetInt() == 0 )
+		if ( !sv_footsteps.GetFloat() )
 			return false;
 
 		if ( pl->IsOnLadder() || pl->GetAbsVelocity().Length2D() > 220 )
