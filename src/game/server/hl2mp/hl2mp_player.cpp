@@ -34,6 +34,7 @@ int g_iLastCombineModel = 0;
 CBaseEntity	 *g_pLastCombineSpawn = NULL;
 CBaseEntity	 *g_pLastRebelSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
+extern ConVar sv_hitmarkers;
 
 ConVar hl2mp_spawn_frag_fallback_radius( "hl2mp_spawn_frag_fallback_radius", "48", FCVAR_NONE, "If no spawns are available, kill players with this radius to allow new players to spawn." );
 
@@ -1352,7 +1353,33 @@ int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	
 	gamestats->Event_PlayerDamage( this, inputInfo );
 
-	return BaseClass::OnTakeDamage( inputInfo );
+	const int nOldHealth = GetHealth();
+	const int nOldArmor = ArmorValue();
+	const Vector vecDamageOrigin = EyePosition();
+	CHandle<CBasePlayer> hAttacker;
+	if ( sv_hitmarkers.GetBool() && HL2MPRules() )
+	{
+		hAttacker = HL2MPRules()->GetDeathScorer( inputInfo.GetAttacker(), inputInfo.GetInflictor(), this );
+		if ( !hAttacker && inputInfo.GetInflictor() )
+			hAttacker = ToBasePlayer( inputInfo.GetInflictor()->GetOwnerEntity() );
+	}
+
+	const int nResult = BaseClass::OnTakeDamage( inputInfo );
+	const bool bTookDamage = ( nResult > 0 && GetHealth() < nOldHealth ) || ArmorValue() < nOldArmor;
+	if ( bTookDamage && sv_hitmarkers.GetBool() && hAttacker && hAttacker != this &&
+		!hAttacker->IsFakeClient() && inputInfo.GetDamage() >= 1.0f &&
+		( !HL2MPRules()->IsTeamplay() || hAttacker->GetTeamNumber() != GetTeamNumber() ) )
+	{
+		CSingleUserRecipientFilter filter( hAttacker.Get() );
+		UserMessageBegin( filter, "DamageHit" );
+			WRITE_LONG( (int)inputInfo.GetDamage() );
+			WRITE_FLOAT( vecDamageOrigin.x );
+			WRITE_FLOAT( vecDamageOrigin.y );
+			WRITE_FLOAT( vecDamageOrigin.z );
+		MessageEnd();
+	}
+
+	return nResult;
 }
 
 void CHL2MP_Player::DeathSound( const CTakeDamageInfo &info )
