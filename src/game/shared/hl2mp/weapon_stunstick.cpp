@@ -25,6 +25,8 @@
 	#include "c_te_effect_dispatch.h"
 	#include "fx_quad.h"
 	#include "fx.h"
+	#include "hltvcamera.h"
+	#include "viewrender.h"
 
 	extern void DrawHalo( IMaterial* pMaterial, const Vector &source, float scale, float const *color, float flHDRColorScale );
 	extern void FormatViewModelAttachment( Vector &vOrigin, bool bInverse );
@@ -68,6 +70,7 @@ public:
 	virtual void			OnDataChanged( DataUpdateType_t updateType );
 	virtual RenderGroup_t	GetRenderGroup( void );
 	virtual void			ViewModelDrawn( C_BaseViewModel *pBaseViewModel );
+	static void				ActivationCallback( const CEffectData &data );
 	
 #endif
 
@@ -115,6 +118,7 @@ private:
 
 	void	SetupAttachmentPoints( void );
 	bool	GetEffectAttachment( int attachmentID, Vector &absOrigin, QAngle &absAngles );
+	void	DrawActivationEffect( C_BaseViewModel *pViewModel = NULL );
 	void	DrawFirstPersonEffects( void );
 	void	DrawThirdPersonEffects( void );
 	void	DrawEffects( void );
@@ -125,6 +129,7 @@ private:
 	#define	FADE_DURATION	0.25f
 
 	float	m_flFadeTime;
+	float	m_flActivationSparkDeadline;
 
 #endif
 
@@ -146,6 +151,9 @@ BEGIN_NETWORK_TABLE( CWeaponStunStick, DT_WeaponStunStick )
 END_NETWORK_TABLE()
 
 BEGIN_PREDICTION_DATA( CWeaponStunStick )
+#ifdef CLIENT_DLL
+	DEFINE_PRED_FIELD( m_bActive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+#endif
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( weapon_stunstick, CWeaponStunStick );
@@ -183,6 +191,7 @@ CWeaponStunStick::CWeaponStunStick( void )
 #ifdef CLIENT_DLL
 	m_bSwungLastFrame = false;
 	m_flFadeTime = FADE_DURATION;	// Start off past the fade point
+	m_flActivationSparkDeadline = -1.0f;
 #endif
 }
 
@@ -425,15 +434,14 @@ void CWeaponStunStick::SetStunState( bool state )
 
 	if ( m_bActive )
 	{
-		//FIXME: START - Move to client-side
-
-		Vector vecAttachment;
-		QAngle vecAttachmentAngles;
-
-		GetAttachment( 1, vecAttachment, vecAttachmentAngles );
-		g_pEffects->Sparks( vecAttachment );
-
-		//FIXME: END - Move to client-side
+		CEffectData data;
+		data.m_vOrigin = GetAbsOrigin();
+#ifdef CLIENT_DLL
+		data.m_hEntity = GetRefEHandle();
+#else
+		data.m_nEntIndex = entindex();
+#endif
+		DispatchEffect( "StunstickActivate", data );
 
 		EmitSound( "Weapon_StunStick.Activate" );
 	}
@@ -449,9 +457,12 @@ void CWeaponStunStick::SetStunState( bool state )
 //-----------------------------------------------------------------------------
 bool CWeaponStunStick::Deploy( void )
 {
+	if ( !BaseClass::Deploy() )
+		return false;
+
 	SetStunState( true );
 
-	return BaseClass::Deploy();
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -520,6 +531,61 @@ bool C_WeaponStunStick::GetEffectAttachment( int attachmentID, Vector &absOrigin
 
 #define	BEAM_ATTACH_CORE_NAME	"sparkrear"
 
+void C_WeaponStunStick::ActivationCallback( const CEffectData &data )
+{
+	C_WeaponStunStick *pWeapon = dynamic_cast<C_WeaponStunStick *>( data.GetEntity() );
+	if ( pWeapon )
+		pWeapon->m_flActivationSparkDeadline = gpGlobals->curtime + 0.5f;
+}
+
+static CClientEffectRegistration s_StunstickActivate( "StunstickActivate", C_WeaponStunStick::ActivationCallback );
+
+void C_WeaponStunStick::DrawActivationEffect( C_BaseViewModel *pViewModel )
+{
+	if ( m_flActivationSparkDeadline < 0.0f )
+		return;
+
+	C_BaseCombatCharacter *pOwner = GetOwner();
+	if ( gpGlobals->curtime > m_flActivationSparkDeadline || !m_bActive || IsDormant() ||
+		!pOwner || !pOwner->IsAlive() || pOwner->GetActiveWeapon() != this )
+	{
+		m_flActivationSparkDeadline = -1.0f;
+		return;
+	}
+
+	if ( gpGlobals->frametime == 0.0f )
+		return;
+
+	C_BaseAnimating *pEffectModel = this;
+	int nAttachment = 1;
+	if ( pViewModel )
+	{
+		if ( pViewModel->GetOwner() != pOwner || pViewModel->GetOwningWeapon() != this ||
+			pViewModel->GetSequenceActivity( pViewModel->GetSequence() ) != GetDrawActivity() )
+			return;
+
+		pEffectModel = pViewModel;
+		nAttachment = pViewModel->LookupAttachment( BEAM_ATTACH_CORE_NAME );
+	}
+	else
+	{
+		if ( CurrentViewID() != VIEW_MAIN || ShouldDrawUsingViewModel() )
+			return;
+
+		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+		if ( ( engine->IsHLTV() && HLTVCamera()->GetMode() == OBS_MODE_IN_EYE && HLTVCamera()->GetPrimaryTarget() == pOwner ) ||
+			( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == pOwner ) )
+			return;
+	}
+
+	Vector vecOrigin;
+	if ( nAttachment > 0 && pEffectModel->GetAttachment( nAttachment, vecOrigin ) )
+	{
+		m_flActivationSparkDeadline = -1.0f;
+		g_pEffects->Sparks( vecOrigin );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Sets up the attachment point lookup for the model
 //-----------------------------------------------------------------------------
@@ -570,6 +636,7 @@ int C_WeaponStunStick::DrawModel( int flags )
 	// Only render these on the transparent pass
 	if ( flags & STUDIO_TRANSPARENCY )
 	{
+		DrawActivationEffect();
 		DrawEffects();
 		return 1;
 	}
@@ -872,6 +939,8 @@ void C_WeaponStunStick::ViewModelDrawn( C_BaseViewModel *pBaseViewModel )
 	// Don't bother when we're not deployed
 	if ( IsWeaponVisible() )
 	{
+		DrawActivationEffect( pBaseViewModel );
+
 		// Do all our special effects
 		DrawEffects();
 	}
