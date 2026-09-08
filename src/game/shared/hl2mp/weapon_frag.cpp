@@ -345,7 +345,7 @@ void CWeaponFrag::ItemPostFrame( void )
 
 	bool bSequenceFinished = false;
 	CBaseViewModel *pViewModel = pPlayer->GetViewModel( m_nViewModelIndex );
-	if ( pViewModel && pViewModel->GetOwningWeapon() == this && gpGlobals->frametime > 0.0f )
+	if ( pViewModel && pViewModel->GetOwningWeapon() == this )
 	{
 		MDLCACHE_CRITICAL_SECTION();
 		CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
@@ -353,41 +353,10 @@ void CWeaponFrag::ItemPostFrame( void )
 		if ( pStudioHdr && nSequence >= 0 && nSequence < pStudioHdr->GetNumSeq() )
 		{
 			float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
-			int nTick = TIME_TO_TICKS( gpGlobals->curtime );
-			float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - m_flAnimStartTime ) * flCycleRate;
-			float flEndCycle = ( TICKS_TO_TIME( nTick ) - m_flAnimStartTime ) * flCycleRate;
-			bSequenceFinished = flEndCycle >= 1.0f;
-			animevent_t event;
-			int nEvent = 0;
-			while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
-			{
-				switch ( event.event )
-				{
-				case EVENT_WEAPON_SEQUENCE_FINISHED:
-					m_fDrawbackFinished = true;
-					continue;
-
-				case EVENT_WEAPON_THROW:
-					ThrowGrenade( pPlayer );
-					break;
-
-				case EVENT_WEAPON_THROW2:
-					RollGrenade( pPlayer );
-					break;
-
-				case EVENT_WEAPON_THROW3:
-					LobGrenade( pPlayer );
-					break;
-
-				default:
-					continue;
-				}
-
-				DecrementAmmo( pPlayer );
-				m_flNextPrimaryAttack = gpGlobals->curtime + RETHROW_DELAY;
-				m_flNextSecondaryAttack = gpGlobals->curtime + RETHROW_DELAY;
-				m_flTimeWeaponIdle = FLT_MAX;
-			}
+			float flCycle = ( gpGlobals->curtime - m_flAnimStartTime ) * flCycleRate;
+			mstudioseqdesc_t &seqdesc = pStudioHdr->pSeqdesc( nSequence );
+			bSequenceFinished = flCycle >= 1.0f ||
+				( !( seqdesc.flags & STUDIO_LOOPING ) && flCycle > 1.0f - seqdesc.fadeouttime * flCycleRate );
 		}
 	}
 
@@ -436,6 +405,60 @@ void CWeaponFrag::ItemPostFrame( void )
 
 	if ( m_bRedraw && bSequenceFinished )
 		Reload();
+
+	if ( pViewModel && pViewModel->GetOwningWeapon() == this && gpGlobals->frametime > 0.0f )
+	{
+		MDLCACHE_CRITICAL_SECTION();
+		CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
+		int nSequence = pViewModel->GetSequence();
+		if ( pStudioHdr && nSequence >= 0 && nSequence < pStudioHdr->GetNumSeq() )
+		{
+			float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
+			int nTick = TIME_TO_TICKS( gpGlobals->curtime );
+			float flStartCycle = ( TICKS_TO_TIME( nTick ) - m_flAnimStartTime ) * flCycleRate;
+			float flEndCycle = ( TICKS_TO_TIME( nTick + 1 ) - m_flAnimStartTime ) * flCycleRate;
+			mstudioseqdesc_t &seqdesc = pStudioHdr->pSeqdesc( nSequence );
+			if ( !( seqdesc.flags & STUDIO_LOOPING ) )
+			{
+				float flLastVisibleCycle = 1.0f - seqdesc.fadeouttime * flCycleRate;
+				if ( flStartCycle > 0.0f && ( flStartCycle >= 1.0f || flStartCycle > flLastVisibleCycle ) )
+					flStartCycle = 1.01f;
+				if ( flEndCycle >= 1.0f || flEndCycle > flLastVisibleCycle )
+					flEndCycle = 1.01f;
+			}
+			animevent_t event;
+			int nEvent = 0;
+			while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
+			{
+				switch ( event.event )
+				{
+				case EVENT_WEAPON_SEQUENCE_FINISHED:
+					m_fDrawbackFinished = true;
+					continue;
+
+				case EVENT_WEAPON_THROW:
+					ThrowGrenade( pPlayer );
+					break;
+
+				case EVENT_WEAPON_THROW2:
+					RollGrenade( pPlayer );
+					break;
+
+				case EVENT_WEAPON_THROW3:
+					LobGrenade( pPlayer );
+					break;
+
+				default:
+					continue;
+				}
+
+				DecrementAmmo( pPlayer );
+				m_flNextPrimaryAttack = gpGlobals->curtime + RETHROW_DELAY;
+				m_flNextSecondaryAttack = gpGlobals->curtime + RETHROW_DELAY;
+				m_flTimeWeaponIdle = FLT_MAX;
+			}
+		}
+	}
 }
 
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
