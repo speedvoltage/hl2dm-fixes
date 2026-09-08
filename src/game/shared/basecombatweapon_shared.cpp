@@ -12,6 +12,7 @@
 #include "physics_saverestore.h"
 #include "datacache/imdlcache.h"
 #include "activitylist.h"
+#include "animation.h"
 
 // NVNT start extra includes
 #include "haptics/haptic_utils.h"
@@ -1139,6 +1140,26 @@ void CBaseCombatWeapon::SendViewModelAnim( int nSequence )
 	SetViewModel();
 	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
 	vm->SendViewModelMatchingSequence( nSequence );
+}
+
+CBaseAnimating *CBaseCombatWeapon::GetWeaponAnimationSource()
+{
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CBaseViewModel *pViewModel = pOwner ? pOwner->GetViewModel( m_nViewModelIndex, false ) : NULL;
+	if ( pViewModel && pViewModel->GetOwningWeapon() == this )
+		return pViewModel;
+
+	return this;
+}
+
+float CBaseCombatWeapon::SequenceDuration( void )
+{
+	return GetWeaponAnimationSource()->SequenceDuration();
+}
+
+float CBaseCombatWeapon::SequenceDuration( int iSequence )
+{
+	return GetWeaponAnimationSource()->SequenceDuration( iSequence );
 }
 
 float CBaseCombatWeapon::GetViewModelSequenceDuration()
@@ -2399,7 +2420,9 @@ void CBaseCombatWeapon::MaintainIdealActivity( void )
 bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 {
 	MDLCACHE_CRITICAL_SECTION();
-	int	idealSequence = SelectWeightedSequence( ideal );
+	SetViewModel();
+	CBaseAnimating *pAnimating = GetWeaponAnimationSource();
+	int idealSequence = ::SelectWeightedSequence( pAnimating->GetModelPtr(), ideal, pAnimating->GetSequence() );
 
 	if ( idealSequence == -1 )
 		return false;
@@ -2409,7 +2432,7 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 	m_nIdealSequence = idealSequence;
 
 	//Find the next sequence in the potential chain of sequences leading to our ideal one
-	int nextSequence = FindTransitionSequence( GetSequence(), m_nIdealSequence, NULL );
+	int nextSequence = pAnimating->FindTransitionSequence( pAnimating->GetSequence(), m_nIdealSequence, NULL );
 
 	// Don't use transitions when we're deploying
 	if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
