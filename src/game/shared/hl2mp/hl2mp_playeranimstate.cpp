@@ -20,6 +20,7 @@
 #define HL2MP_CROUCHWALK_SPEED		110.0f
 
 extern ConVar anim_showmainactivity;
+extern ConVar mp_showgestureslots;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -77,6 +78,46 @@ CHL2MPPlayerAnimState::~CHL2MPPlayerAnimState()
 void CHL2MPPlayerAnimState::InitHL2MP( CHL2MP_Player *pPlayer )
 {
 	m_pHL2MPPlayer = pPlayer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : eyeYaw - 
+//			eyePitch - 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return;
+
+	CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
+
+	if ( !pStudioHdr )
+		return;
+
+	if ( !ShouldUpdateAnimState() )
+	{
+		ClearAnimationState();
+
+		return;
+	}
+
+	m_flEyeYaw = AngleNormalize( eyeYaw );
+	m_flEyePitch = AngleNormalize( eyePitch );
+
+	ComputeSequences( pStudioHdr );
+
+	if ( SetupPoseParameters( pStudioHdr ) )
+	{
+		ComputePoseParam_MoveYaw( pStudioHdr );
+		ComputePoseParam_AimPitch( pStudioHdr );
+		ComputePoseParam_AimYaw( pStudioHdr );
+	}
+
+	if ( mp_showgestureslots.GetInt() == pPlayer->entindex() )
+		DebugGestureInfo();
 }
 
 //-----------------------------------------------------------------------------
@@ -249,4 +290,209 @@ bool CHL2MPPlayerAnimState::HandleMoving( Activity &idealActivity )
 		idealActivity = ACT_HL2MP_RUN;
 
 	return bMoving;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pStudioHdr - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CHL2MPPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
+{
+	if ( m_bPoseParameterInit )
+		return true;
+
+	if ( !pStudioHdr )
+		return false;
+
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return false;
+
+	m_PoseParameterData.m_iMoveX = pPlayer->LookupPoseParameter( pStudioHdr, "move_yaw" );
+	m_PoseParameterData.m_iMoveY = pPlayer->LookupPoseParameter( pStudioHdr, "move_yaw" );
+
+	m_PoseParameterData.m_iAimPitch = pPlayer->LookupPoseParameter( pStudioHdr, "aim_pitch" );
+	m_PoseParameterData.m_iAimYaw = pPlayer->LookupPoseParameter( pStudioHdr, "aim_yaw" );
+
+	m_bPoseParameterInit = true;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::EstimateYaw( void )
+{
+	float flDeltaTime = gpGlobals->frametime;
+
+	if ( flDeltaTime == 0.0f )
+		return;
+
+	Vector vecVelocity;
+
+	GetOuterAbsVelocity( vecVelocity );
+
+	QAngle angles = GetBasePlayer()->GetLocalAngles();
+
+	if ( vecVelocity.y == 0 && vecVelocity.x == 0 )
+	{
+		float flYawDiff = angles[YAW] - m_PoseParameterData.m_flEstimateYaw;
+
+		flYawDiff = flYawDiff - (int)(flYawDiff / 360) * 360;
+
+		if ( flYawDiff > 180 )
+			flYawDiff -= 360;
+		if ( flYawDiff < -180 )
+			flYawDiff += 360;
+
+		if ( flDeltaTime < 0.25 )
+			flYawDiff *= flDeltaTime * 4;
+		else
+			flYawDiff *= flDeltaTime;
+
+		m_PoseParameterData.m_flEstimateYaw += flYawDiff;
+		m_PoseParameterData.m_flEstimateYaw = m_PoseParameterData.m_flEstimateYaw - (int)(m_PoseParameterData.m_flEstimateYaw / 360) * 360;
+	}
+	else
+	{
+		m_PoseParameterData.m_flEstimateYaw = atan2( vecVelocity.y, vecVelocity.x ) * 180 / M_PI;
+
+		if ( m_PoseParameterData.m_flEstimateYaw > 180 )
+			m_PoseParameterData.m_flEstimateYaw = 180;
+		else if ( m_PoseParameterData.m_flEstimateYaw < -180 )
+			m_PoseParameterData.m_flEstimateYaw = -180;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pStudioHdr - 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return;
+
+	EstimateYaw();
+
+	QAngle angles = GetRenderAngles();
+
+	float flYaw = angles[YAW];
+
+	if ( flYaw > 180.0f )
+		flYaw -= 360.0f;
+	else if ( flYaw < -180.0f )
+		flYaw += 360.0f;
+
+	flYaw -= m_PoseParameterData.m_flEstimateYaw;
+	flYaw = -flYaw;
+	flYaw = flYaw - (int)(flYaw / 360) * 360;
+
+	if ( flYaw < -180 )
+		flYaw = flYaw + 360;
+	else if ( flYaw > 180 )
+		flYaw = flYaw - 360;
+
+	pPlayer->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, flYaw );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pStudioHdr - 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return;
+
+	float flAimPitch = m_flEyePitch;
+
+	pPlayer->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
+
+	m_DebugAnimData.m_flAimPitch = flAimPitch;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pStudioHdr - 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return;
+
+	Vector vecVelocity;
+
+	GetOuterAbsVelocity( vecVelocity );
+
+	bool bMoving = GetOuterXYSpeed() > MOVING_MINIMUM_SPEED;
+
+	if ( bMoving || m_bForceAimYaw )
+	{
+		m_flGoalFeetYaw = m_flEyeYaw;
+	}
+	else
+	{
+		if ( m_PoseParameterData.m_flLastAimTurnTime <= 0.0f )
+		{
+			m_flGoalFeetYaw = m_flEyeYaw;
+			m_flCurrentFeetYaw = m_flEyeYaw;
+
+			m_PoseParameterData.m_flLastAimTurnTime = gpGlobals->curtime;
+		}
+		else
+		{
+			float flYawDelta = AngleNormalize( m_flGoalFeetYaw - m_flEyeYaw );
+
+			if ( fabs( flYawDelta ) > 45.0f )
+			{
+				float flSide = flYawDelta > 0.0f ? -1.0f : 1.0f;
+
+				m_flGoalFeetYaw += 45.0f * flSide;
+			}
+		}
+	}
+
+	m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
+
+	if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
+	{
+		if ( m_bForceAimYaw )
+		{
+			m_flCurrentFeetYaw = m_flGoalFeetYaw;
+		}
+		else
+		{
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
+
+			m_flLastAimTurnTime = gpGlobals->curtime;
+		}
+	}
+
+	m_angRender[YAW] = m_flCurrentFeetYaw;
+
+	float flAimYaw = AngleNormalize( m_flEyeYaw - m_flCurrentFeetYaw );
+
+	pPlayer->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, flAimYaw );
+
+	m_DebugAnimData.m_flAimYaw = flAimYaw;
+
+	m_bForceAimYaw = false;
+
+#ifndef CLIENT_DLL
+	QAngle angle = pPlayer->GetAbsAngles();
+
+	angle[YAW] = m_flCurrentFeetYaw;
+
+	pPlayer->SetAbsAngles( angle );
+#endif
 }

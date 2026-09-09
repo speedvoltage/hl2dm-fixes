@@ -26,8 +26,11 @@ public:
 	CHL2MPPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
 	~CHL2MPPlayerAnimState();
 
-	void InitHL2MP( CHL2MP_Player *pPlayer );
 	CHL2MP_Player *GetHL2MPPlayer( void ) { return m_pHL2MPPlayer; }
+
+	void InitHL2MP( CHL2MP_Player *pPlayer );
+
+	virtual void Update( float eyeYaw, float eyePitch );
 
 	virtual Activity CalcMainActivity( void );
 	virtual Activity TranslateActivity( Activity actDesired );
@@ -38,6 +41,14 @@ public:
 	bool HandleMoving( Activity &idealActivity );
 
 private:
+	bool SetupPoseParameters( CStudioHdr *pStudioHdr );
+
+	virtual void EstimateYaw( void );
+
+	virtual void ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
+	virtual void ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr );
+	virtual void ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr );
+
 	CHL2MP_Player *m_pHL2MPPlayer;
 };
 
