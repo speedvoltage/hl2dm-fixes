@@ -29,6 +29,7 @@
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/PanelListPanel.h>
 #include <vgui_controls/ScrollBar.h>
+#include <vgui_controls/ScrollBarSlider.h>
 #include <vgui_controls/TextImage.h>
 #endif
 
@@ -50,12 +51,16 @@ DECLARE_HUD_MESSAGE( CHudMenu, ShowMenu );
 
 #if defined( HL2MP )
 ConVar cl_radio_menus( "cl_radio_menus", "1", FCVAR_ARCHIVE, "Display server menus on the HUD (1) or in a dialog when ESC is pressed (0).", true, 0, true, 1 );
+ConVar cl_menu_dialog_x( "cl_menu_dialog_x", "-1", FCVAR_ARCHIVE, "Saved ESC menu horizontal position as a fraction of screen width (-1 centers it).", true, -1, true, 1 );
+ConVar cl_menu_dialog_y( "cl_menu_dialog_y", "-1", FCVAR_ARCHIVE, "Saved ESC menu vertical position as a fraction of screen height (-1 centers it).", true, -1, true, 1 );
 
 class CHudMenuDialog : public vgui::Frame
 {
 	DECLARE_CLASS_SIMPLE( CHudMenuDialog, vgui::Frame );
 public:
-	CHudMenuDialog( CHudMenu *pMenu ) : BaseClass( NULL, "HudMenuDialog" ), m_nMenuSerial( ~0u )
+	CHudMenuDialog( CHudMenu *pMenu ) : BaseClass( NULL, "HudMenuDialog" ),
+		m_nMenuSerial( ~0u ), m_nHeaderTall( 0 ), m_nFooterTall( 0 ),
+		m_nLastX( 0 ), m_nLastY( 0 ), m_bPositionInitialized( false )
 	{
 		m_hMenu = pMenu;
 		SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
@@ -64,12 +69,24 @@ public:
 		SetProportional( true );
 		SetTitle( "Menu", true );
 		SetSizeable( false );
+		SetClipToParent( true );
+		SetFadeEffectDisableOverride( true );
 		SetMinimizeButtonVisible( false );
 		SetMaximizeButtonVisible( false );
 		SetMenuButtonVisible( false );
 		SetCloseButtonVisible( false );
+		m_pTitle = new vgui::Label( this, "MenuTitle", "Menu" );
+		m_pTitle->SetMouseInputEnabled( false );
+		m_pTitle->SetContentAlignment( vgui::Label::a_west );
+		m_pHint = new vgui::Label( this, "MenuHint", "ESC  Back to game" );
+		m_pHint->SetMouseInputEnabled( false );
+		m_pHint->SetContentAlignment( vgui::Label::a_west );
 		m_pItems = new vgui::PanelListPanel( this, "MenuItems" );
 		m_pItems->SetFirstColumnWidth( 0 );
+		KeyValues *pSettings = new KeyValues( "MenuItems" );
+		pSettings->SetInt( "autohide_scrollbar", 1 );
+		m_pItems->ApplySettings( pSettings );
+		pSettings->deleteThis();
 		MakePopup();
 		SetVisible( false );
 	}
@@ -82,6 +99,8 @@ public:
 
 		m_nMenuSerial = pMenu->m_nMenuSerial;
 		m_pItems->DeleteAllItems();
+		m_pTitle->SetText( "Menu" );
+		SetTitle( "Menu", true );
 		for ( int i = 0; i < pMenu->m_Processed.Count(); ++i )
 		{
 			const CHudMenu::ProcessedLine &line = pMenu->m_Processed[i];
@@ -90,6 +109,15 @@ public:
 			int slot = line.menuitem;
 			if ( !slot && line.length >= 2 && text[0] >= L'0' && text[0] <= L'9' && text[1] == L'.' )
 				slot = text[0] == L'0' ? 10 : text[0] - L'0';
+
+			if ( i == 0 && !slot && line.length <= 64 )
+			{
+				if ( text[line.length - 1] == L':' )
+					text[line.length - 1] = 0;
+				m_pTitle->SetText( text );
+				SetTitle( text, true );
+				continue;
+			}
 
 			vgui::Label *pItem;
 			if ( slot >= 1 && slot <= 10 )
@@ -111,7 +139,11 @@ public:
 		}
 		m_pItems->MoveScrollBarToTop();
 		InvalidateLayout( true );
-		MoveToCenterOfScreen();
+	}
+
+	virtual int GetCaptionHeight()
+	{
+		return vgui::scheme()->GetProportionalNormalizedValueEx( GetScheme(), m_nHeaderTall );
 	}
 
 private:
@@ -131,40 +163,136 @@ private:
 	{
 		int screenWide, screenTall;
 		vgui::surface()->GetScreenSize( screenWide, screenTall );
-		int border = vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 8 );
-		SetSize( MIN( screenWide - 2 * border, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 360 ) ),
-			MIN( screenTall - 2 * border, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 400 ) ) );
-		BaseClass::PerformLayout();
+		vgui::IScheme *pScheme = vgui::scheme()->GetIScheme( GetScheme() );
+		vgui::HFont font = pScheme->GetFont( "Default", true );
+		int fontTall = vgui::surface()->GetFontTall( font );
+		int padding = MAX( 1, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 10 ) );
+		int gap = MAX( 1, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 4 ) );
+		int wide = MIN( screenWide - 2 * padding, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 280 ) );
+		int maxTall = MIN( screenTall - 2 * padding, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 320 ) );
+		m_nHeaderTall = fontTall + 2 * padding;
+		m_nFooterTall = fontTall + 2 * gap;
 
-		int x, y, wide, tall;
-		GetClientArea( x, y, wide, tall );
-		m_pItems->SetBounds( x + border, y + border, wide - 2 * border, tall - 2 * border );
-		m_pItems->SetVerticalBufferPixels( border / 2 );
-		int itemWide = MAX( 1, m_pItems->GetWide() - m_pItems->GetScrollbar()->GetWide() - border / 2 - 12 );
+		vgui::ScrollBar *pScrollBar = m_pItems->GetScrollbar();
+		pScrollBar->SetWide( padding );
+		pScrollBar->SetScrollbarButtonsVisible( false );
+		pScrollBar->GetSlider()->InvalidateLayout( true, true );
+		pScrollBar->GetSlider()->SetFgColor( Color( 126, 120, 101, 255 ) );
+		pScrollBar->GetSlider()->SetBgColor( Color( 26, 29, 32, 255 ) );
+		m_pItems->SetVerticalBufferPixels( gap );
+		m_pItems->SetPaintBackgroundEnabled( false );
+		m_pItems->SetPaintBorderEnabled( false );
+		int itemWide = MAX( 1, wide - 2 * padding - pScrollBar->GetWide() - gap - 12 );
 		for ( int i = 0; i < m_pItems->GetItemCount(); ++i )
 		{
 			vgui::Label *pItem = static_cast<vgui::Label *>( m_pItems->GetItemPanel( m_pItems->GetItemIDFromRow( i ) ) );
 			pItem->SetSize( itemWide, 1 );
-			pItem->SetTextInset( border / 2, 0 );
+			pItem->SetTextInset( padding, 0 );
 			pItem->InvalidateLayout( true, true );
-			pItem->GetTextImage()->SetDrawWidth( MAX( 1, itemWide - border ) );
+			pItem->SetFont( font );
+			pItem->GetTextImage()->SetDrawWidth( MAX( 1, itemWide - 2 * padding ) );
 			int textWide, textTall;
 			pItem->GetTextImage()->GetContentSize( textWide, textTall );
-			pItem->SetTall( MAX( textTall, vgui::surface()->GetFontTall( pItem->GetFont() ) ) + border );
+			pItem->SetTall( MAX( textTall, fontTall ) + padding );
+			pItem->SetFgColor( Color( 171, 177, 182, 255 ) );
+			if ( vgui::Button *pButton = dynamic_cast<vgui::Button *>( pItem ) )
+			{
+				pButton->SetButtonBorderEnabled( false );
+				pButton->DrawFocusBox( true );
+				pButton->SetDefaultColor( Color( 229, 233, 235, 255 ), Color( 35, 39, 43, 255 ) );
+				pButton->SetArmedColor( Color( 255, 213, 133, 255 ), Color( 66, 56, 38, 255 ) );
+				pButton->SetSelectedColor( Color( 255, 213, 133, 255 ), Color( 66, 56, 38, 255 ) );
+				pButton->SetDepressedColor( Color( 255, 226, 169, 255 ), Color( 90, 69, 36, 255 ) );
+				pButton->SetDisabledFgColor1( Color( 102, 109, 115, 255 ) );
+				pButton->SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
+			}
 		}
+		int listTall = MIN( m_pItems->ComputeVPixelsNeeded(), MAX( 1, maxTall - m_nHeaderTall - m_nFooterTall ) );
+		SetSize( wide, m_nHeaderTall + listTall + m_nFooterTall );
+		BaseClass::PerformLayout();
+		SetPaintBorderEnabled( false );
+		m_pItems->SetBounds( padding, m_nHeaderTall, wide - 2 * padding, listTall );
 		m_pItems->InvalidateLayout( true );
+		m_pTitle->InvalidateLayout( true, true );
+		m_pTitle->SetFont( font );
+		m_pTitle->SetFgColor( Color( 255, 203, 109, 255 ) );
+		m_pTitle->SetBounds( padding + gap, padding, wide - 2 * ( padding + gap ), fontTall );
+		m_pHint->InvalidateLayout( true, true );
+		m_pHint->SetFont( font );
+		m_pHint->SetFgColor( Color( 141, 151, 158, 255 ) );
+		m_pHint->SetBounds( padding + gap, GetTall() - m_nFooterTall, wide - 2 * ( padding + gap ), m_nFooterTall );
+		RestorePosition();
+	}
+
+	virtual void PaintBackground()
+	{
+		vgui::surface()->DrawSetColor( Color( 20, 23, 26, 250 ) );
+		vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() );
+		vgui::surface()->DrawSetColor( Color( 29, 33, 37, 255 ) );
+		vgui::surface()->DrawFilledRect( 0, 0, GetWide(), m_nHeaderTall );
+		vgui::surface()->DrawSetColor( Color( 65, 70, 74, 255 ) );
+		vgui::surface()->DrawOutlinedRect( 0, 0, GetWide(), GetTall() );
+		vgui::surface()->DrawLine( 1, GetTall() - m_nFooterTall, GetWide() - 1, GetTall() - m_nFooterTall );
+		vgui::surface()->DrawSetColor( Color( 220, 162, 65, 255 ) );
+		vgui::surface()->DrawFilledRect( 1, 1, GetWide() - 1, MAX( 2, vgui::scheme()->GetProportionalScaledValueEx( GetScheme(), 2 ) ) );
+	}
+
+	void RestorePosition()
+	{
+		int screenWide, screenTall;
+		vgui::surface()->GetScreenSize( screenWide, screenTall );
+		if ( screenWide <= 0 || screenTall <= 0 )
+			return;
+
+		int x = cl_menu_dialog_x.GetFloat() < 0 ? ( screenWide - GetWide() ) / 2 : RoundFloatToInt( cl_menu_dialog_x.GetFloat() * screenWide );
+		int y = cl_menu_dialog_y.GetFloat() < 0 ? ( screenTall - GetTall() ) / 2 : RoundFloatToInt( cl_menu_dialog_y.GetFloat() * screenTall );
+		m_nLastX = clamp( x, 0, MAX( 0, screenWide - GetWide() ) );
+		m_nLastY = clamp( y, 0, MAX( 0, screenTall - GetTall() ) );
+		m_bPositionInitialized = true;
+		SetPos( m_nLastX, m_nLastY );
+		if ( cl_menu_dialog_x.GetFloat() < 0 )
+			cl_menu_dialog_x.SetValue( (float)m_nLastX / screenWide );
+		if ( cl_menu_dialog_y.GetFloat() < 0 )
+			cl_menu_dialog_y.SetValue( (float)m_nLastY / screenTall );
+	}
+
+	virtual void OnMove()
+	{
+		BaseClass::OnMove();
+		if ( !m_bPositionInitialized || !IsVisible() )
+			return;
+		int x, y;
+		GetPos( x, y );
+		if ( x == m_nLastX && y == m_nLastY )
+			return;
+
+		int screenWide, screenTall;
+		vgui::surface()->GetScreenSize( screenWide, screenTall );
+		if ( screenWide > 0 && screenTall > 0 )
+		{
+			m_nLastX = x;
+			m_nLastY = y;
+			cl_menu_dialog_x.SetValue( (float)x / screenWide );
+			cl_menu_dialog_y.SetValue( (float)y / screenTall );
+		}
 	}
 
 	virtual void OnScreenSizeChanged( int oldwide, int oldtall )
 	{
 		BaseClass::OnScreenSizeChanged( oldwide, oldtall );
 		InvalidateLayout( true );
-		MoveToCenterOfScreen();
 	}
 
 	vgui::DHANDLE< CHudMenu > m_hMenu;
 	vgui::PanelListPanel *m_pItems;
+	vgui::Label *m_pTitle;
+	vgui::Label *m_pHint;
 	unsigned int m_nMenuSerial;
+	int m_nHeaderTall;
+	int m_nFooterTall;
+	int m_nLastX;
+	int m_nLastY;
+	bool m_bPositionInitialized;
 };
 #endif
 
