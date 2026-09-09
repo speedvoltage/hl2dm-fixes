@@ -47,7 +47,9 @@ private:
 
 	virtual void ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
 	virtual void ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr );
-	virtual void ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr );
+	virtual void ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr );;
+
+	void ComputePlaybackRate( void );
 
 	CHL2MP_Player *m_pHL2MPPlayer;
 };

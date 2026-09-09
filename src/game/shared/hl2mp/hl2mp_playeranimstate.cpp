@@ -116,6 +116,8 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 		ComputePoseParam_AimYaw( pStudioHdr );
 	}
 
+	ComputePlaybackRate();
+
 	if ( mp_showgestureslots.GetInt() == pPlayer->entindex() )
 		DebugGestureInfo();
 }
@@ -495,4 +497,32 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 	pPlayer->SetAbsAngles( angle );
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::ComputePlaybackRate( void )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return;
+
+	float flRate = 1.0f;
+
+	if ( pPlayer->GetFlags() & FL_ONGROUND &&
+	     pPlayer->GetMoveType() == MOVETYPE_WALK )
+	{
+		float flSpeed = GetOuterXYSpeed();
+
+		if ( flSpeed > MOVING_MINIMUM_SPEED )
+		{
+			float flGroundSpeed = GetInterpolatedGroundSpeed();
+
+			flRate = flGroundSpeed < 0.001f ? 0.01 : clamp( flSpeed / flGroundSpeed, 0.01f, 10.f );
+		}
+	}
+
+	pPlayer->SetPlaybackRate( flRate );
 }
