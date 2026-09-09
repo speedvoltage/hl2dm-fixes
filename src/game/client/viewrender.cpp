@@ -2051,11 +2051,6 @@ void CViewRender::DrawPaniniProjection( const CViewSetup &view )
 	if ( m_PaniniProjectionMaterial->IsErrorMaterial() )
 		return;
 
-	const int nMaxQuads = MIN( 4096, MIN( pRenderContext->GetMaxVerticesToRender( m_PaniniProjectionMaterial ) / 4,
-		pRenderContext->GetMaxIndicesToRender() / 6 ) );
-	if ( nMaxQuads < 1 )
-		return;
-
 	int nViewportX, nViewportY, nViewportWidth, nViewportHeight;
 	pRenderContext->GetViewport( nViewportX, nViewportY, nViewportWidth, nViewportHeight );
 	if ( nViewportWidth < 1 || nViewportHeight < 1 )
@@ -2064,6 +2059,12 @@ void CViewRender::DrawPaniniProjection( const CViewSetup &view )
 	Rect_t sourceRect;
 	UpdateScreenEffectTexture( 1, view.x, view.y, view.width, view.height, false, &sourceRect );
 	if ( sourceRect.width < 2 || sourceRect.height < 2 )
+		return;
+
+	pRenderContext->Bind( m_PaniniProjectionMaterial );
+	const int nMaxQuads = MIN( 4096, MIN( pRenderContext->GetMaxVerticesToRender( m_PaniniProjectionMaterial ) / 4,
+		pRenderContext->GetMaxIndicesToRender() / 6 ) );
+	if ( nMaxQuads < 1 )
 		return;
 
 	const int nColumns = 256;
@@ -2089,7 +2090,6 @@ void CViewRender::DrawPaniniProjection( const CViewSetup &view )
 	const float flWidth = 2.0f * view.width / nViewportWidth;
 	const float flHeight = 2.0f * view.height / nViewportHeight;
 
-	pRenderContext->Bind( m_PaniniProjectionMaterial );
 	pRenderContext->OverrideAlphaWriteEnable( true, false );
 	for ( int nFirstQuad = 0; nFirstQuad < nColumns * nRows; nFirstQuad += nMaxQuads )
 	{
