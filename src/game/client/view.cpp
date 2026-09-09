@@ -337,6 +337,8 @@ void CViewRender::LevelInit( void )
 	}
 	m_flFreezeFrameUntil = 0;
 
+	UpdateSkyboxMaterials();
+
 	// Clear our overlay materials
 	m_ScreenOverlayMaterial.Init( NULL );
 
@@ -349,6 +351,8 @@ void CViewRender::LevelInit( void )
 //-----------------------------------------------------------------------------
 void CViewRender::Shutdown( void )
 {
+	ReleaseSkyboxMaterials();
+
 	m_TranslucentSingleColor.Shutdown( );
 	m_ModulateSingleColor.Shutdown( );
 	m_ScreenOverlayMaterial.Shutdown();
