@@ -351,6 +351,7 @@ void CViewRender::Shutdown( void )
 {
 	m_TranslucentSingleColor.Shutdown( );
 	m_ModulateSingleColor.Shutdown( );
+	m_PaniniProjectionMaterial.Shutdown();
 	m_ScreenOverlayMaterial.Shutdown();
 	m_UnderWaterOverlayMaterial.Shutdown();
 	beams->ShutdownBeams();

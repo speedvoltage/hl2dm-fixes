@@ -104,6 +104,7 @@ extern bool g_bDumpRenderTargets;
 // Convars related to controlling rendering
 //-----------------------------------------------------------------------------
 static ConVar cl_maxrenderable_dist("cl_maxrenderable_dist", "3000", FCVAR_CHEAT, "Max distance from the camera at which things will be rendered" );
+static ConVar cl_panini_projection( "cl_panini_projection", "0", FCVAR_ARCHIVE, "Experimental Panini projection strength. 0 disables it; 1 uses full strength with vertical cropping.", true, 0.0f, true, 1.0f );
 
 ConVar r_entityclips( "r_entityclips", "1" ); //FIXME: Nvidia drivers before 81.94 on cards that support user clip planes will have problems with this, require driver update? Detect and disable?
 
@@ -2019,6 +2020,109 @@ void CViewRender::FreezeFrame( float flFreezeTime )
 const char *COM_GetModDirectory();
 
 
+void CViewRender::DrawPaniniProjection( const CViewSetup &view )
+{
+	const float flStrength = cl_panini_projection.GetFloat();
+	if ( !( flStrength > 0.0f && flStrength <= 1.0f ) || !( view.fov > 0.0f && view.fov < 179.0f ) ||
+		view.width < 2 || view.height < 2 || view.m_bOrtho || view.m_bOffCenter || view.m_bViewToProjectionOverride ||
+		view.m_eStereoEye != STEREO_EYE_MONO || UseVR() || building_cubemaps.GetBool() || g_pIntroData ||
+		g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90 || g_pMaterialSystemHardwareConfig->GetHDRType() == HDR_TYPE_FLOAT )
+	{
+		return;
+	}
+
+	CMatRenderContextPtr pRenderContext( materials );
+	ITexture *pTexture = GetFullFrameFrameBufferTexture( 1 );
+	if ( pTexture->IsError() || pTexture == pRenderContext->GetRenderTarget() )
+		return;
+
+	if ( !m_PaniniProjectionMaterial.IsValid() )
+	{
+		KeyValues *pKeyValues = new KeyValues( "screenspace_general" );
+		pKeyValues->SetString( "$pixshader", "copy_fp_rt_ps20" );
+		pKeyValues->SetString( "$basetexture", pTexture->GetName() );
+		pKeyValues->SetInt( "$linearread_basetexture", 1 );
+		pKeyValues->SetInt( "$linearwrite", 1 );
+		pKeyValues->SetInt( "$ignorez", 1 );
+		pKeyValues->SetInt( "$nocull", 1 );
+		m_PaniniProjectionMaterial.Init( "PaniniProjection", pKeyValues );
+	}
+
+	if ( m_PaniniProjectionMaterial->IsErrorMaterial() )
+		return;
+
+	const int nMaxQuads = MIN( 4096, MIN( pRenderContext->GetMaxVerticesToRender( m_PaniniProjectionMaterial ) / 4,
+		pRenderContext->GetMaxIndicesToRender() / 6 ) );
+	if ( nMaxQuads < 1 )
+		return;
+
+	int nViewportX, nViewportY, nViewportWidth, nViewportHeight;
+	pRenderContext->GetViewport( nViewportX, nViewportY, nViewportWidth, nViewportHeight );
+	if ( nViewportWidth < 1 || nViewportHeight < 1 )
+		return;
+
+	Rect_t sourceRect;
+	UpdateScreenEffectTexture( 1, view.x, view.y, view.width, view.height, false, &sourceRect );
+	if ( sourceRect.width < 2 || sourceRect.height < 2 )
+		return;
+
+	const int nColumns = 256;
+	const int nRows = 32;
+	float flSourceScale[nColumns + 1];
+	const float flHalfFOV = DEG2RAD( view.fov * 0.5f );
+	const float flTanHalfFOV = tanf( flHalfFOV );
+	const float flEdgeCos = cosf( flHalfFOV );
+	const float flEdgeScale = ( flStrength + 1.0f ) * flEdgeCos / ( flStrength + flEdgeCos );
+	for ( int x = 0; x <= nColumns; ++x )
+	{
+		const float flX = ( 2.0f * x / nColumns - 1.0f ) * flTanHalfFOV * flEdgeScale / ( flStrength + 1.0f );
+		const float flX2 = flX * flX;
+		const float flCos = ( sqrtf( 1.0f + flX2 * ( 1.0f - flStrength * flStrength ) ) - flStrength * flX2 ) / ( 1.0f + flX2 );
+		flSourceScale[x] = flEdgeScale * ( flStrength + flCos ) / ( ( flStrength + 1.0f ) * flCos );
+	}
+
+	const float flTextureWidth = pTexture->GetActualWidth();
+	const float flTextureHeight = pTexture->GetActualHeight();
+	const float flPixelOffset = IsPosix() ? 0.0f : 0.5f;
+	const float flLeft = 2.0f * ( view.x - nViewportX - flPixelOffset ) / nViewportWidth - 1.0f;
+	const float flTop = 1.0f - 2.0f * ( view.y - nViewportY - flPixelOffset ) / nViewportHeight;
+	const float flWidth = 2.0f * view.width / nViewportWidth;
+	const float flHeight = 2.0f * view.height / nViewportHeight;
+
+	pRenderContext->Bind( m_PaniniProjectionMaterial );
+	pRenderContext->OverrideAlphaWriteEnable( true, false );
+	for ( int nFirstQuad = 0; nFirstQuad < nColumns * nRows; nFirstQuad += nMaxQuads )
+	{
+		const int nQuads = MIN( nMaxQuads, nColumns * nRows - nFirstQuad );
+		IMesh *pMesh = pRenderContext->GetDynamicMesh( true );
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, nQuads );
+		for ( int nQuad = nFirstQuad; nQuad < nFirstQuad + nQuads; ++nQuad )
+		{
+			const int x = nQuad % nColumns;
+			const int y = nQuad / nColumns;
+			for ( int nCorner = 0; nCorner < 4; ++nCorner )
+			{
+				const int nColumn = x + ( nCorner == 1 || nCorner == 2 );
+				const int nRow = y + ( nCorner >= 2 );
+				const float flX = ( float )nColumn / nColumns;
+				const float flY = ( float )nRow / nRows;
+				const float flU = sourceRect.x + ( 0.5f + ( flX - 0.5f ) * flSourceScale[nColumn] ) * sourceRect.width;
+				const float flV = sourceRect.y + ( 0.5f + ( flY - 0.5f ) * flSourceScale[nColumn] ) * sourceRect.height;
+				meshBuilder.Position3f( flLeft + flX * flWidth, flTop - flY * flHeight, 0.0f );
+				meshBuilder.TexCoord2f( 0,
+					clamp( flU, sourceRect.x + 0.5f, sourceRect.x + sourceRect.width - 0.5f ) / flTextureWidth,
+					clamp( flV, sourceRect.y + 0.5f, sourceRect.y + sourceRect.height - 0.5f ) / flTextureHeight );
+				meshBuilder.AdvanceVertex();
+			}
+		}
+		meshBuilder.End();
+		pMesh->Draw();
+	}
+	pRenderContext->OverrideAlphaWriteEnable( false, true );
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: This renders the entire 3D view and the in-game hud/viewmodel
 // Input  : &view - 
@@ -2155,6 +2259,7 @@ void CViewRender::RenderView( const CViewSetup &viewRender, int nClearFlags, int
 		}
 
 		GetClientModeNormal()->DoPostScreenSpaceEffects( &viewRender );
+		DrawPaniniProjection( viewRender );
 
 		// Now actually draw the viewmodel
 		DrawViewModels( viewRender, whatToDraw & RENDERVIEW_DRAWVIEWMODEL );

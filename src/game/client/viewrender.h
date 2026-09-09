@@ -439,6 +439,7 @@ private:
 	// Drawing primitives
 	bool			ShouldDrawViewModel( bool drawViewmodel );
 	void			DrawViewModels( const CViewSetup &view, bool drawViewmodel );
+	void			DrawPaniniProjection( const CViewSetup &view );
 
 	void			PerformScreenSpaceEffects( int x, int y, int w, int h );
 
@@ -485,6 +486,7 @@ private:
 	// Some materials used...
 	CMaterialReference	m_TranslucentSingleColor;
 	CMaterialReference	m_ModulateSingleColor;
+	CMaterialReference	m_PaniniProjectionMaterial;
 	CMaterialReference	m_ScreenOverlayMaterial;
 	CMaterialReference m_UnderWaterOverlayMaterial;
 
