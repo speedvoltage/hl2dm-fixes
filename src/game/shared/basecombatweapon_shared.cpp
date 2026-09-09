@@ -2427,20 +2427,21 @@ bool CBaseCombatWeapon::SetIdealActivity( Activity ideal )
 
 	//Find the next sequence in the potential chain of sequences leading to our ideal one
 	int nextSequence = pAnimating->FindTransitionSequence( pAnimating->GetSequence(), m_nIdealSequence, NULL );
+	bool bMatchingModel = pAnimating->GetModelIndex() == GetModelIndex();
 
 	// Don't use transitions when we're deploying
 	if ( ideal != ACT_VM_DRAW && IsWeaponVisible() && nextSequence != m_nIdealSequence )
 	{
 		//Set our activity to the next transitional animation
 		SetActivity( ACT_TRANSITION );
-		SetSequence( nextSequence );	
+		SetSequence( bMatchingModel ? nextSequence : 0 );
 		SendViewModelAnim( nextSequence );
 	}
 	else
 	{
 		//Set our activity to the ideal
 		SetActivity( m_IdealActivity );
-		SetSequence( m_nIdealSequence );	
+		SetSequence( bMatchingModel ? m_nIdealSequence : 0 );
 		SendViewModelAnim( m_nIdealSequence );
 	}
 
