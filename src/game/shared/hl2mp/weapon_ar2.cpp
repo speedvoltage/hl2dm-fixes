@@ -58,7 +58,6 @@ LINK_ENTITY_TO_CLASS( weapon_ar2, CWeaponAR2 );
 PRECACHE_WEAPON_REGISTER(weapon_ar2);
 
 
-#ifndef CLIENT_DLL
 
 acttable_t	CWeaponAR2::m_acttable[] = 
 {
@@ -74,7 +73,6 @@ acttable_t	CWeaponAR2::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponAR2);
 
-#endif
 
 CWeaponAR2::CWeaponAR2( )
 {

@@ -1305,7 +1305,6 @@ END_PREDICTION_DATA()
 
 #endif
 
-#ifndef CLIENT_DLL
 acttable_t	CWeaponRPG::m_acttable[] = 
 {
 	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_RPG,					false },
@@ -1320,7 +1319,6 @@ acttable_t	CWeaponRPG::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponRPG);
 
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
