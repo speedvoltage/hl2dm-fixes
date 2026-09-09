@@ -394,8 +394,10 @@ void CHudMenu::OnThink()
 //-----------------------------------------------------------------------------
 bool CHudMenu::ShouldDraw( void )
 {
+#if defined( HL2MP )
 	if ( !UseRadioMenus() )
-		return false;
+		return CHudElement::ShouldDraw() && IsMenuOpen() && engine->IsInGame() && !enginevgui->IsGameUIVisible();
+#endif
 
 	bool draw = CHudElement::ShouldDraw() && m_bMenuDisplayed;
 	if ( !draw )
@@ -438,6 +440,24 @@ void CHudMenu::PaintString( const wchar_t *text, int textlen, vgui::HFont& font,
 //-----------------------------------------------------------------------------
 void CHudMenu::Paint()
 {
+#if defined( HL2MP )
+	if ( !UseRadioMenus() )
+	{
+		if ( !ShouldDraw() )
+			return;
+
+		const wchar_t *text = L"Press ESC to open menu";
+		int wide, tall;
+		vgui::surface()->GetTextSize( m_hTextFont, text, wide, tall );
+		int inset = YRES( 8 );
+		int padding = YRES( 4 );
+		DrawBox( inset, inset, wide + 2 * padding, tall + 2 * padding, m_BoxColor, 1.0f );
+		vgui::surface()->DrawSetTextColor( m_MenuColor );
+		PaintString( text, V_wcslen( text ), m_hTextFont, inset + padding, inset + padding );
+		return;
+	}
+#endif
+
 	if ( !m_bMenuDisplayed )
 		return;
 
