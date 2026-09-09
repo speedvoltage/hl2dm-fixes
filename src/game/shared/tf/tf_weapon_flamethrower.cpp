@@ -979,7 +979,7 @@ void CTFFlameThrower::FireAirBlast( int iAmmoPerShot )
 
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 	pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
-	m_flSecondaryAnimTime = gpGlobals->curtime + SequenceDuration( GetSequence() );
+	m_flSecondaryAnimTime = gpGlobals->curtime + SequenceDuration();
 	
 #ifdef GAME_DLL
 	int nDash = 0;
