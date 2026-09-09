@@ -29,6 +29,14 @@ public:
 	void InitHL2MP( CHL2MP_Player *pPlayer );
 	CHL2MP_Player *GetHL2MPPlayer( void ) { return m_pHL2MPPlayer; }
 
+	virtual Activity CalcMainActivity( void );
+	virtual Activity TranslateActivity( Activity actDesired );
+
+	bool HandleJumping( Activity &idealActivity );
+	bool HandleDucking( Activity &idealActivity );
+	bool HandleSwimming( Activity &idealActivity );
+	bool HandleMoving( Activity &idealActivity );
+
 private:
 	CHL2MP_Player *m_pHL2MPPlayer;
 };
