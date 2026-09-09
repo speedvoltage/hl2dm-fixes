@@ -32,6 +32,8 @@ public:
 
 	virtual void Update( float eyeYaw, float eyePitch );
 
+	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+
 	virtual Activity CalcMainActivity( void );
 	virtual Activity TranslateActivity( Activity actDesired );
 

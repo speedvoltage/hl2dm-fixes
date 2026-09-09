@@ -56,7 +56,7 @@ CHL2MPPlayerAnimState::CHL2MPPlayerAnimState()
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
-//			&movementData - 
+//          &movementData - 
 //-----------------------------------------------------------------------------
 CHL2MPPlayerAnimState::CHL2MPPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData )
 	: CMultiPlayerAnimState( pPlayer, movementData )
@@ -83,7 +83,7 @@ void CHL2MPPlayerAnimState::InitHL2MP( CHL2MP_Player *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : eyeYaw - 
-//			eyePitch - 
+//          eyePitch - 
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 {
@@ -120,6 +120,34 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 
 	if ( mp_showgestureslots.GetInt() == pPlayer->entindex() )
 		DebugGestureInfo();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : event - 
+//          nData - 
+//-----------------------------------------------------------------------------
+void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
+{
+	switch ( event )
+	{
+	case PLAYERANIMEVENT_ATTACK_PRIMARY:
+	case PLAYERANIMEVENT_ATTACK_SECONDARY:
+		{
+			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RANGE_ATTACK );
+			break;
+		}
+	case PLAYERANIMEVENT_RELOAD:
+		{
+			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RELOAD );
+			break;
+		}
+	default:
+		{
+			BaseClass::DoAnimationEvent( event, nData );
+			break;
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
