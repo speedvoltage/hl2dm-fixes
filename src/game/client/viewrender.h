@@ -423,7 +423,29 @@ public:
 	{
 		m_UnderWaterOverlayMaterial.Init( pMaterial );
 	}
+
+	bool Draw2DSkybox( const CViewSetup &viewSetup, bool bClipSkybox );
+
 private:
+	void UpdateSkyboxMaterials();
+	void ReleaseSkyboxMaterials();
+
+	enum { SKYBOX_FACE_COUNT = 6 };
+	struct skyboxface_t
+	{
+		const char *pszSuffix;
+		Vector vecNormal;
+		Vector vecRight;
+		Vector vecUp;
+	};
+
+	static const skyboxface_t s_SkyboxFaces[SKYBOX_FACE_COUNT];
+	CMaterialReference m_SkyboxMaterials[SKYBOX_FACE_COUNT];
+	float m_flSkyboxMinUV[SKYBOX_FACE_COUNT][2];
+	char m_szSkyboxName[MAX_PATH];
+	bool m_bSkyboxHDR;
+	bool m_bSkyboxCompressedTextures;
+
 	int				m_BuildWorldListsNumber;
 
 

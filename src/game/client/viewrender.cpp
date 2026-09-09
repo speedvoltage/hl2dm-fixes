@@ -53,6 +53,7 @@
 #include "clientmode_shared.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
+#include "movevars_shared.h"
 #ifdef TF_CLIENT_DLL
 #include "tf/c_tf_player.h"
 #endif
@@ -112,6 +113,7 @@ static ConVar r_drawopaqueworld( "r_drawopaqueworld", "1", FCVAR_CHEAT );
 static ConVar r_drawtranslucentworld( "r_drawtranslucentworld", "1", FCVAR_CHEAT );
 static ConVar r_3dsky( "r_3dsky","1", 0, "Enable the rendering of 3d sky boxes" );
 static ConVar r_skybox( "r_skybox","1", FCVAR_CHEAT, "Enable the rendering of sky boxes" );
+static ConVar r_skybox_use_new_renderer( "r_skybox_use_new_renderer", "1", FCVAR_NONE, "Use the game client's 2D skybox renderer to avoid face culling at high FOV." );
 #ifdef TF_CLIENT_DLL
 ConVar r_drawviewmodel( "r_drawviewmodel","1", FCVAR_DONTRECORD );
 #else
@@ -941,6 +943,9 @@ CViewRender::CViewRender()
 	m_pCurrentlyDrawingEntity = NULL;
 
 	m_szCurrentScriptMaterialName[0] = '\0';
+	m_szSkyboxName[0] = '\0';
+	m_bSkyboxHDR = false;
+	m_bSkyboxCompressedTextures = false;
 }
 
 
@@ -949,6 +954,8 @@ CViewRender::CViewRender()
 //-----------------------------------------------------------------------------
 void CViewRender::LevelShutdown( void )
 {
+	ReleaseSkyboxMaterials();
+
 	g_pScreenSpaceEffects->ShutdownScreenSpaceEffects();
 	g_CurrentViewID = VIEW_NONE;
 
@@ -3656,6 +3663,143 @@ void CRendering3dView::BuildRenderableRenderLists( int viewID )
 //-----------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------
+const CViewRender::skyboxface_t CViewRender::s_SkyboxFaces[SKYBOX_FACE_COUNT] =
+{
+	{ "lf", Vector( -1.0f, 0.0f, 0.0f ), Vector( 0.0f, 1.0f, 0.0f ), Vector( 0.0f, 0.0f, 1.0f ) },
+	{ "rt", Vector( 1.0f, 0.0f, 0.0f ), Vector( 0.0f, -1.0f, 0.0f ), Vector( 0.0f, 0.0f, 1.0f ) },
+	{ "ft", Vector( 0.0f, -1.0f, 0.0f ), Vector( -1.0f, 0.0f, 0.0f ), Vector( 0.0f, 0.0f, 1.0f ) },
+	{ "bk", Vector( 0.0f, 1.0f, 0.0f ), Vector( 1.0f, 0.0f, 0.0f ), Vector( 0.0f, 0.0f, 1.0f ) },
+	{ "up", Vector( 0.0f, 0.0f, 1.0f ), Vector( 0.0f, -1.0f, 0.0f ), Vector( -1.0f, 0.0f, 0.0f ) },
+	{ "dn", Vector( 0.0f, 0.0f, -1.0f ), Vector( 0.0f, -1.0f, 0.0f ), Vector( 1.0f, 0.0f, 0.0f ) },
+};
+
+void CViewRender::UpdateSkyboxMaterials()
+{
+	const char *pszSkyName = sv_skyname.GetString();
+	const bool bHDR = g_pMaterialSystemHardwareConfig->GetDXSupportLevel() >= 90 &&
+		g_pMaterialSystemHardwareConfig->GetHDRType() != HDR_TYPE_NONE;
+	static ConVarRef mat_use_compressed_hdr_textures( "mat_use_compressed_hdr_textures", true );
+	const bool bCompressedTextures = !mat_use_compressed_hdr_textures.IsValid() || mat_use_compressed_hdr_textures.GetBool();
+
+	if ( m_SkyboxMaterials[0].IsValid() && !Q_strcmp( m_szSkyboxName, pszSkyName ) &&
+		m_bSkyboxHDR == bHDR && m_bSkyboxCompressedTextures == bCompressedTextures )
+	{
+		return;
+	}
+
+	static const char *s_TextureVars[] =
+	{
+		"$hdrcompressedtexture", "$hdrcompressedtexture0", "$hdrbasetexture", "$basetexture"
+	};
+
+	for ( int i = 0; i < SKYBOX_FACE_COUNT; ++i )
+	{
+		char szMaterialName[MAX_PATH];
+		Q_snprintf( szMaterialName, sizeof( szMaterialName ), "skybox/%s%s", pszSkyName, s_SkyboxFaces[i].pszSuffix );
+		m_SkyboxMaterials[i].Init( szMaterialName, TEXTURE_GROUP_SKYBOX );
+		m_flSkyboxMinUV[i][0] = m_flSkyboxMinUV[i][1] = 0.5f / 256.0f;
+
+		if ( IsErrorMaterial( m_SkyboxMaterials[i] ) )
+			continue;
+
+		for ( int j = bHDR ? 0 : 3; j < ARRAYSIZE( s_TextureVars ); ++j )
+		{
+			if ( j == 0 && !bCompressedTextures )
+				continue;
+
+			bool bFound;
+			IMaterialVar *pTextureVar = m_SkyboxMaterials[i]->FindVar( s_TextureVars[j], &bFound, false );
+			if ( !bFound || !pTextureVar->IsDefined() )
+				continue;
+
+			ITexture *pTexture = NULL;
+			if ( pTextureVar->IsTexture() )
+			{
+				pTexture = pTextureVar->GetTextureValue();
+			}
+			else if ( pTextureVar->GetType() == MATERIAL_VAR_TYPE_STRING && pTextureVar->GetStringValue()[0] )
+			{
+				pTexture = materials->FindTexture( pTextureVar->GetStringValue(), TEXTURE_GROUP_SKYBOX, false );
+			}
+
+			if ( pTexture && !pTexture->IsError() )
+			{
+				m_flSkyboxMinUV[i][0] = 0.5f / MAX( pTexture->GetMappingWidth(), 1 );
+				m_flSkyboxMinUV[i][1] = 0.5f / MAX( pTexture->GetMappingHeight(), 1 );
+				break;
+			}
+		}
+	}
+
+	Q_strncpy( m_szSkyboxName, pszSkyName, sizeof( m_szSkyboxName ) );
+	m_bSkyboxHDR = bHDR;
+	m_bSkyboxCompressedTextures = bCompressedTextures;
+}
+
+void CViewRender::ReleaseSkyboxMaterials()
+{
+	for ( int i = 0; i < SKYBOX_FACE_COUNT; ++i )
+	{
+		m_SkyboxMaterials[i].Shutdown();
+	}
+	m_szSkyboxName[0] = '\0';
+}
+
+bool CViewRender::Draw2DSkybox( const CViewSetup &viewSetup, bool bClipSkybox )
+{
+	if ( viewSetup.m_bOrtho || viewSetup.zFar <= 2.0f * viewSetup.zNear )
+		return false;
+
+	UpdateSkyboxMaterials();
+	for ( int i = 0; i < SKYBOX_FACE_COUNT; ++i )
+	{
+		if ( IsErrorMaterial( m_SkyboxMaterials[i] ) )
+			return false;
+	}
+
+	CMatRenderContextPtr pRenderContext( materials );
+	const MaterialHeightClipMode_t oldClipMode = pRenderContext->GetHeightClipMode();
+	if ( !bClipSkybox )
+	{
+		pRenderContext->SetHeightClipMode( MATERIAL_HEIGHTCLIPMODE_DISABLE );
+	}
+
+	const float flDistance = viewSetup.zFar * 0.5f;
+	for ( int i = 0; i < SKYBOX_FACE_COUNT; ++i )
+	{
+		const skyboxface_t &face = s_SkyboxFaces[i];
+		const Vector vecCenter = viewSetup.origin + flDistance * face.vecNormal;
+		const Vector vecRight = flDistance * face.vecRight;
+		const Vector vecUp = flDistance * face.vecUp;
+		const float flMinU = m_flSkyboxMinUV[i][0];
+		const float flMinV = m_flSkyboxMinUV[i][1];
+
+		IMesh *pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, m_SkyboxMaterials[i] );
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+		meshBuilder.Position3fv( ( vecCenter - vecRight + vecUp ).Base() );
+		meshBuilder.TexCoord2f( 0, flMinU, flMinV );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.Position3fv( ( vecCenter + vecRight + vecUp ).Base() );
+		meshBuilder.TexCoord2f( 0, 1.0f - flMinU, flMinV );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.Position3fv( ( vecCenter + vecRight - vecUp ).Base() );
+		meshBuilder.TexCoord2f( 0, 1.0f - flMinU, 1.0f - flMinV );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.Position3fv( ( vecCenter - vecRight - vecUp ).Base() );
+		meshBuilder.TexCoord2f( 0, flMinU, 1.0f - flMinV );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+		pMesh->Draw();
+	}
+
+	if ( !bClipSkybox )
+	{
+		pRenderContext->SetHeightClipMode( oldClipMode );
+	}
+	return true;
+}
+
 void CRendering3dView::DrawWorld( float waterZAdjust )
 {
 	VPROF_INCREMENT_COUNTER( "RenderWorld", 1 );
@@ -3665,7 +3809,13 @@ void CRendering3dView::DrawWorld( float waterZAdjust )
 		return;
 	}
 
-	unsigned long engineFlags = BuildEngineDrawWorldListFlags( m_DrawFlags );
+	unsigned int drawFlags = m_DrawFlags;
+	if ( ( drawFlags & DF_DRAWSKYBOX ) && !( drawFlags & ( DF_SHADOW_DEPTH_MAP | DF_SSAO_DEPTH_PASS ) ) &&
+		r_skybox_use_new_renderer.GetBool() && m_pMainView->Draw2DSkybox( *this, ( drawFlags & DF_CLIP_SKYBOX ) != 0 ) )
+	{
+		drawFlags &= ~DF_DRAWSKYBOX;
+	}
+	unsigned long engineFlags = BuildEngineDrawWorldListFlags( drawFlags );
 
 	render->DrawWorldLists( m_pWorldRenderList, engineFlags, waterZAdjust );
 }
