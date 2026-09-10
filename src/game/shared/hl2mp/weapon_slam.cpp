@@ -608,7 +608,6 @@ void CWeapon_SLAM::SatchelAttach( void )
 //-----------------------------------------------------------------------------
 void CWeapon_SLAM::StartSatchelAttach( void )
 {
-#ifndef CLIENT_DLL
 	CBaseCombatCharacter *pOwner  = GetOwner();
 	if (!pOwner)
 	{
@@ -656,7 +655,6 @@ void CWeapon_SLAM::StartSatchelAttach( void )
 			m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
 		}
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
