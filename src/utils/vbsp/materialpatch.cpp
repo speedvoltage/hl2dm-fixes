@@ -306,6 +306,9 @@ static void InsertKeyValues( KeyValues &dst, KeyValues& src, bool bCheckForExist
 		{
 			switch( pSrcVar->GetDataType() )
 			{
+			case KeyValues::TYPE_NONE:
+				InsertKeyValues( *dst.FindKey( pSrcVar->GetName(), true ), *pSrcVar, bCheckForExistence );
+				break;
 			case KeyValues::TYPE_STRING:
 				dst.SetString( pSrcVar->GetName(), pSrcVar->GetString() );
 				break;
@@ -324,51 +327,33 @@ static void InsertKeyValues( KeyValues &dst, KeyValues& src, bool bCheckForExist
 	}
 }
 
-static void ExpandPatchFile( KeyValues &keyValues )
+static void ExpandPatchFile( KeyValues &keyValues, int nDepth = 0 )
 {
-	int nCount = 0;
-	while( nCount < 10 && stricmp( keyValues.GetName(), "patch" ) == 0 )
-	{
-//		WriteKeyValuesToFile( "patch.txt", keyValues );
-		const char *pIncludeFileName = keyValues.GetString( "include" );
-		if( !pIncludeFileName )
-			return;
-
-		KeyValues * includeKeyValues = new KeyValues( "vmt" );
-		int nBufLen = Q_strlen( pIncludeFileName ) +  Q_strlen( "materials/.vmt" ) + 1;
-		char *pFileName = ( char * )stackalloc( nBufLen );
-		Q_strncpy( pFileName, pIncludeFileName, nBufLen );
-		bool bSuccess = LoadKeyValuesFromPackOrFile( pFileName, includeKeyValues );
-		if ( !bSuccess )
-		{
-			includeKeyValues->deleteThis();
-			return;
-		}
-
-		KeyValues *pInsertSection = keyValues.FindKey( "insert" );
-		if( pInsertSection )
-		{
-			InsertKeyValues( *includeKeyValues, *pInsertSection, false );
-			keyValues = *includeKeyValues;
-		}
-
-		KeyValues *pReplaceSection = keyValues.FindKey( "replace" );
-		if( pReplaceSection )
-		{
-			InsertKeyValues( *includeKeyValues, *pReplaceSection, true );
-			keyValues = *includeKeyValues;
-		}
-
-		// Could add other commands here, like "delete", "rename", etc.
-
-		includeKeyValues->deleteThis();
-		nCount++;
-	}
-
-	if( nCount >= 10 )
+	if ( stricmp( keyValues.GetName(), "patch" ) != 0 )
+		return;
+	if ( nDepth >= 10 )
 	{
 		Warning( "Infinite recursion in patch file?\n" );
+		return;
 	}
+	const char *pIncludeFileName = keyValues.GetString( "include", NULL );
+	if ( !pIncludeFileName )
+		return;
+	KeyValues *includeKeyValues = new KeyValues( "vmt" );
+	if ( !LoadKeyValuesFromPackOrFile( pIncludeFileName, includeKeyValues ) )
+	{
+		includeKeyValues->deleteThis();
+		return;
+	}
+	ExpandPatchFile( *includeKeyValues, nDepth + 1 );
+	KeyValues *pInsertSection = keyValues.FindKey( "insert" );
+	if ( pInsertSection )
+		InsertKeyValues( *includeKeyValues, *pInsertSection, false );
+	KeyValues *pReplaceSection = keyValues.FindKey( "replace" );
+	if ( pReplaceSection )
+		InsertKeyValues( *includeKeyValues, *pReplaceSection, true );
+	keyValues = *includeKeyValues;
+	includeKeyValues->deleteThis();
 }
 
 KeyValues *LoadMaterialKeyValues( const char *pMaterialName, unsigned int nFlags )

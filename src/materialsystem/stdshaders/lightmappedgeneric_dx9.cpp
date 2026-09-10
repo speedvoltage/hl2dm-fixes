@@ -31,6 +31,11 @@ BEGIN_VS_SHADER( LightmappedGeneric,
 		SHADER_PARAM( DETAILTINT, SHADER_PARAM_TYPE_COLOR, "[1 1 1]", "detail texture tint" )
 
 		SHADER_PARAM( ENVMAP, SHADER_PARAM_TYPE_TEXTURE, "shadertest/shadertest_env", "envmap" )
+		SHADER_PARAM( ENVMAPPARALLAX, SHADER_PARAM_TYPE_BOOL, "0", "Enable box projected cubemap reflections" )
+		SHADER_PARAM( ENVMAPORIGIN, SHADER_PARAM_TYPE_VEC3, "", "Cubemap capture position in world space" )
+		SHADER_PARAM( ENVMAPPARALLAXOBB1, SHADER_PARAM_TYPE_VEC4, "", "World to unit box matrix row 1" )
+		SHADER_PARAM( ENVMAPPARALLAXOBB2, SHADER_PARAM_TYPE_VEC4, "", "World to unit box matrix row 2" )
+		SHADER_PARAM( ENVMAPPARALLAXOBB3, SHADER_PARAM_TYPE_VEC4, "", "World to unit box matrix row 3" )
 		SHADER_PARAM( ENVMAPFRAME, SHADER_PARAM_TYPE_INTEGER, "", "" )
 		SHADER_PARAM( ENVMAPMASK, SHADER_PARAM_TYPE_TEXTURE, "shadertest/shadertest_envmask", "envmap mask" )
 		SHADER_PARAM( ENVMAPMASKFRAME, SHADER_PARAM_TYPE_INTEGER, "", "" )
@@ -93,6 +98,11 @@ END_SHADER_PARAMS
 		info.m_nDetailTint = DETAILTINT;
 
 		info.m_nEnvmap = ENVMAP;
+		info.m_nEnvmapParallax = ENVMAPPARALLAX;
+		info.m_nEnvmapOrigin = ENVMAPORIGIN;
+		info.m_nEnvmapParallaxObb1 = ENVMAPPARALLAXOBB1;
+		info.m_nEnvmapParallaxObb2 = ENVMAPPARALLAXOBB2;
+		info.m_nEnvmapParallaxObb3 = ENVMAPPARALLAXOBB3;
 		info.m_nEnvmapFrame = ENVMAPFRAME;
 		info.m_nEnvmapMask = ENVMAPMASK;
 		info.m_nEnvmapMaskFrame = ENVMAPMASKFRAME;

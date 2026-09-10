@@ -11,4 +11,21 @@ $Include "$SRCDIR\materialsystem\stdshaders\game_shader_generic_example_base.vpc
 
 $Project "Game Shaders (HL2MP)"
 {
+	$Folder "Source Files"
+	{
+		$File "lightmappedgeneric_dx9.cpp"
+		$File "lightmappedgeneric_dx9_helper.cpp"
+		$File "worldvertextransition.cpp"
+		$File "worldvertextransition_dx8_helper.cpp"
+	}
+
+	$Folder "Header Files"
+	{
+		$File "lightmappedgeneric_dx9_helper.h"
+		$File "lightmappedgeneric_ps2_3_x.h"
+		$File "worldvertextransition_dx8_helper.h"
+	}
+
+	$File "buildparallaxshaders.bat"
+	$Shaders "parallaxshaders_dx9_20b.txt"
 }

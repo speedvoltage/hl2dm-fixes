@@ -608,6 +608,7 @@ void SaveVertexNormals( void );
 //=============================================================================
 // cubemap.cpp
 void Cubemap_InsertSample( const Vector& origin, int size );
+void Cubemap_ProcessEntities();
 void Cubemap_CreateDefaultCubemaps( void );
 void Cubemap_SaveBrushSides( const char *pSideListStr );
 void Cubemap_FixupBrushSidesMaterials( void );

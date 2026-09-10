@@ -1,0 +1,45 @@
+@SolidClass color(80 180 255) = parallax_obb : "Projection box for cubemap reflections. Use one rectangular tools/toolstrigger brush matching the room boundaries. Rotated boxes are supported. Removed during compilation."
+[
+	targetname(target_source) : "Name" : "" : "Unique name referenced by env_cubemap."
+	origin(origin) : "Origin" : "0 0 0"
+	angles(angle) : "Angles" : "0 0 0"
+]
+
+@PointClass size(-8 -8 -8, 8 8 8) color(255 0 255) iconsprite("editor/env_cubemap.vmt") = env_cubemap : "Cubemap capture point. Parallax correction requires a named parallax_obb, the updated VBSP and the HL2MP parallax shaders."
+[
+	origin(origin) : "Origin" : "0 0 0"
+	cubemapsize(choices) : "Cubemap Size" : 0 =
+	[
+		0 : "Default"
+		1 : "1x1"
+		2 : "2x2"
+		3 : "4x4"
+		4 : "8x8"
+		5 : "16x16"
+		6 : "32x32"
+		7 : "64x64"
+		8 : "128x128"
+		9 : "256x256"
+		10 : "512x512"
+	]
+	sides(sidelist) : "Brush faces" : "" : "Optional explicit assignment of reflective faces to this cubemap."
+	parallaxobb(target_destination) : "Parallax OBB" : "" : "Named parallax_obb containing the capture point. Leave empty for ordinary cubemap reflections."
+	mindxlevel(choices) : "Minimum DX Level" : 0 =
+	[
+		0 : "Default"
+		70 : "DX7"
+		80 : "DX8"
+		81 : "DX8.1"
+		90 : "DX9"
+		95 : "DX9 Shader Model 3"
+	]
+	maxdxlevel(choices) : "Maximum DX Level" : 0 =
+	[
+		0 : "Default"
+		70 : "DX7"
+		80 : "DX8"
+		81 : "DX8.1"
+		90 : "DX9"
+		95 : "DX9 Shader Model 3"
+	]
+]

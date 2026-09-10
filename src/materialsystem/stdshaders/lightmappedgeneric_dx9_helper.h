@@ -44,6 +44,11 @@ struct LightmappedGeneric_DX9_Vars_t
 	int m_nDetailTint;
 
 	int m_nEnvmap;
+	int m_nEnvmapParallax;
+	int m_nEnvmapOrigin;
+	int m_nEnvmapParallaxObb1;
+	int m_nEnvmapParallaxObb2;
+	int m_nEnvmapParallaxObb3;
 	int m_nEnvmapFrame;
 	int m_nEnvmapMask;
 	int m_nEnvmapMaskFrame;
