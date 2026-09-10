@@ -482,6 +482,7 @@ void CGrabController::AttachEntity( CBasePlayer *pPlayer, CBaseEntity *pEntity, 
 		pList[i]->GetDamping( NULL, &m_savedRotDamping[i] );
 		m_flLoadWeight += mass;
 		m_savedMass[i] = mass;
+		m_savedDragEnabled[i] = pList[i]->IsDragEnabled();
 
 		// reduce the mass to prevent the player from adding crazy amounts of energy to the system
 		pList[i]->SetMass( REDUCED_CARRY_MASS / flFactor );
@@ -553,7 +554,7 @@ void CGrabController::DetachEntity( bool bClearVelocity )
 				continue;
 
 			// on the odd chance that it's gone to sleep while under anti-gravity
-			pPhys->EnableDrag( true );
+			pPhys->EnableDrag( m_savedDragEnabled[i] );
 			pPhys->Wake();
 			pPhys->SetMass( m_savedMass[i] );
 			pPhys->SetDamping( NULL, &m_savedRotDamping[i] );
