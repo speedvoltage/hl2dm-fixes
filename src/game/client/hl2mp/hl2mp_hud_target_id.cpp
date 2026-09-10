@@ -36,12 +36,14 @@ public:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint( void );
 	void VidInit( void );
+	void Reset( void ) OVERRIDE;
+	void LevelShutdown( void ) OVERRIDE;
 
 private:
 	Color			GetColorForTargetTeam( int iTeamNumber );
 
 	vgui::HFont		m_hFont;
-	int				m_iLastEntIndex;
+	CHandle<C_BasePlayer> m_hLastTarget;
 	float			m_flLastChangeTime;
 };
 
@@ -59,8 +61,7 @@ CTargetID::CTargetID( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_hFont = g_hFontTrebuchet24;
-	m_flLastChangeTime = 0;
-	m_iLastEntIndex = 0;
+	Reset();
 
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
 	SetSize( ScreenWidth(), ScreenHeight() );
@@ -71,6 +72,7 @@ CTargetID::CTargetID( const char *pElementName ) :
 //-----------------------------------------------------------------------------
 void CTargetID::Init( void )
 {
+	Reset();
 	SetSize( ScreenWidth(), ScreenHeight() );
 };
 
@@ -92,8 +94,18 @@ void CTargetID::VidInit()
 {
 	CHudElement::VidInit();
 
+	Reset();
+}
+
+void CTargetID::Reset( void )
+{
 	m_flLastChangeTime = 0;
-	m_iLastEntIndex = 0;
+	m_hLastTarget = NULL;
+}
+
+void CTargetID::LevelShutdown( void )
+{
+	Reset();
 }
 
 Color CTargetID::GetColorForTargetTeam( int iTeamNumber )
@@ -112,38 +124,43 @@ void CTargetID::Paint()
 
 	C_HL2MP_Player *pPlayer = C_HL2MP_Player::GetLocalHL2MPPlayer();
 
-	if ( !pPlayer )
+	if ( !pPlayer || !hud_showtargetid.GetBool() || !GameResources() ||
+		pPlayer->GetObserverMode() == OBS_MODE_CHASE || pPlayer->GetObserverMode() == OBS_MODE_DEATHCAM )
+	{
+		Reset();
 		return;
+	}
 
 	Color c;
 
-	// Get our target's ent index
-	int iEntIndex = pPlayer->GetIDTarget();
-	// Didn't find one?
-	if ( !iEntIndex )
+	C_BasePlayer *pTarget = ToBasePlayer( cl_entitylist->GetEnt( pPlayer->GetIDTarget() ) );
+	if ( pTarget )
 	{
-		// Check to see if we should clear our ID
-		if ( m_flLastChangeTime && (gpGlobals->curtime > (m_flLastChangeTime + 0.5)) )
-		{
-			m_flLastChangeTime = 0;
-			sIDString[0] = 0;
-			m_iLastEntIndex = 0;
-		}
-		else
-		{
-			// Keep re-using the old one
-			iEntIndex = m_iLastEntIndex;
-		}
+		m_hLastTarget = pTarget;
+		m_flLastChangeTime = gpGlobals->curtime;
+	}
+	else if ( gpGlobals->curtime < m_flLastChangeTime || gpGlobals->curtime >= m_flLastChangeTime + 0.5f )
+	{
+		Reset();
+		return;
 	}
 	else
 	{
-		m_flLastChangeTime = gpGlobals->curtime;
+		pTarget = m_hLastTarget.Get();
 	}
+
+	if ( !pTarget || pTarget->IsDormant() || !GameResources()->IsConnected( pTarget->entindex() ) )
+	{
+		Reset();
+		return;
+	}
+
+	int iEntIndex = pTarget->entindex();
 
 	// Is this an entindex sent by the server?
 	if ( iEntIndex )
 	{
-		C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt( iEntIndex ));
+		C_BasePlayer *pPlayer = pTarget;
 		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 
 		const char *printFormatString = NULL;
