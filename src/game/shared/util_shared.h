@@ -642,6 +642,7 @@ class RealTimeCountdownTimer : public CountdownTimer
 char* ReadAndAllocStringValue( KeyValues *pSub, const char *pName, const char *pFilename = NULL );
 
 int UTIL_StringFieldToInt( const char *szValue, const char **pValueStrings, int iNumStrings );
+int UTIL_CountNumBitsSet( unsigned int nValue );
 
 //-----------------------------------------------------------------------------
 // Holidays

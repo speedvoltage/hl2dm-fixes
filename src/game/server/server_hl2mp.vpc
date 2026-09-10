@@ -24,6 +24,13 @@ $Project "Server (HL2MP)"
 {
 	$Folder	"Source Files"
 	{
+		$Folder "Game Instructor"
+		{
+			$File "env_instructor_hint.cpp"
+			$File "$SRCDIR\game\shared\gameinstructor_shared.cpp"
+			$File "$SRCDIR\game\shared\gameinstructor_shared.h"
+		}
+
 		$File	"ai_relationship.cpp"
 		$File	"basegrenade_concussion.cpp"
 		$File	"basegrenade_contact.cpp"

@@ -1,0 +1,4 @@
+"LocatorPanel"
+{
+	"WrapStaticLocators"	"1"
+}
