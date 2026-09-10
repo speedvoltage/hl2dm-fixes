@@ -52,7 +52,7 @@ DECLARE_HUD_MESSAGE( CHudBattery, Battery );
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudBattery::CHudBattery( const char *pElementName ) : BaseClass(NULL, "HudSuit"), CHudElement( pElementName )
+CHudBattery::CHudBattery( const char *pElementName ) : BaseClass(NULL, "HudSuit"), CHudElement( pElementName ), m_iBat( INIT_BAT ), m_iNewBat( 0 )
 {
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_NEEDSUIT );
 }
@@ -64,8 +64,6 @@ void CHudBattery::Init( void )
 {
 	HOOK_HUD_MESSAGE( CHudBattery, Battery);
 	Reset();
-	m_iBat		= INIT_BAT;
-	m_iNewBat   = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -73,8 +71,10 @@ void CHudBattery::Init( void )
 //-----------------------------------------------------------------------------
 void CHudBattery::Reset( void )
 {
+	BaseClass::Reset();
+	m_iBat = INIT_BAT;
 	SetLabelText(g_pVGuiLocalize->Find("#Valve_Hud_SUIT"));
-	SetDisplayValue(m_iBat);
+	SetDisplayValue(m_iNewBat);
 }
 
 //-----------------------------------------------------------------------------
