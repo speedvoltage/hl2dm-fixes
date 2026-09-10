@@ -366,7 +366,7 @@ void CBaseHL2MPBludgeonWeapon::Swing( int bIsSecondary )
 	// Send the anim
 	SendWeaponAnim( nHitActivity );
 
-	pOwner->SetAnimation( PLAYER_ATTACK1 );
+	ToHL2MPPlayer( pOwner )->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 
 	//Setup our next attack times
 	const float flNextAttack = gpGlobals->curtime + GetFireRate();

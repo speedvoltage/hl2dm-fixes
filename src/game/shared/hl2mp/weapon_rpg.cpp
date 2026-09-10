@@ -1308,7 +1308,6 @@ END_PREDICTION_DATA()
 
 #endif
 
-#ifndef CLIENT_DLL
 acttable_t	CWeaponRPG::m_acttable[] = 
 {
 	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_RPG,					false },
@@ -1323,7 +1322,6 @@ acttable_t	CWeaponRPG::m_acttable[] =
 
 IMPLEMENT_ACTTABLE(CWeaponRPG);
 
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1534,7 +1532,7 @@ void CWeaponRPG::PrimaryAttack( void )
 	WeaponSound( SINGLE );
 
 	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 }
 
 //-----------------------------------------------------------------------------

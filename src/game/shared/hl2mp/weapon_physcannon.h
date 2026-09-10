@@ -458,9 +458,7 @@ protected:
 private:
 	CWeaponPhysCannon( const CWeaponPhysCannon & );
 
-#ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
-#endif
 };
 
 #endif // WEAPON_PHYSCANNON_H

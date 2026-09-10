@@ -10,7 +10,9 @@
 #pragma once
 
 class C_HL2MP_Player;
+
 #include "c_basehlplayer.h"
+#include "hl2mp_playeranimstate.h"
 #include "hl2mp_player_shared.h"
 #include "beamdraw.h"
 #include "glow_outline_effect.h"
@@ -78,6 +80,7 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t type );
 	virtual float GetFOV( void );
 	virtual CStudioHdr *OnNewModel( void );
+	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );
 	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
@@ -125,6 +128,9 @@ public:
 	bool IsWalking( void ) { return m_fIsWalking; }
 
 	virtual void PostThink( void );
+	virtual void UpdateClientSideAnimation( void );
+
+	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
 private:
 	
@@ -132,7 +138,7 @@ private:
 	void ResetDuckJumpInterpState( void );
 	void UpdateDuckJumpInterp( void );
 
-	CPlayerAnimState m_PlayerAnimState;
+	CHL2MPPlayerAnimState *m_PlayerAnimState;
 	bool	m_bDuckJumpStateInitialized;
 	bool	m_bWasDucked;
 	bool	m_bWasAirborne;

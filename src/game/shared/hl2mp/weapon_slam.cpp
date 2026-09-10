@@ -95,6 +95,9 @@ BEGIN_DATADESC( CWeapon_SLAM )
 
 END_DATADESC()
 
+#endif
+
+
 acttable_t	CWeapon_SLAM::m_acttable[] = 
 {
 	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SLAM, true },
@@ -108,7 +111,6 @@ acttable_t	CWeapon_SLAM::m_acttable[] =
 };
 
 IMPLEMENT_ACTTABLE(CWeapon_SLAM);
-#endif
 
 
 void CWeapon_SLAM::Spawn( )
@@ -433,7 +435,7 @@ void CWeapon_SLAM::StartTripmineAttach( void )
 		return;
 	}
 
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	if (m_bDetonatorArmed)
 	{
@@ -496,7 +498,7 @@ void CWeapon_SLAM::SatchelThrow( void )
 
 #endif
 	pPlayer->RemoveAmmo( 1, m_iSecondaryAmmoType );
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	// Play throw sound
 	EmitSound( "Weapon_SLAM.SatchelThrow" );
@@ -585,7 +587,6 @@ void CWeapon_SLAM::SatchelAttach( void )
 //-----------------------------------------------------------------------------
 void CWeapon_SLAM::StartSatchelAttach( void )
 {
-#ifndef CLIENT_DLL
 	CBaseCombatCharacter *pOwner  = GetOwner();
 	if (!pOwner)
 	{
@@ -598,7 +599,7 @@ void CWeapon_SLAM::StartSatchelAttach( void )
 	}
 
 	CBasePlayer *pPlayer = ToBasePlayer( pOwner );
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	if (m_bDetonatorArmed)
 	{
@@ -615,7 +616,6 @@ void CWeapon_SLAM::StartSatchelAttach( void )
 	m_bAttachSatchel = true;
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + SequenceDuration();
-#endif
 }
 
 //-----------------------------------------------------------------------------
