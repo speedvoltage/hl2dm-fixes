@@ -14,6 +14,7 @@
 #include "iviewrender_beams.h"			// flashlight beam
 #include "r_efx.h"
 #include "dlight.h"
+#include "prediction.h"
 
 // Don't alias here
 #if defined( CHL2MP_Player )
@@ -113,6 +114,13 @@ C_HL2MP_Player::C_HL2MP_Player() : m_PlayerAnimState( this ), m_iv_angEyeAngles(
 	m_blinkTimer.Invalidate();
 
 	m_pFlashlightBeam = NULL;
+
+	m_bDuckJumpStateInitialized = false;
+	m_bDuckJumpOriginChanged = false;
+	m_bWasDucked = false;
+	m_bWasAirborne = false;
+	m_flDuckJumpInterp = 0.0f;
+	m_flDuckJumpLastUpdateTime = 0.0f;
 
 	SuitPower_Initialize();
 }
@@ -329,6 +337,78 @@ int C_HL2MP_Player::DrawModel( int flags )
 		return 0;
 
     return BaseClass::DrawModel(flags);
+}
+
+void C_HL2MP_Player::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
+{
+	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
+
+	if ( prediction->InPrediction() )
+		return;
+
+	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
+	bool bAirborne = GetGroundEntity() == NULL;
+	float flElapsed = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
+
+	if ( !m_bDuckJumpStateInitialized || !IsAlive() || IsNoInterpolationFrame() || Teleported() || flElapsed < 0.0f || flElapsed > 0.15f )
+	{
+		m_flDuckJumpInterp = 0.0f;
+	}
+	else
+	{
+		m_flDuckJumpInterp = Approach( 0.0f, m_flDuckJumpInterp, flElapsed / 0.15f );
+
+		if ( bAirborne && ( m_bWasAirborne || m_bDuckJumpOriginChanged ) && bDucked != m_bWasDucked )
+		{
+			m_flDuckJumpInterp += bDucked ? 1.0f : -1.0f;
+			m_flDuckJumpInterp = clamp( m_flDuckJumpInterp, -1.0f, 1.0f );
+		}
+	}
+
+	if ( !bAirborne )
+		m_flDuckJumpInterp = 0.0f;
+
+	m_bDuckJumpStateInitialized = true;
+	m_bDuckJumpOriginChanged = false;
+	m_bWasDucked = bDucked;
+	m_bWasAirborne = bAirborne;
+	m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+
+	if ( m_flDuckJumpInterp == 0.0f )
+		return;
+
+	Vector hullSizeNormal = VEC_HULL_MAX_SCALED( this ) - VEC_HULL_MIN_SCALED( this );
+	Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED( this ) - VEC_DUCK_HULL_MIN_SCALED( this );
+	Vector duckOffset = ( hullSizeNormal - hullSizeCrouch ) * m_flDuckJumpInterp;
+
+	for ( int i = 0; i < hdr->numbones(); i++ )
+	{
+		if ( !( hdr->boneFlags( i ) & boneMask ) )
+			continue;
+
+		matrix3x4_t &transform = GetBoneForWrite( i );
+		Vector bonePosition;
+		MatrixGetTranslation( transform, bonePosition );
+		MatrixSetTranslation( bonePosition - duckOffset, transform );
+	}
+}
+
+void C_HL2MP_Player::ResetDuckJumpInterpState( void )
+{
+	m_bDuckJumpStateInitialized = false;
+	m_bDuckJumpOriginChanged = false;
+	m_flDuckJumpInterp = 0.0f;
+}
+
+void C_HL2MP_Player::ResetLatched( void )
+{
+	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
+	if ( prediction->InPrediction() && prediction->IsFirstTimePredicted() && GetGroundEntity() == NULL && bDucked != m_bWasDucked )
+	{
+		m_bDuckJumpOriginChanged = true;
+	}
+
+	BaseClass::ResetLatched();
 }
 
 //-----------------------------------------------------------------------------
@@ -703,6 +783,8 @@ bool C_HL2MP_Player::ShouldDraw( void )
 
 void C_HL2MP_Player::NotifyShouldTransmit( ShouldTransmitState_t state )
 {
+	ResetDuckJumpInterpState();
+
 	if ( state == SHOULDTRANSMIT_END )
 	{
 		if( m_pFlashlightBeam != NULL )
@@ -731,6 +813,7 @@ void C_HL2MP_Player::PostDataUpdate( DataUpdateType_t updateType )
 	if ( m_iSpawnInterpCounter != m_iSpawnInterpCounterCache )
 	{
 		MoveToLastReceivedPosition( true );
+		ResetDuckJumpInterpState();
 		ResetLatched();
 		m_iSpawnInterpCounterCache = m_iSpawnInterpCounter;
 	}
