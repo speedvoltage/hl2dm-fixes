@@ -23,6 +23,18 @@ $Project "Client (HL2MP)"
 {
 	$Folder	"Source Files"
 	{
+		$Folder "Game Instructor"
+		{
+			$File "gameinstructor\c_baselesson.cpp"
+			$File "gameinstructor\c_baselesson.h"
+			$File "gameinstructor\c_gameinstructor.cpp"
+			$File "gameinstructor\c_gameinstructor.h"
+			$File "gameinstructor\hud_locator_target.cpp"
+			$File "gameinstructor\hud_locator_target.h"
+			$File "$SRCDIR\game\shared\gameinstructor_shared.cpp"
+			$File "$SRCDIR\game\shared\gameinstructor_shared.h"
+		}
+
 		-$File	"$SRCDIR\game\shared\weapon_parse_default.cpp"
 
 		$File	"c_team_objectiveresource.cpp"

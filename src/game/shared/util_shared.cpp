@@ -1317,6 +1317,17 @@ char* ReadAndAllocStringValue( KeyValues *pSub, const char *pName, const char *p
 	return pAlloced;
 }
 
+int UTIL_CountNumBitsSet( unsigned int nValue )
+{
+    int nCount = 0;
+    while ( nValue )
+    {
+        nValue &= nValue - 1;
+        ++nCount;
+    }
+    return nCount;
+}
+
 int UTIL_StringFieldToInt( const char *szValue, const char **pValueStrings, int iNumStrings )
 {
 	if ( !szValue || !szValue[0] )
