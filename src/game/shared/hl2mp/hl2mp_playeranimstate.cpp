@@ -144,6 +144,11 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_HL2MP_GESTURE_RELOAD );
 			break;
 		}
+	case PLAYERANIMEVENT_CANCEL:
+		{
+			ResetGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD );
+			break;
+		}
 	default:
 		{
 			BaseClass::DoAnimationEvent( event, nData );

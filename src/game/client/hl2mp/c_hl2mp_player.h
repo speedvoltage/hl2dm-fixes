@@ -74,6 +74,7 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t type );
 	virtual float GetFOV( void );
 	virtual CStudioHdr *OnNewModel( void );
+	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );
 	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );

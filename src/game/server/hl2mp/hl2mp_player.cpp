@@ -568,6 +568,8 @@ bool CHL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelinde
 {
 	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 
+	DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
+
 	return bRet;
 }
 

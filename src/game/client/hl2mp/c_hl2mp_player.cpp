@@ -239,6 +239,15 @@ CStudioHdr *C_HL2MP_Player::OnNewModel( void )
 	return hdr;
 }
 
+bool C_HL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
+{
+	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
+
+	DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
+
+	return bRet;
+}
+
 //-----------------------------------------------------------------------------
 /**
  * Orient head and eyes towards m_lookAt.
