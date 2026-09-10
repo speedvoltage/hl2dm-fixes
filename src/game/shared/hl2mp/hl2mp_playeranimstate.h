@@ -38,9 +38,12 @@ public:
 	virtual Activity TranslateActivity( Activity actDesired );
 
 	bool HandleJumping( Activity &idealActivity );
-	bool HandleDucking( Activity &idealActivity );
+	bool HandleHovering( Activity &idealActivity );
 	bool HandleSwimming( Activity &idealActivity );
+	bool HandleDucking( Activity &idealActivity );
 	bool HandleMoving( Activity &idealActivity );
+
+	virtual float GetCurrentMaxGroundSpeed( void );
 
 private:
 	bool SetupPoseParameters( CStudioHdr *pStudioHdr );
@@ -54,6 +57,8 @@ private:
 	void ComputePlaybackRate( void );
 
 	CHL2MP_Player *m_pHL2MPPlayer;
+
+	bool m_bFirstHoverFrame;
 };
 
 CHL2MPPlayerAnimState *CreateHL2MPPlayerAnimState( CHL2MP_Player *pPlayer );

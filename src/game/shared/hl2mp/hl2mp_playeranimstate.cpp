@@ -51,6 +51,7 @@ CHL2MPPlayerAnimState *CreateHL2MPPlayerAnimState( CHL2MP_Player *pPlayer )
 CHL2MPPlayerAnimState::CHL2MPPlayerAnimState()
 {
 	m_pHL2MPPlayer = NULL;
+	m_bFirstHoverFrame = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -62,6 +63,7 @@ CHL2MPPlayerAnimState::CHL2MPPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerM
 	: CMultiPlayerAnimState( pPlayer, movementData )
 {
 	m_pHL2MPPlayer = NULL;
+	m_bFirstHoverFrame = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -159,8 +161,9 @@ Activity CHL2MPPlayerAnimState::CalcMainActivity( void )
 	Activity idealActivity = ACT_HL2MP_IDLE;
 
 	if ( HandleJumping( idealActivity ) ||
-	     HandleDucking( idealActivity ) ||
+	     HandleHovering( idealActivity ) ||
 	     HandleSwimming( idealActivity ) ||
+	     HandleDucking( idealActivity ) ||
 	     HandleMoving( idealActivity ) )
 	{
 	}
@@ -246,31 +249,6 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 // Input  : *idealActivity - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool CHL2MPPlayerAnimState::HandleDucking( Activity &idealActivity )
-{
-	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
-
-	if ( !pPlayer )
-		return false;
-
-	bool bDucking = pPlayer->GetFlags() & FL_DUCKING;
-
-	if ( bDucking )
-	{
-		if ( GetOuterXYSpeed() > MOVING_MINIMUM_SPEED )
-			idealActivity = ACT_HL2MP_WALK_CROUCH;
-		else
-			idealActivity = ACT_HL2MP_IDLE_CROUCH;
-	}
-
-	return bDucking;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleSwimming( Activity &idealActivity )
 {
 	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
@@ -307,6 +285,68 @@ bool CHL2MPPlayerAnimState::HandleSwimming( Activity &idealActivity )
 // Input  : *idealActivity - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
+bool CHL2MPPlayerAnimState::HandleHovering( Activity &idealActivity )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return false;
+
+	bool bHovering = !(pPlayer->GetFlags() & FL_ONGROUND) ||
+	                   pPlayer->GetMoveType() != MOVETYPE_WALK;
+
+	if ( bHovering )
+	{
+		if ( m_bFirstHoverFrame )
+		{
+			RestartMainSequence();
+
+			pPlayer->SetCycle( 1.0f );
+
+			m_bFirstHoverFrame = false;
+		}
+
+		idealActivity = ACT_HL2MP_JUMP;
+	}
+	else
+	{
+		if ( !m_bFirstHoverFrame )
+			m_bFirstHoverFrame = true;
+	}
+
+	return bHovering;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *idealActivity - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CHL2MPPlayerAnimState::HandleDucking( Activity &idealActivity )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return false;
+
+	bool bDucking = pPlayer->GetFlags() & FL_DUCKING;
+
+	if ( bDucking )
+	{
+		if ( GetOuterXYSpeed() > MOVING_MINIMUM_SPEED )
+			idealActivity = ACT_HL2MP_WALK_CROUCH;
+		else
+			idealActivity = ACT_HL2MP_IDLE_CROUCH;
+	}
+
+	return bDucking;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *idealActivity - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleMoving( Activity &idealActivity )
 {
 	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
@@ -320,6 +360,27 @@ bool CHL2MPPlayerAnimState::HandleMoving( Activity &idealActivity )
 		idealActivity = ACT_HL2MP_RUN;
 
 	return bMoving;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Output : float
+//-----------------------------------------------------------------------------
+float CHL2MPPlayerAnimState::GetCurrentMaxGroundSpeed( void )
+{
+	CHL2MP_Player *pPlayer = GetHL2MPPlayer();
+
+	if ( !pPlayer )
+		return 1.0f;
+
+	CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
+
+	if ( !pStudioHdr )
+		return 1.0f;
+
+	float flSpeed = pPlayer->GetSequenceGroundSpeed( pPlayer->GetSequence() );
+
+	return flSpeed;
 }
 
 //-----------------------------------------------------------------------------
@@ -546,7 +607,7 @@ void CHL2MPPlayerAnimState::ComputePlaybackRate( void )
 
 		if ( flSpeed > MOVING_MINIMUM_SPEED )
 		{
-			float flGroundSpeed = GetInterpolatedGroundSpeed();
+			float flGroundSpeed = GetCurrentMaxGroundSpeed();
 
 			flRate = flGroundSpeed < 0.001f ? 0.01 : clamp( flSpeed / flGroundSpeed, 0.01f, 10.f );
 		}
