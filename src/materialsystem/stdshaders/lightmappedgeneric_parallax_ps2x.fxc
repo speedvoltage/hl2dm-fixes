@@ -1,0 +1,2 @@
+#define PARALLAXCORRECT 1
+#include "lightmappedgeneric_ps2x.fxc"

@@ -9,6 +9,7 @@
 #include "map_shared.h"
 #include "disp_vbsp.h"
 #include "tier1/strtools.h"
+#include "tier1/utlbuffer.h"
 #include "builddisp.h"
 #include "tier0/icommandline.h"
 #include "KeyValues.h"
@@ -1625,16 +1626,6 @@ ChunkFileResult_t CMapFile::LoadEntityCallback(CChunkFile *pFile, int nParam)
 
 		if( !strcmp( "env_cubemap", pClassName ) )
 		{
-			if( ( g_nDXLevel == 0 ) || ( g_nDXLevel >= 70 ) )
-			{
-				const char *pSideListStr = ValueForKey( mapent, "sides" );
-				int size;
-				size = IntForKey( mapent, "cubemapsize" );
-				Cubemap_InsertSample( mapent->origin, size );
-				Cubemap_SaveBrushSides( pSideListStr );
-			}
-			// clear out this entity
-			mapent->epairs = NULL;
 			return(ChunkFile_Ok);
 		}
 
@@ -2185,6 +2176,21 @@ void CMapFile::MergeBrushSides( entity_t *pInstanceEntity, CMapFile *Instance, V
 		}
 	}
 
+	for ( int i = 0; i < Instance->num_entities; ++i )
+	{
+		entity_t *pEntity = &Instance->entities[i];
+		if ( Q_stricmp( ValueForKey( pEntity, "classname" ), "env_cubemap" ) )
+			continue;
+		CUtlVector<char *> sides;
+		V_SplitString( ValueForKey( pEntity, "sides" ), " ", sides );
+		CUtlBuffer remapped( 0, 0, CUtlBuffer::TEXT_BUFFER );
+		for ( int j = 0; j < sides.Count(); ++j )
+			remapped.Printf( "%s%d", j ? " " : "", atoi( sides[j] ) + max_side_id );
+		remapped.PutChar( '\0' );
+		SetKeyValue( pEntity, "sides", (const char *)remapped.Base() );
+		sides.PurgeAndDeleteElements();
+	}
+
 	for( int i = 0; i < Instance->nummapbrushsides; i++ )
 	{
 		brushsides[ nummapbrushsides + i ] = Instance->brushsides[ i ];
@@ -2416,11 +2422,16 @@ void CMapFile::MergeEntities( entity_t *pInstanceEntity, CMapFile *Instance, Vec
 			Msg( "Remapping class %s\n", pEntity );
 #endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
 			GDclass *EntClass = GD.BeginInstanceRemap( pEntity, NameFixup, InstanceOrigin, InstanceAngle );
+			bool bParallaxObb = !Q_stricmp( pEntity, "parallax_obb" );
+			bool bCubemap = !Q_stricmp( pEntity, "env_cubemap" );
 			if ( EntClass )
 			{
 				for( int j = 0; j < EntClass->GetVariableCount(); j++ )
 				{
 					GDinputvariable *EntVar = EntClass->GetVariableAt( j );
+					if ( ( bParallaxObb && ( !Q_stricmp( EntVar->GetName(), "targetname" ) || !Q_stricmp( EntVar->GetName(), "angles" ) ) ) ||
+						( bCubemap && !Q_stricmp( EntVar->GetName(), "parallaxobb" ) ) )
+						continue;
 					char *pValue = ValueForKey( entity, ( char * )EntVar->GetName() );
 					if ( GD.RemapKeyValue( EntVar->GetName(), pValue, temp, FixupStyle ) )
 					{
@@ -2436,6 +2447,25 @@ void CMapFile::MergeEntities( entity_t *pInstanceEntity, CMapFile *Instance, Vec
 #endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
 					}
 				}
+			}
+
+			if ( bParallaxObb || bCubemap )
+			{
+				char pKey[16];
+				Q_strncpy( pKey, bParallaxObb ? "targetname" : "parallaxobb", sizeof( pKey ) );
+				if ( GD.RemapNameField( ValueForKey( entity, pKey ), temp, FixupStyle ) )
+					SetKeyValue( entity, pKey, temp );
+			}
+			if ( bParallaxObb )
+			{
+				QAngle angles;
+				GetAnglesForKey( entity, "angles", angles );
+				matrix3x4_t local, rotated;
+				AngleMatrix( angles, local );
+				ConcatTransforms( InstanceMatrix, local, rotated );
+				MatrixAngles( rotated, angles );
+				Q_snprintf( temp, sizeof( temp ), "%.9g %.9g %.9g", angles.x, angles.y, angles.z );
+				SetKeyValue( entity, "angles", temp );
 			}
 
 			if ( strcmpi( pEntity, "func_simpleladder" ) == 0 )
@@ -2640,6 +2670,8 @@ bool LoadMapFile( const char *pszFileName )
 		OverlayTransition_UpdateSideLists( g_LoadingMap->m_StartMapWaterOverlays );
 
 		g_LoadingMap->CheckForInstances( pszFileName );
+		if ( g_LoadingMap == g_MainMap )
+			Cubemap_ProcessEntities();
 
 		if ( pMainManifest )
 		{

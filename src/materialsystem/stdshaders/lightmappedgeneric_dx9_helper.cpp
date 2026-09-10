@@ -23,13 +23,11 @@ ConVar my_mat_fullbright( "mat_fullbright","0", FCVAR_CHEAT );
 
 ConVar r_lightmap_bicubic( "r_lightmap_bicubic", "0", FCVAR_NONE, "Enable bi-cubic (high quality) lightmap sampling." );
 
-extern ConVar r_flashlight_version2;
-
 class CLightmappedGeneric_DX9_Context : public CBasePerMaterialContextData
 {
 public:
 	uint8 *m_pStaticCmds;
-	CCommandBufferBuilder< CFixedCommandStorageBuffer< 1000 > > m_SemiStaticCmdsOut;
+	CCommandBufferBuilder< CFixedCommandStorageBuffer< 1200 > > m_SemiStaticCmdsOut;
 
 	bool m_bVertexShaderFastPath;
 	bool m_bPixelShaderFastPath;
@@ -100,6 +98,37 @@ void InitParamsLightmappedGeneric_DX9( CBaseVSShader *pShader, IMaterialVar** pa
 
 	if( !params[info.m_nEnvmapTint]->IsDefined() )
 		params[info.m_nEnvmapTint]->SetVecValue( 1.0f, 1.0f, 1.0f );
+
+	if ( IsBoolSet( info.m_nEnvmapParallax, params ) )
+	{
+		const int nVars[] = { info.m_nEnvmapOrigin, info.m_nEnvmapParallaxObb1,
+			info.m_nEnvmapParallaxObb2, info.m_nEnvmapParallaxObb3 };
+		bool bValid = true;
+		for ( int i = 0; i < ARRAYSIZE( nVars ); ++i )
+		{
+			if ( nVars[i] < 0 || !params[nVars[i]]->IsDefined() || params[nVars[i]]->VectorSize() != ( i == 0 ? 3 : 4 ) )
+			{
+				bValid = false;
+				break;
+			}
+			const float *pValue = params[nVars[i]]->GetVecValue();
+			for ( int j = 0; j < params[nVars[i]]->VectorSize(); ++j )
+				bValid = bValid && IsFinite( pValue[j] );
+		}
+		if ( bValid )
+		{
+			Vector rows[3];
+			for ( int i = 0; i < 3; ++i )
+				params[nVars[i + 1]]->GetVecValue( rows[i].Base(), 3 );
+			float flDeterminant = DotProduct( rows[0], CrossProduct( rows[1], rows[2] ) );
+			bValid = IsFinite( flDeterminant ) && fabsf( flDeterminant ) > 1.0e-20f;
+		}
+		if ( !bValid )
+		{
+			Warning( "Invalid parallax cubemap parameters in material %s; using ordinary reflections.\n", pMaterialName );
+			params[info.m_nEnvmapParallax]->SetIntValue( 0 );
+		}
+	}
 
 	if( !params[info.m_nNoDiffuseBumpLighting]->IsDefined() )
 		params[info.m_nNoDiffuseBumpLighting]->SetIntValue( 0 );
@@ -316,6 +345,9 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 			(info.m_nBlendModulateTexture != -1) &&
 			(params[info.m_nBlendModulateTexture]->IsTexture() );
 		bool hasNormalMapAlphaEnvmapMask = IS_FLAG_SET( MATERIAL_VAR_NORMALMAPALPHAENVMAPMASK );
+		bool bParallaxCorrect = params[info.m_nEnvmap]->IsTexture() &&
+			IsBoolSet( info.m_nEnvmapParallax, params ) && !pShader->CanUseEditorMaterials() &&
+			g_pHardwareConfig->SupportsPixelShaders_2_b();
 
 		if ( hasFlashlight && !IsX360() )				
 		{
@@ -578,6 +610,8 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 					SET_STATIC_PIXEL_SHADER_COMBO( FLASHLIGHT, hasFlashlight);
 #endif
 					SET_STATIC_PIXEL_SHADER( lightmappedgeneric_ps20b );
+					if ( bParallaxCorrect )
+						pShaderShadow->SetPixelShader( "lightmappedgeneric_parallax_ps20b", _pshIndex.GetIndex() );
 				}
 				else
 				{
@@ -860,6 +894,15 @@ void DrawLightmappedGeneric_DX9_Internal(CBaseVSShader *pShader, IMaterialVar** 
 				pContextData->m_SemiStaticCmdsOut.BindTexture( pShader, SHADER_SAMPLER3, info.m_nBlendModulateTexture, -1 );
 			}
 
+			if ( bParallaxCorrect )
+			{
+				float constants[4][4] = {};
+				params[info.m_nEnvmapOrigin]->GetVecValue( constants[0], 3 );
+				params[info.m_nEnvmapParallaxObb1]->GetVecValue( constants[1], 4 );
+				params[info.m_nEnvmapParallaxObb2]->GetVecValue( constants[2], 4 );
+				params[info.m_nEnvmapParallaxObb3]->GetVecValue( constants[3], 4 );
+				pContextData->m_SemiStaticCmdsOut.SetPixelShaderConstant( 21, constants[0], 4 );
+			}
 			pContextData->m_SemiStaticCmdsOut.End();
 		}
 	}
@@ -1015,11 +1058,5 @@ void DrawLightmappedGeneric_DX9(CBaseVSShader *pShader, IMaterialVar** params,
 										 CBasePerMaterialContextData **pContextDataPtr )
 {
 	bool hasFlashlight = pShader->UsingFlashlight( params );
-	if ( !IsX360() && !r_flashlight_version2.GetInt() )
-	{
-		DrawLightmappedGeneric_DX9_Internal( pShader, params, hasFlashlight, pShaderAPI, pShaderShadow, info, pContextDataPtr );
-		return;
-	}
-	
 	DrawLightmappedGeneric_DX9_Internal( pShader, params, hasFlashlight, pShaderAPI, pShaderShadow, info, pContextDataPtr );
 }

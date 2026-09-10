@@ -90,7 +90,11 @@ const float4 g_DetailTint_and_BlendFactor	: register( c8 );
 #define g_DetailTint (g_DetailTint_and_BlendFactor.rgb)
 #define g_DetailBlendFactor (g_DetailTint_and_BlendFactor.w)
 
+#if PARALLAXCORRECT
+const float3 g_EyePos : register( c10 );
+#else
 const HALF3 g_EyePos						: register( c10 );
+#endif
 const HALF4 g_FogParams						: register( c11 );
 const float4 g_TintValuesAndLightmapScale	: register( c12 );
 
@@ -100,6 +104,13 @@ const float4 g_FlashlightAttenuationFactors	: register( c13 );
 const float3 g_FlashlightPos				: register( c14 );
 const float4x4 g_FlashlightWorldToTexture	: register( c15 ); // through c18
 const float4 g_ShadowTweaks					: register( c19 );
+
+#if PARALLAXCORRECT
+const float3 g_EnvmapOrigin : register( c21 );
+const float4 g_EnvmapParallaxObb1 : register( c22 );
+const float4 g_EnvmapParallaxObb2 : register( c23 );
+const float4 g_EnvmapParallaxObb3 : register( c24 );
+#endif
 
 
 sampler BaseTextureSampler		: register( s0 );
@@ -168,7 +179,11 @@ struct PS_INPUT
 	HALF4 lightmapTexCoord1And2		: TEXCOORD2;
 // CENTROID: TEXCOORD3
 	HALF4 lightmapTexCoord3			: TEXCOORD3;
+#if PARALLAXCORRECT
+	float4 worldPos_projPosZ : TEXCOORD4;
+#else
 	HALF4 worldPos_projPosZ			: TEXCOORD4;
+#endif
 	HALF3x3 tangentSpaceTranspose	: TEXCOORD5;
 	// tangentSpaceTranspose		: TEXCOORD6
 	// tangentSpaceTranspose		: TEXCOORD7
@@ -531,6 +546,22 @@ HALF4 main( PS_INPUT i ) : COLOR
 		fresnel = pow( fresnel, 5.0 );
 		fresnel = fresnel * g_OneMinusFresnelReflection + g_FresnelReflection;
 		
+#if PARALLAXCORRECT
+		float4 worldPos = float4( i.worldPos_projPosZ.xyz, 1.0f );
+		float3 positionLS = float3( dot( g_EnvmapParallaxObb1, worldPos ),
+			dot( g_EnvmapParallaxObb2, worldPos ), dot( g_EnvmapParallaxObb3, worldPos ) );
+		float3 rayWS = normalize( reflectVect );
+		float3 rayLS = float3( dot( g_EnvmapParallaxObb1.xyz, rayWS ),
+			dot( g_EnvmapParallaxObb2.xyz, rayWS ), dot( g_EnvmapParallaxObb3.xyz, rayWS ) );
+		float3 safeRayLS = ( step( 0.0f, rayLS ) * 2.0f - 1.0f ) * max( abs( rayLS ), 1.0e-8f );
+		float3 farPlanes = max( ( 1.0f - positionLS ) / safeRayLS, -positionLS / safeRayLS );
+		farPlanes += ( 1.0f - step( 1.0e-8f, abs( rayLS ) ) ) * 1.0e20f;
+		float distance = max( 0.0f, min( farPlanes.x, min( farPlanes.y, farPlanes.z ) ) );
+		float3 corrected = worldPos.xyz + rayWS * distance - g_EnvmapOrigin;
+		float3 inside = step( -1.0e-4f, positionLS ) * step( positionLS, 1.0001f );
+		float useCorrection = inside.x * inside.y * inside.z * step( 1.0e-8f, dot( corrected, corrected ) );
+		reflectVect = reflectVect * ( 1.0f - useCorrection ) + corrected * useCorrection;
+#endif
 		specularLighting = ENV_MAP_SCALE * texCUBE( EnvmapSampler, reflectVect );
 		specularLighting *= specularFactor;
 								   

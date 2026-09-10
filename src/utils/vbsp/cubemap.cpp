@@ -19,6 +19,9 @@
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialvar.h"
 
+extern qboolean onlyents;
+extern qboolean onlyprops;
+
 
 /*
 	Meager documentation for how the cubemaps are assigned.
@@ -48,7 +51,17 @@ struct PatchInfo_t
 {
 	char *m_pMapName;
 	int m_pOrigin[3];
+	int m_nParallaxObb;
 };
+
+struct ParallaxObb_t
+{
+	const char *m_pName;
+	matrix3x4_t m_WorldToBox;
+};
+
+static CUtlVector<ParallaxObb_t> s_ParallaxObbs;
+static int s_CubemapParallaxObbs[MAX_MAP_CUBEMAPSAMPLES];
 
 struct CubemapInfo_t
 {
@@ -87,12 +100,155 @@ inline bool SideHasCubemapAndWasntManuallyReferenced( int iSide )
 
 void Cubemap_InsertSample( const Vector& origin, int size )
 {
+	if ( g_nCubemapSamples >= MAX_MAP_CUBEMAPSAMPLES )
+		Error( "Too many env_cubemap entities (maximum %d).\n", MAX_MAP_CUBEMAPSAMPLES );
+
+	s_CubemapParallaxObbs[g_nCubemapSamples] = -1;
 	dcubemapsample_t *pSample = &g_CubemapSamples[g_nCubemapSamples];
 	pSample->origin[0] = ( int )origin[0];	
 	pSample->origin[1] = ( int )origin[1];	
 	pSample->origin[2] = ( int )origin[2];	
 	pSample->size = size;
 	g_nCubemapSamples++;
+}
+
+void Cubemap_ProcessEntities()
+{
+	s_ParallaxObbs.RemoveAll();
+	for ( int i = 0; i < g_MainMap->num_entities; ++i )
+	{
+		entity_t *pEntity = &g_MainMap->entities[i];
+		if ( Q_stricmp( ValueForKey( pEntity, "classname" ), "parallax_obb" ) )
+			continue;
+
+		const char *pName = ValueForKey( pEntity, "targetname" );
+		if ( !pName[0] || pEntity->numbrushes != 1 )
+			Error( "parallax_obb at (%g %g %g) must have a name and exactly one rectangular brush.\n",
+				pEntity->origin.x, pEntity->origin.y, pEntity->origin.z );
+		for ( int j = 0; j < s_ParallaxObbs.Count(); ++j )
+		{
+			if ( !Q_stricmp( pName, s_ParallaxObbs[j].m_pName ) )
+				Error( "Duplicate parallax_obb name: %s.\n", pName );
+		}
+
+		mapbrush_t *pBrush = &g_MainMap->mapbrushes[pEntity->firstbrush];
+		const plane_t *planes[6];
+		int nPlanes = 0;
+		for ( int j = 0; j < pBrush->numsides; ++j )
+		{
+			side_t *pSide = &pBrush->original_sides[j];
+			if ( pSide->bevel || !pSide->winding )
+				continue;
+			if ( pSide->pMapDisp || pSide->winding->numpoints != 4 || nPlanes == ARRAYSIZE( planes ) )
+				Error( "parallax_obb %s must be a rectangular box without displacements.\n", pName );
+			planes[nPlanes++] = &g_MainMap->mapplanes[pSide->planenum];
+		}
+		if ( nPlanes != ARRAYSIZE( planes ) )
+			Error( "parallax_obb %s must have six rectangular faces.\n", pName );
+
+		ParallaxObb_t obb;
+		obb.m_pName = pName;
+		QAngle angles;
+		GetAnglesForKey( pEntity, "angles", angles );
+		matrix3x4_t boxToWorld;
+		AngleMatrix( angles, pEntity->origin, boxToWorld );
+		Vector axes[3];
+		int nAxes = 0;
+		int nUsedPlanes = 0;
+		for ( int j = 0; j < nPlanes; ++j )
+		{
+			if ( nUsedPlanes & ( 1 << j ) )
+				continue;
+			if ( nAxes == 3 )
+				Error( "parallax_obb %s has nonparallel opposite faces.\n", pName );
+			int nOpposite = -1;
+			for ( int k = j + 1; k < nPlanes; ++k )
+			{
+				if ( !( nUsedPlanes & ( 1 << k ) ) && DotProduct( planes[j]->normal, planes[k]->normal ) < -0.99999f )
+				{
+					nOpposite = k;
+					break;
+				}
+			}
+			if ( nOpposite < 0 )
+				Error( "parallax_obb %s has nonparallel opposite faces.\n", pName );
+			float flExtent = planes[j]->dist + planes[nOpposite]->dist;
+			if ( !IsFinite( flExtent ) || flExtent <= 0.01f )
+				Error( "parallax_obb %s has an invalid or zero sized extent.\n", pName );
+			axes[nAxes] = planes[j]->normal;
+			for ( int k = 0; k < nAxes; ++k )
+			{
+				if ( fabsf( DotProduct( axes[k], axes[nAxes] ) ) > 0.0001f )
+					Error( "parallax_obb %s has nonperpendicular edges.\n", pName );
+			}
+			Vector worldAxis;
+			VectorRotate( axes[nAxes], boxToWorld, worldAxis );
+			for ( int k = 0; k < 3; ++k )
+				obb.m_WorldToBox[nAxes][k] = worldAxis[k] / flExtent;
+			obb.m_WorldToBox[nAxes][3] = ( planes[nOpposite]->dist - DotProduct( worldAxis, pEntity->origin ) ) / flExtent;
+			for ( int k = 0; k < 4; ++k )
+			{
+				if ( !IsFinite( obb.m_WorldToBox[nAxes][k] ) )
+					Error( "parallax_obb %s has an invalid transform.\n", pName );
+			}
+			nUsedPlanes |= ( 1 << j ) | ( 1 << nOpposite );
+			++nAxes;
+		}
+		s_ParallaxObbs.AddToTail( obb );
+		pEntity->numbrushes = 0;
+		pEntity->epairs = NULL;
+	}
+
+	for ( int i = 0; i < g_MainMap->num_entities; ++i )
+	{
+		entity_t *pEntity = &g_MainMap->entities[i];
+		if ( Q_stricmp( ValueForKey( pEntity, "classname" ), "env_cubemap" ) )
+			continue;
+		if ( !onlyprops && ( g_nDXLevel == 0 || g_nDXLevel >= 70 ) )
+		{
+			int nSample = g_nCubemapSamples;
+			Cubemap_InsertSample( pEntity->origin, IntForKey( pEntity, "cubemapsize" ) );
+			Cubemap_SaveBrushSides( ValueForKey( pEntity, "sides" ) );
+			const char *pName = ValueForKey( pEntity, "parallaxobb" );
+			if ( pName[0] )
+			{
+				if ( onlyents )
+					Error( "Parallax cubemaps require a full BSP compile; -onlyents cannot update the projection data.\n" );
+				for ( int j = 0; j < s_ParallaxObbs.Count(); ++j )
+				{
+					if ( Q_stricmp( pName, s_ParallaxObbs[j].m_pName ) )
+						continue;
+					const dcubemapsample_t &sample = g_CubemapSamples[nSample];
+					Vector origin( sample.origin[0], sample.origin[1], sample.origin[2] );
+					Vector localOrigin;
+					VectorTransform( origin, s_ParallaxObbs[j].m_WorldToBox, localOrigin );
+					for ( int k = 0; k < 3; ++k )
+					{
+						if ( localOrigin[k] <= 0.0f || localOrigin[k] >= 1.0f )
+							Error( "env_cubemap at (%d %d %d) must be strictly inside parallax_obb %s.\n",
+								sample.origin[0], sample.origin[1], sample.origin[2], pName );
+					}
+					s_CubemapParallaxObbs[nSample] = j;
+					break;
+				}
+				if ( s_CubemapParallaxObbs[nSample] < 0 )
+					Error( "env_cubemap at (%g %g %g) references missing parallax_obb %s.\n",
+						pEntity->origin.x, pEntity->origin.y, pEntity->origin.z, pName );
+			}
+			for ( int j = 0; j < nSample; ++j )
+			{
+				if ( s_CubemapParallaxObbs[j] == s_CubemapParallaxObbs[nSample] )
+					continue;
+				const dcubemapsample_t &sample = g_CubemapSamples[nSample];
+				if ( sample.origin[0] == g_CubemapSamples[j].origin[0] && sample.origin[1] == g_CubemapSamples[j].origin[1] &&
+					sample.origin[2] == g_CubemapSamples[j].origin[2] )
+					Error( "env_cubemap entities at (%d %d %d) have conflicting parallax boxes.\n",
+						sample.origin[0], sample.origin[1], sample.origin[2] );
+			}
+		}
+		pEntity->numbrushes = 0;
+		pEntity->epairs = NULL;
+	}
 }
 
 static const char *FindSkyboxMaterialName( void )
@@ -579,6 +735,43 @@ static bool PatchEnvmapForMaterialAndDependents( const char *pMaterialName, cons
 	}
 
 	CreateMaterialPatch( pMaterialName, pPatchedMaterialName, nPatchCount, pPatchInfo, PATCH_REPLACE );
+	if ( bShouldPatchEnvCubemap && info.m_nParallaxObb >= 0 )
+	{
+		KeyValues *pPatch = LoadMaterialKeyValues( pPatchedMaterialName, 0 );
+		if ( !pPatch )
+			Error( "Unable to load cubemap material patch %s.\n", pPatchedMaterialName );
+		KeyValues *pInsert = pPatch->FindKey( "insert", true );
+		pInsert->SetInt( "$envmapparallax", 0 );
+		char value[192];
+		Q_snprintf( value, sizeof( value ), "[%d %d %d]", info.m_pOrigin[0], info.m_pOrigin[1], info.m_pOrigin[2] );
+		pInsert->SetString( "$envmaporigin", value );
+		const char *pKeys[] = { "$envmapparallaxobb1", "$envmapparallaxobb2", "$envmapparallaxobb3" };
+		for ( int i = 0; i < 3; ++i )
+		{
+			const float *row = s_ParallaxObbs[info.m_nParallaxObb].m_WorldToBox[i];
+			Q_snprintf( value, sizeof( value ), "[%.9g %.9g %.9g %.9g]", row[0], row[1], row[2], row[3] );
+			pInsert->SetString( pKeys[i], value );
+		}
+		KeyValues *pOriginal = LoadMaterialKeyValues( pMaterialName, LOAD_MATERIAL_KEY_VALUES_FLAGS_EXPAND_PATCH );
+		if ( !pOriginal )
+			Error( "Unable to load cubemap material %s.\n", pMaterialName );
+		CUtlVector<KeyValues *> originals, inserts;
+		originals.AddToTail( pOriginal );
+		inserts.AddToTail( pInsert );
+		for ( int i = 0; i < originals.Count(); ++i )
+		{
+			const char *pEnvmap = originals[i]->GetString( "$envmap", NULL );
+			if ( pEnvmap )
+				inserts[i]->SetInt( "$envmapparallax", !Q_stricmp( pEnvmap, "env_cubemap" ) );
+			for ( KeyValues *pSub = originals[i]->GetFirstTrueSubKey(); pSub; pSub = pSub->GetNextTrueSubKey() )
+			{
+				originals.AddToTail( pSub );
+				inserts.AddToTail( inserts[i]->FindKey( pSub->GetName(), true ) );
+			}
+		}
+		pOriginal->deleteThis();
+		WriteMaterialKeyValuesToPak( pPatchedMaterialName, pPatch );
+	}
 
 	return true;
 }
@@ -597,7 +790,7 @@ static bool PatchEnvmapForMaterialAndDependents( const char *pMaterialName, cons
 // default (skybox) cubemap into this file so the cubemap doesn't have the pink checkerboard at
 // runtime before they run buildcubemaps.
 //-----------------------------------------------------------------------------
-static int Cubemap_CreateTexInfo( int originalTexInfo, int origin[3] )
+static int Cubemap_CreateTexInfo( int originalTexInfo, int origin[3], int nCubemap )
 {
 	// Don't make cubemap tex infos for nodes
 	if ( originalTexInfo == TEXINFO_NODE )
@@ -624,6 +817,7 @@ static int Cubemap_CreateTexInfo( int originalTexInfo, int origin[3] )
 	info.m_pOrigin[0] = origin[0];
 	info.m_pOrigin[1] = origin[1];
 	info.m_pOrigin[2] = origin[2];
+	info.m_nParallaxObb = s_CubemapParallaxObbs[nCubemap];
 
 	// Generate the name of the patched material
 	char pGeneratedTexDataName[1024];
@@ -730,7 +924,7 @@ void Cubemap_FixupBrushSidesMaterials( void )
 			}
 #endif
 			
-			pSide->texinfo = Cubemap_CreateTexInfo( pSide->texinfo, g_CubemapSamples[cubemapID].origin );
+			pSide->texinfo = Cubemap_CreateTexInfo( pSide->texinfo, g_CubemapSamples[cubemapID].origin, cubemapID );
 			if ( pSide->pMapDisp )
 			{
 				pSide->pMapDisp->face.texinfo = pSide->texinfo;
@@ -946,7 +1140,7 @@ void Cubemap_AttachDefaultCubemapToSpecularSides( void )
 			Assert( pSide->texinfo == pSide->pMapDisp->face.texinfo );
 		}
 #endif				
-		pSide->texinfo = Cubemap_CreateTexInfo( pSide->texinfo, g_CubemapSamples[iCubemap].origin );
+		pSide->texinfo = Cubemap_CreateTexInfo( pSide->texinfo, g_CubemapSamples[iCubemap].origin, iCubemap );
 		if ( pSide->pMapDisp )
 		{
 			pSide->pMapDisp->face.texinfo = pSide->texinfo;
