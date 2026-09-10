@@ -358,7 +358,7 @@ void CWeaponFrag::ItemPostFrame( void )
 				{
 					//See if we're ducking
 					if ( pOwner->m_nButtons & IN_DUCK )
-					{	
+					{
 						//Send the weapon animation
 						SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 					}

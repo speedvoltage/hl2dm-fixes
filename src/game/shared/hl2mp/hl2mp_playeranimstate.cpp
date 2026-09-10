@@ -23,8 +23,8 @@ extern ConVar anim_showmainactivity;
 extern ConVar mp_showgestureslots;
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPlayer - 
+// Purpose:
+// Input  : *pPlayer -
 // Output : CMultiPlayerAnimState*
 //-----------------------------------------------------------------------------
 CHL2MPPlayerAnimState *CreateHL2MPPlayerAnimState( CHL2MP_Player *pPlayer )
@@ -46,7 +46,7 @@ CHL2MPPlayerAnimState *CreateHL2MPPlayerAnimState( CHL2MP_Player *pPlayer )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CHL2MPPlayerAnimState::CHL2MPPlayerAnimState()
 {
@@ -55,9 +55,9 @@ CHL2MPPlayerAnimState::CHL2MPPlayerAnimState()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPlayer - 
-//          &movementData - 
+// Purpose:
+// Input  : *pPlayer -
+//          &movementData -
 //-----------------------------------------------------------------------------
 CHL2MPPlayerAnimState::CHL2MPPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData )
 	: CMultiPlayerAnimState( pPlayer, movementData )
@@ -67,7 +67,7 @@ CHL2MPPlayerAnimState::CHL2MPPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerM
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 CHL2MPPlayerAnimState::~CHL2MPPlayerAnimState()
 {
@@ -75,7 +75,7 @@ CHL2MPPlayerAnimState::~CHL2MPPlayerAnimState()
 
 //-----------------------------------------------------------------------------
 // Purpose: Initialize HL2MP specific animation state.
-// Input  : *pPlayer - 
+// Input  : *pPlayer -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::InitHL2MP( CHL2MP_Player *pPlayer )
 {
@@ -83,9 +83,9 @@ void CHL2MPPlayerAnimState::InitHL2MP( CHL2MP_Player *pPlayer )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : eyeYaw - 
-//          eyePitch - 
+// Purpose:
+// Input  : eyeYaw -
+//          eyePitch -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 {
@@ -125,9 +125,9 @@ void CHL2MPPlayerAnimState::Update( float eyeYaw, float eyePitch )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : event - 
-//          nData - 
+// Purpose:
+// Input  : event -
+//          nData -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 {
@@ -158,7 +158,7 @@ void CHL2MPPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 // Output : Activity
 //-----------------------------------------------------------------------------
 Activity CHL2MPPlayerAnimState::CalcMainActivity( void )
@@ -184,8 +184,8 @@ Activity CHL2MPPlayerAnimState::CalcMainActivity( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : actDesired - 
+// Purpose:
+// Input  : actDesired -
 // Output : Activity
 //-----------------------------------------------------------------------------
 Activity CHL2MPPlayerAnimState::TranslateActivity( Activity actDesired )
@@ -200,14 +200,14 @@ Activity CHL2MPPlayerAnimState::TranslateActivity( Activity actDesired )
 	CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
 
 	if ( pWeapon )
-		translateActivity = pWeapon->ActivityOverride( translateActivity, false );
+		translateActivity = pWeapon->ActivityOverride( translateActivity, NULL );
 
 	return translateActivity;
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
+// Purpose:
+// Input  : *idealActivity -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
@@ -250,8 +250,8 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
+// Purpose:
+// Input  : *idealActivity -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleSwimming( Activity &idealActivity )
@@ -286,8 +286,8 @@ bool CHL2MPPlayerAnimState::HandleSwimming( Activity &idealActivity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
+// Purpose:
+// Input  : *idealActivity -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleHovering( Activity &idealActivity )
@@ -323,8 +323,8 @@ bool CHL2MPPlayerAnimState::HandleHovering( Activity &idealActivity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
+// Purpose:
+// Input  : *idealActivity -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleDucking( Activity &idealActivity )
@@ -348,8 +348,8 @@ bool CHL2MPPlayerAnimState::HandleDucking( Activity &idealActivity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
+// Purpose:
+// Input  : *idealActivity -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::HandleMoving( Activity &idealActivity )
@@ -389,8 +389,8 @@ float CHL2MPPlayerAnimState::GetCurrentMaxGroundSpeed( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pStudioHdr - 
+// Purpose:
+// Input  : *pStudioHdr -
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CHL2MPPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
@@ -418,7 +418,7 @@ bool CHL2MPPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::EstimateYaw( void )
 {
@@ -464,8 +464,8 @@ void CHL2MPPlayerAnimState::EstimateYaw( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pStudioHdr - 
+// Purpose:
+// Input  : *pStudioHdr -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 {
@@ -498,8 +498,8 @@ void CHL2MPPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pStudioHdr - 
+// Purpose:
+// Input  : *pStudioHdr -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 {
@@ -516,8 +516,8 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pStudioHdr - 
+// Purpose:
+// Input  : *pStudioHdr -
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 {
@@ -594,7 +594,7 @@ void CHL2MPPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CHL2MPPlayerAnimState::ComputePlaybackRate( void )
 {

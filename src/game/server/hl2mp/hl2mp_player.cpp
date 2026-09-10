@@ -358,7 +358,7 @@ void CHL2MP_Player::Spawn(void)
 		GiveDefaultItems();
 	}
 
-	SetNumAnimOverlays( 3 );
+	SetNumAnimOverlays( GESTURE_SLOT_COUNT );
 
 	m_nRenderFX = kRenderNormal;
 
@@ -547,6 +547,13 @@ void CHL2MP_Player::SetPlayerModel( void )
 	m_flNextModelChangeTime = gpGlobals->curtime + MODEL_CHANGE_INTERVAL;
 }
 
+CStudioHdr *CHL2MP_Player::OnNewModel( void )
+{
+	CStudioHdr *pStudioHdr = BaseClass::OnNewModel();
+	m_PlayerAnimState->OnNewModel();
+	return pStudioHdr;
+}
+
 void CHL2MP_Player::SetupPlayerSoundsByModel( const char *pModelName )
 {
 	if ( Q_stristr( pModelName, "models/human") )
@@ -568,7 +575,8 @@ bool CHL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelinde
 {
 	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 
-	DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
+	if ( bRet )
+		DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
 
 	return bRet;
 }
@@ -718,8 +726,8 @@ Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : playerAnim - 
+// Purpose:
+// Input  : playerAnim -
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
 {
@@ -1598,7 +1606,7 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nDat
 	CPVSFilter filter( (const Vector &)pPlayer->EyePosition() );
 
 	filter.UsePredictionRules();
-	
+
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
 	g_TEPlayerAnimEvent.m_nData = nData;

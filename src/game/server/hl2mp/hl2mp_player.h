@@ -98,6 +98,7 @@ public:
 
 	void SetPlayerModel( void );
 	void SetPlayerTeamModel( void );
+	virtual CStudioHdr *OnNewModel( void );
 	Activity TranslateTeamActivity( Activity ActToTranslate );
 	
 	float GetNextModelChangeTime( void ) { return m_flNextModelChangeTime; }

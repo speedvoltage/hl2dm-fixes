@@ -243,7 +243,8 @@ bool C_HL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelind
 {
 	bool bRet = BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 
-	DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
+	if ( bRet )
+		DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
 
 	return bRet;
 }
