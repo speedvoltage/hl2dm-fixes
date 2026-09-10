@@ -347,6 +347,8 @@ void CWeaponFrag::ItemPostFrame( void )
 				if( !(pOwner->m_nButtons & IN_ATTACK) )
 				{
 					SendWeaponAnim( ACT_VM_THROW );
+					ToHL2MPPlayer( pOwner )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+
 					m_fDrawbackFinished = false;
 				}
 				break;
@@ -356,7 +358,7 @@ void CWeaponFrag::ItemPostFrame( void )
 				{
 					//See if we're ducking
 					if ( pOwner->m_nButtons & IN_DUCK )
-					{
+					{	
 						//Send the weapon animation
 						SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 					}
@@ -365,6 +367,7 @@ void CWeaponFrag::ItemPostFrame( void )
 						//Send the weapon animation
 						SendWeaponAnim( ACT_VM_HAULBACK );
 					}
+					ToHL2MPPlayer( pOwner )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 					m_fDrawbackFinished = false;
 				}
@@ -454,9 +457,6 @@ void CWeaponFrag::ThrowGrenade( CBasePlayer *pPlayer )
 	m_bRedraw = true;
 
 	WeaponSound( SINGLE );
-	
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 #ifdef GAME_DLL
 	pPlayer->OnMyWeaponFired( this );
@@ -490,9 +490,6 @@ void CWeaponFrag::LobGrenade( CBasePlayer *pPlayer )
 #endif
 
 	WeaponSound( WPN_DOUBLE );
-
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 	m_bRedraw = true;
 }
@@ -543,9 +540,6 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 #endif
 
 	WeaponSound( SPECIAL1 );
-
-	// player "shoot" animation
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 
 	m_bRedraw = true;
 }

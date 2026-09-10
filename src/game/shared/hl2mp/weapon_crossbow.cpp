@@ -665,6 +665,7 @@ void CWeaponCrossbow::FireBolt( void )
 	WeaponSound( SPECIAL2 );
 
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+	ToHL2MPPlayer( pOwner )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	if ( !m_iClip1 && pOwner->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
 	{

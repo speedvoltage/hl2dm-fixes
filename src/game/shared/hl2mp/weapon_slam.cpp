@@ -441,7 +441,7 @@ void CWeapon_SLAM::StartTripmineAttach( void )
 		if (pEntity && !(pEntity->GetFlags() & FL_CONVEYOR))
 		{
 			// player "shoot" animation
-			pPlayer->SetAnimation( PLAYER_ATTACK1 );
+			ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 			// -----------------------------------------
 			//  Play attach animation
@@ -478,11 +478,11 @@ void CWeapon_SLAM::StartTripmineAttach( void )
 //-----------------------------------------------------------------------------
 void CWeapon_SLAM::SatchelThrow( void )
 {	
-#ifndef CLIENT_DLL
-	m_bThrowSatchel = false;
-
 	// Only the player fires this way so we can cast
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+
+#ifndef CLIENT_DLL
+	m_bThrowSatchel = false;
 
 	Vector vecSrc	 = pPlayer->WorldSpaceCenter();
 	Vector vecFacing = pPlayer->BodyDirection3D( );
@@ -514,9 +514,9 @@ void CWeapon_SLAM::SatchelThrow( void )
 	}
 
 	pPlayer->RemoveAmmo( 1, m_iSecondaryAmmoType );
-	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-
 #endif
+
+	ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	// Play throw sound
 	EmitSound( "Weapon_SLAM.SatchelThrow" );
@@ -631,7 +631,7 @@ void CWeapon_SLAM::StartSatchelAttach( void )
 			CBasePlayer *pPlayer = ToBasePlayer( pOwner );
 
 			// player "shoot" animation
-			pPlayer->SetAnimation( PLAYER_ATTACK1 );
+			ToHL2MPPlayer( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 			// -----------------------------------------
 			//  Play attach animation
