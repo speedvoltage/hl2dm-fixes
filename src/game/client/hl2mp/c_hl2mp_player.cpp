@@ -14,6 +14,7 @@
 #include "iviewrender_beams.h"			// flashlight beam
 #include "r_efx.h"
 #include "dlight.h"
+#include "prediction.h"
 #include <igameresources.h>
 
 // Don't alias here
@@ -119,6 +120,7 @@ C_HL2MP_Player::C_HL2MP_Player() :
 	m_pFlashlightBeam = NULL;
 
 	m_bDuckJumpStateInitialized = false;
+	m_bDuckJumpOriginChanged = false;
 	m_bWasDucked = false;
 	m_bWasAirborne = false;
 	m_flDuckJumpInterp = 0.0f;
@@ -350,92 +352,70 @@ void C_HL2MP_Player::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quatern
 {
 	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
 
+	if ( prediction->InPrediction() )
+		return;
+
 	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
 	bool bAirborne = GetGroundEntity() == NULL;
-	float flTimeSinceUpdate = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
-	if ( !m_bDuckJumpStateInitialized || flTimeSinceUpdate < 0.0f || flTimeSinceUpdate > 0.15f )
+	float flElapsed = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
+
+	if ( !m_bDuckJumpStateInitialized || !IsAlive() || IsNoInterpolationFrame() || Teleported() || flElapsed < 0.0f || flElapsed > 0.15f )
 	{
-		m_bDuckJumpStateInitialized = true;
-		m_bWasDucked = bDucked;
-		m_bWasAirborne = bAirborne;
 		m_flDuckJumpInterp = 0.0f;
-		m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
 	}
 	else
 	{
-		UpdateDuckJumpInterp();
+		m_flDuckJumpInterp = Approach( 0.0f, m_flDuckJumpInterp, flElapsed / 0.15f );
 
-		if ( bAirborne && m_bWasAirborne && bDucked != m_bWasDucked )
+		if ( bAirborne && ( m_bWasAirborne || m_bDuckJumpOriginChanged ) && bDucked != m_bWasDucked )
 		{
 			m_flDuckJumpInterp += bDucked ? 1.0f : -1.0f;
 			m_flDuckJumpInterp = clamp( m_flDuckJumpInterp, -1.0f, 1.0f );
 		}
-
-		if ( !bAirborne )
-		{
-			m_flDuckJumpInterp = 0.0f;
-		}
 	}
 
-	if ( bAirborne && m_flDuckJumpInterp != 0.0f )
-	{
-		Vector hullSizeNormal = VEC_HULL_MAX_SCALED( this ) - VEC_HULL_MIN_SCALED( this );
-		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED( this ) - VEC_DUCK_HULL_MIN_SCALED( this );
-		Vector duckOffset = ( hullSizeNormal - hullSizeCrouch ) * m_flDuckJumpInterp;
+	if ( !bAirborne )
+		m_flDuckJumpInterp = 0.0f;
 
-		for ( int i = 0; i < hdr->numbones(); i++ )
-		{
-			if ( !( hdr->boneFlags( i ) & boneMask ) )
-				continue;
-
-			matrix3x4_t &transform = GetBoneForWrite( i );
-			Vector bonePosition;
-			MatrixGetTranslation( transform, bonePosition );
-			MatrixSetTranslation( bonePosition - duckOffset, transform );
-		}
-	}
-
+	m_bDuckJumpStateInitialized = true;
+	m_bDuckJumpOriginChanged = false;
 	m_bWasDucked = bDucked;
 	m_bWasAirborne = bAirborne;
-}
-
-void C_HL2MP_Player::UpdateDuckJumpInterp( void )
-{
-	float flElapsed = MAX( 0.0f, gpGlobals->curtime - m_flDuckJumpLastUpdateTime );
-	m_flDuckJumpInterp = Approach( 0.0f, m_flDuckJumpInterp, flElapsed / 0.15f );
 	m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
+
+	if ( m_flDuckJumpInterp == 0.0f )
+		return;
+
+	Vector hullSizeNormal = VEC_HULL_MAX_SCALED( this ) - VEC_HULL_MIN_SCALED( this );
+	Vector hullSizeCrouch = VEC_DUCK_HULL_MAX_SCALED( this ) - VEC_DUCK_HULL_MIN_SCALED( this );
+	Vector duckOffset = ( hullSizeNormal - hullSizeCrouch ) * m_flDuckJumpInterp;
+
+	for ( int i = 0; i < hdr->numbones(); i++ )
+	{
+		if ( !( hdr->boneFlags( i ) & boneMask ) )
+			continue;
+
+		matrix3x4_t &transform = GetBoneForWrite( i );
+		Vector bonePosition;
+		MatrixGetTranslation( transform, bonePosition );
+		MatrixSetTranslation( bonePosition - duckOffset, transform );
+	}
 }
 
 void C_HL2MP_Player::ResetDuckJumpInterpState( void )
 {
 	m_bDuckJumpStateInitialized = false;
+	m_bDuckJumpOriginChanged = false;
 	m_flDuckJumpInterp = 0.0f;
-	m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
 }
 
 void C_HL2MP_Player::ResetLatched( void )
 {
 	bool bDucked = ( GetFlags() & FL_DUCKING ) != 0;
-	bool bAirborne = GetGroundEntity() == NULL;
-	float flTimeSinceUpdate = gpGlobals->curtime - m_flDuckJumpLastUpdateTime;
-	if ( m_bDuckJumpStateInitialized && flTimeSinceUpdate >= 0.0f && flTimeSinceUpdate <= 0.15f )
+	if ( prediction->InPrediction() && prediction->IsFirstTimePredicted() && GetGroundEntity() == NULL && bDucked != m_bWasDucked )
 	{
-		UpdateDuckJumpInterp();
-		if ( bAirborne && bDucked != m_bWasDucked )
-		{
-			m_flDuckJumpInterp += bDucked ? 1.0f : -1.0f;
-			m_flDuckJumpInterp = clamp( m_flDuckJumpInterp, -1.0f, 1.0f );
-		}
+		m_bDuckJumpOriginChanged = true;
 	}
-	else
-	{
-		m_bDuckJumpStateInitialized = true;
-		m_flDuckJumpInterp = 0.0f;
-		m_flDuckJumpLastUpdateTime = gpGlobals->curtime;
-	}
-
-	m_bWasDucked = bDucked;
-	m_bWasAirborne = bAirborne;
 
 	BaseClass::ResetLatched();
 }
