@@ -2596,8 +2596,7 @@ void CHudCloseCaption::InitCaptionDictionary( const char *dbfile )
 		} 
 
 		char fullpath[MAX_PATH];
-		Q_snprintf( fullpath, sizeof( fullpath ), "%s%s", path, dbfile );
-		Q_FixSlashes( fullpath );
+		V_ComposeFileName( path, dbfile, fullpath, sizeof( fullpath ) );
 
 		if ( IsX360() )
 		{
