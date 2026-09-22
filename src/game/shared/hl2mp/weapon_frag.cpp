@@ -73,6 +73,14 @@ public:
 	
 private:
 
+#ifdef CLIENT_DLL
+	void	PredictAnimationEvents( void );
+
+	int		m_nPredictedEventSequence;
+	float	m_flPredictedEventAnimTime;
+	float	m_flPredictedEventCycle;
+#endif
+
 	void	RollGrenade( CBasePlayer *pPlayer );
 	void	LobGrenade( CBasePlayer *pPlayer );
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
@@ -128,6 +136,9 @@ BEGIN_PREDICTION_DATA( CWeaponFrag )
 	DEFINE_PRED_FIELD( m_bRedraw, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_fDrawbackFinished, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_AttackPaused, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_nPredictedEventSequence, FIELD_INTEGER, 0 ),
+	DEFINE_PRED_FIELD( m_flPredictedEventAnimTime, FIELD_FLOAT, 0 ),
+	DEFINE_PRED_FIELD( m_flPredictedEventCycle, FIELD_FLOAT, 0 ),
 END_PREDICTION_DATA()
 #endif
 
@@ -138,6 +149,11 @@ CWeaponFrag::CWeaponFrag( void ) :
 	CBaseHL2MPCombatWeapon()
 {
 	m_bRedraw = false;
+#ifdef CLIENT_DLL
+	m_nPredictedEventSequence = -1;
+	m_flPredictedEventAnimTime = 0.0f;
+	m_flPredictedEventCycle = 0.0f;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -211,6 +227,9 @@ void CWeaponFrag::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 //-----------------------------------------------------------------------------
 bool CWeaponFrag::Deploy( void )
 {
+#ifdef CLIENT_DLL
+	m_nPredictedEventSequence = -1;
+#endif
 	m_bRedraw = false;
 	m_fDrawbackFinished = false;
 
@@ -223,6 +242,9 @@ bool CWeaponFrag::Deploy( void )
 //-----------------------------------------------------------------------------
 bool CWeaponFrag::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
+#ifdef CLIENT_DLL
+	m_nPredictedEventSequence = -1;
+#endif
 	m_bRedraw = false;
 	m_fDrawbackFinished = false;
 
@@ -339,39 +361,77 @@ void CWeaponFrag::DecrementAmmo( CBaseCombatCharacter *pOwner )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+#ifdef CLIENT_DLL
+// Predict the two viewmodel events needed for local roll audio. The server
+// still handles grenade creation, ammo consumption and the other throw state.
+void CWeaponFrag::PredictAnimationEvents( void )
+{
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	if ( !pPlayer || pPlayer != CBasePlayer::GetLocalPlayer() || gpGlobals->frametime <= 0.0f )
+		return;
+
+	CBaseViewModel *pViewModel = pPlayer->GetViewModel( m_nViewModelIndex );
+	if ( !pViewModel || pViewModel->GetOwningWeapon() != this )
+		return;
+
+	MDLCACHE_CRITICAL_SECTION();
+	CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
+	int nSequence = pViewModel->GetSequence();
+	if ( !pStudioHdr || !pStudioHdr->SequencesAvailable() || nSequence < 0 || nSequence >= pStudioHdr->GetNumSeq() )
+		return;
+
+	float flAnimTime = pViewModel->GetAnimTime();
+	if ( m_nPredictedEventSequence != nSequence || m_flPredictedEventAnimTime != flAnimTime )
+	{
+		m_nPredictedEventSequence = nSequence;
+		m_flPredictedEventAnimTime = flAnimTime;
+		m_flPredictedEventCycle = 0.0f;
+	}
+
+	float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
+	if ( flCycleRate <= 0.0f )
+		return;
+
+	float flEndCycle = MAX( 0.0f, ( gpGlobals->curtime - flAnimTime ) * flCycleRate );
+	mstudioseqdesc_t &seqdesc = pStudioHdr->pSeqdesc( nSequence );
+	if ( seqdesc.flags & STUDIO_LOOPING )
+	{
+		flEndCycle = fmodf( flEndCycle, 1.0f );
+	}
+	else if ( flEndCycle >= 1.0f || flEndCycle > 1.0f - seqdesc.fadeouttime * flCycleRate )
+	{
+		// Match StudioFrameAdvance/DispatchAnimEvents: a finished sequence
+		// dispatches its remaining events, including events in its fade-out.
+		flEndCycle = 1.01f;
+	}
+
+	// Keep the cursor in prediction data so command replays restore it along
+	// with the viewmodel. Checking only the previous tick loses events when
+	// ItemPostFrame is skipped. WeaponSound already suppresses replayed audio.
+	float flStartCycle = m_flPredictedEventCycle;
+	m_flPredictedEventCycle = flEndCycle;
+	animevent_t event;
+	int nEvent = 0;
+	while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
+	{
+		switch ( event.event )
+		{
+		case EVENT_WEAPON_SEQUENCE_FINISHED:
+			m_fDrawbackFinished = true;
+			break;
+
+		case EVENT_WEAPON_THROW2:
+			WeaponSound( SPECIAL1 );
+			break;
+		}
+	}
+}
+#endif
+
 void CWeaponFrag::ItemPostFrame( void )
 {
 #ifdef CLIENT_DLL
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	CBaseViewModel *pViewModel = pPlayer ? pPlayer->GetViewModel( m_nViewModelIndex ) : NULL;
-	if ( pViewModel && pPlayer == CBasePlayer::GetLocalPlayer() && pViewModel->GetOwningWeapon() == this && gpGlobals->frametime > 0.0f )
-	{
-		MDLCACHE_CRITICAL_SECTION();
-		CStudioHdr *pStudioHdr = pViewModel->GetModelPtr();
-		int nSequence = pViewModel->GetSequence();
-		if ( pStudioHdr && nSequence >= 0 && nSequence < pStudioHdr->GetNumSeq() )
-		{
-			float flCycleRate = pViewModel->GetSequenceCycleRate( pStudioHdr, nSequence ) * pViewModel->GetPlaybackRate();
-			int nTick = TIME_TO_TICKS( gpGlobals->curtime );
-			float flStartCycle = ( TICKS_TO_TIME( nTick - 1 ) - pViewModel->GetAnimTime() ) * flCycleRate;
-			float flEndCycle = ( TICKS_TO_TIME( nTick ) - pViewModel->GetAnimTime() ) * flCycleRate;
-			animevent_t event;
-			int nEvent = 0;
-			while ( ( nEvent = GetAnimationEvent( pStudioHdr, nSequence, &event, flStartCycle, flEndCycle, nEvent ) ) != 0 )
-			{
-				switch ( event.event )
-				{
-				case EVENT_WEAPON_SEQUENCE_FINISHED:
-					m_fDrawbackFinished = true;
-					break;
-
-				case EVENT_WEAPON_THROW2:
-					WeaponSound( SPECIAL1 );
-					break;
-				}
-			}
-		}
-	}
+	PredictAnimationEvents();
 #endif
 
 	if( m_fDrawbackFinished )
