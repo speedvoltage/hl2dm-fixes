@@ -31,6 +31,7 @@ public:
 	~ClientModeHL2MPNormal();
 
 	virtual void	Init();
+	virtual void	Shutdown();
 	virtual int		GetDeathMessageStartHeight( void );
 	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
 };

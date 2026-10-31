@@ -22,6 +22,7 @@
 #include "glow_outline_effect.h"
 #include "hl2mp_gamerules.h"
 #include "clienteffectprecachesystem.h"
+#include "hl2mp_mainmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -130,6 +131,7 @@ ClientModeHL2MPNormal::~ClientModeHL2MPNormal()
 void ClientModeHL2MPNormal::Init()
 {
 	BaseClass::Init();
+	HL2MPMainMenu_Create();
 
 	// Load up the combine control panel scheme
 	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/CombinePanelScheme.res", "CombineScheme" );
@@ -137,6 +139,12 @@ void ClientModeHL2MPNormal::Init()
 	{
 		Warning( "Couldn't load combine panel scheme!\n" );
 	}
+}
+
+void ClientModeHL2MPNormal::Shutdown()
+{
+	HL2MPMainMenu_Destroy();
+	BaseClass::Shutdown();
 }
 
 bool ClientModeHL2MPNormal::DoPostScreenSpaceEffects( const CViewSetup *pSetup )

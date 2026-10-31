@@ -502,3 +502,18 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local matchmaking builds, runtime downloads, and screenshots
+/artifacts/
+/windows-build.log
+/linux-build.log
+/game/mod_hl2mp_linux64
+/game/mod_hl2mp_win64.exe
+/src/.ninja_deps
+/src/.ninja_log
+/src/lib/public/linux64/mathlib.a
+/src/lib/public/linux64/matsys_controls.a
+/src/lib/public/linux64/raytrace.a
+/src/lib/public/linux64/tier1.a
+/src/lib/public/linux64/vgui_controls.a
+/game/mod_hl2mp/materials/vgui/logos/

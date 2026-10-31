@@ -23,6 +23,14 @@ $Project "Client (HL2MP)"
 {
 	$Folder	"Source Files"
 	{
+		$Folder "Matchmaking"
+		{
+			$File "hl2mp\ui\hl2mp_mainmenu.cpp"
+			$File "hl2mp\ui\hl2mp_mainmenu.h"
+			$File "hl2mp\ui\hl2mp_party.cpp"
+			$File "hl2mp\ui\hl2mp_party.h"
+		}
+
 		$Folder "Game Instructor"
 		{
 			$File "gameinstructor\c_baselesson.cpp"
