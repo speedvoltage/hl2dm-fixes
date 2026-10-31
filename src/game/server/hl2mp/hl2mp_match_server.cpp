@@ -94,6 +94,7 @@ private:
 	void ClearMatch();
 	void Release();
 	void FreezePlayers();
+	void CheckCoordinatorContact();
 	bool m_Enabled, m_Configured, m_LevelReady, m_Prepared, m_Playing, m_ResultPending;
 	char m_URL[512], m_Credential[128], m_Match[40], m_Mode[16], m_Map[64], m_State[32], m_Abort[32];
 	HTTPRequestHandle m_Request;
@@ -351,6 +352,9 @@ void CMatchServer::Response( HTTPRequestCompleted_t *result, bool failed )
 		if ( root ) root->deleteThis();
 		return;
 	}
+	// A successful response must not revive a round that crossed the outage limit
+	// while this request was in flight.
+	CheckCoordinatorContact();
 	m_LastContact = Plat_FloatTime();
 	if ( operation == HEARTBEAT ) Assignment( root->FindKey( "match" ) );
 	else if ( operation == READY )
@@ -359,7 +363,7 @@ void CMatchServer::Response( HTTPRequestCompleted_t *result, bool failed )
 		m_AdmissionDeadline = Plat_FloatTime() + 120;
 		Msg( "Matchmaking server: map loaded; waiting for authenticated players.\n" );
 	}
-	else if ( operation == AUTHORIZE )
+	else if ( operation == AUTHORIZE && !m_Abort[0] )
 	{
 		CHL2MP_Player *player = ToHL2MPPlayer( m_Authorizing.Get() );
 		const int index = RosterIndex( player );
@@ -400,6 +404,18 @@ void CMatchServer::FreezePlayers()
 	}
 }
 
+void CMatchServer::CheckCoordinatorContact()
+{
+	if ( Q_strcmp( m_State, "active" ) || m_ResultPending || m_Abort[0] || Plat_FloatTime() - m_LastContact < 20 ) return;
+	// Freezing players does not freeze projectiles or the map clock. Once contact
+	// is lost for this long, cancel instead of resuming an altered competitive round.
+	Q_strncpy( m_Abort, "server_error", sizeof( m_Abort ) );
+	m_Playing = false;
+	m_Countdown = 0;
+	UTIL_ClientPrintAll( HUD_PRINTCENTER, "Match cancelled: matchmaking service unavailable" );
+	Msg( "Matchmaking server: coordinator contact lost; cancelling without a result.\n" );
+}
+
 void CMatchServer::Finished()
 {
 	if ( !m_Enabled || !m_Playing || m_ResultPending ) return;
@@ -430,6 +446,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 {
 	if ( !m_Enabled || !m_LevelReady ) return;
 	const double now = Plat_FloatTime();
+	CheckCoordinatorContact();
 	if ( m_ReturnDeadline )
 	{
 		FreezePlayers();

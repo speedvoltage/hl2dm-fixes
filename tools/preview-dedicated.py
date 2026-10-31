@@ -16,6 +16,8 @@ import sys
 import time
 
 import httpx
+from matchmaking_faults import ServerFaultProxy
+
 
 
 def console_command(process, command):
@@ -65,10 +67,11 @@ def main():
     checks.add_argument("--verify", action="store_true", help="Verify admission, a one-minute casual round, result reporting, and server release")
     checks.add_argument("--unreserved", action="store_true", help="Verify that a different coordinator identity cannot enter the reserved match")
     checks.add_argument("--expired-session", action="store_true", help="Verify bounded server release when the client loses its coordinator session")
+    checks.add_argument("--coordinator-outage", choices=("brief", "sustained"), help="Interrupt server API traffic and verify safe recovery or unrated cancellation")
     args = parser.parse_args()
     if os.name != "nt":
         raise SystemExit("This runtime preview currently targets Windows.")
-    if args.server_only and (args.verify or args.unreserved or args.expired_session):
+    if args.server_only and (args.verify or args.unreserved or args.expired_session or args.coordinator_outage):
         parser.error("Runtime verification requires a game client")
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam\ActiveProcess") as key:
@@ -106,6 +109,7 @@ def main():
     client_log = root / "game/mod_hl2mp/matchmaking-client.log"
     client_offset = client_log.stat().st_size if client_log.exists() else 0
     verified = False
+    fault_proxy = None
 
     def launch(argv, name, env, cwd=root, hidden=True):
         if name == "srcds":
@@ -142,7 +146,9 @@ def main():
             response = client.post("/v1/auth/development", json={"steam_id": steam_id, "key": key})
             response.raise_for_status()
             token = response.json()["token"]
-            server = launch([str(sdk / "srcds_win64.exe"), "-console", "-game", str(root / "game/mod_hl2mp"), "-ip", "127.0.0.1", "-port", str(game_port), "-maxplayers", "16", "-mm_server", "-condebug", "+con_logfile", "matchmaking-server.log", "+net_usesocketsforloopback", "1", "+sv_lan", "0", "+map", "dm_lockdown"], "srcds", dict(os.environ, HL2MP_MM_SERVER_URL=url, HL2MP_MM_SERVER_TOKEN=server_key), cwd=sdk)
+            if args.coordinator_outage:
+                fault_proxy = ServerFaultProxy(url)
+            server = launch([str(sdk / "srcds_win64.exe"), "-console", "-game", str(root / "game/mod_hl2mp"), "-ip", "127.0.0.1", "-port", str(game_port), "-maxplayers", "16", "-mm_server", "-condebug", "+con_logfile", "matchmaking-server.log", "+net_usesocketsforloopback", "1", "+sv_lan", "0", "+map", "dm_lockdown"], "srcds", dict(os.environ, HL2MP_MM_SERVER_URL=fault_proxy.url if fault_proxy else url, HL2MP_MM_SERVER_TOKEN=server_key), cwd=sdk)
             game = None
             if not args.server_only:
                 game = launch([str(sdk / "hl2_win64.exe"), "-steam", "-game", str(root / "game/mod_hl2mp"), "-ip", "127.0.0.1", "+clientport", str(client_port), "+net_usesocketsforloopback", "1", "-windowed", "-w", "1280", "-h", "720", "-novid", "-condebug", "+con_logfile", "matchmaking-client.log", "-mm_local_test", "+mm_queue", "casual"], "client", dict(os.environ, HL2MP_MM_DEV_URL=url, HL2MP_MM_DEV_SESSION=token), cwd=sdk, hidden=False)
@@ -152,6 +158,7 @@ def main():
             start = time.time()
             last_state, copied = None, False
             shortened = False
+            outage_started, outage_recovered = None, False
             while time.time() - start < args.seconds:
                 if service.poll() is not None or server.poll() is not None or (game and game.poll() is not None):
                     print("A preview process exited.", flush=True)
@@ -198,14 +205,39 @@ def main():
                         rotated.raise_for_status()
                         headers = {"Authorization": "Bearer " + rotated.json()["token"]}
                 last = state.get("last_match") or {}
-                if (args.verify or args.expired_session) and last.get("state") == "finished":
+                if args.coordinator_outage and copied and outage_started is None:
+                    fault_proxy.unavailable.set()
+                    outage_started = time.monotonic()
+                    print("Interrupting native server API traffic.", flush=True)
+                aborted = "coordinator contact lost; cancelling without a result" in log_text
+                if args.coordinator_outage and outage_started is not None and not outage_recovered:
+                    elapsed = time.monotonic() - outage_started
+                    if (args.coordinator_outage == "brief" and elapsed >= 5) or aborted:
+                        fault_proxy.unavailable.clear()
+                        outage_recovered = True
+                        print("Restored native server API traffic.", flush=True)
+                        if args.coordinator_outage == "brief":
+                            if aborted:
+                                raise RuntimeError("A brief outage unexpectedly cancelled the match")
+                            console_command(server, "mp_timelimit 1")
+                    elif elapsed > 25:
+                        raise RuntimeError("The server failed to cancel after sustained contact loss")
+                outage_terminal = args.coordinator_outage and outage_recovered and last.get("state") in {"finished", "cancelled"}
+                if ((args.verify or args.expired_session) and last.get("state") == "finished") or outage_terminal:
                     if "admitted player" not in log_text or "match started" not in log_text:
                         raise RuntimeError("Result arrived without native admission and gameplay")
-                    if last["result"] != {"winner": None, "rating_change_team_0": 0}:
+                    if args.coordinator_outage == "sustained":
+                        if not aborted or last["state"] != "cancelled" or last.get("reason") != "The dedicated server could not continue":
+                            raise RuntimeError("The match was not cancelled by the native outage guard")
+                        if last["rating_change"] != 0 or state["ratings"] != {"duel": 1500, "team": 1500}:
+                            raise RuntimeError("The cancelled match changed a rating")
+                    elif last.get("result") != {"winner": None, "rating_change_team_0": 0}:
                         raise RuntimeError("Casual match unexpectedly affected ratings")
                     with sqlite3.connect(f"file:{(directory / 'state.sqlite3').as_posix()}?mode=ro", uri=True) as db:
                         stored = json.loads(db.execute("SELECT payload FROM state WHERE id=1").fetchone()[0])
                     if stored["servers"]["local-srcds"]["match"] is None:
+                        if args.coordinator_outage == "sustained" and (any(path.endswith("/result") for path in fault_proxy.forwarded) or not any(path.endswith("/abort") for path in fault_proxy.forwarded)):
+                            raise RuntimeError("The native server reported a result instead of aborting")
                         with client_log.open("rb") as stream:
                             stream.seek(client_offset)
                             client_text = stream.read().decode("utf-8", errors="replace")
@@ -219,13 +251,17 @@ def main():
                                 raise RuntimeError("The player did not return voluntarily after the result")
                             capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(root / "tools/capture-menu.ps1"), "-Name", "match-result"], cwd=root, check=True, capture_output=True, text=True)
                             print("Result screenshot: " + capture.stdout.strip(), flush=True)
-                        proof = {"check": "expired_session_return_timeout" if args.expired_session else "native_casual_lifecycle", "success": True, "result": last["result"], "server_released": True, "returned_to_menu": returned, "summary": last}
+                        check = "coordinator_outage_" + args.coordinator_outage if args.coordinator_outage else "expired_session_return_timeout" if args.expired_session else "native_casual_lifecycle"
+                        proof = {"check": check, "success": True, "result": last.get("result"), "server_released": True, "returned_to_menu": returned, "summary": last}
                         (directory / "verification.json").write_text(json.dumps(proof, indent=2))
-                        print("Verified: session-loss fallback released the server." if args.expired_session else "Verified: native admission, gameplay, result reporting, and server release.", flush=True)
+                        if args.coordinator_outage:
+                            print(f"Verified: {args.coordinator_outage} coordinator outage handled and server released.", flush=True)
+                        else:
+                            print("Verified: session-loss fallback released the server." if args.expired_session else "Verified: native admission, gameplay, result reporting, and server release.", flush=True)
                         verified = True
                         break
                 time.sleep(1)
-            if (args.verify or args.unreserved or args.expired_session) and not verified:
+            if (args.verify or args.unreserved or args.expired_session or args.coordinator_outage) and not verified:
                 raise RuntimeError("The runtime check did not complete; inspect the evidence directory")
     finally:
         for child in reversed(children):
@@ -238,6 +274,8 @@ def main():
                     child.wait()
         for log in logs:
             log.close()
+        if fault_proxy:
+            fault_proxy.close()
         for name in ("matchmaking-server.log", "matchmaking-client.log"):
             source = root / "game/mod_hl2mp" / name
             if source.exists():

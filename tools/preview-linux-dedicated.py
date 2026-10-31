@@ -16,6 +16,7 @@ import subprocess
 import sys
 import threading
 import time
+from matchmaking_faults import ServerFaultProxy
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,6 +48,7 @@ def worker(args):
     console = None
     reader = None
     success = False
+    fault_proxy = None
     thread.start()
     try:
         for attempt in range(100):
@@ -57,8 +59,10 @@ def worker(args):
             time.sleep(0.1)
         else:
             raise RuntimeError("Linux coordinator did not start")
+        if args.coordinator_outage:
+            fault_proxy = ServerFaultProxy(url)
         env = dict(os.environ, LD_LIBRARY_PATH=str(args.runtime / "bin/linux64"),
-                   HL2MP_MM_SERVER_URL=url, HL2MP_MM_SERVER_TOKEN=server_key)
+                   HL2MP_MM_SERVER_URL=fault_proxy.url if fault_proxy else url, HL2MP_MM_SERVER_TOKEN=server_key)
         with httpx.Client(base_url=url, timeout=5) as client:
             console, slave = pty.openpty()
             try:
@@ -90,6 +94,7 @@ def worker(args):
             print(f"Linux SRCDS PID {server.pid}; evidence: {args.evidence}", flush=True)
             headers = {"Authorization": "Bearer " + token}
             started, shortened, last_state = time.monotonic(), False, None
+            outage_started, outage_recovered = None, not args.coordinator_outage
             while time.monotonic() - started < args.seconds and not (args.evidence / "stop").exists():
                 if server.poll() is not None:
                     raise RuntimeError(f"Linux SRCDS exited with status {server.returncode}; inspect server.log")
@@ -107,20 +112,47 @@ def worker(args):
                     last_state = phase
                 text = (args.evidence / "server.log").read_text(errors="replace")
                 if not shortened and "Matchmaking server: match started." in text:
-                    os.write(console, b"mp_timelimit 1\n")
+                    if fault_proxy:
+                        fault_proxy.unavailable.set()
+                        outage_started = time.monotonic()
+                        print("Interrupting Linux server API traffic.", flush=True)
+                    else:
+                        os.write(console, b"mp_timelimit 1\n")
                     shortened = True
+                aborted = "coordinator contact lost; cancelling without a result" in text
+                if outage_started is not None and not outage_recovered:
+                    elapsed = time.monotonic() - outage_started
+                    if (args.coordinator_outage == "brief" and elapsed >= 5) or aborted:
+                        fault_proxy.unavailable.clear()
+                        outage_recovered = True
+                        print("Restored Linux server API traffic.", flush=True)
+                        if args.coordinator_outage == "brief":
+                            if aborted:
+                                raise RuntimeError("A brief outage unexpectedly cancelled the match")
+                            os.write(console, b"mp_timelimit 1\n")
+                    elif elapsed > 25:
+                        raise RuntimeError("Linux server failed to cancel after sustained contact loss")
                 last = state.get("last_match") or {}
-                if last.get("state") == "finished" and shortened and "Matchmaking server: admitted player" in text:
+                if last.get("state") in {"finished", "cancelled"} and shortened and outage_recovered and "Matchmaking server: admitted player" in text:
+                    if args.coordinator_outage == "sustained":
+                        if not aborted or last["state"] != "cancelled" or last.get("reason") != "The dedicated server could not continue":
+                            raise RuntimeError("The Linux native outage guard did not cancel the match")
+                        if last["rating_change"] != 0 or state["ratings"] != {"duel": 1500, "team": 1500}:
+                            raise RuntimeError("The cancelled Linux match changed a rating")
+                    elif last.get("result") != {"winner": None, "rating_change_team_0": 0}:
+                        raise RuntimeError("Linux match did not finish with an unrated casual result")
                     with core.transaction() as data:
                         released = data["servers"]["linux-srcds"]["match"] is None
                     if released:
+                        if args.coordinator_outage == "sustained" and (any(path.endswith("/result") for path in fault_proxy.forwarded) or not any(path.endswith("/abort") for path in fault_proxy.forwarded)):
+                            raise RuntimeError("The Linux server reported a result instead of aborting")
                         if "Matchmaking_reservation_ended" in text:
                             raise RuntimeError("The server kicked the player instead of allowing a clean return")
                         success = True
                         (args.evidence / "verification.json").write_text(json.dumps(dict(
-                            check="linux_server_casual_lifecycle", success=True,
-                            result=last["result"], server_released=True, summary=last), indent=2))
-                        print("Verified Linux admission, gameplay, result reporting, and server release.", flush=True)
+                            check="linux_coordinator_outage_" + args.coordinator_outage if args.coordinator_outage else "linux_server_casual_lifecycle", success=True,
+                            result=last.get("result"), server_released=True, summary=last), indent=2))
+                        print("Verified Linux match resolution and server release.", flush=True)
                         break
                 time.sleep(0.5)
             if not success:
@@ -150,6 +182,8 @@ def worker(args):
             result["server_exit_code"] = server.returncode
             result["shutdown_clean"] = server.returncode == 0 and "Assertion Failed" not in console_text
             verification.write_text(json.dumps(result, indent=2))
+        if fault_proxy:
+            fault_proxy.close()
         service.should_exit = True
         thread.join(timeout=10)
         if not thread.is_alive():
@@ -173,6 +207,8 @@ def windows(args):
         linux_path(Path(__file__)), "--worker", "--runtime", linux_path(args.runtime),
         "--evidence", linux_path(evidence), "--steam-id", str(76561197960265728 + account),
         "--address", address, "--api-port", str(api_port), "--seconds", str(args.seconds)]
+    if args.coordinator_outage:
+        command += ["--coordinator-outage", args.coordinator_outage]
     worker_log = (evidence / "worker.log").open("w")
     child = subprocess.Popen(command, stdout=worker_log, stderr=subprocess.STDOUT,
                              creationflags=subprocess.CREATE_NO_WINDOW)
@@ -244,6 +280,7 @@ def main():
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--distro", default="Ubuntu")
     parser.add_argument("--seconds", type=int, default=180)
+    parser.add_argument("--coordinator-outage", choices=("brief", "sustained"))
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--evidence", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--steam-id", help=argparse.SUPPRESS)
