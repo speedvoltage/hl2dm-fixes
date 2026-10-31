@@ -271,13 +271,18 @@ class Coordinator:
                 elif match["state"] not in TERMINAL:
                     raise Rejected("The search has ended and the match is starting")
 
+    def _match_summary(self, s, match, actor, state):
+        ranked = MODES[match["mode"]]["ranked"]
+        return {"id": match["id"], "state": state, "mode": match["mode"], "map": match["map"],
+                "rating_change": 0, "rating": s["users"][actor]["ratings"][match["mode"]] if ranked else None}
+
     def _cancel(self, s, match, reason):
         match["state"], match["reason"] = "cancelled", reason
         match["ended"] = self.clock()
         for uid in match["players"]:
             if s["users"][uid]["match"] == match["id"]:
                 s["users"][uid]["match"] = None
-                s["users"][uid]["last_match"] = {"id": match["id"], "state": "cancelled", "reason": reason}
+                s["users"][uid]["last_match"] = {**self._match_summary(s, match, uid, "cancelled"), "reason": reason}
         # Retain the server claim until it acknowledges that it has stopped the match.
 
     def _expire(self, s):
@@ -461,7 +466,13 @@ class Coordinator:
             for uid in m["players"]:
                 if s["users"][uid]["match"] == match_id:
                     s["users"][uid]["match"] = None
-                    s["users"][uid]["last_match"] = {"id": match_id, "state": "finished", "result": m["result"]}
+                    ranked = MODES[m["mode"]]["ranked"]
+                    team = m["players"][uid]["team"]
+                    s["users"][uid]["last_match"] = {
+                        **self._match_summary(s, m, uid, "finished"), "result": m["result"],
+                        "outcome": ("draw" if winner is None else "win" if winner == team else "loss") if ranked else "completed",
+                        "rating_change": (delta if team == 0 else -delta) if ranked else 0,
+                    }
             return m["result"]
 
     def leave_casual(self, actor):
@@ -478,7 +489,7 @@ class Coordinator:
         match["players"].pop(actor, None)
         if s["users"][actor]["match"] == match["id"]:
             s["users"][actor]["match"] = None
-            s["users"][actor]["last_match"] = {"id": match["id"], "state": "left", "reason": "You left the casual match"}
+            s["users"][actor]["last_match"] = {**self._match_summary(s, match, actor, "left"), "reason": "You left the casual match"}
         if not match["players"] and match["state"] not in TERMINAL:
             self._cancel(s, match, "Casual server is empty")
 

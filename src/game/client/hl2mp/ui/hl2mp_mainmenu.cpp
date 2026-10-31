@@ -122,6 +122,8 @@ private:
 	vgui::Label *m_Members[4];
 	vgui::Label *m_Status;
 	vgui::Label *m_QueueStatus;
+	vgui::Label *m_ResultHeading;
+	vgui::Label *m_ResultDetails;
 	int m_ScreenWidth;
 	int m_ScreenHeight;
 	vgui::HFont m_TitleFont;
@@ -149,6 +151,9 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
 	m_PartyHeading = new vgui::Label( this, "PartyHeading", "YOUR PARTY" );
 	m_Status = new vgui::Label( this, "PartyStatus", "" );
 	m_QueueStatus = new vgui::Label( this, "QueueStatus", "Classic combat. A new way to play together." );
+	m_ResultHeading = new vgui::Label( this, "ResultHeading", "" );
+	m_ResultDetails = new vgui::Label( this, "ResultDetails", "" );
+	m_ResultDetails->SetWrap( true );
 	m_Status->SetWrap( true );
 	m_QueueStatus->SetWrap( true );
 	const char *labels[BUTTON_COUNT] = { "DUEL", "TEAM DEATHMATCH", "CASUAL DEATHMATCH",
@@ -195,6 +200,8 @@ void CHL2MPMainMenu::ApplySchemeSettings( vgui::IScheme *scheme )
 	m_PartyHeading->SetFgColor( Color( 244, 163, 58, 255 ) );
 	m_Status->SetFgColor( Color( 188, 193, 196, 255 ) );
 	m_QueueStatus->SetFgColor( Color( 188, 193, 196, 255 ) );
+	m_ResultHeading->SetFgColor( Color( 244, 163, 58, 255 ) );
+	m_ResultDetails->SetFgColor( Color( 215, 219, 221, 255 ) );
 }
 
 void CHL2MPMainMenu::PerformLayout()
@@ -215,6 +222,8 @@ void CHL2MPMainMenu::PerformLayout()
 	m_PartyHeading->SetFont( m_SectionFont );
 	m_Status->SetFont( m_BodyFont );
 	m_QueueStatus->SetFont( m_BodyFont );
+	m_ResultHeading->SetFont( m_SectionFont );
+	m_ResultDetails->SetFont( m_DetailFont );
 	for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetFont( m_BodyFont );
 	for ( int i = 0; i < 4; ++i ) m_Members[i]->SetFont( m_BodyFont );
 	const int margin = int( 40 * scale );
@@ -243,6 +252,8 @@ void CHL2MPMainMenu::PerformLayout()
 	m_Buttons[READY]->SetBounds( right, top + int( 320 * scale ), column, buttonHeight );
 	const int footerY = h - margin - buttonHeight;
 	const int footerWidth = ( width - gap * 3 ) / 4;
+	m_ResultHeading->SetBounds( left, footerY - int( 68 * scale ), width, int( 20 * scale ) );
+	m_ResultDetails->SetBounds( left, footerY - int( 46 * scale ), width, int( 38 * scale ) );
 	for ( int i = RESUME; i < BUTTON_COUNT; ++i )
 		m_Buttons[i]->SetBounds( left + ( i - RESUME ) * ( footerWidth + gap ), footerY, footerWidth, buttonHeight );
 	for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( scale, m_DetailFont );
@@ -270,6 +281,8 @@ void CHL2MPMainMenu::OnTick()
 	}
 	CHL2MPParty &party = HL2MPParty();
 	CHL2MPCoordinator &coordinator = HL2MPCoordinator();
+	m_ResultHeading->SetText( coordinator.ResultHeading() );
+	m_ResultDetails->SetText( coordinator.ResultDetails() );
 	const bool grouped = party.Lobby().IsValid();
 	m_Buttons[CREATE_PARTY]->SetVisible( !grouped && !party.Pending() );
 	m_Buttons[CREATE_PARTY]->SetEnabled( party.Available() && !coordinator.Busy() );

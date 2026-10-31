@@ -52,6 +52,7 @@ CHL2MPCoordinator::CHL2MPCoordinator() : m_NextGrant( 0 ), m_PendingAction( ACTI
 {
 	m_BaseURL[0] = m_Token[0] = m_PendingMode[0] = m_MatchID[0] = m_MatchState[0] = m_ActionMatchID[0] = 0;
 	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
+	m_ConnectedEndpoint[0] = m_ResultID[0] = m_ResultHeading[0] = m_ResultDetails[0] = 0;
 	m_MatchMode[0] = 0;
 	m_PartyID[0] = m_PartyLobby[0] = m_PartyLeader[0] = m_UserID[0] = m_PartyInvite[0] = m_ReadyPartyID[0] = 0;
 	m_PartyCount = m_LobbyCount = m_PartyRevision = m_ReadyRevision = 0;
@@ -95,6 +96,7 @@ void CHL2MPCoordinator::Shutdown()
 	m_PendingAction = ACTION_NONE;
 	m_PreviewCaptureTime = 0;
 	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
+	m_ConnectedEndpoint[0] = m_ResultID[0] = m_ResultHeading[0] = m_ResultDetails[0] = 0;
 	m_PartyID[0] = m_PartyLobby[0] = m_PartyInvite[0] = 0;
 	m_PartyCount = m_LobbyCount = 0;
 	m_WantSession = m_ReadyPending = false;
@@ -482,9 +484,45 @@ void CHL2MPCoordinator::Connect()
 	// m_Endpoint is constructed only from a parsed IPv4 address and numeric port.
 	Q_snprintf( command, sizeof( command ), "connect %s", m_Endpoint );
 	Q_strncpy( m_ConnectedMatch, m_MatchID, sizeof( m_ConnectedMatch ) );
+	Q_strncpy( m_ConnectedEndpoint, m_Endpoint, sizeof( m_ConnectedEndpoint ) );
 	m_NextGrant = 0;
 	engine->ClientCmd_Unrestricted( command );
 	SetStatus( "Connecting to your dedicated server..." );
+}
+
+void CHL2MPCoordinator::ReadLastMatch( KeyValues *last )
+{
+	const char *id = last ? last->GetString( "id", "" ) : "";
+	if ( !SafeToken( id, 32, 32 ) ) return;
+	const char *state = last->GetString( "state", "" );
+	const bool finished = !Q_strcmp( state, "finished" );
+	const bool cancelled = !Q_strcmp( state, "cancelled" );
+	if ( !finished && !cancelled && Q_strcmp( state, "left" ) ) return;
+	if ( !Q_strcmp( id, m_ConnectedMatch ) && !m_MatchID[0] )
+	{
+		INetChannelInfo *channel = engine->GetNetChannelInfo();
+		// A late result must never disconnect a player from a different server.
+		if ( channel && m_ConnectedEndpoint[0] && !Q_strcmp( channel->GetAddress(), m_ConnectedEndpoint ) )
+		{
+			engine->ClientCmd_Unrestricted( "disconnect\ngameui_activate" );
+			if ( CommandLine()->CheckParm( "-mm_local_test" ) ) Msg( "Matchmaking preview: returning from completed reservation.\n" );
+		}
+		m_ConnectedMatch[0] = m_ConnectedEndpoint[0] = 0;
+	}
+	if ( !Q_strcmp( id, m_ResultID ) ) return;
+	Q_strncpy( m_ResultID, id, sizeof( m_ResultID ) );
+	const char *mode = last->GetString( "mode", "" );
+	const bool ranked = !Q_strcmp( mode, "duel" ) || !Q_strcmp( mode, "team" );
+	const char *name = !Q_strcmp( mode, "duel" ) ? "DUEL" : !Q_strcmp( mode, "team" ) ? "TEAM DEATHMATCH" : !Q_strcmp( mode, "casual" ) ? "CASUAL" : "MATCH";
+	const char *outcome = last->GetString( "outcome", "" );
+	const char *title = cancelled ? "CANCELLED" : !finished ? "LEFT MATCH" :
+		!Q_strcmp( outcome, "win" ) ? "VICTORY" : !Q_strcmp( outcome, "loss" ) ? "DEFEAT" : !Q_strcmp( outcome, "draw" ) ? "DRAW" : "COMPLETE";
+	Q_snprintf( m_ResultHeading, sizeof( m_ResultHeading ), "LAST MATCH  /  %s  /  %s", name, title );
+	if ( finished && ranked && last->FindKey( "rating" ) )
+		Q_snprintf( m_ResultDetails, sizeof( m_ResultDetails ), "Rating: %d (%+d). Ready for another match.", last->GetInt( "rating" ), last->GetInt( "rating_change" ) );
+	else if ( !finished )
+		Q_snprintf( m_ResultDetails, sizeof( m_ResultDetails ), "%s. %s", last->GetString( "reason", "The match ended" ), ranked ? "Your rating is unchanged." : "" );
+	else Q_strncpy( m_ResultDetails, !Q_strcmp( mode, "casual" ) ? "No ranking. Play another round whenever you like." : "Match complete. Ready for another match.", sizeof( m_ResultDetails ) );
 }
 
 void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed )
@@ -594,9 +632,9 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 		else if ( m_Searching ) Q_snprintf( m_Status, sizeof( m_Status ), "Searching for %s in %s...", queue->GetString( "mode" ), queue->GetString( "region" ) );
 		else
 		{
-			KeyValues *last = root->FindKey( "last_match" );
-			SetStatus( last && last->GetString( "reason", "" )[0] ? last->GetString( "reason" ) : "Ready. Choose a mode to find a match." );
+			SetStatus( "Ready. Choose a mode to find a match." );
 		}
+		ReadLastMatch( root->FindKey( "last_match" ) );
 	}
 	root->deleteThis();
 	if ( !auth && m_PendingMode[0] && !m_Searching && !m_MatchID[0] )

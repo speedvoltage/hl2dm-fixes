@@ -24,6 +24,8 @@ public:
 	bool HasServer() const { return m_Endpoint[0] && !Q_strcmp( m_MatchState, "active" ); }
 	bool CanLeaveCasual() const { return m_MatchID[0] && !Q_strcmp( m_MatchMode, "casual" ); }
 	const char *Status() const { return m_Status; }
+	const char *ResultHeading() const { return m_ResultHeading; }
+	const char *ResultDetails() const { return m_ResultDetails; }
 	bool Searching() const { return m_Searching; }
 	bool HasReadyCheck() const { return !Q_strcmp( m_MatchState, "ready_check" ); }
 	bool NeedsConfirmation() const { return HasReadyCheck() && !m_Confirmed; }
@@ -40,6 +42,7 @@ private:
 	void SetStatus( const char *text );
 	void ReleaseRequest();
 	void ReadParty( class KeyValues *root );
+	void ReadLastMatch( class KeyValues *last );
 	void SyncParty();
 	bool LobbyRosterMatches( bool joined ) const;
 	char m_PartyID[40];
@@ -71,6 +74,10 @@ private:
 	char m_Endpoint[64];
 	char m_JoinGrant[128];
 	char m_ConnectedMatch[40];
+	char m_ConnectedEndpoint[64];
+	char m_ResultID[40];
+	char m_ResultHeading[128];
+	char m_ResultDetails[256];
 	double m_NextGrant;
 	PendingAction m_PendingAction;
 	HTTPRequestHandle m_Request;

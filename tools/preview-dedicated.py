@@ -64,10 +64,11 @@ def main():
     checks = parser.add_mutually_exclusive_group()
     checks.add_argument("--verify", action="store_true", help="Verify admission, a one-minute casual round, result reporting, and server release")
     checks.add_argument("--unreserved", action="store_true", help="Verify that a different coordinator identity cannot enter the reserved match")
+    checks.add_argument("--expired-session", action="store_true", help="Verify bounded server release when the client loses its coordinator session")
     args = parser.parse_args()
     if os.name != "nt":
         raise SystemExit("This runtime preview currently targets Windows.")
-    if args.server_only and (args.verify or args.unreserved):
+    if args.server_only and (args.verify or args.unreserved or args.expired_session):
         parser.error("Runtime verification requires a game client")
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam\ActiveProcess") as key:
@@ -102,6 +103,8 @@ def main():
     children, logs = [], []
     server_log = root / "game/mod_hl2mp/matchmaking-server.log"
     log_offset = server_log.stat().st_size if server_log.exists() else 0
+    client_log = root / "game/mod_hl2mp/matchmaking-client.log"
+    client_offset = client_log.stat().st_size if client_log.exists() else 0
     verified = False
 
     def launch(argv, name, env, cwd=root, hidden=True):
@@ -185,11 +188,17 @@ def main():
                     print("Verified: an authenticated Steam player with a different coordinator identity was rejected.", flush=True)
                     verified = True
                     break
-                if args.verify and copied and not shortened:
+                if (args.verify or args.expired_session) and copied and not shortened:
                     console_command(server, "mp_timelimit 1")
                     shortened = True
+                    if args.expired_session:
+                        # Rotate the test harness session. The native client's old
+                        # session is revoked and cannot read its completion status.
+                        rotated = client.post("/v1/auth/development", json={"steam_id": steam_id, "key": key})
+                        rotated.raise_for_status()
+                        headers = {"Authorization": "Bearer " + rotated.json()["token"]}
                 last = state.get("last_match") or {}
-                if args.verify and last.get("state") == "finished":
+                if (args.verify or args.expired_session) and last.get("state") == "finished":
                     if "admitted player" not in log_text or "match started" not in log_text:
                         raise RuntimeError("Result arrived without native admission and gameplay")
                     if last["result"] != {"winner": None, "rating_change_team_0": 0}:
@@ -197,13 +206,26 @@ def main():
                     with sqlite3.connect(f"file:{(directory / 'state.sqlite3').as_posix()}?mode=ro", uri=True) as db:
                         stored = json.loads(db.execute("SELECT payload FROM state WHERE id=1").fetchone()[0])
                     if stored["servers"]["local-srcds"]["match"] is None:
-                        proof = {"check": "native_casual_lifecycle", "success": True, "result": last["result"], "server_released": True}
+                        with client_log.open("rb") as stream:
+                            stream.seek(client_offset)
+                            client_text = stream.read().decode("utf-8", errors="replace")
+                        returned = "returning from completed reservation" in client_text
+                        kicked = "Matchmaking_reservation_ended" in log_text
+                        if args.expired_session:
+                            if returned or not kicked or "match ended; waiting for clients to return" not in log_text:
+                                raise RuntimeError("The expired client did not exercise the return timeout")
+                        else:
+                            if not returned or kicked:
+                                raise RuntimeError("The player did not return voluntarily after the result")
+                            capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(root / "tools/capture-menu.ps1"), "-Name", "match-result"], cwd=root, check=True, capture_output=True, text=True)
+                            print("Result screenshot: " + capture.stdout.strip(), flush=True)
+                        proof = {"check": "expired_session_return_timeout" if args.expired_session else "native_casual_lifecycle", "success": True, "result": last["result"], "server_released": True, "returned_to_menu": returned, "summary": last}
                         (directory / "verification.json").write_text(json.dumps(proof, indent=2))
-                        print("Verified: native admission, gameplay, result reporting, and server release.", flush=True)
+                        print("Verified: session-loss fallback released the server." if args.expired_session else "Verified: native admission, gameplay, result reporting, and server release.", flush=True)
                         verified = True
                         break
                 time.sleep(1)
-            if (args.verify or args.unreserved) and not verified:
+            if (args.verify or args.unreserved or args.expired_session) and not verified:
                 raise RuntimeError("The runtime check did not complete; inspect the evidence directory")
     finally:
         for child in reversed(children):

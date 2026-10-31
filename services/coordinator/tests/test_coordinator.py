@@ -85,6 +85,34 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaises(Rejected):
             self.core.party_leave(self.users[0])
 
+    def test_result_summaries_use_each_players_perspective_and_survive_restart(self):
+        mid = self.active_duel()
+        self.core.report_result("eu-1", mid, 1)
+        expected = []
+        for uid, outcome, delta, rating in ((self.users[0], "loss", -16, 1484), (self.users[1], "win", 16, 1516)):
+            summary = self.core.status(uid)["last_match"]
+            self.assertEqual((summary["id"], summary["mode"], summary["map"]), (mid, "duel", "dm_lockdown"))
+            self.assertEqual((summary["outcome"], summary["rating_change"], summary["rating"]), (outcome, delta, rating))
+            expected.append(summary)
+        self.core.report_result("eu-1", mid, 1)
+        self.core.close()
+        self.core = Coordinator(self.path, clock=lambda: self.now)
+        self.assertEqual([self.core.status(u)["last_match"] for u in self.users[:2]], expected)
+
+    def test_draw_summary_and_unrated_cancellation(self):
+        mid = self.active_duel()
+        self.core.report_result("eu-1", mid, None)
+        for uid in self.users[:2]:
+            summary = self.core.status(uid)["last_match"]
+            self.assertEqual((summary["outcome"], summary["rating_change"], summary["rating"]), ("draw", 0, 1500))
+        self.core.heartbeat("eu-1", None)
+        mid = self.active_duel()
+        self.core.abort_match("eu-1", mid, "server_error")
+        for uid in self.users[:2]:
+            summary = self.core.status(uid)["last_match"]
+            self.assertEqual((summary["state"], summary["mode"], summary["rating_change"], summary["rating"]), ("cancelled", "duel", 0, 1500))
+            self.assertNotIn("outcome", summary)
+
     def test_cancel_from_party_member_withdraws_entire_party(self):
         invitation = self.core.status(self.users[0])["party"]["invite"]
         self.core.party_join(self.users[1], invitation)
@@ -219,6 +247,12 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(self.core.status(self.users[0])["party"]["ready"], [])
         self.assertEqual(self.core.status(self.users[0])["ratings"]["team"], 1516)
         self.assertEqual(self.core.status(self.users[1])["ratings"]["team"], 1516)
+        for uid in self.users[:4]:
+            summary = self.core.status(uid)["last_match"]
+            won = teams[uid] == teams[self.users[0]]
+            self.assertEqual(summary["mode"], "team")
+            self.assertEqual(summary["outcome"], "win" if won else "loss")
+            self.assertEqual(summary["rating_change"], 16 if won else -16)
 
     def test_decline_holds_server_until_shutdown_ack(self):
         mid = self.duel()
@@ -295,8 +329,13 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(self.core.status(self.users[1])["match"]["id"], mid)
         self.core.leave_casual(self.users[0])
         self.assertIsNone(self.core.status(self.users[0])["match"])
+        departed = self.core.status(self.users[0])["last_match"]
+        self.assertEqual((departed["state"], departed["mode"], departed["rating_change"], departed["rating"]), ("left", "casual", 0, None))
         self.core.report_result("eu-1", mid, None)
         self.assertEqual(self.core.status(self.users[1])["ratings"], {"duel": 1500, "team": 1500})
+        summary = self.core.status(self.users[1])["last_match"]
+        self.assertEqual((summary["outcome"], summary["mode"], summary["rating_change"], summary["rating"]), ("completed", "casual", 0, None))
+        self.assertEqual(self.core.status(self.users[0])["last_match"], departed)
 
     def test_queue_idempotency_and_session_rotation(self):
         self.core.enqueue(self.users[0], "duel", "eu", 1)
@@ -410,6 +449,10 @@ class APITests(unittest.TestCase):
             self.assertEqual(client.post(f"/v1/servers/matches/{mid}/ready", headers=server).status_code, 200)
             self.assertEqual(client.post(f"/v1/servers/matches/{mid}/result", json={"winner": 0}, headers=player_headers[0]).status_code, 401)
             self.assertEqual(client.post(f"/v1/servers/matches/{mid}/result", json={"winner": 0}, headers=server).status_code, 200)
+            for headers, outcome, change in zip(player_headers, ("win", "loss"), (16, -16)):
+                summary = client.get("/v1/me", headers=headers).json()["last_match"]
+                self.assertEqual((summary["mode"], summary["outcome"], summary["rating_change"], summary["rating"]),
+                                 ("duel", outcome, change, 1500 + change))
 
     def test_steam_verification_uses_server_config_and_rejects_bans(self):
         settings = Settings(123, "private-key")

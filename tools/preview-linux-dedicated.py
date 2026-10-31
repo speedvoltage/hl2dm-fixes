@@ -114,10 +114,12 @@ def worker(args):
                     with core.transaction() as data:
                         released = data["servers"]["linux-srcds"]["match"] is None
                     if released:
+                        if "Matchmaking_reservation_ended" in text:
+                            raise RuntimeError("The server kicked the player instead of allowing a clean return")
                         success = True
                         (args.evidence / "verification.json").write_text(json.dumps(dict(
                             check="linux_server_casual_lifecycle", success=True,
-                            result=last["result"], server_released=True), indent=2))
+                            result=last["result"], server_released=True, summary=last), indent=2))
                         print("Verified Linux admission, gameplay, result reporting, and server release.", flush=True)
                         break
                 time.sleep(0.5)
@@ -191,9 +193,11 @@ def windows(args):
             raise RuntimeError("Linux worker did not publish a session")
         sdk = Path(os.environ.get("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Steam/steamapps/common/Source SDK Base 2013 Multiplayer"
         env = dict(os.environ, HL2MP_MM_DEV_URL=session["url"], HL2MP_MM_DEV_SESSION=session["token"])
+        client_log = ROOT / "game/mod_hl2mp/matchmaking-linux-client.log"
+        client_offset = client_log.stat().st_size if client_log.exists() else 0
         started = time.time()
         game = subprocess.Popen([str(sdk / "hl2_win64.exe"), "-steam", "-game", str(ROOT / "game/mod_hl2mp"),
-            "-windowed", "-w", "1280", "-h", "720", "-novid", "-mm_local_test", "+clientport",
+            "-windowed", "-w", "1280", "-h", "720", "-novid", "-mm_local_test", "+con_logfile", "matchmaking-linux-client.log", "+clientport",
             str(free_port(socket.SOCK_DGRAM)), "+mm_queue", "casual"], cwd=sdk, env=env)
         print(f"Windows client PID {game.pid}; Linux server {session['address']}:{session['port']}", flush=True)
         captured = False
@@ -213,6 +217,16 @@ def windows(args):
             raise RuntimeError("The match completed without a new gameplay screenshot")
         print(f"Linux lifecycle verified. Evidence: {evidence}", flush=True)
         result = json.loads((evidence / "verification.json").read_text())
+        with client_log.open("rb") as stream:
+            stream.seek(client_offset)
+            client_text = stream.read().decode("utf-8", errors="replace")
+        (evidence / "client.log").write_text(client_text)
+        if "returning from completed reservation" not in client_text:
+            raise RuntimeError("The client did not return voluntarily after the Linux match")
+        capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "tools/capture-menu.ps1"), "-Name", "linux-match-result"], cwd=ROOT, check=True, capture_output=True, text=True)
+        print("Result screenshot: " + capture.stdout.strip(), flush=True)
+        result["returned_to_menu"] = True
+        (evidence / "verification.json").write_text(json.dumps(result, indent=2))
         if not result.get("shutdown_clean"):
             print("The SDK runtime reported shutdown diagnostics; see verification.json and server.log.", flush=True)
     finally:

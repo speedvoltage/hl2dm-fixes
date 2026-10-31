@@ -59,7 +59,7 @@ public:
 	CMatchServer() : CAutoGameSystemPerFrame( "HL2MPMatchServer" ), m_Enabled( false ), m_Configured( false ),
 		m_LevelReady( false ), m_Prepared( false ), m_Playing( false ), m_ResultPending( false ),
 		m_Request( 0 ), m_NextRequest( 0 ), m_NextHeartbeat( 0 ), m_LastContact( 0 ),
-		m_AdmissionDeadline( 0 ), m_Countdown( 0 ), m_Winner( -1 ), m_Operation( HEARTBEAT )
+		m_AdmissionDeadline( 0 ), m_Countdown( 0 ), m_ReturnDeadline( 0 ), m_Winner( -1 ), m_Operation( HEARTBEAT )
 	{
 		m_URL[0] = m_Credential[0] = m_Match[0] = m_Mode[0] = m_Map[0] = m_State[0] = m_Abort[0] = 0;
 		m_Response.SetGameserverFlag();
@@ -89,13 +89,15 @@ private:
 	bool Send( Operation operation, const char *path, const char *body );
 	void Response( HTTPRequestCompleted_t *result, bool failed );
 	void Assignment( KeyValues *match );
+	void BeginReturn();
+	void Heartbeat();
 	void ClearMatch();
 	void Release();
 	void FreezePlayers();
 	bool m_Enabled, m_Configured, m_LevelReady, m_Prepared, m_Playing, m_ResultPending;
 	char m_URL[512], m_Credential[128], m_Match[40], m_Mode[16], m_Map[64], m_State[32], m_Abort[32];
 	HTTPRequestHandle m_Request;
-	double m_NextRequest, m_NextHeartbeat, m_LastContact, m_AdmissionDeadline, m_Countdown;
+	double m_NextRequest, m_NextHeartbeat, m_LastContact, m_AdmissionDeadline, m_Countdown, m_ReturnDeadline;
 	int m_Winner;
 	Operation m_Operation;
 	EHANDLE m_Authorizing;
@@ -229,6 +231,28 @@ bool CMatchServer::Send( Operation operation, const char *path, const char *body
 	return true;
 }
 
+void CMatchServer::BeginReturn()
+{
+	if ( !m_Match[0] || m_ReturnDeadline ) return;
+	// Let authenticated clients read their result and disconnect voluntarily.
+	// Keep the reservation closed until they leave, with a bounded fallback.
+	m_ReturnDeadline = Plat_FloatTime() + 10;
+	Q_strncpy( m_State, "ending", sizeof( m_State ) );
+	m_Playing = m_ResultPending = false;
+	m_Abort[0] = 0;
+	FreezePlayers();
+	Msg( "Matchmaking server: match ended; waiting for clients to return.\n" );
+}
+
+void CMatchServer::Heartbeat()
+{
+	m_NextHeartbeat = Plat_FloatTime() + 5;
+	char body[80];
+	if ( m_Match[0] ) Q_snprintf( body, sizeof( body ), "{\"running_match\":\"%s\"}", m_Match );
+	else Q_strncpy( body, "{\"running_match\":null}", sizeof( body ) );
+	Send( HEARTBEAT, "/v1/servers/heartbeat", body );
+}
+
 void CMatchServer::ClearMatch()
 {
 	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
@@ -238,7 +262,7 @@ void CMatchServer::ClearMatch()
 	}
 	m_Match[0] = m_Mode[0] = m_Map[0] = m_State[0] = m_Abort[0] = 0;
 	m_Prepared = m_Playing = m_ResultPending = false;
-	m_Countdown = m_AdmissionDeadline = 0;
+	m_Countdown = m_AdmissionDeadline = m_ReturnDeadline = 0;
 	m_Roster.Purge();
 	m_NextHeartbeat = 0;
 	Msg( "Matchmaking server: reservation released.\n" );
@@ -247,10 +271,11 @@ void CMatchServer::ClearMatch()
 void CMatchServer::Assignment( KeyValues *match )
 {
 	const char *id = match ? match->GetString( "id", "" ) : "";
-	if ( !id[0] ) { if ( m_Match[0] ) ClearMatch(); return; }
+	if ( !id[0] ) { if ( m_Match[0] ) BeginReturn(); return; }
 	const char *state = match->GetString( "state", "" );
-	if ( !Q_strcmp( state, "finished" ) || !Q_strcmp( state, "cancelled" ) ) { ClearMatch(); return; }
 	if ( !SafeText( id, 32, 32 ) || ( m_Match[0] && Q_strcmp( id, m_Match ) ) ) return;
+	if ( !Q_strcmp( state, "finished" ) || !Q_strcmp( state, "cancelled" ) ) { BeginReturn(); return; }
+	if ( m_ReturnDeadline ) return;
 	if ( !m_Match[0] )
 	{
 		Q_strncpy( m_Match, id, sizeof( m_Match ) );
@@ -359,7 +384,7 @@ void CMatchServer::Response( HTTPRequestCompleted_t *result, bool failed )
 			Msg( "Matchmaking server: admitted player %d.\n", player->GetUserID() );
 		}
 	}
-	else if ( operation == RESULT || operation == ABORT ) ClearMatch();
+	else if ( operation == RESULT || operation == ABORT ) BeginReturn();
 	else if ( operation == LEFT ) m_NextHeartbeat = 0;
 	root->deleteThis();
 }
@@ -405,6 +430,18 @@ void CMatchServer::FrameUpdatePostEntityThink()
 {
 	if ( !m_Enabled || !m_LevelReady ) return;
 	const double now = Plat_FloatTime();
+	if ( m_ReturnDeadline )
+	{
+		FreezePlayers();
+		bool connected = false;
+		for ( int i = 1; i <= gpGlobals->maxClients; ++i ) if ( UTIL_PlayerByIndex( i ) ) connected = true;
+		if ( !connected || now >= m_ReturnDeadline ) ClearMatch();
+		else
+		{
+			if ( m_Configured && !m_Request && now >= m_NextRequest && now >= m_NextHeartbeat ) Heartbeat();
+			return;
+		}
+	}
 	int present = 0;
 	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
@@ -464,10 +501,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 	char path[160], body[320];
 	if ( now >= m_NextHeartbeat )
 	{
-		m_NextHeartbeat = now + 5;
-		if ( m_Match[0] ) Q_snprintf( body, sizeof( body ), "{\"running_match\":\"%s\"}", m_Match );
-		else Q_strncpy( body, "{\"running_match\":null}", sizeof( body ) );
-		Send( HEARTBEAT, "/v1/servers/heartbeat", body );
+		Heartbeat();
 		return;
 	}
 	if ( m_Abort[0] || m_ResultPending )
