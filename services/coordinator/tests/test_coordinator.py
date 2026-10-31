@@ -424,11 +424,41 @@ class APITests(unittest.TestCase):
         app = create_app(self.core, Settings(development_key="x" * 32))
         for host, code in [("127.0.0.1", 200), ("192.0.2.1", 403)]:
             with TestClient(app, client=(host, 50000)) as client:
-                response = client.post("/v1/auth/development", json={"steam_id": "76561198000000001", "key": "x" * 32})
+                response = client.post("/v1/auth/development", json={"steam_id": "76561198000000001", "key": "x" * 32},
+                                       headers={"X-Forwarded-For": "127.0.0.1"})
                 self.assertEqual(response.status_code, code)
                 if code == 200:
                     token = response.json()["token"]
                     self.assertEqual(client.get("/v1/me", headers={"Authorization": "Bearer " + token}).status_code, 200)
+
+    def test_proxy_clients_have_separate_limits_and_spoofed_prefixes_do_not(self):
+        app = create_app(self.core, Settings(trusted_proxies=("127.0.0.1",)))
+        with TestClient(app, client=("127.0.0.1", 50000)) as client:
+            for number in range(20):
+                response = client.post("/v1/auth/steam", json={"ticket": "00"},
+                    headers={"X-Forwarded-For": f"203.0.113.{number + 1}, 192.0.2.10"})
+                self.assertEqual(response.status_code, 503)
+            self.assertEqual(client.post("/v1/auth/steam", json={"ticket": "00"},
+                headers={"X-Forwarded-For": "203.0.113.99, 192.0.2.10"}).status_code, 429)
+            self.assertEqual(client.post("/v1/auth/steam", json={"ticket": "00"},
+                headers={"X-Forwarded-For": "192.0.2.11"}).status_code, 503)
+
+    def test_untrusted_or_disabled_proxy_headers_cannot_evade_limits(self):
+        for trusted in ((), ("127.0.0.1",)):
+            with self.subTest(trusted=trusted):
+                app = create_app(self.core, Settings(trusted_proxies=trusted))
+                with TestClient(app, client=("192.0.2.10", 50000)) as client:
+                    for number in range(21):
+                        response = client.post("/v1/auth/steam", json={"ticket": "00"},
+                            headers={"X-Forwarded-For": f"203.0.113.{number + 1}"})
+                        self.assertEqual(response.status_code, 503 if number < 20 else 429)
+
+    def test_proxy_trust_requires_explicit_ips_and_disables_development_login(self):
+        for address in ("*", "0.0.0.0/0", "proxy.example.com"):
+            with self.subTest(address=address), self.assertRaises(ValueError):
+                create_app(self.core, Settings(trusted_proxies=(address,)))
+        with self.assertRaises(ValueError):
+            create_app(self.core, Settings(development_key="x" * 32, trusted_proxies=("127.0.0.1",)))
 
     def test_authenticated_http_duel(self):
         app = create_app(self.core, steam_verifier=lambda ticket, settings: str(76561198000000000 + int(ticket, 16)))

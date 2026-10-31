@@ -14,6 +14,7 @@ from fastapi import Depends, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from .core import Coordinator, PROTOCOL, Rejected, digest
 
@@ -24,6 +25,7 @@ class Settings:
     steam_publisher_key: str = ""
     ticket_identity: str = "hl2dm-matchmaking"
     development_key: str = ""
+    trusted_proxies: tuple[str, ...] = ()
 
 
 class Input(BaseModel):
@@ -86,7 +88,7 @@ class Abort(Input):
 
 
 class RequestLimits:
-    """Bound bodies before JSON parsing; rate-limit by peer address, never a user header."""
+    """Bound bodies before parsing; use the peer resolved by the trusted proxy layer."""
     def __init__(self, app):
         self.app = app
         self.requests = defaultdict(deque)
@@ -155,6 +157,11 @@ def verify_steam_ticket(ticket, settings):
 def create_app(core: Coordinator, settings=Settings(), steam_verifier=verify_steam_ticket):
     if settings.development_key and len(settings.development_key) < 32:
         raise ValueError("The local development key must contain at least 32 characters")
+    if settings.development_key and settings.trusted_proxies:
+        raise ValueError("Development login cannot be used behind a trusted proxy")
+    # Require explicit IPs. Wildcards, broad networks, and hostnames could let
+    # direct clients choose their own rate-limit bucket through forged headers.
+    trusted_proxies = [str(ipaddress.ip_address(address)) for address in settings.trusted_proxies]
 
     @asynccontextmanager
     async def lifespan(app):
@@ -173,6 +180,8 @@ def create_app(core: Coordinator, settings=Settings(), steam_verifier=verify_ste
 
     app = FastAPI(title="HL2DM Matchmaking Coordinator", version="0.1.0", lifespan=lifespan)
     app.add_middleware(RequestLimits)
+    if trusted_proxies:
+        app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_proxies)
 
     @app.exception_handler(Rejected)
     async def rejected(request, error):

@@ -63,16 +63,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seconds", type=int, default=150)
     parser.add_argument("--server-only", action="store_true")
+    parser.add_argument("--rounds", type=int, default=1, help="With --verify, play consecutive rounds using the same client and server processes")
     checks = parser.add_mutually_exclusive_group()
     checks.add_argument("--verify", action="store_true", help="Verify admission, a one-minute casual round, result reporting, and server release")
+    checks.add_argument("--reconnect", action="store_true", help="Disconnect and rejoin an active casual match before verifying its result")
     checks.add_argument("--unreserved", action="store_true", help="Verify that a different coordinator identity cannot enter the reserved match")
     checks.add_argument("--expired-session", action="store_true", help="Verify bounded server release when the client loses its coordinator session")
     checks.add_argument("--coordinator-outage", choices=("brief", "sustained"), help="Interrupt server API traffic and verify safe recovery or unrated cancellation")
     args = parser.parse_args()
     if os.name != "nt":
         raise SystemExit("This runtime preview currently targets Windows.")
-    if args.server_only and (args.verify or args.unreserved or args.expired_session or args.coordinator_outage):
+    if args.server_only and (args.verify or args.reconnect or args.unreserved or args.expired_session or args.coordinator_outage):
         parser.error("Runtime verification requires a game client")
+    if not 1 <= args.rounds <= 3 or (args.rounds > 1 and not args.verify):
+        parser.error("Use 1-3 rounds; multiple rounds require --verify")
     import winreg
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Valve\Steam\ActiveProcess") as key:
         account = winreg.QueryValueEx(key, "ActiveUser")[0]
@@ -156,9 +160,14 @@ def main():
             print(f"Dedicated preview: {directory}; server PID {server.pid}; client PID {game.pid if game else None}", flush=True)
             headers = {"Authorization": "Bearer " + token}
             start = time.time()
+            round_start = start
+            completed_rounds = []
+            native_started = None
             last_state, copied = None, False
             shortened = False
             outage_started, outage_recovered = None, False
+            reconnect_started, reconnect_requested, rejoined = None, False, False
+            reconnect_match = None
             while time.time() - start < args.seconds:
                 if service.poll() is not None or server.poll() is not None or (game and game.poll() is not None):
                     print("A preview process exited.", flush=True)
@@ -173,10 +182,11 @@ def main():
                     evidence = {k: state.get(k) for k in ("queue", "match", "last_match")}
                     if match and match.get("connection"):
                         match["connection"].pop("join_token", None)
-                    (directory / (phase + ".json")).write_text(json.dumps(evidence, indent=2))
+                    prefix = f"round-{len(completed_rounds) + 1}-" if args.rounds > 1 else ""
+                    (directory / (prefix + phase + ".json")).write_text(json.dumps(evidence, indent=2))
                     last_state = phase
                 screenshot = root / "game/mod_hl2mp/screenshots/matchmaking_gameplay.jpg"
-                if not copied and screenshot.exists() and screenshot.stat().st_mtime >= start:
+                if not copied and screenshot.exists() and screenshot.stat().st_mtime >= round_start:
                     output = root / "artifacts/screenshots" / (time.strftime("%Y%m%d-%H%M%S") + "-dedicated-gameplay.jpg")
                     output.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(screenshot, output)
@@ -187,6 +197,14 @@ def main():
                     with server_log.open("rb") as stream:
                         stream.seek(log_offset)
                         log_text = stream.read().decode("utf-8", errors="replace")
+                if "match started" in log_text and native_started is None:
+                    native_started = time.monotonic()
+                if completed_rounds and not copied and native_started is not None and time.monotonic() - native_started >= 6:
+                    # The client's automatic preview screenshot is taken once
+                    # per process. Capture later rounds from the same renderer.
+                    capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(root / "tools/capture-menu.ps1"), "-Name", f"dedicated-gameplay-round-{len(completed_rounds) + 1}"], cwd=root, check=True, capture_output=True, text=True)
+                    print("In-game screenshot: " + capture.stdout.strip(), flush=True)
+                    copied = True
                 if args.unreserved and "Matchmaking_reservation_ended" in log_text and "engine authenticated player" in log_text:
                     if "admitted player" in log_text:
                         raise RuntimeError("An unreserved player was admitted")
@@ -195,7 +213,26 @@ def main():
                     print("Verified: an authenticated Steam player with a different coordinator identity was rejected.", flush=True)
                     verified = True
                     break
-                if (args.verify or args.expired_session) and copied and not shortened:
+                if args.reconnect and copied and reconnect_started is None:
+                    reconnect_match = match["id"] if match else None
+                    if not reconnect_match:
+                        raise RuntimeError("The player had no active match before disconnecting")
+                    subprocess.run([str(sdk / "hl2_win64.exe"), "-hijack", "-game", str(root / "game/mod_hl2mp"), "+disconnect", "+gameui_activate"], cwd=sdk, check=True, timeout=5, creationflags=subprocess.CREATE_NO_WINDOW)
+                    reconnect_started = time.monotonic()
+                    print("Disconnected the native client; keeping its match reservation.", flush=True)
+                if args.reconnect and reconnect_started is not None and not reconnect_requested and time.monotonic() - reconnect_started >= 5:
+                    if not match or match["id"] != reconnect_match or match["state"] != "active":
+                        raise RuntimeError("The match reservation disappeared before reconnecting")
+                    capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(root / "tools/capture-menu.ps1"), "-Name", "reconnect-menu"], cwd=root, check=True, capture_output=True, text=True)
+                    print("Reconnect screenshot: " + capture.stdout.strip(), flush=True)
+                    subprocess.run([str(sdk / "hl2_win64.exe"), "-hijack", "-game", str(root / "game/mod_hl2mp"), "+mm_match_connect"], cwd=sdk, check=True, timeout=5, creationflags=subprocess.CREATE_NO_WINDOW)
+                    reconnect_requested = True
+                if reconnect_requested and not rejoined and log_text.count("admitted player") >= 2:
+                    if not match or match["id"] != reconnect_match or log_text.count("match started") != 1:
+                        raise RuntimeError("Reconnecting restarted or replaced the active match")
+                    rejoined = True
+                    print("The native client was readmitted to the same running match.", flush=True)
+                if (args.verify or args.expired_session or (args.reconnect and rejoined)) and copied and not shortened:
                     console_command(server, "mp_timelimit 1")
                     shortened = True
                     if args.expired_session:
@@ -223,7 +260,8 @@ def main():
                     elif elapsed > 25:
                         raise RuntimeError("The server failed to cancel after sustained contact loss")
                 outage_terminal = args.coordinator_outage and outage_recovered and last.get("state") in {"finished", "cancelled"}
-                if ((args.verify or args.expired_session) and last.get("state") == "finished") or outage_terminal:
+                new_result = not match and last.get("id") not in {item["summary"]["id"] for item in completed_rounds}
+                if new_result and (((args.verify or args.expired_session or args.reconnect) and last.get("state") == "finished") or outage_terminal):
                     if "admitted player" not in log_text or "match started" not in log_text:
                         raise RuntimeError("Result arrived without native admission and gameplay")
                     if args.coordinator_outage == "sustained":
@@ -251,8 +289,25 @@ def main():
                                 raise RuntimeError("The player did not return voluntarily after the result")
                             capture = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(root / "tools/capture-menu.ps1"), "-Name", "match-result"], cwd=root, check=True, capture_output=True, text=True)
                             print("Result screenshot: " + capture.stdout.strip(), flush=True)
-                        check = "coordinator_outage_" + args.coordinator_outage if args.coordinator_outage else "expired_session_return_timeout" if args.expired_session else "native_casual_lifecycle"
+                        if args.reconnect and not rejoined:
+                            raise RuntimeError("The match finished without a verified native reconnect")
+                        check = "coordinator_outage_" + args.coordinator_outage if args.coordinator_outage else "expired_session_return_timeout" if args.expired_session else "native_casual_reconnect" if args.reconnect else "native_casual_lifecycle"
                         proof = {"check": check, "success": True, "result": last.get("result"), "server_released": True, "returned_to_menu": returned, "summary": last}
+                        if args.reconnect:
+                            proof["reconnected_to_same_match"] = True
+                        completed_rounds.append(proof)
+                        if args.rounds > 1:
+                            (directory / f"round-{len(completed_rounds)}-verification.json").write_text(json.dumps(proof, indent=2))
+                            if len(completed_rounds) < args.rounds:
+                                print(f"Round {len(completed_rounds)} completed; reusing the same client and dedicated server.", flush=True)
+                                round_start = time.time()
+                                log_offset = server_log.stat().st_size
+                                client_offset = client_log.stat().st_size
+                                last_state, copied, shortened, native_started = None, False, False, None
+                                subprocess.run([str(sdk / "hl2_win64.exe"), "-hijack", "-game", str(root / "game/mod_hl2mp"), "+mm_queue", "casual"], cwd=sdk, check=True, timeout=5, creationflags=subprocess.CREATE_NO_WINDOW)
+                                continue
+                            proof = {"check": "native_consecutive_casual_rounds", "success": True,
+                                     "server_pid": server.pid, "client_pid": game.pid, "rounds": completed_rounds}
                         (directory / "verification.json").write_text(json.dumps(proof, indent=2))
                         if args.coordinator_outage:
                             print(f"Verified: {args.coordinator_outage} coordinator outage handled and server released.", flush=True)
@@ -261,7 +316,7 @@ def main():
                         verified = True
                         break
                 time.sleep(1)
-            if (args.verify or args.unreserved or args.expired_session or args.coordinator_outage) and not verified:
+            if (args.verify or args.reconnect or args.unreserved or args.expired_session or args.coordinator_outage) and not verified:
                 raise RuntimeError("The runtime check did not complete; inspect the evidence directory")
     finally:
         for child in reversed(children):
