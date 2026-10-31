@@ -13,3 +13,5 @@ cd "$root/src"
 export VPC_NINJA_BUILD_MODE=release
 devtools/bin/vpc /hl2mp /linux64 /ninja /define:SOURCESDK +game /mksln _vpc_/ninja/hl2mp_matchmaking_release
 ninja -f _vpc_/ninja/hl2mp_matchmaking_release.ninja -j"${JOBS:-6}"
+# The dedicated runtime requests server_srv.so; the client runtime uses server.so.
+ln -sfn server.so "$root/game/mod_hl2mp/bin/linux64/server_srv.so"
