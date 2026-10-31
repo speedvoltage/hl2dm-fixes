@@ -588,7 +588,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 		KeyValues *match = root->FindKey( "match" );
 		m_MatchID[0] = m_MatchState[0] = 0;
 		m_Endpoint[0] = m_JoinGrant[0] = 0;
-		m_MatchMode[0] = 0;
+		Q_strncpy( m_MatchMode, m_Searching ? queue->GetString( "mode", "" ) : "", sizeof( m_MatchMode ) );
 		m_Confirmed = false;
 		if ( match && SafeToken( match->GetString( "id", "" ), 32, 32 ) )
 		{

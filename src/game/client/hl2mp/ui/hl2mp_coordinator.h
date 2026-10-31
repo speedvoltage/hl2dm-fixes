@@ -24,6 +24,7 @@ public:
 	bool HasServer() const { return m_Endpoint[0] && !Q_strcmp( m_MatchState, "active" ); }
 	bool CanLeaveCasual() const { return m_MatchID[0] && !Q_strcmp( m_MatchMode, "casual" ); }
 	const char *Status() const { return m_Status; }
+	const char *Mode() const { return m_PendingMode[0] ? m_PendingMode : ( m_Searching || m_MatchID[0] ) ? m_MatchMode : ""; }
 	const char *ResultHeading() const { return m_ResultHeading; }
 	const char *ResultDetails() const { return m_ResultDetails; }
 	bool Searching() const { return m_Searching; }

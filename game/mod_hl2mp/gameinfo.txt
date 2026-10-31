@@ -1,8 +1,9 @@
 "GameInfo"
 {
 	game	"HL2DM Matchmaking"
-	title	"HALF+LIFE'"
-	title2	"deathmatch"
+	// The custom main menu draws its own logo, including behind dialogs.
+	title	""
+	title2	""
 	type multiplayer_only
 	nomodels 0
 	nohimodel 1
