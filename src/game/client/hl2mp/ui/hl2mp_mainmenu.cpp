@@ -15,30 +15,78 @@
 
 static CDllDemandLoader s_GameUI( "GameUI" );
 static ConVar mm_menu( "mm_menu", "1", FCVAR_ARCHIVE, "Use the matchmaking main menu (restart required)." );
+static ConVar mm_menu_motion( "mm_menu_motion", "1", FCVAR_ARCHIVE, "Animate matchmaking menu hover transitions." );
 
 class CMatchmakingButton : public vgui::Button
 {
 	DECLARE_CLASS_SIMPLE( CMatchmakingButton, vgui::Button );
 public:
 	CMatchmakingButton( vgui::Panel *parent, const char *name, const char *text, const char *command, vgui::HFont font )
-		: BaseClass( parent, name, text, parent, command ), m_Font( font ) {}
+		: BaseClass( parent, name, text, parent, command ), m_Font( font ), m_Detail( NULL ),
+		m_Hover( 0 ), m_LastThink( Plat_FloatTime() ) {}
+	void SetDetail( const char *text )
+	{
+		m_Detail = new vgui::Label( this, "Detail", text );
+		m_Detail->SetMouseInputEnabled( false );
+		m_Detail->SetKeyBoardInputEnabled( false );
+		m_Detail->SetContentAlignment( vgui::Label::a_west );
+	}
+	void SetMenuScale( float scale, vgui::HFont detailFont )
+	{
+		const int inset = int( 16 * scale );
+		SetTextInset( inset, m_Detail ? int( 10 * scale ) : 0 );
+		SetContentAlignment( m_Detail ? vgui::Label::a_northwest : vgui::Label::a_west );
+		if ( m_Detail )
+		{
+			m_Detail->SetFont( detailFont );
+			m_Detail->SetBounds( inset, int( 33 * scale ), GetWide() - inset * 2, int( 23 * scale ) );
+			m_Detail->SetFgColor( Color( 188, 193, 196, 255 ) );
+			m_Detail->SetDisabledFgColor1( Color( 135, 143, 148, 255 ) );
+			m_Detail->SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
+		}
+	}
 	void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
 	{
 		BaseClass::ApplySchemeSettings( scheme );
 		SetFont( m_Font );
 		SetDefaultColor( Color( 239, 240, 235, 255 ), Color( 38, 43, 47, 255 ) );
-		SetArmedColor( Color( 20, 23, 26, 255 ), Color( 244, 163, 58, 255 ) );
-		SetDepressedColor( Color( 20, 23, 26, 255 ), Color( 216, 139, 44, 255 ) );
+		SetArmedColor( Color( 239, 240, 235, 255 ), Color( 54, 60, 64, 255 ) );
+		SetDepressedColor( Color( 239, 240, 235, 255 ), Color( 68, 58, 42, 255 ) );
 		SetDisabledFgColor1( Color( 135, 143, 148, 255 ) );
 		SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
-		SetTextInset( 12, 0 );
 		SetButtonBorderEnabled( false );
+		DrawFocusBox( false );
+	}
+	Color GetButtonBgColor() OVERRIDE
+	{
+		if ( IsEnabled() && IsDepressed() ) return GetButtonDepressedBgColor();
+		return Color( 38 + int( 16 * m_Hover ), 43 + int( 17 * m_Hover ), 47 + int( 17 * m_Hover ), 255 );
+	}
+	void OnThink() OVERRIDE
+	{
+		BaseClass::OnThink();
+		const double now = Plat_FloatTime();
+		const float target = IsEnabled() && ( IsArmed() || HasFocus() ) ? 1.0f : 0.0f;
+		const float previous = m_Hover;
+		m_Hover = mm_menu_motion.GetBool() && IsEnabled()
+			? Approach( target, m_Hover, float( MAX( 0.0, now - m_LastThink ) ) / 0.14f ) : target;
+		m_LastThink = now;
+		if ( previous != m_Hover )
+		{
+			SetBgColor( GetButtonBgColor() );
+			Repaint();
+		}
 	}
 	void PaintBorder() OVERRIDE {}
 	void Paint() OVERRIDE
 	{
 		BaseClass::Paint();
-		if ( HasFocus() )
+		if ( m_Hover > 0 )
+		{
+			vgui::surface()->DrawSetColor( Color( 244, 163, 58, int( 255 * m_Hover ) ) );
+			vgui::surface()->DrawFilledRect( 0, 0, 3, GetTall() );
+		}
+		if ( HasFocus() && IsEnabled() )
 		{
 			vgui::surface()->DrawSetColor( Color( 244, 163, 58, 255 ) );
 			vgui::surface()->DrawOutlinedRect( 0, 0, GetWide(), GetTall() );
@@ -46,6 +94,9 @@ public:
 	}
 private:
 	vgui::HFont m_Font;
+	vgui::Label *m_Detail;
+	float m_Hover;
+	double m_LastThink;
 };
 
 class CHL2MPMainMenu : public vgui::EditablePanel
@@ -59,12 +110,11 @@ public:
 	void PaintBackground() OVERRIDE;
 	void OnTick() OVERRIDE;
 	void OnCommand( const char *command ) OVERRIDE;
-	void OnKeyCodePressed( vgui::KeyCode code ) OVERRIDE;
 
 private:
 	enum { DUEL, TEAM, CASUAL, CREATE_PARTY, INVITE, LEAVE, READY, ACCEPT, CANCEL, RESUME, SERVERS, OPTIONS, QUIT, BUTTON_COUNT };
 	IGameUI *m_GameUI;
-	vgui::Button *m_Buttons[BUTTON_COUNT];
+	CMatchmakingButton *m_Buttons[BUTTON_COUNT];
 	vgui::Label *m_Title;
 	vgui::Label *m_Subtitle;
 	vgui::Label *m_PlayHeading;
@@ -77,6 +127,7 @@ private:
 	vgui::HFont m_TitleFont;
 	vgui::HFont m_BodyFont;
 	vgui::HFont m_SectionFont;
+	vgui::HFont m_DetailFont;
 };
 
 static CHL2MPMainMenu *s_Menu = NULL;
@@ -91,15 +142,16 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
 	m_TitleFont = vgui::surface()->CreateFont();
 	m_BodyFont = vgui::surface()->CreateFont();
 	m_SectionFont = vgui::surface()->CreateFont();
+	m_DetailFont = vgui::surface()->CreateFont();
 	m_Title = new vgui::Label( this, "Title", "HALF-LIFE 2" );
 	m_Subtitle = new vgui::Label( this, "Subtitle", "DEATHMATCH  /  MATCHMAKING" );
-	m_PlayHeading = new vgui::Label( this, "PlayHeading", "PLAY" );
+	m_PlayHeading = new vgui::Label( this, "PlayHeading", "FIND A MATCH" );
 	m_PartyHeading = new vgui::Label( this, "PartyHeading", "YOUR PARTY" );
 	m_Status = new vgui::Label( this, "PartyStatus", "" );
 	m_QueueStatus = new vgui::Label( this, "QueueStatus", "Classic combat. A new way to play together." );
 	m_Status->SetWrap( true );
 	m_QueueStatus->SetWrap( true );
-	const char *labels[BUTTON_COUNT] = { "COMPETITIVE  /  DUEL", "COMPETITIVE  /  TEAM", "CASUAL  /  DEATHMATCH",
+	const char *labels[BUTTON_COUNT] = { "DUEL", "TEAM DEATHMATCH", "CASUAL DEATHMATCH",
 		"CREATE PARTY", "INVITE FRIENDS", "LEAVE PARTY", "READY TO PLAY", "ACCEPT MATCH", "CANCEL / DECLINE", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "QUIT" };
 	const char *commands[BUTTON_COUNT] = { "queue_duel", "queue_team", "queue_casual", "party_create",
 		"party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit" };
@@ -109,11 +161,19 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
 		m_Buttons[i]->SetTabPosition( i + 1 );
 		m_Buttons[i]->SetContentAlignment( vgui::Label::a_west );
 	}
+	m_Buttons[DUEL]->SetDetail( "1v1  /  Ranked" );
+	m_Buttons[TEAM]->SetDetail( "2v2  /  Ranked" );
+	m_Buttons[CASUAL]->SetDetail( "Drop-in  /  No ranking" );
 	for ( int i = 0; i < 4; ++i )
 		m_Members[i] = new vgui::Label( this, VarArgs( "Member%d", i ), "" );
 	HL2MPParty().Init();
 	HL2MPCoordinator().Init();
 	m_GameUI->SetMainMenuOverride( GetVPanel() );
+	// A menu override needs its own focus root; GameUI otherwise keeps keyboard
+	// focus in the hidden retail menu, even after clicking one of our buttons.
+	MakePopup( false );
+	GetFocusNavGroup().SetFocusTopLevel( true );
+	RequestFocusNext( NULL );
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
 
@@ -135,14 +195,6 @@ void CHL2MPMainMenu::ApplySchemeSettings( vgui::IScheme *scheme )
 	m_PartyHeading->SetFgColor( Color( 244, 163, 58, 255 ) );
 	m_Status->SetFgColor( Color( 188, 193, 196, 255 ) );
 	m_QueueStatus->SetFgColor( Color( 188, 193, 196, 255 ) );
-	for ( int i = 0; i < BUTTON_COUNT; ++i )
-	{
-		m_Buttons[i]->SetDefaultColor( Color( 239, 240, 235, 255 ), Color( 38, 43, 47, 255 ) );
-		m_Buttons[i]->SetArmedColor( Color( 20, 23, 26, 255 ), Color( 244, 163, 58, 255 ) );
-		m_Buttons[i]->SetDepressedColor( Color( 20, 23, 26, 255 ), Color( 216, 139, 44, 255 ) );
-		m_Buttons[i]->SetTextInset( 12, 0 );
-		m_Buttons[i]->SetButtonBorderEnabled( false );
-	}
 }
 
 void CHL2MPMainMenu::PerformLayout()
@@ -152,10 +204,11 @@ void CHL2MPMainMenu::PerformLayout()
 	vgui::surface()->GetScreenSize( w, h );
 	SetBounds( 0, 0, w, h );
 	// Keep the menu usable at 640x480 and ultrawide, with a bounded reading width.
-	const float scale = MAX( 0.65f, MIN( h / 720.0f, 2.5f ) );
+	const float scale = MAX( 0.65f, MIN( MIN( h / 720.0f, w / 900.0f ), 2.5f ) );
 	vgui::surface()->SetFontGlyphSet( m_TitleFont, "Tahoma", int( 42 * scale ), 600, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
-	vgui::surface()->SetFontGlyphSet( m_BodyFont, "Tahoma", int( 16 * scale ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
-	vgui::surface()->SetFontGlyphSet( m_SectionFont, "Tahoma", int( 13 * scale ), 600, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
+	vgui::surface()->SetFontGlyphSet( m_BodyFont, "Tahoma", MAX( 12, int( 16 * scale ) ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
+	vgui::surface()->SetFontGlyphSet( m_SectionFont, "Tahoma", MAX( 10, int( 13 * scale ) ), 600, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
+	vgui::surface()->SetFontGlyphSet( m_DetailFont, "Tahoma", MAX( 11, int( 13 * scale ) ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
 	m_Title->SetFont( m_TitleFont );
 	m_Subtitle->SetFont( m_SectionFont );
 	m_PlayHeading->SetFont( m_SectionFont );
@@ -177,21 +230,22 @@ void CHL2MPMainMenu::PerformLayout()
 	m_PlayHeading->SetBounds( left, top - int( 32 * scale ), column, int( 24 * scale ) );
 	m_PartyHeading->SetBounds( right, top - int( 32 * scale ), column, int( 24 * scale ) );
 	for ( int i = DUEL; i <= CASUAL; ++i )
-		m_Buttons[i]->SetBounds( left, top + i * ( buttonHeight + gap / 2 ), column, buttonHeight );
-	m_QueueStatus->SetBounds( left, top + 3 * ( buttonHeight + gap / 2 ), column, int( 80 * scale ) );
-	m_Buttons[ACCEPT]->SetBounds( left, top + int( 280 * scale ), ( column - gap ) / 2, buttonHeight );
-	m_Buttons[CANCEL]->SetBounds( left + ( column + gap ) / 2, top + int( 280 * scale ), ( column - gap ) / 2, buttonHeight );
+		m_Buttons[i]->SetBounds( left, top + i * int( 76 * scale ), column, int( 64 * scale ) );
+	m_QueueStatus->SetBounds( left, top + int( 234 * scale ), column, int( 72 * scale ) );
+	m_Buttons[ACCEPT]->SetBounds( left, top + int( 320 * scale ), ( column - gap ) / 2, buttonHeight );
+	m_Buttons[CANCEL]->SetBounds( left + ( column + gap ) / 2, top + int( 320 * scale ), ( column - gap ) / 2, buttonHeight );
 	for ( int i = 0; i < 4; ++i )
 		m_Members[i]->SetBounds( right, top + i * int( 30 * scale ), column, int( 28 * scale ) );
 	m_Status->SetBounds( right, top + int( 125 * scale ), column, int( 70 * scale ) );
-	m_Buttons[CREATE_PARTY]->SetBounds( right, top + int( 205 * scale ), column, buttonHeight );
-	m_Buttons[INVITE]->SetBounds( right, top + int( 205 * scale ), ( column - gap ) / 2, buttonHeight );
-	m_Buttons[LEAVE]->SetBounds( right + ( column + gap ) / 2, top + int( 205 * scale ), ( column - gap ) / 2, buttonHeight );
-	m_Buttons[READY]->SetBounds( right, top + int( 280 * scale ), column, buttonHeight );
+	m_Buttons[CREATE_PARTY]->SetBounds( right, top + int( 228 * scale ), column, buttonHeight );
+	m_Buttons[INVITE]->SetBounds( right, top + int( 228 * scale ), ( column - gap ) / 2, buttonHeight );
+	m_Buttons[LEAVE]->SetBounds( right + ( column + gap ) / 2, top + int( 228 * scale ), ( column - gap ) / 2, buttonHeight );
+	m_Buttons[READY]->SetBounds( right, top + int( 320 * scale ), column, buttonHeight );
 	const int footerY = h - margin - buttonHeight;
 	const int footerWidth = ( width - gap * 3 ) / 4;
 	for ( int i = RESUME; i < BUTTON_COUNT; ++i )
 		m_Buttons[i]->SetBounds( left + ( i - RESUME ) * ( footerWidth + gap ), footerY, footerWidth, buttonHeight );
+	for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( scale, m_DetailFont );
 }
 
 void CHL2MPMainMenu::PaintBackground()
@@ -280,13 +334,6 @@ void CHL2MPMainMenu::OnCommand( const char *command )
 			if ( !Q_strcmp( command, allowed[i] ) ) { m_GameUI->SendMainMenuCommand( allowed[i] ); return; }
 		BaseClass::OnCommand( command );
 	}
-}
-
-void CHL2MPMainMenu::OnKeyCodePressed( vgui::KeyCode code )
-{
-	if ( code == KEY_ESCAPE && engine->IsInGame() && !engine->IsLevelMainMenuBackground() )
-		m_GameUI->SendMainMenuCommand( "ResumeGame" );
-	else BaseClass::OnKeyCodePressed( code );
 }
 
 void HL2MPMainMenu_Create()
