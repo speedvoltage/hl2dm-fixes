@@ -316,8 +316,57 @@ class CoordinatorTests(unittest.TestCase):
             self.assertEqual(len(mids), 1)
             self.assertEqual(sum(self.core.status(u)["match"] is not None for u in self.users[:4]), 2)
             self.assertEqual(other.authenticate(self.tokens[self.users[0]]), self.users[0])
+            self.assertEqual(other.authenticate_server(SERVER["token"]), SERVER["id"])
         finally:
             other.close()
+
+    def test_removed_server_credentials_are_revoked_and_matches_cancel_without_ratings(self):
+        mid = self.active_duel()
+        other = Coordinator(self.path, [], clock=lambda: self.now)
+        try:
+            # Already-running workers also read the reconciled pool from SQLite.
+            for worker in (self.core, other):
+                with self.assertRaises(Rejected) as denied:
+                    worker.authenticate_server(SERVER["token"])
+                self.assertEqual(denied.exception.status, 401)
+                with self.assertRaises(Rejected) as stale_request:
+                    worker.heartbeat(SERVER["id"], mid)
+                self.assertEqual(stale_request.exception.status, 401)
+                worker.tick()
+                for uid in self.users[:2]:
+                    state = worker.status(uid)
+                    self.assertIsNone(state["match"])
+                    self.assertEqual(state["ratings"]["duel"], 1500)
+                    summary = state["last_match"]
+                    self.assertEqual((summary["id"], summary["state"], summary["rating_change"]), (mid, "cancelled", 0))
+                    self.assertIn("removed from the pool", summary["reason"])
+            with other.transaction() as state:
+                self.assertEqual(state["servers"], {})
+        finally:
+            other.close()
+
+    def test_pool_reload_preserves_retained_active_server_and_accepts_new_server(self):
+        mid = self.active_duel()
+        replacement = dict(SERVER, id="eu-2", token="replacement-token-" + "b" * 32, port=27016)
+        other = Coordinator(self.path, [SERVER, replacement], clock=lambda: self.now)
+        try:
+            self.assertEqual(other.authenticate_server(SERVER["token"]), "eu-1")
+            self.assertEqual(other.authenticate_server(replacement["token"]), "eu-2")
+            self.assertEqual(other.heartbeat("eu-1", mid)["match"]["state"], "active")
+            self.assertEqual(other.status(self.users[0])["match"]["id"], mid)
+            self.assertIsNone(other.heartbeat("eu-2", None)["match"])
+        finally:
+            other.close()
+
+    def test_invalid_pool_reload_rolls_back_removals_and_rejects_duplicate_ids(self):
+        mid = self.active_duel()
+        bad_server = dict(SERVER, id="eu-2", token="too-short")
+        for servers in ([bad_server], [SERVER, SERVER]):
+            with self.subTest(servers=len(servers)), self.assertRaises(ValueError):
+                Coordinator(self.path, servers, clock=lambda: self.now)
+            self.assertEqual(self.core.authenticate_server(SERVER["token"]), "eu-1")
+            self.assertEqual(self.core.status(self.users[0])["match"]["state"], "active")
+            self.assertEqual(self.core.heartbeat("eu-1", mid)["match"]["id"], mid)
 
     def test_casual_backfill_leave_and_no_ratings(self):
         self.core.enqueue(self.users[0], "casual", "eu", 1)

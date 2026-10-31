@@ -47,7 +47,7 @@ def identifier():
 
 
 class Coordinator:
-    def __init__(self, database, servers=(), clock=time.time):
+    def __init__(self, database, servers=None, clock=time.time):
         self.clock = clock
         self.lock = threading.RLock()
         self.db = sqlite3.connect(str(database), check_same_thread=False, timeout=15)
@@ -57,11 +57,18 @@ class Coordinator:
         initial = dict(version=1, users={}, sessions={}, parties={}, queue={}, servers={}, matches={}, tickets={})
         self.db.execute("INSERT OR IGNORE INTO state VALUES (1,?)", (json.dumps(initial),))
         self.db.commit()
-        with self.transaction() as state:
-            if state["version"] != 1:
-                raise RuntimeError("Unsupported coordinator database version")
-            for spec in servers:
-                self._configure_server(state, spec)
+        try:
+            with self.transaction() as state:
+                if state["version"] != 1:
+                    raise RuntimeError("Unsupported coordinator database version")
+                # Omitting configuration opens the existing pool unchanged (for
+                # another worker). An explicit list is the complete current pool,
+                # including an empty list used to revoke every server.
+                if servers is not None:
+                    self._configure_pool(state, servers)
+        except BaseException:
+            self.db.close()
+            raise
 
     def close(self):
         with self.lock:
@@ -79,6 +86,20 @@ class Coordinator:
             except BaseException:
                 self.db.rollback()
                 raise
+
+    def _configure_pool(self, state, servers):
+        servers = list(servers)
+        identifiers = [spec.get("id") for spec in servers]
+        if any(not isinstance(sid, str) or not sid for sid in identifiers) or len(set(identifiers)) != len(identifiers):
+            raise ValueError("Each configured server needs a nonempty, distinct ID")
+        removed = set(state["servers"]) - set(identifiers)
+        for match in state["matches"].values():
+            if match["server"] in removed and match["state"] not in TERMINAL:
+                self._cancel(state, match, "The dedicated server was removed from the pool")
+        for sid in removed:
+            del state["servers"][sid]
+        for spec in servers:
+            self._configure_server(state, spec)
 
     def _configure_server(self, state, spec):
         required = {"id", "token", "address", "port", "region", "modes"}
@@ -388,7 +409,11 @@ class Coordinator:
     def heartbeat(self, server_id, running_match):
         with self.transaction() as s:
             self._expire(s)
-            server = s["servers"][server_id]
+            server = s["servers"].get(server_id)
+            if server is None:
+                # Configuration can change after an in-flight request has
+                # authenticated in another worker.
+                raise Rejected("Server is no longer configured", 401)
             mid = server["match"]
             if mid and s["matches"][mid]["state"] in TERMINAL and running_match is None:
                 server["match"] = mid = None

@@ -31,8 +31,11 @@ def main():
         parser.error("Each trusted proxy must be an explicit IPv4 or IPv6 address")
     settings = Settings(int(os.environ.get("MM_STEAM_APP_ID", "0")), os.environ.get("MM_STEAM_PUBLISHER_KEY", ""),
                         development_key=dev_key, trusted_proxies=proxies)
+    servers = json.loads(Path(args.servers).read_text(encoding="utf-8"))
+    if not isinstance(servers, list) or any(not isinstance(spec, dict) for spec in servers):
+        parser.error("Server configuration must be a JSON array of objects; use [] to disable all servers")
     Path(args.database).parent.mkdir(parents=True, exist_ok=True)
-    core = Coordinator(args.database, json.loads(Path(args.servers).read_text(encoding="utf-8")))
+    core = Coordinator(args.database, servers)
     try:
         # The application handles only explicitly trusted proxies. Keep Uvicorn's
         # implicit/environment-configured proxy handling disabled in every mode.
