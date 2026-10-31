@@ -1,0 +1,10 @@
+[
+  {
+    "id": "local-1",
+    "token": "REPLACE_WITH_A_RANDOM_TOKEN_OF_AT_LEAST_32_CHARACTERS",
+    "address": "127.0.0.1",
+    "port": 27015,
+    "region": "eu",
+    "modes": ["duel", "team", "casual"]
+  }
+]

@@ -25,11 +25,25 @@ verified**: live creation under SDK app ID 243750 returned Steam result 15
 (Access Denied) while signed in. The UI reports that limitation. An app ID
 owned by the project is not allocated yet.
 
-Queue buttons currently report that the matchmaking service is not connected.
-Server reservation, authentication, competitive results/ratings, and end-to-end
-matchmaking remain to be implemented. Lobby metadata must not be accepted as
-proof of a match assignment or match result. The coordinator and dedicated
-server will establish those facts.
+The Python coordinator now implements authenticated sessions, parties, explicit
+readiness, duel/2v2 queues, casual backfill, server reservations, ready checks,
+per-player join grants, and transactional ratings from server-reported results.
+Its Steam authentication boundary uses a publisher key on the service. Local
+test accounts require an explicit development flag, a secret, and loopback.
+See [the service setup and protocol](services/coordinator/README.md).
+
+The native menu communicates with the coordinator through asynchronous Steam
+HTTP requests. It supports solo queues, acceptance/decline, cancellation, and a
+ready-check countdown. A real Windows game client has reached the ready check
+against the local service using simulated accounts and a simulated server.
+The coordinator's 16 tests pass on Windows and Linux; both game builds pass.
+
+End-to-end gameplay is **not ready**: native Steam parties are not yet bridged
+to coordinator parties, and SRCDS does not yet consume reservations, enforce
+join grants, or report game results. Live Steam authentication needs the mod's
+own app ID and publisher key. Multi-member Steam parties are blocked from
+queueing until synchronization exists, so a party cannot silently queue solo.
+Lobby metadata is never proof of a match assignment or result.
 
 ## Project build and preview
 
@@ -58,7 +72,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/capture-menu.ps1 -Name
 ```
 
 Screenshots are saved in `artifacts/screenshots/` (local, not committed).
-Debug commands: `mm_party_create`, `mm_party_leave`, `mm_party_status`.
+Debug commands: `mm_party_create`, `mm_party_leave`, `mm_party_status`,
+`mm_queue duel|team|casual`, `mm_match_accept`, `mm_queue_cancel`.
+The Windows preview launcher in the service guide runs a local ready check and
+captures the game renderer directly, even when the game is not in the foreground.
 
 `tools/compare-engine-binaries.ps1` writes SHA-256 comparisons to
 `artifacts/engine-comparison/windows-binaries.csv`. On 2026-10-31, SDK build

@@ -19,6 +19,7 @@ public static class HL2MPWindowCapture {
 $game = Get-Process hl2_win64 -ErrorAction Stop | Where-Object MainWindowHandle -ne 0 | Select-Object -First 1
 if (-not $game) { throw 'Launch the mod in windowed mode before capturing.' }
 [HL2MPWindowCapture]::ShowWindow($game.MainWindowHandle, 9) | Out-Null
+$previousWindow = [HL2MPWindowCapture]::GetForegroundWindow()
 [HL2MPWindowCapture]::SetForegroundWindow($game.MainWindowHandle) | Out-Null
 Start-Sleep -Milliseconds 400
 if ([HL2MPWindowCapture]::GetForegroundWindow() -ne $game.MainWindowHandle) {
@@ -39,5 +40,8 @@ try {
     $graphics.CopyFromScreen($origin.X, $origin.Y, 0, 0, $bitmap.Size)
     $bitmap.Save($outputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 }
-finally { $graphics.Dispose(); $bitmap.Dispose() }
+finally {
+    $graphics.Dispose(); $bitmap.Dispose()
+    if ($previousWindow -ne [IntPtr]::Zero) { [HL2MPWindowCapture]::SetForegroundWindow($previousWindow) | Out-Null }
+}
 Write-Output $outputPath

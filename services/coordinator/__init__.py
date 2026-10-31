@@ -1,0 +1,1 @@
+"""Self-hosted matchmaking coordinator."""

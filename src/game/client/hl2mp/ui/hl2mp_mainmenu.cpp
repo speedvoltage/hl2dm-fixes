@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_party.h"
+#include "hl2mp_coordinator.h"
 #include "GameUI/IGameUI.h"
 #include "ienginevgui.h"
 #include "vgui/IVGui.h"
@@ -28,6 +29,8 @@ public:
 		SetDefaultColor( Color( 239, 240, 235, 255 ), Color( 38, 43, 47, 255 ) );
 		SetArmedColor( Color( 20, 23, 26, 255 ), Color( 244, 163, 58, 255 ) );
 		SetDepressedColor( Color( 20, 23, 26, 255 ), Color( 216, 139, 44, 255 ) );
+		SetDisabledFgColor1( Color( 135, 143, 148, 255 ) );
+		SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
 		SetTextInset( 12, 0 );
 		SetButtonBorderEnabled( false );
 	}
@@ -59,7 +62,7 @@ public:
 	void OnKeyCodePressed( vgui::KeyCode code ) OVERRIDE;
 
 private:
-	enum { DUEL, TEAM, CASUAL, CREATE_PARTY, INVITE, LEAVE, RESUME, SERVERS, OPTIONS, QUIT, BUTTON_COUNT };
+	enum { DUEL, TEAM, CASUAL, CREATE_PARTY, INVITE, LEAVE, ACCEPT, CANCEL, RESUME, SERVERS, OPTIONS, QUIT, BUTTON_COUNT };
 	IGameUI *m_GameUI;
 	vgui::Button *m_Buttons[BUTTON_COUNT];
 	vgui::Label *m_Title;
@@ -97,9 +100,9 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
 	m_Status->SetWrap( true );
 	m_QueueStatus->SetWrap( true );
 	const char *labels[BUTTON_COUNT] = { "COMPETITIVE  /  DUEL", "COMPETITIVE  /  TEAM", "CASUAL  /  DEATHMATCH",
-		"CREATE PARTY", "INVITE FRIENDS", "LEAVE PARTY", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "QUIT" };
+		"CREATE PARTY", "INVITE FRIENDS", "LEAVE PARTY", "ACCEPT MATCH", "CANCEL / DECLINE", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "QUIT" };
 	const char *commands[BUTTON_COUNT] = { "queue_duel", "queue_team", "queue_casual", "party_create",
-		"party_invite", "party_leave", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit" };
+		"party_invite", "party_leave", "match_accept", "queue_cancel", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit" };
 	for ( int i = 0; i < BUTTON_COUNT; ++i )
 	{
 		m_Buttons[i] = new CMatchmakingButton( this, commands[i], labels[i], commands[i], m_BodyFont );
@@ -109,6 +112,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
 	for ( int i = 0; i < 4; ++i )
 		m_Members[i] = new vgui::Label( this, VarArgs( "Member%d", i ), "" );
 	HL2MPParty().Init();
+	HL2MPCoordinator().Init();
 	m_GameUI->SetMainMenuOverride( GetVPanel() );
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
@@ -118,6 +122,7 @@ CHL2MPMainMenu::~CHL2MPMainMenu()
 	vgui::ivgui()->RemoveTickSignal( GetVPanel() );
 	m_GameUI->SetMainMenuOverride( 0 );
 	HL2MPParty().Shutdown();
+	HL2MPCoordinator().Shutdown();
 }
 
 void CHL2MPMainMenu::ApplySchemeSettings( vgui::IScheme *scheme )
@@ -174,6 +179,8 @@ void CHL2MPMainMenu::PerformLayout()
 	for ( int i = DUEL; i <= CASUAL; ++i )
 		m_Buttons[i]->SetBounds( left, top + i * ( buttonHeight + gap / 2 ), column, buttonHeight );
 	m_QueueStatus->SetBounds( left, top + 3 * ( buttonHeight + gap / 2 ), column, int( 80 * scale ) );
+	m_Buttons[ACCEPT]->SetBounds( left, top + int( 280 * scale ), ( column - gap ) / 2, buttonHeight );
+	m_Buttons[CANCEL]->SetBounds( left + ( column + gap ) / 2, top + int( 280 * scale ), ( column - gap ) / 2, buttonHeight );
 	for ( int i = 0; i < 4; ++i )
 		m_Members[i]->SetBounds( right, top + i * int( 30 * scale ), column, int( 28 * scale ) );
 	m_Status->SetBounds( right, top + int( 125 * scale ), column, int( 70 * scale ) );
@@ -197,6 +204,7 @@ void CHL2MPMainMenu::PaintBackground()
 void CHL2MPMainMenu::OnTick()
 {
 	HL2MPParty().Tick();
+	HL2MPCoordinator().Tick();
 	int w, h;
 	vgui::surface()->GetScreenSize( w, h );
 	if ( w != m_ScreenWidth || h != m_ScreenHeight )
@@ -212,8 +220,11 @@ void CHL2MPMainMenu::OnTick()
 	m_Buttons[INVITE]->SetVisible( grouped );
 	m_Buttons[LEAVE]->SetVisible( grouped || party.Pending() );
 	m_Buttons[RESUME]->SetEnabled( engine->IsInGame() && !engine->IsLevelMainMenuBackground() );
-	const bool canQueue = !party.Pending() && ( !grouped || party.IsOwner() );
+	const bool canQueue = !party.Pending() && ( !grouped || party.IsOwner() ) && !HL2MPCoordinator().Busy();
 	for ( int i = DUEL; i <= CASUAL; ++i ) m_Buttons[i]->SetEnabled( canQueue );
+	m_QueueStatus->SetText( HL2MPCoordinator().Status() );
+	m_Buttons[ACCEPT]->SetVisible( HL2MPCoordinator().NeedsConfirmation() );
+	m_Buttons[CANCEL]->SetVisible( HL2MPCoordinator().Searching() || HL2MPCoordinator().HasReadyCheck() );
 	m_Status->SetText( party.Available() ? party.Status() : "Steam is offline. Server browser and options are still available." );
 	m_PartyHeading->SetText( grouped ? ( party.IsOwner() ? "YOUR PARTY  /  LEADER" : "YOUR PARTY" ) : "YOUR PARTY  /  SOLO" );
 	for ( int i = 0; i < 4; ++i )
@@ -228,9 +239,11 @@ void CHL2MPMainMenu::OnCommand( const char *command )
 	if ( !Q_strcmp( command, "party_create" ) ) HL2MPParty().Create();
 	else if ( !Q_strcmp( command, "party_invite" ) ) HL2MPParty().Invite();
 	else if ( !Q_strcmp( command, "party_leave" ) ) HL2MPParty().Leave();
+	else if ( !Q_strcmp( command, "match_accept" ) ) HL2MPCoordinator().Confirm();
+	else if ( !Q_strcmp( command, "queue_cancel" ) ) HL2MPCoordinator().Cancel();
 	else if ( !Q_strncmp( command, "queue_", 6 ) )
 	{
-		m_QueueStatus->SetText( "Matchmaking is not connected yet. Use the server browser to play while the service is being set up." );
+		HL2MPCoordinator().Queue( command + 6 );
 	}
 	else
 	{
