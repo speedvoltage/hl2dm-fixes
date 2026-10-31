@@ -42,7 +42,7 @@
 			// folder.
 			//
 			// Note that this folder is scanned only when the game is booted.
-			game+mod			mod_hl2mp/custom/*
+			game+mod			|gameinfo_path|custom/*
 
 			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
 			// as the first "mod" search path (after any user customizations).  This is also the one
@@ -56,27 +56,29 @@
 			// VPK and we can avoid making thousands of file system calls to attempt to open files
 			// in folders where they don't exist.  (Searching a VPK is much faster than making an operating
 			// system call.)
-			game+mod			|appid_243750|hl2mp/hl2mp_english.vpk
-			game+mod			|appid_243750|hl2mp/hl2mp_pak.vpk
+			// Resolve content beside the selected SDK runtime. Dedicated servers do
+			// not have the client SteamApps interface required by |appid_*| mounts.
+			game+mod			|all_source_engine_paths|hl2mp/hl2mp_english.vpk
+			game+mod			|all_source_engine_paths|hl2mp/hl2mp_pak.vpk
 
-			game				|appid_243750|hl2_complete/hl2_complete_textures.vpk
-			game				|appid_243750|hl2_complete/hl2_complete_sound_vo_english.vpk
-			game				|appid_243750|hl2_complete/hl2_complete_sound_misc.vpk
-			game				|appid_243750|hl2_complete/hl2_complete_misc.vpk
+			game				|all_source_engine_paths|hl2_complete/hl2_complete_textures.vpk
+			game				|all_source_engine_paths|hl2_complete/hl2_complete_sound_vo_english.vpk
+			game				|all_source_engine_paths|hl2_complete/hl2_complete_sound_misc.vpk
+			game				|all_source_engine_paths|hl2_complete/hl2_complete_misc.vpk
 
-			game				|appid_243750|hl2/hl2_textures.vpk
-			game				|appid_243750|hl2/hl2_sound_vo_english.vpk
-			game				|appid_243750|hl2/hl2_sound_misc.vpk
-			game				|appid_243750|hl2/hl2_misc.vpk
+			game				|all_source_engine_paths|hl2/hl2_textures.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
+			game				|all_source_engine_paths|hl2/hl2_misc.vpk
 
-			platform			|appid_243750|platform/platform_misc.vpk
+			platform			|all_source_engine_paths|platform/platform_misc.vpk
 
-			game				|appid_243750|hl2mp
+			game				|all_source_engine_paths|hl2mp
 
 			// Last, mount in shared HL2 loose files
-			game				|appid_243750|hl2_complete
-			game				|appid_243750|hl2
-			platform			|appid_243750|platform
+			game				|all_source_engine_paths|hl2_complete
+			game				|all_source_engine_paths|hl2
+			platform			|all_source_engine_paths|platform
 
 			// Random files downloaded from gameservers go into a seperate directory, so
 			// that it's easy to keep those files segregated from the official game files
@@ -89,7 +91,7 @@
 			// packed up in the .bsp file so that it will be mounted as a map search pack.
 			// The map search pack is mounted at the top of the search path list,
 			// but only while you are connected that server and on that map.
-			game+download	mod_hl2mp/download
+			game+download	|gameinfo_path|download
 		}
 	}
 }

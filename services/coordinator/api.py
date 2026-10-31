@@ -70,6 +70,10 @@ class Result(Input):
     winner: int | None = Field(default=None, ge=0, le=1)
 
 
+class Abort(Input):
+    reason: Literal["players_missing", "server_error"]
+
+
 class RequestLimits:
     """Bound bodies before JSON parsing; rate-limit by peer address, never a user header."""
     def __init__(self, app):
@@ -252,5 +256,15 @@ def create_app(core: Coordinator, settings=Settings(), steam_verifier=verify_ste
     @app.post("/v1/servers/matches/{match_id}/result")
     def result(match_id: str, body: Result, server_id=Depends(server)):
         return core.report_result(server_id, match_id, body.winner)
+
+    @app.post("/v1/servers/matches/{match_id}/abort")
+    def abort(match_id: str, body: Abort, server_id=Depends(server)):
+        core.abort_match(server_id, match_id, body.reason)
+        return {"ok": True}
+
+    @app.post("/v1/servers/matches/{match_id}/players/{steam_id}/left")
+    def casual_disconnected(match_id: str, steam_id: str, server_id=Depends(server)):
+        core.casual_disconnected(server_id, match_id, steam_id)
+        return {"ok": True}
 
     return app

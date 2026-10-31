@@ -20,7 +20,7 @@ import time
 
 MODES = {
     "duel": {"team_size": 1, "map": "dm_lockdown", "ranked": True},
-    "team": {"team_size": 2, "map": "dm_overwatch", "ranked": True},
+    "team": {"team_size": 2, "map": "dm_lockdown", "ranked": True},
     "casual": {"team_size": 0, "map": "dm_lockdown", "ranked": False},
 }
 PROTOCOL = 1
@@ -370,6 +370,18 @@ class Coordinator:
             raise Rejected("Match is not assigned to this server", 403)
         return m
 
+    def abort_match(self, server_id, match_id, reason):
+        reasons = {"players_missing": "Players did not reach the server", "server_error": "The dedicated server could not continue"}
+        if reason not in reasons:
+            raise Rejected("Invalid cancellation reason", 400)
+        with self.transaction() as s:
+            m = self._server_match(s, server_id, match_id)
+            if m["state"] == "cancelled":
+                return
+            if m["state"] == "finished":
+                raise Rejected("A completed result cannot be cancelled")
+            self._cancel(s, m, reasons[reason])
+
     def authorize_join(self, server_id, match_id, steam_id, token):
         with self.transaction() as s:
             self._expire(s)
@@ -417,10 +429,25 @@ class Coordinator:
             m = s["matches"][mid]
             if m["mode"] != "casual":
                 raise Rejected("Competitive matches must be completed or resolved by the server")
-            del m["players"][actor]
+            self._leave_casual(s, m, actor)
+
+    def _leave_casual(self, s, match, actor):
+        match["players"].pop(actor, None)
+        if s["users"][actor]["match"] == match["id"]:
             s["users"][actor]["match"] = None
-            if not m["players"]:
-                self._cancel(s, m, "Casual server is empty")
+            s["users"][actor]["last_match"] = {"id": match["id"], "state": "left", "reason": "You left the casual match"}
+        if not match["players"] and match["state"] not in TERMINAL:
+            self._cancel(s, match, "Casual server is empty")
+
+    def casual_disconnected(self, server_id, match_id, actor):
+        with self.transaction() as s:
+            m = self._server_match(s, server_id, match_id)
+            if m["mode"] != "casual":
+                raise Rejected("Competitive disconnects require match resolution")
+            if m["state"] in TERMINAL:
+                return
+            if actor in m["players"]:
+                self._leave_casual(s, m, actor)
 
     def status(self, actor):
         with self.transaction() as s:

@@ -32,6 +32,8 @@ $Project "Server (HL2MP)"
 		}
 
 		$File	"ai_relationship.cpp"
+		$File	"hl2mp\hl2mp_match_server.cpp"
+		$File	"hl2mp\hl2mp_match_server.h"
 		$File	"basegrenade_concussion.cpp"
 		$File	"basegrenade_contact.cpp"
 		$File	"basegrenade_timed.cpp"

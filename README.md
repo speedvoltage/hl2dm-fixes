@@ -32,18 +32,27 @@ Its Steam authentication boundary uses a publisher key on the service. Local
 test accounts require an explicit development flag, a secret, and loopback.
 See [the service setup and protocol](services/coordinator/README.md).
 
-The native menu communicates with the coordinator through asynchronous Steam
-HTTP requests. It supports solo queues, acceptance/decline, cancellation, and a
-ready-check countdown. A real Windows game client has reached the ready check
-against the local service using simulated accounts and a simulated server.
-The coordinator's 16 tests pass on Windows and Linux; both game builds pass.
+The native menu communicates through asynchronous Steam HTTP requests. It
+supports solo queues, ready-check countdowns, acceptance/decline, cancellation,
+server connection/reconnection, and leaving casual matches. SRCDS consumes
+reservations, loads the assigned map, checks engine-authenticated Steam IDs
+against private join grants, assigns teams, waits for the roster, and reports
+results. These rules activate only for dedicated servers launched with
+`-mm_server`; ordinary browser games retain their existing rules.
 
-End-to-end gameplay is **not ready**: native Steam parties are not yet bridged
-to coordinator parties, and SRCDS does not yet consume reservations, enforce
-join grants, or report game results. Live Steam authentication needs the mod's
-own app ID and publisher key. Multi-member Steam parties are blocked from
-queueing until synchronization exists, so a party cannot silently queue solo.
-Lobby metadata is never proof of a match assignment or result.
+A real Windows client has completed a casual round on a real local dedicated
+server, including admission, gameplay, result reporting, and reservation
+release. The coordinator login used the explicit local development provider;
+the game-server connection used the engine's Steam authentication. The native
+builds and coordinator tests run on Windows and Linux. Linux runtime play,
+multi-player competitive rounds, reconnect/forfeit behavior, and casual backfill
+still need runtime verification.
+
+Native Steam parties are not yet bridged to coordinator parties. Live
+coordinator authentication needs the mod's own app ID and publisher key.
+Multi-member Steam parties are blocked from queueing until synchronization
+exists, so a party cannot silently queue solo. Lobby metadata is never proof
+of a match assignment or result. This remains a development build.
 
 ## Project build and preview
 
@@ -76,6 +85,8 @@ Debug commands: `mm_party_create`, `mm_party_leave`, `mm_party_status`,
 `mm_queue duel|team|casual`, `mm_match_accept`, `mm_queue_cancel`.
 The Windows preview launcher in the service guide runs a local ready check and
 captures the game renderer directly, even when the game is not in the foreground.
+`tools/preview-dedicated.py --verify` exercises a real local dedicated server
+and a one-minute casual round; `--unreserved` checks identity mismatch rejection.
 
 `tools/compare-engine-binaries.ps1` writes SHA-256 comparisons to
 `artifacts/engine-comparison/windows-binaries.csv`. On 2026-10-31, SDK build

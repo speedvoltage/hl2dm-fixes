@@ -223,8 +223,10 @@ void CHL2MPMainMenu::OnTick()
 	const bool canQueue = !party.Pending() && ( !grouped || party.IsOwner() ) && !HL2MPCoordinator().Busy();
 	for ( int i = DUEL; i <= CASUAL; ++i ) m_Buttons[i]->SetEnabled( canQueue );
 	m_QueueStatus->SetText( HL2MPCoordinator().Status() );
-	m_Buttons[ACCEPT]->SetVisible( HL2MPCoordinator().NeedsConfirmation() );
-	m_Buttons[CANCEL]->SetVisible( HL2MPCoordinator().Searching() || HL2MPCoordinator().HasReadyCheck() );
+	m_Buttons[ACCEPT]->SetVisible( HL2MPCoordinator().NeedsConfirmation() || HL2MPCoordinator().HasServer() );
+	m_Buttons[ACCEPT]->SetText( HL2MPCoordinator().HasServer() ? "JOIN / RECONNECT" : "ACCEPT MATCH" );
+	m_Buttons[CANCEL]->SetVisible( HL2MPCoordinator().Searching() || HL2MPCoordinator().HasReadyCheck() || HL2MPCoordinator().CanLeaveCasual() );
+	m_Buttons[CANCEL]->SetText( HL2MPCoordinator().CanLeaveCasual() ? "LEAVE MATCH" : "CANCEL / DECLINE" );
 	m_Status->SetText( party.Available() ? party.Status() : "Steam is offline. Server browser and options are still available." );
 	m_PartyHeading->SetText( grouped ? ( party.IsOwner() ? "YOUR PARTY  /  LEADER" : "YOUR PARTY" ) : "YOUR PARTY  /  SOLO" );
 	for ( int i = 0; i < 4; ++i )
@@ -239,7 +241,11 @@ void CHL2MPMainMenu::OnCommand( const char *command )
 	if ( !Q_strcmp( command, "party_create" ) ) HL2MPParty().Create();
 	else if ( !Q_strcmp( command, "party_invite" ) ) HL2MPParty().Invite();
 	else if ( !Q_strcmp( command, "party_leave" ) ) HL2MPParty().Leave();
-	else if ( !Q_strcmp( command, "match_accept" ) ) HL2MPCoordinator().Confirm();
+	else if ( !Q_strcmp( command, "match_accept" ) )
+	{
+		if ( HL2MPCoordinator().HasServer() ) HL2MPCoordinator().Connect();
+		else HL2MPCoordinator().Confirm();
+	}
 	else if ( !Q_strcmp( command, "queue_cancel" ) ) HL2MPCoordinator().Cancel();
 	else if ( !Q_strncmp( command, "queue_", 6 ) )
 	{

@@ -124,6 +124,7 @@ public:
 	void OnNavMeshLoad( void );
 	
 #ifndef CLIENT_DLL
+	virtual void ClientCommandKeyValues( edict_t *entity, KeyValues *message ) OVERRIDE;
 	virtual QAngle VecWeaponRespawnAngles( CBaseCombatWeapon *pWeapon ) OVERRIDE;
 	bool FlPlayerFallDeathDoesScreenFade( CBasePlayer * ) OVERRIDE { return false; }
 	virtual Vector VecItemRespawnSpot( CItem *pItem );

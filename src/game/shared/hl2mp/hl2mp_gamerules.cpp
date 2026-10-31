@@ -28,6 +28,7 @@
 	#include "voice_gamemgr.h"
 	#include "iscorer.h"
 	#include "hl2mp_player.h"
+	#include "hl2mp_match_server.h"
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
@@ -297,6 +298,7 @@ void CHL2MPRules::Think( void )
 #ifndef CLIENT_DLL
 	
 	CGameRules::Think();
+	if ( HL2MPMatchServerEnabled() && ( !HL2MPMatchServerPlaying() || g_fGameOver ) ) return;
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
@@ -383,6 +385,7 @@ void CHL2MPRules::GoToIntermission( void )
 	if ( g_fGameOver )
 		return;
 
+	HL2MPMatchServerFinished();
 	g_fGameOver = true;
 
 	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
@@ -652,6 +655,7 @@ int CHL2MPRules::WeaponShouldRespawn( CBaseCombatWeapon *pWeapon )
 void CHL2MPRules::ClientDisconnected( edict_t *pClient )
 {
 #ifndef CLIENT_DLL
+	HL2MPMatchServerDisconnect( ToBasePlayer( CBaseEntity::Instance( pClient ) ) );
 	// Msg( "CLIENT DISCONNECTED, REMOVING FROM TEAM.\n" );
 
 	CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance( pClient );
@@ -1023,6 +1027,7 @@ CAmmoDef *GetAmmoDef()
 
 	bool CHL2MPRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
 	{
+		if ( HL2MPMatchServerEnabled() && !HL2MPMatchServerPlaying() ) return false;
 		if ( pAttacker && pAttacker->IsPlayer() && pAttacker->GetTeamNumber() == TEAM_SPECTATOR )
 			return false;
 
@@ -1032,6 +1037,16 @@ CAmmoDef *GetAmmoDef()
 #endif
 
 #ifndef CLIENT_DLL
+
+void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
+{
+	if ( message && !Q_strcmp( message->GetName(), "HL2MPMatchJoin" ) )
+	{
+		HL2MPMatchServerJoin( ToBasePlayer( CBaseEntity::Instance( entity ) ), message );
+		return;
+	}
+	BaseClass::ClientCommandKeyValues( entity, message );
+}
 
 void CHL2MPRules::RestartGame()
 {

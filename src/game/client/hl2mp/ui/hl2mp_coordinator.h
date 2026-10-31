@@ -15,6 +15,9 @@ public:
 	void Queue( const char *mode );
 	void Cancel();
 	void Confirm();
+	void Connect();
+	bool HasServer() const { return m_Endpoint[0] && !Q_strcmp( m_MatchState, "active" ); }
+	bool CanLeaveCasual() const { return m_MatchID[0] && !Q_strcmp( m_MatchMode, "casual" ); }
 	const char *Status() const { return m_Status; }
 	bool Searching() const { return m_Searching; }
 	bool HasReadyCheck() const { return !Q_strcmp( m_MatchState, "ready_check" ); }
@@ -37,7 +40,12 @@ private:
 	char m_PendingMode[16];
 	char m_MatchID[40];
 	char m_MatchState[32];
+	char m_MatchMode[16];
 	char m_ActionMatchID[40];
+	char m_Endpoint[64];
+	char m_JoinGrant[128];
+	char m_ConnectedMatch[40];
+	double m_NextGrant;
 	PendingAction m_PendingAction;
 	HTTPRequestHandle m_Request;
 	HAuthTicket m_AuthTicket;
@@ -53,6 +61,7 @@ private:
 	int m_ReadyAccepted;
 	double m_PreviewCaptureTime;
 	bool m_PreviewCaptured;
+	bool m_PreviewGameplay;
 	CCallResult<CHL2MPCoordinator, HTTPRequestCompleted_t> m_Response;
 	CCallbackManual<CHL2MPCoordinator, GetTicketForWebApiResponse_t> m_TicketCallback;
 };

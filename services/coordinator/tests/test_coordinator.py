@@ -191,6 +191,50 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaises(Rejected):
             self.core.report_result("another-server", mid, 0)
 
+    def test_server_abort_is_scoped_idempotent_and_never_rated(self):
+        mid = self.active_duel()
+        with self.assertRaises(Rejected):
+            self.core.abort_match("another-server", mid, "players_missing")
+        self.core.abort_match("eu-1", mid, "players_missing")
+        self.core.abort_match("eu-1", mid, "players_missing")
+        self.assertIsNone(self.core.status(self.users[0])["match"])
+        self.assertEqual(self.core.status(self.users[0])["ratings"]["duel"], 1500)
+        with self.assertRaises(Rejected):
+            self.core.report_result("eu-1", mid, 0)
+        self.assertEqual(self.core.heartbeat("eu-1", mid)["match"]["state"], "cancelled")
+        self.assertIsNone(self.core.heartbeat("eu-1", None)["match"])
+
+    def test_casual_disconnect_cannot_remove_player_from_another_match(self):
+        actor = self.users[0]
+        self.core.enqueue(actor, "casual", "eu", 1)
+        self.core.tick()
+        mid = self.core.status(actor)["match"]["id"]
+        self.core.server_ready("eu-1", mid)
+        with self.assertRaises(Rejected):
+            self.core.casual_disconnected("another-server", mid, actor)
+        self.core.casual_disconnected("eu-1", mid, actor)
+        self.assertIsNone(self.core.status(actor)["match"])
+        self.core.heartbeat("eu-1", None)
+        self.core.enqueue(actor, "casual", "eu", 1)
+        self.core.tick()
+        new_match = self.core.status(actor)["match"]["id"]
+        self.core.casual_disconnected("eu-1", mid, actor)
+        self.assertEqual(self.core.status(actor)["match"]["id"], new_match)
+
+    def test_disconnect_report_preserves_finished_roster_and_rejects_ranked(self):
+        actor = self.users[0]
+        self.core.enqueue(actor, "casual", "eu", 1)
+        self.core.tick()
+        mid = self.core.status(actor)["match"]["id"]
+        self.core.server_ready("eu-1", mid)
+        self.core.report_result("eu-1", mid, None)
+        self.core.casual_disconnected("eu-1", mid, actor)
+        self.assertEqual(len(self.core.heartbeat("eu-1", mid)["match"]["players"]), 1)
+        self.core.heartbeat("eu-1", None)
+        mid = self.active_duel()
+        with self.assertRaises(Rejected):
+            self.core.casual_disconnected("eu-1", mid, actor)
+
 
 class APITests(unittest.TestCase):
     def setUp(self):

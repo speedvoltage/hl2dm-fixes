@@ -40,6 +40,28 @@ configuration contains a local credential and stays in ignored artifacts.
 Development sessions and URLs are passed through the child process environment,
 enabled only by `-mm_local_test`, and are not archived in the game's config.
 
+To exercise the real Windows SRCDS agent and game client instead:
+
+```powershell
+.\artifacts\coordinator-venv\Scripts\python.exe tools/preview-dedicated.py --verify
+.\artifacts\coordinator-venv\Scripts\python.exe tools/preview-dedicated.py --unreserved
+```
+
+The first check creates a casual reservation for the signed-in Steam account,
+verifies admission, captures the game renderer, and sets the server's ordinary
+`mp_timelimit` to one minute. It checks the server-reported result and release
+of the reservation. The second check gives the coordinator session a different
+development identity and verifies that the actual Steam player is rejected.
+The coordinator login is simulated in both checks; the game-server connection
+uses the engine's Steam authentication. No Steam authentication bypass is added
+to the server. Evidence goes to `artifacts/dedicated-preview-<timestamp>/`.
+
+The helper gives SRCDS a hidden Windows console because it requires a real
+console input handle. Client and server use separate ports and
+`net_usesocketsforloopback 1` for local socket communication. It stops only its
+own child processes. Omit the verification flags to play a casual preview for
+150 seconds, or set `--seconds` to change the duration.
+
 ## Configured service
 
 Copy `servers.example.json` to a private file and replace every placeholder
@@ -73,6 +95,42 @@ version; trusted proxy handling is still needed for a larger deployment.
 Request bodies are limited to 16 KiB. Keep HTTP debug logging off: Steam's
 upstream authentication URL contains the publisher key and ticket.
 
+## Native dedicated servers
+
+Launch the built mod with the SDK's dedicated-server executable and
+`-console -game <mod-path> -mm_server +sv_lan 0 +map dm_lockdown`. Set these
+environment variables in the server process:
+
+```text
+HL2MP_MM_SERVER_URL=https://your-coordinator.example
+HL2MP_MM_SERVER_TOKEN=<the credential for this server's configuration entry>
+```
+
+Use an IPv4 address and port in the pool configuration that clients can reach.
+The credential is read from the environment and is never a replicated convar.
+The agent uses Steam HTTP with verified TLS, polls every five seconds, and
+pauses gameplay after twenty seconds without a successful service response.
+It does not announce map readiness before Steam is logged on, and it does not
+admit LAN/offline identities. Invalid configuration keeps admission closed.
+
+The gameinfo search paths resolve SDK content beside the selected engine
+runtime, so SRCDS can load it without a client SteamApps connection. Engine
+binaries remain unchanged. The initial map is Lockdown for all modes; additional
+maps require a content/rotation setup. Provisional rules are ten-minute duels,
+twenty-minute/50-frag team matches, and twenty-minute casual rounds.
+
+Competitive players wait frozen until everyone joins, then start after a
+five-second countdown and a clean map reset. The join deadline is 120 seconds.
+A ranked player has a 90-second reconnect allowance; a missing team forfeits,
+while both teams missing cancels without ratings. Frags/deaths are restored on
+reconnect. Casual disconnects release a slot after 30 seconds; a casual player
+who never joins releases it after 120 seconds. These reconnect and multi-player
+paths still need runtime verification with multiple Steam clients.
+
+The server controls teams and reports results from its scores at intermission.
+Ordinary servers without `-mm_server` keep the existing retail rules, MOTD,
+team controls, and map cycle. Matchmaking servers skip the stock welcome dialog.
+
 ## Lifecycle and trust boundaries
 
 | Step | Player API | Dedicated-server API |
@@ -84,13 +142,18 @@ upstream authentication URL contains the publisher key and ticket.
 | Server loaded | Wait for active assignment | `POST /v1/servers/matches/{id}/ready` |
 | Admission | Receive endpoint and private join grant | `POST /v1/servers/matches/{id}/authorize` |
 | Completion | Read `last_match` and ratings | `POST /v1/servers/matches/{id}/result` |
-| Casual exit | `POST /v1/casual/leave` | Receive updated roster on heartbeat |
+| Casual exit | `POST /v1/casual/leave` | `POST /v1/servers/matches/{id}/players/{steam_id}/left` |
+| Server cancellation | Read the cancellation reason | `POST /v1/servers/matches/{id}/abort` |
 
 The game server must validate the connecting player's Steam identity itself and
 pair it with that player's join grant. The service binds grants to the player,
 match, and authenticated server. Lobby data and client-reported scores cannot
-authorize a connection or rating update. The native game-server integration
-that performs this enforcement is still pending.
+authorize a connection or rating update. The native server reads the identity
+from `IVEngineServer::GetClientSteamID`, whose SDK contract returns null before
+authentication. It sends that identity and the player's private grant to the
+coordinator. The client sends the grant through a command KeyValues payload,
+only on a connection to its assigned endpoint; grants never enter userinfo or
+console command strings. Unadmitted players remain spectators.
 
 Players poll `/v1/me` to maintain presence. Queued parties expire after 45 seconds
 without member presence; ready checks last 30 seconds; server startup has a

@@ -1,5 +1,7 @@
 #include "cbase.h"
 #include "cdll_client_int.h"
+#include "c_baseplayer.h"
+#include "inetchannelinfo.h"
 #include "hl2mp_coordinator.h"
 #include "hl2mp_party.h"
 #include "tier1/keyvaluesjson.h"
@@ -43,12 +45,14 @@ static bool ValidURL( const char *url )
 
 CHL2MPCoordinator &HL2MPCoordinator() { static CHL2MPCoordinator service; return service; }
 
-CHL2MPCoordinator::CHL2MPCoordinator() : m_PendingAction( ACTION_NONE ), m_Request( 0 ), m_AuthTicket( k_HAuthTicketInvalid ),
+CHL2MPCoordinator::CHL2MPCoordinator() : m_NextGrant( 0 ), m_PendingAction( ACTION_NONE ), m_Request( 0 ), m_AuthTicket( k_HAuthTicketInvalid ),
 	m_AuthRequest( false ), m_PollRequest( false ), m_Confirmed( false ), m_Searching( false ), m_Initialized( false ), m_NextPoll( 0 ), m_AuthDeadline( 0 ),
 	m_ReadyExpires( 0 ), m_ReadyPlayers( 0 ), m_ReadyAccepted( 0 ),
-	m_PreviewCaptureTime( 0 ), m_PreviewCaptured( false )
+	m_PreviewCaptureTime( 0 ), m_PreviewCaptured( false ), m_PreviewGameplay( false )
 {
 	m_BaseURL[0] = m_Token[0] = m_PendingMode[0] = m_MatchID[0] = m_MatchState[0] = m_ActionMatchID[0] = 0;
+	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
+	m_MatchMode[0] = 0;
 	SetStatus( "Choose a mode to find a match." );
 }
 
@@ -85,15 +89,37 @@ void CHL2MPCoordinator::Shutdown()
 	m_Confirmed = false;
 	m_PendingAction = ACTION_NONE;
 	m_PreviewCaptureTime = 0;
+	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
 }
 
 void CHL2MPCoordinator::Tick()
 {
+	if ( HasServer() && engine->IsInGame() && Plat_FloatTime() >= m_NextGrant )
+	{
+		INetChannelInfo *channel = engine->GetNetChannelInfo();
+		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+		if ( channel && player && !Q_strcmp( channel->GetAddress(), m_Endpoint ) &&
+			( !m_NextGrant || player->GetTeamNumber() == TEAM_SPECTATOR ) )
+		{
+			// Private command payload: never put a join grant in userinfo or a console command.
+			KeyValues *message = new KeyValues( "HL2MPMatchJoin" );
+			message->SetString( "match", m_MatchID );
+			message->SetString( "grant", m_JoinGrant );
+			engine->ServerCmdKeyValues( message );
+			m_NextGrant = Plat_FloatTime() + 2;
+		}
+		if ( channel && player && !Q_strcmp( channel->GetAddress(), m_Endpoint ) &&
+			player->GetTeamNumber() != TEAM_SPECTATOR && !m_PreviewGameplay && CommandLine()->CheckParm( "-mm_local_test" ) )
+		{
+			m_PreviewGameplay = true;
+			m_PreviewCaptureTime = Plat_FloatTime() + 6;
+		}
+	}
 	if ( HasReadyCheck() ) UpdateReadyStatus();
 	if ( m_PreviewCaptureTime > 0 && Plat_FloatTime() >= m_PreviewCaptureTime )
 	{
 		m_PreviewCaptureTime = 0;
-		engine->ClientCmd_Unrestricted( "jpeg matchmaking_ready_check 95" );
+		engine->ClientCmd_Unrestricted( m_PreviewGameplay ? "jpeg matchmaking_gameplay 95" : "jpeg matchmaking_ready_check 95" );
 	}
 	if ( Q_strcmp( m_BaseURL, CoordinatorURL() ) )
 	{
@@ -224,7 +250,7 @@ void CHL2MPCoordinator::Queue( const char *mode )
 
 void CHL2MPCoordinator::Cancel()
 {
-	if ( !m_Searching && !HasReadyCheck() ) return;
+	if ( !m_Searching && !HasReadyCheck() && !CanLeaveCasual() ) return;
 	m_PendingAction = ACTION_CANCEL;
 	Q_strncpy( m_ActionMatchID, m_MatchID, sizeof( m_ActionMatchID ) );
 	if ( !m_Request ) DispatchAction();
@@ -244,6 +270,16 @@ void CHL2MPCoordinator::DispatchAction()
 	m_PendingAction = ACTION_NONE;
 	// A click belongs to the match visible when it was made, never a later match.
 	if ( m_ActionMatchID[0] && Q_strcmp( m_ActionMatchID, m_MatchID ) ) return;
+	if ( action == ACTION_CANCEL && CanLeaveCasual() )
+	{
+		if ( Request( k_EHTTPMethodPOST, "/v1/casual/leave", "{}" ) )
+		{
+			INetChannelInfo *channel = engine->GetNetChannelInfo();
+			if ( channel && m_Endpoint[0] && !Q_strcmp( channel->GetAddress(), m_Endpoint ) )
+				engine->ClientCmd_Unrestricted( "disconnect" );
+		}
+		return;
+	}
 	if ( HasReadyCheck() && ( action == ACTION_CANCEL || ( action == ACTION_ACCEPT && !m_Confirmed ) ) )
 	{
 		char path[128]; Q_snprintf( path, sizeof( path ), "/v1/matches/%s/confirm", m_MatchID );
@@ -257,6 +293,18 @@ void CHL2MPCoordinator::UpdateReadyStatus()
 	const int seconds = MAX( 0, (int)ceil( m_ReadyExpires - Plat_FloatTime() ) );
 	Q_snprintf( m_Status, sizeof( m_Status ), "%s  %d / %d ready.  %ds remaining.",
 		m_Confirmed ? "You accepted." : "Match found! Accept to play.", m_ReadyAccepted, m_ReadyPlayers, seconds );
+}
+
+void CHL2MPCoordinator::Connect()
+{
+	if ( !HasServer() ) return;
+	char command[96];
+	// m_Endpoint is constructed only from a parsed IPv4 address and numeric port.
+	Q_snprintf( command, sizeof( command ), "connect %s", m_Endpoint );
+	Q_strncpy( m_ConnectedMatch, m_MatchID, sizeof( m_ConnectedMatch ) );
+	m_NextGrant = 0;
+	engine->ClientCmd_Unrestricted( command );
+	SetStatus( "Connecting to your dedicated server..." );
 }
 
 void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed )
@@ -318,11 +366,14 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 		m_Searching = queue && queue->GetString( "mode", "" )[0];
 		KeyValues *match = root->FindKey( "match" );
 		m_MatchID[0] = m_MatchState[0] = 0;
+		m_Endpoint[0] = m_JoinGrant[0] = 0;
+		m_MatchMode[0] = 0;
 		m_Confirmed = false;
 		if ( match && SafeToken( match->GetString( "id", "" ), 32, 32 ) )
 		{
 			Q_strncpy( m_MatchID, match->GetString( "id" ), sizeof( m_MatchID ) );
 			Q_strncpy( m_MatchState, match->GetString( "state" ), sizeof( m_MatchState ) );
+			Q_strncpy( m_MatchMode, match->GetString( "mode", "" ), sizeof( m_MatchMode ) );
 			if ( HasReadyCheck() )
 			{
 				m_Confirmed = match->GetInt( "you_accepted" ) != 0;
@@ -337,7 +388,25 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 				}
 			}
 			else if ( !Q_strcmp( m_MatchState, "starting" ) ) SetStatus( "Players ready. Preparing your dedicated server..." );
-			else SetStatus( "Server reservation ready. Game-server handoff is not connected yet." );
+			else if ( !Q_strcmp( m_MatchState, "active" ) )
+			{
+				KeyValues *connection = match->FindKey( "connection" );
+				const char *address = connection ? connection->GetString( "address", "" ) : "";
+				const char *grant = connection ? connection->GetString( "join_token", "" ) : "";
+				int octets[4]; char trailing;
+				const int port = connection ? connection->GetInt( "port" ) : 0;
+				if ( sscanf( address, "%d.%d.%d.%d%c", &octets[0], &octets[1], &octets[2], &octets[3], &trailing ) == 4 &&
+					octets[0] >= 0 && octets[0] <= 255 && octets[1] >= 0 && octets[1] <= 255 &&
+					octets[2] >= 0 && octets[2] <= 255 && octets[3] >= 0 && octets[3] <= 255 &&
+					port > 0 && port <= 65535 && SafeToken( grant, 32, 120 ) )
+				{
+					Q_snprintf( m_Endpoint, sizeof( m_Endpoint ), "%d.%d.%d.%d:%d", octets[0], octets[1], octets[2], octets[3], port );
+					Q_strncpy( m_JoinGrant, grant, sizeof( m_JoinGrant ) );
+					SetStatus( "Your match server is ready. Join or reconnect." );
+					if ( Q_strcmp( m_ConnectedMatch, m_MatchID ) && !engine->IsConnected() ) Connect();
+				}
+				else SetStatus( "The service returned an invalid server assignment." );
+			}
 		}
 		else if ( m_Searching ) Q_snprintf( m_Status, sizeof( m_Status ), "Searching for %s in %s...", queue->GetString( "mode" ), queue->GetString( "region" ) );
 		else
@@ -360,3 +429,4 @@ CON_COMMAND_F( mm_queue, "Search for a duel, team, or casual match.", FCVAR_CLIE
 }
 CON_COMMAND_F( mm_queue_cancel, "Cancel a search or decline a ready check.", FCVAR_CLIENTDLL ) { HL2MPCoordinator().Cancel(); }
 CON_COMMAND_F( mm_match_accept, "Accept the current ready check.", FCVAR_CLIENTDLL ) { HL2MPCoordinator().Confirm(); }
+CON_COMMAND_F( mm_match_connect, "Join or reconnect to your reserved match server.", FCVAR_CLIENTDLL ) { HL2MPCoordinator().Connect(); }

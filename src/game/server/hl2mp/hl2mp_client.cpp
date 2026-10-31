@@ -15,6 +15,7 @@
 
 #include "cbase.h"
 #include "hl2mp_player.h"
+#include "hl2mp_match_server.h"
 #include "hl2mp_gamerules.h"
 #include "gamerules.h"
 #include "teamplay_gamerules.h"
@@ -72,6 +73,12 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 		{
 		ClientPrint( pPlayer, HUD_PRINTTALK, "You are on team %s1\n", pPlayer->GetTeam()->GetName() );
 		}
+	}
+
+	if ( HL2MPMatchServerEnabled() )
+	{
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "Joining your match..." );
+		return;
 	}
 
 	const ConVar *hostname = cvar->FindVar( "hostname" );

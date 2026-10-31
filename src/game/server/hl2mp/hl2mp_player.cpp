@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "hl2mp_player.h"
+#include "hl2mp_match_server.h"
 #include "globalstate.h"
 #include "game.h"
 #include "gamerules.h"
@@ -390,6 +391,7 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	m_bReady = false;
+	HL2MPMatchServerSpawn( this );
 }
 
 bool CHL2MP_Player::ValidatePlayerModel( const char *pModel )
@@ -971,6 +973,7 @@ bool CHL2MP_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 
 void CHL2MP_Player::ChangeTeam( int iTeam )
 {
+	if ( HL2MPMatchServerEnabled() ) iTeam = HL2MPMatchServerTeam( this );
 /*	if ( GetNextTeamChangeTime() >= gpGlobals->curtime )
 	{
 		char szReturnString[128];
@@ -1038,7 +1041,9 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 {
 	const bool bWasSpectator = GetTeamNumber() == TEAM_SPECTATOR;
 
-	if ( !GetGlobalTeam( team ) || team == 0 )
+	const bool bReservedDeathmatch = HL2MPMatchServerEnabled() && team == TEAM_UNASSIGNED &&
+		HL2MPMatchServerTeam( this ) == TEAM_UNASSIGNED;
+	if ( !bReservedDeathmatch && ( !GetGlobalTeam( team ) || team == 0 ) )
 	{
 		Warning( "HandleCommand_JoinTeam( %d ) - invalid team index.\n", team );
 		return false;
@@ -1086,6 +1091,8 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 
 bool CHL2MP_Player::ClientCommand( const CCommand &args )
 {
+	if ( HL2MPMatchServerEnabled() && ( FStrEq( args[0], "jointeam" ) || FStrEq( args[0], "spectate" ) ) )
+		return true;
 	if ( FStrEq( args[0], "spectate" ) )
 	{
 		if ( ShouldRunRateLimitedCommand( args ) )
