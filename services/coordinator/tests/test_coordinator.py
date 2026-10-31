@@ -94,6 +94,132 @@ class CoordinatorTests(unittest.TestCase):
         self.core.cancel_queue(self.users[1])
         self.assertIsNone(self.core.status(self.users[0])["queue"])
 
+    def bind_lobby(self, leader, members, lobby="109775241000000001"):
+        party = self.core.status(leader)["party"]
+        self.core.party_lobby(leader, lobby, members, party["id"], party.get("revision", 0))
+        return self.core.status(leader)["party"]
+
+    def ready_lobby(self, users):
+        for uid in users:
+            party = self.core.status(uid)["party"]
+            self.core.party_ready(uid, True, party["id"], party["revision"])
+
+    def queue_lobby(self, actor, mode="team"):
+        party = self.core.status(actor)["party"]
+        self.core.enqueue(actor, mode, "eu", 1, party["id"], party["revision"])
+
+    def test_lobby_invitation_is_restricted_to_authenticated_invited_accounts(self):
+        leader, member, stranger = self.users[:3]
+        party = self.bind_lobby(leader, [leader, member])
+        with self.assertRaises(Rejected):
+            self.core.party_join(stranger, party["invite"])
+        with self.assertRaises(Rejected):
+            self.queue_lobby(leader)  # No silent solo queue while a friend is still joining.
+        self.core.party_join(member, party["invite"])
+        self.assertNotIn("invite", self.core.status(member)["party"])
+        with self.assertRaises(Rejected):
+            self.core.party_lobby(member, party["lobby"], [member, stranger], party["id"], party["revision"])
+        self.ready_lobby([leader, member])
+        self.queue_lobby(leader)
+        self.assertIsNotNone(self.core.status(member)["queue"])
+        self.core.cancel_queue(member)
+        self.assertIsNone(self.core.status(leader)["queue"])
+
+    def test_lobby_roster_revisions_prevent_stale_ready_and_queue_actions(self):
+        leader, member = self.users[:2]
+        old = self.bind_lobby(leader, [leader, member])
+        self.ready_lobby([leader])
+        self.core.party_join(member, old["invite"])
+        self.assertEqual(self.core.status(leader)["party"]["ready"], [])
+        with self.assertRaises(Rejected):
+            self.core.party_ready(leader, True, old["id"], old["revision"])
+        with self.assertRaises(Rejected):
+            self.core.party_ready(member, True)
+        self.ready_lobby([leader, member])
+        with self.assertRaises(Rejected):
+            self.core.enqueue(leader, "team", "eu", 1, old["id"], old["revision"])
+        with self.assertRaises(Rejected):
+            self.core.enqueue(leader, "team", "eu", 1)
+        current = self.core.status(leader)["party"]
+        self.assertEqual(self.bind_lobby(leader, [member, leader]), current)  # Idempotent roster order.
+        self.queue_lobby(leader)
+
+    def test_lobby_departure_revokes_invite_and_cannot_change_reserved_roster(self):
+        leader, member, replacement = self.users[:3]
+        old = self.bind_lobby(leader, [leader, member])
+        self.core.party_join(member, old["invite"])
+        self.ready_lobby([leader, member])
+        self.queue_lobby(leader)
+        with self.assertRaises(Rejected):
+            self.bind_lobby(leader, [leader, replacement])
+        self.core.cancel_queue(member)
+        changed = self.bind_lobby(leader, [leader, replacement])
+        self.assertEqual(changed["members"], [leader])
+        self.assertEqual(changed["ready"], [])
+        self.assertEqual(self.core.status(member)["party"]["members"], [member])
+        with self.assertRaises(Rejected):
+            self.core.party_join(replacement, old["invite"])
+        self.core.party_join(replacement, changed["invite"])
+        self.ready_lobby([leader, replacement])
+        self.queue_lobby(leader, "casual")
+        self.core.tick()
+        with self.assertRaises(Rejected):
+            self.bind_lobby(leader, [leader])
+
+    def test_new_lobby_owner_can_reform_party_without_reusing_old_readiness(self):
+        leader, member, new_owner = self.users[:3]
+        party = self.bind_lobby(leader, [leader, member, new_owner])
+        for uid in (member, new_owner):
+            self.core.party_join(uid, party["invite"])
+        self.ready_lobby([leader, member, new_owner])
+        self.core.party_leave(new_owner)
+        migrated = self.bind_lobby(new_owner, [member, new_owner])
+        self.core.party_join(member, migrated["invite"])
+        state = self.core.status(member)["party"]
+        self.assertEqual(state["leader"], new_owner)
+        self.assertEqual(state["ready"], [])
+        self.assertEqual(set(state["members"]), {member, new_owner})
+        with self.assertRaises(Rejected):
+            self.core.party_ready(member, True, party["id"], party["revision"])
+
+    def test_lobby_http_identity_and_validation(self):
+        leader, member = self.users[:2]
+        party = self.core.status(leader)["party"]
+        headers = {"Authorization": "Bearer " + self.tokens[leader]}
+        body = dict(lobby_id="109775241000000001", members=[leader, member], party_id=party["id"], revision=0)
+        with TestClient(create_app(self.core)) as client:
+            self.assertEqual(client.post("/v1/party/lobby", json=body).status_code, 401)
+            for members in ([member], [leader, leader], [leader, "not-a-steam-id"], [leader, str(2**64)], [leader, "9" * 5000]):
+                response = client.post("/v1/party/lobby", json={**body, "members": members}, headers=headers)
+                self.assertEqual(response.status_code, 400)
+            response = client.post("/v1/party/lobby", json=body, headers=headers)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["party"]["lobby_members"], [leader, member])
+
+    def test_two_lobby_parties_reach_team_match_with_individual_confirmation(self):
+        for n in (0, 2):
+            leader, member = self.users[n:n + 2]
+            party = self.bind_lobby(leader, [leader, member], str(109775241000000001 + n))
+            self.core.party_join(member, party["invite"])
+            self.ready_lobby([leader, member])
+            self.queue_lobby(leader)
+        self.core.tick()
+        mid = self.core.status(self.users[0])["match"]["id"]
+        for uid in self.users[:3]:
+            self.core.confirm(uid, mid, True)
+        self.assertEqual(self.core.status(self.users[3])["match"]["state"], "ready_check")
+        self.core.confirm(self.users[3], mid, True)
+        roster = self.core.heartbeat("eu-1", mid)["match"]["players"]
+        teams = {p["steam_id"]: p["team"] for p in roster}
+        self.assertEqual(teams[self.users[0]], teams[self.users[1]])
+        self.assertEqual(teams[self.users[2]], teams[self.users[3]])
+        self.assertNotEqual(teams[self.users[0]], teams[self.users[2]])
+        self.core.server_ready("eu-1", mid)
+        self.core.report_result("eu-1", mid, teams[self.users[0]])
+        self.assertEqual(self.core.status(self.users[0])["party"]["ready"], [])
+        self.assertEqual(self.core.status(self.users[0])["ratings"]["team"], 1516)
+        self.assertEqual(self.core.status(self.users[1])["ratings"]["team"], 1516)
+
     def test_decline_holds_server_until_shutdown_ack(self):
         mid = self.duel()
         self.core.confirm(self.users[0], mid, False)

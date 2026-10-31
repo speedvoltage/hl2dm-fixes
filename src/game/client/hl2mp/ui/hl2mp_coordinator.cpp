@@ -53,6 +53,11 @@ CHL2MPCoordinator::CHL2MPCoordinator() : m_NextGrant( 0 ), m_PendingAction( ACTI
 	m_BaseURL[0] = m_Token[0] = m_PendingMode[0] = m_MatchID[0] = m_MatchState[0] = m_ActionMatchID[0] = 0;
 	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
 	m_MatchMode[0] = 0;
+	m_PartyID[0] = m_PartyLobby[0] = m_PartyLeader[0] = m_UserID[0] = m_PartyInvite[0] = m_ReadyPartyID[0] = 0;
+	m_PartyCount = m_LobbyCount = m_PartyRevision = m_ReadyRevision = 0;
+	m_WantSession = m_ReadyPending = m_ReadyValue = false;
+	m_NextSignIn = 0;
+	Q_strncpy( m_PartyStatus, "Create a party to invite friends.", sizeof( m_PartyStatus ) );
 	SetStatus( "Choose a mode to find a match." );
 }
 
@@ -90,6 +95,9 @@ void CHL2MPCoordinator::Shutdown()
 	m_PendingAction = ACTION_NONE;
 	m_PreviewCaptureTime = 0;
 	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
+	m_PartyID[0] = m_PartyLobby[0] = m_PartyInvite[0] = 0;
+	m_PartyCount = m_LobbyCount = 0;
+	m_WantSession = m_ReadyPending = false;
 }
 
 void CHL2MPCoordinator::Tick()
@@ -142,11 +150,174 @@ void CHL2MPCoordinator::Tick()
 		SetStatus( "Steam sign-in timed out. Please try again." );
 	}
 	if ( !m_Request && m_PendingAction != ACTION_NONE ) DispatchAction();
+	if ( HL2MPParty().Lobby().IsValid() ) m_WantSession = true;
+	if ( m_WantSession && !m_Token[0] && !m_Request && m_AuthTicket == k_HAuthTicketInvalid && Plat_FloatTime() >= m_NextSignIn ) SignIn();
 	if ( m_Token[0] && !m_Request && Plat_FloatTime() >= m_NextPoll )
 	{
 		m_NextPoll = Plat_FloatTime() + 2;
-		Request( k_EHTTPMethodGET, "/v1/me" );
+		SyncParty();
+		if ( !m_Request ) Request( k_EHTTPMethodGET, "/v1/me" );
 	}
+}
+
+static bool DecimalID( const char *value )
+{
+	const int length = Q_strlen( value );
+	if ( length < 1 || length > 20 ) return false;
+	for ( const char *p = value; *p; ++p ) if ( *p < '0' || *p > '9' ) return false;
+	return true;
+}
+
+void CHL2MPCoordinator::ReadParty( KeyValues *root )
+{
+	m_PartyID[0] = m_PartyLobby[0] = m_PartyInvite[0] = 0;
+	m_PartyCount = m_LobbyCount = 0;
+	KeyValues *party = root->FindKey( "party" );
+	if ( !party || !SafeToken( party->GetString( "id" ), 32, 32 ) || !DecimalID( root->GetString( "steam_id" ) ) ) return;
+	Q_strncpy( m_UserID, root->GetString( "steam_id" ), sizeof( m_UserID ) );
+	Q_strncpy( m_PartyID, party->GetString( "id" ), sizeof( m_PartyID ) );
+	Q_strncpy( m_PartyLeader, party->GetString( "leader" ), sizeof( m_PartyLeader ) );
+	m_PartyRevision = party->GetInt( "revision" );
+	if ( DecimalID( party->GetString( "lobby", "" ) ) ) Q_strncpy( m_PartyLobby, party->GetString( "lobby" ), sizeof( m_PartyLobby ) );
+	if ( SafeToken( party->GetString( "invite", "" ), 16, 120 ) ) Q_strncpy( m_PartyInvite, party->GetString( "invite" ), sizeof( m_PartyInvite ) );
+	KeyValues *members = party->FindKey( "members" );
+	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_PartyCount < 4; member = member->GetNextKey() )
+		if ( DecimalID( member->GetString() ) ) Q_strncpy( m_PartyMembers[m_PartyCount++], member->GetString(), sizeof( m_PartyMembers[0] ) );
+	members = party->FindKey( "lobby_members" );
+	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_LobbyCount < 4; member = member->GetNextKey() )
+		if ( DecimalID( member->GetString() ) ) Q_strncpy( m_LobbyMembers[m_LobbyCount++], member->GetString(), sizeof( m_LobbyMembers[0] ) );
+	KeyValues *ready = party->FindKey( "ready" );
+	for ( int i = 0; i < m_PartyCount; ++i )
+	{
+		m_MemberReady[i] = false;
+		for ( KeyValues *member = ready ? ready->GetFirstSubKey() : NULL; member; member = member->GetNextKey() )
+			if ( !Q_strcmp( member->GetString(), m_PartyMembers[i] ) ) m_MemberReady[i] = true;
+	}
+}
+
+bool CHL2MPCoordinator::LobbyRosterMatches( bool joined ) const
+{
+	CHL2MPParty &party = HL2MPParty();
+	char lobby[24]; Q_snprintf( lobby, sizeof( lobby ), "%llu", (unsigned long long)party.Lobby().ConvertToUint64() );
+	const int count = joined ? m_PartyCount : m_LobbyCount;
+	if ( !party.Lobby().IsValid() || Q_strcmp( m_PartyLobby, lobby ) || count != party.MemberCount() || !count ) return false;
+	for ( int i = 0; i < party.MemberCount(); ++i )
+	{
+		char id[24]; Q_snprintf( id, sizeof( id ), "%llu", (unsigned long long)party.Member( i ).ConvertToUint64() );
+		bool found = false;
+		for ( int j = 0; j < count; ++j ) if ( !Q_strcmp( id, joined ? m_PartyMembers[j] : m_LobbyMembers[j] ) ) found = true;
+		if ( !found ) return false;
+	}
+	return true;
+}
+
+bool CHL2MPCoordinator::PartySynchronized() const
+{
+	CHL2MPParty &party = HL2MPParty();
+	if ( !m_PartyID[0] || party.Pending() ) return false;
+	if ( !party.Lobby().IsValid() ) return !m_PartyLobby[0] && m_PartyCount == 1;
+	char owner[24]; Q_snprintf( owner, sizeof( owner ), "%llu", (unsigned long long)party.Owner().ConvertToUint64() );
+	return !Q_strcmp( owner, m_PartyLeader ) && LobbyRosterMatches( false ) && LobbyRosterMatches( true );
+}
+
+bool CHL2MPCoordinator::PartyMemberReady( CSteamID member ) const
+{
+	char id[24]; Q_snprintf( id, sizeof( id ), "%llu", (unsigned long long)member.ConvertToUint64() );
+	for ( int i = 0; i < m_PartyCount; ++i ) if ( !Q_strcmp( id, m_PartyMembers[i] ) ) return m_MemberReady[i];
+	return false;
+}
+
+bool CHL2MPCoordinator::PartyReady() const
+{
+	for ( int i = 0; i < m_PartyCount; ++i ) if ( !Q_strcmp( m_UserID, m_PartyMembers[i] ) ) return m_MemberReady[i];
+	return false;
+}
+
+void CHL2MPCoordinator::TogglePartyReady()
+{
+	if ( Busy() || !PartySynchronized() || m_ReadyPending ) return;
+	m_ReadyPending = true;
+	m_ReadyValue = !PartyReady();
+	Q_strncpy( m_ReadyPartyID, m_PartyID, sizeof( m_ReadyPartyID ) );
+	m_ReadyRevision = m_PartyRevision;
+	m_NextPoll = 0;
+}
+
+void CHL2MPCoordinator::SyncParty()
+{
+	CHL2MPParty &party = HL2MPParty();
+	party.SetJoinable( !m_Searching && !m_MatchID[0] );
+	if ( !m_PartyID[0] ) return; // Read our authenticated state before changing any party.
+	const bool synchronized = PartySynchronized();
+	if ( ( m_Searching || HasReadyCheck() ) && !synchronized )
+	{
+		Cancel();
+		Q_strncpy( m_PartyStatus, "Party changed. Cancelling the search...", sizeof( m_PartyStatus ) );
+		return;
+	}
+	if ( m_Searching || m_MatchID[0] ) return;
+	if ( m_ReadyPending )
+	{
+		m_ReadyPending = false;
+		if ( synchronized && !Q_strcmp( m_ReadyPartyID, m_PartyID ) && m_ReadyRevision == m_PartyRevision )
+		{
+			char body[160]; Q_snprintf( body, sizeof( body ), "{\"ready\":%s,\"party_id\":\"%s\",\"revision\":%d}", m_ReadyValue ? "true" : "false", m_PartyID, m_PartyRevision );
+			Request( k_EHTTPMethodPOST, "/v1/party/ready", body );
+			return;
+		}
+	}
+	if ( party.Pending() ) return;
+	if ( !party.Lobby().IsValid() )
+	{
+		if ( m_PartyLobby[0] || m_PartyCount > 1 ) Request( k_EHTTPMethodPOST, "/v1/party/leave", "{}" );
+		return;
+	}
+	if ( !party.MemberCount() ) return;
+	Q_strncpy( m_PartyStatus, "Synchronizing your party...", sizeof( m_PartyStatus ) );
+	char lobby[24]; Q_snprintf( lobby, sizeof( lobby ), "%llu", (unsigned long long)party.Lobby().ConvertToUint64() );
+	if ( party.IsOwner() )
+	{
+		if ( Q_strcmp( m_UserID, m_PartyLeader ) || ( m_PartyLobby[0] && Q_strcmp( lobby, m_PartyLobby ) ) || ( !m_PartyLobby[0] && m_PartyCount > 1 ) )
+		{
+			party.PublishMatchmaking( m_BaseURL, "", "" );
+			Request( k_EHTTPMethodPOST, "/v1/party/leave", "{}" );
+			return;
+		}
+		if ( !LobbyRosterMatches( false ) )
+		{
+			party.PublishMatchmaking( m_BaseURL, "", "" );
+			char body[512]; Q_snprintf( body, sizeof( body ), "{\"lobby_id\":\"%s\",\"party_id\":\"%s\",\"revision\":%d,\"members\":[", lobby, m_PartyID, m_PartyRevision );
+			for ( int i = 0; i < party.MemberCount(); ++i )
+			{
+				char entry[32]; Q_snprintf( entry, sizeof( entry ), "%s\"%llu\"", i ? "," : "", (unsigned long long)party.Member( i ).ConvertToUint64() );
+				Q_strncat( body, entry, sizeof( body ) );
+			}
+			Q_strncat( body, "]}", sizeof( body ) );
+			Request( k_EHTTPMethodPOST, "/v1/party/lobby", body );
+			return;
+		}
+		party.PublishMatchmaking( m_BaseURL, m_PartyID, m_PartyInvite );
+	}
+	else
+	{
+		char owner[24]; Q_snprintf( owner, sizeof( owner ), "%llu", (unsigned long long)party.Owner().ConvertToUint64() );
+		const char *invitation = party.MatchmakingData( "mm_invite" );
+		const char *target = party.MatchmakingData( "mm_party" );
+		if ( Q_strcmp( owner, party.MatchmakingData( "mm_owner" ) ) || !SafeToken( target, 32, 32 ) || !SafeToken( invitation, 16, 120 ) ) return;
+		// Lobby data can invite us, but cannot redirect Steam credentials to another service.
+		if ( Q_strcmp( m_BaseURL, party.MatchmakingData( "mm_url" ) ) )
+		{
+			Q_strncpy( m_PartyStatus, "Your party uses a different matchmaking service.", sizeof( m_PartyStatus ) );
+			return;
+		}
+		if ( Q_strcmp( target, m_PartyID ) )
+		{
+			char body[160]; Q_snprintf( body, sizeof( body ), "{\"invitation\":\"%s\"}", invitation );
+			Request( k_EHTTPMethodPOST, "/v1/party/join", body );
+			return;
+		}
+	}
+	Q_strncpy( m_PartyStatus, synchronized ? "Mark ready when you want the leader to start matchmaking." : "Waiting for every member to join matchmaking...", sizeof( m_PartyStatus ) );
 }
 
 bool CHL2MPCoordinator::Request( EHTTPMethod method, const char *path, const char *body, bool auth )
@@ -186,6 +357,7 @@ bool CHL2MPCoordinator::Request( EHTTPMethod method, const char *path, const cha
 
 void CHL2MPCoordinator::SignIn()
 {
+	m_NextSignIn = Plat_FloatTime() + 30;
 	if ( !ValidURL( m_BaseURL ) ) { SetStatus( "Matchmaking is not configured yet. The server browser is available." ); m_PendingMode[0] = 0; return; }
 	if ( !steamapicontext || !steamapicontext->SteamUser() || !steamapicontext->SteamUser()->BLoggedOn() )
 	{
@@ -233,18 +405,26 @@ void CHL2MPCoordinator::Queue( const char *mode )
 		Q_strncpy( m_PendingMode, mode, sizeof( m_PendingMode ) );
 		return;
 	}
-	if ( Busy() ) return;
+	if ( Busy() || HL2MPParty().Pending() ) return;
 	if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() ) { SetStatus( "Disconnect from your current server before searching." ); return; }
-	if ( HL2MPParty().MemberCount() > 1 ) { SetStatus( "Steam party synchronization is not connected yet. Keep your party together using the server browser." ); return; }
+	m_WantSession = true;
 	if ( !m_Token[0] )
 	{
 		Q_strncpy( m_PendingMode, mode, sizeof( m_PendingMode ) );
 		SignIn();
 		return;
 	}
+	if ( !m_PartyID[0] )
+	{
+		Q_strncpy( m_PendingMode, mode, sizeof( m_PendingMode ) );
+		Request( k_EHTTPMethodGET, "/v1/me" );
+		return;
+	}
+	if ( !PartySynchronized() ) { SetStatus( "Wait for your party to finish synchronizing." ); return; }
+	if ( Q_strcmp( m_UserID, m_PartyLeader ) ) { SetStatus( "The party leader starts matchmaking. Mark ready to join them." ); return; }
 	if ( !SafeToken( mm_region.GetString(), 1, 32 ) ) { SetStatus( "Choose a valid matchmaking region." ); return; }
-	char body[160];
-	Q_snprintf( body, sizeof( body ), "{\"mode\":\"%s\",\"region\":\"%s\",\"protocol\":1}", mode, mm_region.GetString() );
+	char body[256];
+	Q_snprintf( body, sizeof( body ), "{\"mode\":\"%s\",\"region\":\"%s\",\"protocol\":1,\"party_id\":\"%s\",\"revision\":%d}", mode, mm_region.GetString(), m_PartyID, m_PartyRevision );
 	if ( Request( k_EHTTPMethodPOST, "/v1/queue", body ) ) SetStatus( "Starting matchmaking..." );
 }
 
@@ -337,9 +517,11 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 	m_NextPoll = Plat_FloatTime() + 2;
 	if ( !root || failed || result->m_eStatusCode != 200 )
 	{
+		// A rejected mutation may mean our roster revision is stale. Read before retrying.
+		m_PartyID[0] = 0;
 		SetStatus( root ? root->GetString( "error", "Matchmaking request failed. Please try again." ) : "Matchmaking connection lost. Retrying shortly..." );
 		m_NextPoll = Plat_FloatTime() + 5;
-		if ( result->m_eStatusCode == 401 ) { m_Token[0] = m_MatchID[0] = m_MatchState[0] = 0; m_Searching = false; m_PendingAction = ACTION_NONE; }
+		if ( result->m_eStatusCode == 401 ) { m_Token[0] = m_MatchID[0] = m_MatchState[0] = m_PartyID[0] = 0; m_Searching = false; m_PendingAction = ACTION_NONE; }
 		m_PendingMode[0] = 0;
 		if ( root ) root->deleteThis();
 		return;
@@ -362,6 +544,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 	else if ( root->GetInt( "protocol" ) != 1 ) SetStatus( "Please update the mod to use this matchmaking service." );
 	else
 	{
+		ReadParty( root );
 		KeyValues *queue = root->FindKey( "queue" );
 		m_Searching = queue && queue->GetString( "mode", "" )[0];
 		KeyValues *match = root->FindKey( "match" );

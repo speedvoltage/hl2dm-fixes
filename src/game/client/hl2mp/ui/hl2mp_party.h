@@ -16,7 +16,7 @@ public:
 	void Shutdown();
 	void Create();
 	void Join( CSteamID lobby );
-	void Leave();
+	void Leave( bool force = false );
 	void Invite();
 	void Tick();
 	bool Available() const;
@@ -25,6 +25,11 @@ public:
 	CSteamID Lobby() const { return m_Lobby; }
 	int MemberCount() const;
 	const char *MemberName( int index ) const;
+	CSteamID Member( int index ) const;
+	CSteamID Owner() const;
+	const char *MatchmakingData( const char *key ) const;
+	void PublishMatchmaking( const char *url, const char *partyID, const char *invitation );
+	void SetJoinable( bool joinable );
 	const char *Status() const { return m_Status; }
 
 private:

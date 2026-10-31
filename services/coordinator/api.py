@@ -45,12 +45,23 @@ class PartyJoin(Input):
 
 class Ready(Input):
     ready: bool
+    party_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    revision: int | None = Field(default=None, ge=0)
+
+
+class PartyLobby(Input):
+    lobby_id: str = Field(pattern=r"^[0-9]{1,20}$")
+    members: list[str] = Field(min_length=1, max_length=4)
+    party_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    revision: int = Field(ge=0)
 
 
 class Queue(Input):
     mode: Literal["duel", "team", "casual"]
     region: str = Field(min_length=1, max_length=32, pattern=r"^[a-z0-9-]+$")
     protocol: int
+    party_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    revision: int | None = Field(default=None, ge=0)
 
 
 class Confirm(Input):
@@ -217,12 +228,17 @@ def create_app(core: Coordinator, settings=Settings(), steam_verifier=verify_ste
 
     @app.post("/v1/party/ready")
     def party_ready(body: Ready, actor=Depends(player)):
-        core.party_ready(actor, body.ready)
+        core.party_ready(actor, body.ready, body.party_id, body.revision)
+        return core.status(actor)
+
+    @app.post("/v1/party/lobby")
+    def party_lobby(body: PartyLobby, actor=Depends(player)):
+        core.party_lobby(actor, body.lobby_id, body.members, body.party_id, body.revision)
         return core.status(actor)
 
     @app.post("/v1/queue")
     def queue(body: Queue, actor=Depends(player)):
-        core.enqueue(actor, body.mode, body.region, body.protocol)
+        core.enqueue(actor, body.mode, body.region, body.protocol, body.party_id, body.revision)
         return core.status(actor)
 
     @app.delete("/v1/queue")

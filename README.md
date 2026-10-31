@@ -33,7 +33,7 @@ test accounts require an explicit development flag, a secret, and loopback.
 See [the service setup and protocol](services/coordinator/README.md).
 
 The native menu communicates through asynchronous Steam HTTP requests. It
-supports solo queues, ready-check countdowns, acceptance/decline, cancellation,
+supports party synchronization and readiness, solo/group queues, ready-check countdowns, acceptance/decline, cancellation,
 server connection/reconnection, and leaving casual matches. SRCDS consumes
 reservations, loads the assigned map, checks engine-authenticated Steam IDs
 against private join grants, assigns teams, waits for the roster, and reports
@@ -48,11 +48,16 @@ builds and coordinator tests run on Windows and Linux. Linux runtime play,
 multi-player competitive rounds, reconnect/forfeit behavior, and casual backfill
 still need runtime verification.
 
-Native Steam parties are not yet bridged to coordinator parties. Live
-coordinator authentication needs the mod's own app ID and publisher key.
-Multi-member Steam parties are blocked from queueing until synchronization
-exists, so a party cannot silently queue solo. Lobby metadata is never proof
-of a match assignment or result. This remains a development build.
+The Steam lobby owner authorizes the roster on the coordinator and shares an
+invitation through lobby metadata. Each member joins with their own authenticated
+session and marks ready. Membership changes clear readiness; roster revisions
+reject stale ready/queue clicks, and a group cannot search until every invited
+member has joined. Ownership changes reform the party and require readiness
+again. The native bridge builds on both platforms but still needs live multi-user
+verification under the mod's own app ID. Live coordinator authentication also
+needs that app ID and a publisher key. Lobby metadata cannot redirect sign-in
+to another service or authorize a match assignment or result. This remains a
+development build.
 
 ## Project build and preview
 

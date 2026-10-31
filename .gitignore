@@ -519,6 +519,7 @@ FodyWeavers.xsd
 /game/mod_hl2mp/materials/vgui/logos/
 /game/mod_hl2mp/screenshots/
 /game/mod_hl2mp/downloadlists/
+/game/mod_hl2mp/download/
 /game/mod_hl2mp/maps/graphs/
 /game/mod_hl2mp/save/
 /game/mod_hl2mp/textwindow_temp.html

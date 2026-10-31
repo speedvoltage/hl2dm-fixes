@@ -95,6 +95,35 @@ version; trusted proxy handling is still needed for a larger deployment.
 Request bodies are limited to 16 KiB. Keep HTTP debug logging off: Steam's
 upstream authentication URL contains the publisher key and ticket.
 
+## Steam parties and readiness
+
+The native client signs in when a Steam party is present. Its lobby owner sends
+the member accounts to `POST /v1/party/lobby`, then publishes the party ID,
+invitation, owner ID, and configured service URL in lobby metadata. Other members
+join with their own authenticated sessions. The client requires the advertised
+URL to match its configured service; it never follows a lobby-provided URL for
+authentication. Invitations are restricted to the accounts authorized by the
+coordinator party leader. Possessing an invitation alone cannot impersonate a
+member or admit an unlisted account.
+
+The service treats the lobby ID as a grouping hint, not independent proof of
+Steam membership. The authenticated leader has authority to invite accounts;
+each account must authenticate and accept the invitation separately. The native
+client derives that allowlist from Steam's local lobby roster. Live multi-user
+validation is pending because lobby creation under SDK app 243750 is denied.
+
+Ready and queue requests include `party_id` and `revision`. Joining, leaving,
+or changing the invited roster advances the revision and clears readiness.
+Every invited account must join before a lobby party can search, and each group
+member must mark ready. Any member can cancel the party's search. A new lobby
+owner reforms the coordinator party, and everyone must ready again. Native
+clients close lobby joining during a search/match; changes observed while queued
+cancel the search. Active reservations keep their roster until resolved.
+
+These fields are required for lobby-bound parties. Legacy API-only parties can
+omit them. A rejected stale mutation must be followed by `GET /v1/me` before
+retrying. Repeating an unchanged lobby roster does not reset readiness.
+
 ## Native dedicated servers
 
 Launch the built mod with the SDK's dedicated-server executable and
@@ -136,7 +165,7 @@ team controls, and map cycle. Matchmaking servers skip the stock welcome dialog.
 | Step | Player API | Dedicated-server API |
 | --- | --- | --- |
 | Identity | `POST /v1/auth/steam`; bearer session thereafter | Separate configured bearer credential |
-| Party | `GET /v1/me`, `POST /v1/party/join`, `/leave`, `/ready` | No authority over player parties |
+| Party | `GET /v1/me`, `POST /v1/party/lobby`, `/join`, `/leave`, `/ready` | No authority over player parties |
 | Search | `POST /v1/queue`, `DELETE /v1/queue` | `POST /v1/servers/heartbeat` |
 | Ready check | `POST /v1/matches/{id}/confirm` | Reservation with roster, mode, and map |
 | Server loaded | Wait for active assignment | `POST /v1/servers/matches/{id}/ready` |

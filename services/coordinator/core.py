@@ -138,7 +138,7 @@ class Coordinator:
         user = s["users"][user_id]
         if user["party"] is None:
             pid = identifier()
-            s["parties"][pid] = {"id": pid, "leader": user_id, "members": [user_id], "ready": [], "invite": secrets.token_urlsafe(24)}
+            s["parties"][pid] = {"id": pid, "leader": user_id, "members": [user_id], "ready": [], "invite": secrets.token_urlsafe(24), "revision": 0}
             user["party"] = pid
         return s["parties"][user["party"]]
 
@@ -151,6 +151,8 @@ class Coordinator:
             target = next((p for p in s["parties"].values() if secrets.compare_digest(p["invite"], invitation)), None)
             if not target:
                 raise Rejected("Party invitation expired", 404)
+            if target.get("lobby") and actor not in target["lobby_members"]:
+                raise Rejected("The party leader has not invited this account", 403)
             current = self._party(s, actor)
             if current["id"] == target["id"]:
                 return
@@ -161,12 +163,47 @@ class Coordinator:
             self._leave(s, actor)
             target["members"].append(actor)
             target["ready"] = []
+            target["revision"] = target.get("revision", 0) + 1
             s["users"][actor]["party"] = target["id"]
+
+    def _party_snapshot(self, party, party_id, revision):
+        if party["id"] != party_id or party.get("revision", 0) != revision:
+            raise Rejected("Your party changed. Review the roster and try again")
+
+    def party_lobby(self, actor, lobby_id, members, party_id, revision):
+        """A leader authorizes accounts, not identities claimed by lobby metadata.
+
+        Each account still authenticates and accepts the invitation separately.
+        The lobby ID is a grouping hint, never proof of Steam membership.
+        """
+        if (not 1 <= len(lobby_id) <= 20 or not lobby_id.isascii() or not lobby_id.isdigit() or not 0 < int(lobby_id) < 2**64
+                or not 1 <= len(members) <= 4 or len(set(members)) != len(members) or actor not in members
+                or any(not 1 <= len(u) <= 20 or not u.isascii() or not u.isdigit() or not 0 < int(u) < 2**64 for u in members)):
+            raise Rejected("Invalid party roster", 400)
+        with self.transaction() as s:
+            party = self._party(s, actor)
+            if party["leader"] != actor:
+                raise Rejected("Only the party leader may invite or remove members", 403)
+            self._party_snapshot(party, party_id, revision)
+            self._unlocked(s, party)
+            if party.get("lobby") != lobby_id and len(party["members"]) > 1:
+                raise Rejected("Leave your previous party before creating a new lobby party")
+            if party.get("lobby") == lobby_id and set(party["lobby_members"]) == set(members):
+                return
+            for uid in list(party["members"]):
+                if uid not in members:
+                    self._leave(s, uid)
+                    self._party(s, uid)
+            party.update(lobby=lobby_id, lobby_members=members, ready=[], invite=secrets.token_urlsafe(24))
+            party["revision"] = party.get("revision", 0) + 1
 
     def _leave(self, s, actor):
         party = self._party(s, actor)
         party["members"].remove(actor)
         party["ready"] = []
+        party["revision"] = party.get("revision", 0) + 1
+        if party.get("lobby"):
+            party["lobby_members"] = [u for u in party["lobby_members"] if u != actor]
         if not party["members"]:
             del s["parties"][party["id"]]
         else:
@@ -181,20 +218,26 @@ class Coordinator:
             self._leave(s, actor)
             self._party(s, actor)
 
-    def party_ready(self, actor, ready):
+    def party_ready(self, actor, ready, party_id=None, revision=None):
         with self.transaction() as s:
             party = self._party(s, actor)
+            if party.get("lobby") or party_id is not None:
+                self._party_snapshot(party, party_id, revision)
             self._unlocked(s, party)
             party["ready"] = [u for u in party["ready"] if u != actor]
             if ready:
                 party["ready"].append(actor)
 
-    def enqueue(self, actor, mode, region, protocol):
+    def enqueue(self, actor, mode, region, protocol, party_id=None, revision=None):
         if mode not in MODES or protocol != PROTOCOL:
             raise Rejected("Incompatible mode or client version", 400)
         with self.transaction() as s:
             self._expire(s)
             p = self._party(s, actor)
+            if p.get("lobby") or party_id is not None:
+                self._party_snapshot(p, party_id, revision)
+            if p.get("lobby") and set(p["members"]) != set(p["lobby_members"]):
+                raise Rejected("Waiting for every lobby member to join matchmaking")
             if p["leader"] != actor:
                 raise Rejected("Only the party leader can start matchmaking", 403)
             if any(s["users"][u]["match"] for u in p["members"]):

@@ -16,13 +16,18 @@ public:
 	void Cancel();
 	void Confirm();
 	void Connect();
+	void TogglePartyReady();
+	bool PartySynchronized() const;
+	bool PartyMemberReady( CSteamID member ) const;
+	bool PartyReady() const;
+	const char *PartyStatus() const { return m_Token[0] ? m_PartyStatus : m_Status; }
 	bool HasServer() const { return m_Endpoint[0] && !Q_strcmp( m_MatchState, "active" ); }
 	bool CanLeaveCasual() const { return m_MatchID[0] && !Q_strcmp( m_MatchMode, "casual" ); }
 	const char *Status() const { return m_Status; }
 	bool Searching() const { return m_Searching; }
 	bool HasReadyCheck() const { return !Q_strcmp( m_MatchState, "ready_check" ); }
 	bool NeedsConfirmation() const { return HasReadyCheck() && !m_Confirmed; }
-	bool Busy() const { return m_Searching || m_MatchID[0] || m_PendingMode[0] ||
+	bool Busy() const { return m_Searching || m_MatchID[0] || m_PendingMode[0] || m_ReadyPending ||
 		( m_Request && !m_PollRequest ) || m_AuthTicket != k_HAuthTicketInvalid; }
 private:
 	enum PendingAction { ACTION_NONE, ACTION_CANCEL, ACTION_ACCEPT };
@@ -34,6 +39,27 @@ private:
 	bool Request( EHTTPMethod method, const char *path, const char *body = NULL, bool auth = false );
 	void SetStatus( const char *text );
 	void ReleaseRequest();
+	void ReadParty( class KeyValues *root );
+	void SyncParty();
+	bool LobbyRosterMatches( bool joined ) const;
+	char m_PartyID[40];
+	char m_PartyLobby[24];
+	char m_PartyLeader[24];
+	char m_UserID[24];
+	char m_PartyInvite[128];
+	char m_PartyMembers[4][24];
+	char m_LobbyMembers[4][24];
+	bool m_MemberReady[4];
+	int m_PartyCount;
+	int m_LobbyCount;
+	int m_PartyRevision;
+	char m_PartyStatus[256];
+	bool m_WantSession;
+	double m_NextSignIn;
+	bool m_ReadyPending;
+	bool m_ReadyValue;
+	char m_ReadyPartyID[40];
+	int m_ReadyRevision;
 	char m_BaseURL[512];
 	char m_Token[128];
 	char m_Status[256];

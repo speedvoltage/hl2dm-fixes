@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "cdll_client_int.h"
 #include "hl2mp_party.h"
+#include "hl2mp_coordinator.h"
 #include "tier0/platform.h"
 #include "tier0/memdbgon.h"
 
@@ -39,7 +40,7 @@ void CHL2MPParty::Init()
 
 void CHL2MPParty::Shutdown()
 {
-	Leave();
+	Leave( true );
 	m_CreateResult.Cancel();
 	m_JoinResult.Cancel();
 	m_InviteCallback.Unregister();
@@ -50,6 +51,7 @@ void CHL2MPParty::Shutdown()
 
 void CHL2MPParty::Create()
 {
+	if ( HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before creating a party." ); return; }
 	if ( m_bPending || m_Lobby.IsValid() ) return;
 	if ( !Available() ) { SetStatus( "Sign in to Steam to create a party." ); return; }
 	SteamAPICall_t call = steamapicontext->SteamMatchmaking()->CreateLobby( k_ELobbyTypeFriendsOnly, s_MaxParty );
@@ -73,12 +75,12 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 		return;
 	}
 	m_Lobby = CSteamID( result->m_ulSteamIDLobby );
-	if ( m_bCancelPending ) { Leave(); return; }
+	if ( m_bCancelPending ) { Leave( true ); return; }
 	ISteamMatchmaking *mm = steamapicontext->SteamMatchmaking();
 	if ( !mm->SetLobbyData( m_Lobby, "mod", s_ModKey ) ||
 		 !mm->SetLobbyData( m_Lobby, "protocol", s_Protocol ) )
 	{
-		Leave();
+		Leave( true );
 		SetStatus( "Could not initialize the party. Please try again." );
 		return;
 	}
@@ -87,6 +89,7 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 
 void CHL2MPParty::Join( CSteamID lobby )
 {
+	if ( HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before joining another party." ); return; }
 	if ( m_bPending || lobby == m_Lobby ) return;
 	if ( !Available() ) { SetStatus( "Sign in to Steam to join a party." ); return; }
 	if ( !lobby.IsValid() || !lobby.IsLobby() ) { SetStatus( "Invalid party invite." ); return; }
@@ -124,7 +127,7 @@ void CHL2MPParty::OnEntered( LobbyEnter_t *result, bool failed )
 		return;
 	}
 	m_Lobby = CSteamID( result->m_ulSteamIDLobby );
-	if ( m_bCancelPending ) { Leave(); return; }
+	if ( m_bCancelPending ) { Leave( true ); return; }
 	if ( Compatible() ) { SetStatus( "Joined party." ); return; }
 	// Metadata may arrive after LobbyEnter. Allow a bounded refresh before rejecting.
 	m_bAwaitingMetadata = true;
@@ -145,7 +148,7 @@ void CHL2MPParty::OnData( LobbyDataUpdate_t *result )
 	}
 	else if ( !m_bAwaitingMetadata )
 	{
-		Leave();
+		Leave( true );
 		SetStatus( "Party version changed. Please create or join a compatible party." );
 	}
 }
@@ -154,18 +157,19 @@ void CHL2MPParty::Tick()
 {
 	if ( m_Lobby.IsValid() && !Available() )
 	{
-		Leave();
+		Leave( true );
 		SetStatus( "Steam connection lost. Reconnect, then create or join a party." );
 	}
 	if ( m_bAwaitingMetadata && Plat_FloatTime() >= m_flMetadataDeadline )
 	{
-		Leave();
+		Leave( true );
 		SetStatus( "This party is unavailable or uses a different mod version." );
 	}
 }
 
-void CHL2MPParty::Leave()
+void CHL2MPParty::Leave( bool force )
 {
+	if ( !force && HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before leaving your party." ); return; }
 	// Keep pending call results registered so a late success is immediately left.
 	m_bCancelPending = m_bPending;
 	if ( m_Lobby.IsValid() && steamapicontext && steamapicontext->SteamMatchmaking() )
@@ -203,6 +207,38 @@ const char *CHL2MPParty::MemberName( int index ) const
 	if ( index < 0 || index >= MemberCount() ) return "";
 	return steamapicontext->SteamFriends()->GetFriendPersonaName(
 		steamapicontext->SteamMatchmaking()->GetLobbyMemberByIndex( m_Lobby, index ) );
+}
+
+CSteamID CHL2MPParty::Member( int index ) const
+{
+	return index >= 0 && index < MemberCount() ?
+		steamapicontext->SteamMatchmaking()->GetLobbyMemberByIndex( m_Lobby, index ) : CSteamID();
+}
+
+CSteamID CHL2MPParty::Owner() const
+{
+	return Available() && m_Lobby.IsValid() ? steamapicontext->SteamMatchmaking()->GetLobbyOwner( m_Lobby ) : CSteamID();
+}
+
+const char *CHL2MPParty::MatchmakingData( const char *key ) const
+{
+	return Compatible() && !m_bAwaitingMetadata ? steamapicontext->SteamMatchmaking()->GetLobbyData( m_Lobby, key ) : "";
+}
+
+void CHL2MPParty::PublishMatchmaking( const char *url, const char *partyID, const char *invitation )
+{
+	if ( !IsOwner() || !Compatible() ) return;
+	char owner[24]; Q_snprintf( owner, sizeof( owner ), "%llu", (unsigned long long)Owner().ConvertToUint64() );
+	const char *keys[] = { "mm_url", "mm_party", "mm_invite", "mm_owner" };
+	const char *values[] = { url, partyID, invitation, partyID[0] ? owner : "" };
+	for ( int i = 0; i < ARRAYSIZE( keys ); ++i )
+		if ( Q_strcmp( MatchmakingData( keys[i] ), values[i] ) )
+			steamapicontext->SteamMatchmaking()->SetLobbyData( m_Lobby, keys[i], values[i] );
+}
+
+void CHL2MPParty::SetJoinable( bool joinable )
+{
+	if ( IsOwner() ) steamapicontext->SteamMatchmaking()->SetLobbyJoinable( m_Lobby, joinable );
 }
 
 CON_COMMAND_F( mm_party_create, "Create a Steam party.", FCVAR_CLIENTDLL )
