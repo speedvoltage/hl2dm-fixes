@@ -3,6 +3,8 @@
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_party.h"
 #include "hl2mp_coordinator.h"
+#include "hl2mp_menucontrols.h"
+#include "hl2mp_options.h"
 #include "GameUI/IGameUI.h"
 #include "ienginevgui.h"
 #include "filesystem.h"
@@ -76,7 +78,7 @@ public:
 		BaseClass::ApplySchemeSettings( scheme );
 		SetArmedSound( "ui/buttonrollover.wav" );
 		SetDepressedSound( "ui/buttonclick.wav" );
-		SetReleasedSound( "ui/buttonclickrelease.wav" );
+		SetReleasedSound( NULL );
 		if ( m_Font ) SetFont( m_Font );
 		const Color normal = m_Style == PRIMARY ? Color( 24, 26, 27, 255 ) : Color( 204, 209, 209, 255 );
 		SetDefaultColor( normal, Color( 0, 0, 0, 0 ) );
@@ -214,9 +216,12 @@ private:
     void SetPlayPage( bool play );
     void UpdateFriends();
     enum { PLAY, RESUME, SERVERS, OPTIONS, QUIT, BACK, DUEL, TEAM, TEAM3, TEAM4, TEAM5, CASUAL, CUSTOM,
-        FIND, CREATE_PARTY, INVITE, LEAVE, READY, ACCEPT, CANCEL, MAP, SIZE, TIME, FRAGS, BROWSE, BUTTON_COUNT };
+        FIND, CREATE_PARTY, INVITE, LEAVE, READY, ACCEPT, CANCEL, BROWSE, BUTTON_COUNT };
     IGameUI *m_GameUI;
     CMatchmakingButton *m_Buttons[BUTTON_COUNT];
+    CHL2MPDropdown *m_CustomControls[4];
+    vgui::Label *m_CustomCaptions[4];
+    vgui::Panel *m_Options;
     vgui::Label *m_Title, *m_Subtitle, *m_Tag, *m_PlayHeading, *m_ModeDescription;
     vgui::Label *m_PartyHeading, *m_Status, *m_QueueStatus, *m_ResultHeading, *m_ResultDetails;
     vgui::Label *m_FriendsHeading, *m_FriendsHint, *m_NewsHeading, *m_NewsTitle, *m_NewsBody;
@@ -225,6 +230,7 @@ private:
     CUtlVector<CMatchmakingFriendRow *> m_Friends;
     vgui::HFont m_LogoFont, m_BrandFont, m_NavFont, m_CardFont, m_BodyFont, m_SectionFont, m_DetailFont;
     int m_ScreenWidth, m_ScreenHeight, m_Background, m_SelectedMode, m_MapChoice, m_SizeChoice, m_TimeChoice, m_FragChoice;
+    int m_FontWidth, m_FontHeight;
     int m_PartyX, m_PartyY, m_PartyW, m_PartyH, m_FriendsY, m_NewsX, m_NewsY, m_NewsW;
     bool m_PlayPage, m_WasBusy, m_WasReady, m_GroupedLayout, m_InGameLayout, m_BackgroundRequested;
     float m_Scale;
@@ -236,6 +242,7 @@ static CHL2MPMainMenu *s_Menu = NULL;
 CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainMenu" ),
     m_GameUI( gameUI ), m_ScreenWidth( 0 ), m_ScreenHeight( 0 ), m_Background( -1 ), m_SelectedMode( 0 ),
     m_MapChoice( 0 ), m_SizeChoice( 0 ), m_TimeChoice( 1 ), m_FragChoice( 0 ),
+    m_FontWidth( 0 ), m_FontHeight( 0 ),
     m_PartyX( 0 ), m_PartyY( 0 ), m_PartyW( 0 ), m_PartyH( 0 ), m_FriendsY( 0 ), m_NewsX( 0 ), m_NewsY( 0 ), m_NewsW( 0 ),
     m_PlayPage( false ), m_WasBusy( false ), m_WasReady( false ), m_GroupedLayout( false ), m_InGameLayout( false ),
     m_BackgroundRequested( false ), m_Scale( 1 ), m_NextFriends( 0 ), m_IdleSince( Plat_FloatTime() )
@@ -275,20 +282,36 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_ModeDescription->SetWrap( true ); m_ResultDetails->SetWrap( true ); m_Status->SetWrap( true ); m_QueueStatus->SetWrap( true );
     m_FriendsHint->SetWrap( true ); m_NewsBody->SetWrap( false );
     m_PartyList = new vgui::PanelListPanel( this, "PartyList" ); m_FriendsList = new vgui::PanelListPanel( this, "FriendsList" );
+    HL2MPStyleScrollBar( m_PartyList->GetScrollbar() ); HL2MPStyleScrollBar( m_FriendsList->GetScrollbar() );
     m_PartyList->SetFirstColumnWidth( 0 ); m_FriendsList->SetFirstColumnWidth( 0 );
     KeyValues *listSettings = new KeyValues( "ListSettings" ); listSettings->SetInt( "autohide_scrollbar", 1 );
     m_PartyList->ApplySettings( listSettings ); m_FriendsList->ApplySettings( listSettings ); listSettings->deleteThis();
     m_PartyList->SetVerticalBufferPixels( 0 ); m_FriendsList->SetVerticalBufferPixels( 2 );
     const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "QUIT", "<  BACK",
-        "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "", "", "", "", "BROWSE SERVERS" };
+        "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "BROWSE SERVERS" };
     const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit", "back",
-        "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "custom_map", "custom_size", "custom_time", "custom_frags", "OpenServerBrowser" };
+        "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "OpenServerBrowser" };
     for ( int i = 0; i < BUTTON_COUNT; ++i )
     {
         const CMatchmakingButton::Style style = i <= BACK ? CMatchmakingButton::NAVIGATION : i <= CUSTOM ? CMatchmakingButton::MODE : ( i == FIND || i == ACCEPT ) ? CMatchmakingButton::PRIMARY : CMatchmakingButton::ACTION;
         m_Buttons[i] = new CMatchmakingButton( this, commands[i], texts[i], style ); m_Buttons[i]->SetTabPosition( i + 1 );
     }
     for ( int i = DUEL; i <= CUSTOM; ++i ) m_Buttons[i]->SetDetail( i <= TEAM5 ? "RANKED" : i == CASUAL ? "UNRANKED" : "BROWSE / PRIVATE", 0, -1 );
+    const char *captions[] = { "MAP", "TEAMS", "TIME", "FRAGS" };
+    for ( int field = 0; field < 4; ++field )
+    {
+        m_CustomCaptions[field] = new vgui::Label( this, "CustomCaption", captions[field] );
+        m_CustomCaptions[field]->SetMouseInputEnabled( false ); m_CustomCaptions[field]->SetKeyBoardInputEnabled( false );
+        m_CustomControls[field] = new CHL2MPDropdown( this, captions[field] );
+        const int count = field == 0 ? ARRAYSIZE( s_Maps ) : field == 1 ? 6 : field == 2 ? ARRAYSIZE( s_Times ) : ARRAYSIZE( s_Frags );
+        for ( int i = 0; i < count; ++i )
+        {
+            const char *text = field == 0 ? s_Maps[i] : field == 1 ? ( i ? VarArgs( "%dv%d", i, i ) : "FREE-FOR-ALL" ) : field == 2 ? VarArgs( "%d MINUTES", s_Times[i] ) : s_Frags[i] ? VarArgs( "%d FRAGS", s_Frags[i] ) : "NO LIMIT";
+            KeyValues *data = new KeyValues( "Choice", "choice", i ); m_CustomControls[field]->AddItem( text, data ); data->deleteThis();
+        }
+        m_CustomControls[field]->SilentActivateItemByRow( field == 2 ? 1 : 0 );
+    }
+    m_Options = HL2MPOptions_Create( this );
     HL2MPParty().Init(); HL2MPCoordinator().Init(); m_GameUI->SetMainMenuOverride( GetVPanel() );
     MakePopup( false ); GetFocusNavGroup().SetFocusTopLevel( true );
     OnTick(); m_Buttons[PLAY]->RequestFocus(); vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
@@ -322,6 +345,14 @@ void CHL2MPMainMenu::PerformLayout()
     m_PartyW = int( 280 * s ); m_PartyX = w - left - m_PartyW; m_PartyY = int( 48 * s );
     m_PartyH = int( ( m_GroupedLayout ? 284 : 192 ) * s ); m_FriendsY = m_PartyY + m_PartyH + int( 24 * s );
     const int mainW = m_PartyX - left - gap;
+    if ( w != m_FontWidth || h != m_FontHeight )
+    {
+        // Video mode changes invalidate surface font handles, not just glyph sizes.
+        m_FontWidth = w; m_FontHeight = h;
+        MenuFontFile( "HL2MP", "resource/hl2mp.ttf" ); MenuFontFile( "GorDIN", "resource/gordin-regular.ttf" ); MenuFontFile( "GorDIN Bold", "resource/gordin-bold.ttf" );
+        m_LogoFont = vgui::surface()->CreateFont(); m_BrandFont = vgui::surface()->CreateFont(); m_NavFont = vgui::surface()->CreateFont();
+        m_CardFont = vgui::surface()->CreateFont(); m_BodyFont = vgui::surface()->CreateFont(); m_SectionFont = vgui::surface()->CreateFont(); m_DetailFont = vgui::surface()->CreateFont();
+    }
     int logoHeight = int( ( m_PlayPage ? 60 : 94 ) * s ); MenuFont( m_LogoFont, "HL2MP", logoHeight );
     int logoW, logoH; vgui::surface()->GetTextSize( m_LogoFont, L"deathmatch", logoW, logoH );
     if ( logoW > mainW ) MenuFont( m_LogoFont, "HL2MP", MAX( 1, logoHeight * mainW / logoW ) );
@@ -350,7 +381,13 @@ void CHL2MPMainMenu::PerformLayout()
     const bool custom = m_SelectedMode == 6;
     m_ModeDescription->SetBounds( left, int( 438 * s ), mainW, int( ( custom ? 38 : 48 ) * s ) );
     const int fieldW = ( mainW - cardGap ) / 2;
-    for ( int i = 0; i < 4; ++i ) m_Buttons[MAP + i]->SetBounds( left + ( i % 2 ) * ( fieldW + cardGap ), int( ( 480 + ( i / 2 ) * 38 ) * s ), fieldW, int( 32 * s ) );
+    for ( int i = 0; i < 4; ++i )
+    {
+        const int x = left + ( i % 2 ) * ( fieldW + cardGap ), y = int( ( 480 + ( i / 2 ) * 38 ) * s ), captionW = int( 58 * s );
+        m_CustomCaptions[i]->SetFont( m_DetailFont ); m_CustomCaptions[i]->SetFgColor( Color( 184, 193, 195, 255 ) );
+        m_CustomCaptions[i]->SetBounds( x, y, captionW, int( 32 * s ) );
+        m_CustomControls[i]->SetBounds( x + captionW, y, fieldW - captionW, int( 32 * s ) ); m_CustomControls[i]->Style( m_DetailFont, s );
+    }
     m_Buttons[BROWSE]->SetBounds( left, int( 560 * s ), mainW, int( 32 * s ) );
     const int actionY = int( ( custom ? 604 : 550 ) * s );
     m_Buttons[FIND]->SetBounds( left, actionY, fieldW, int( 44 * s ) ); m_Buttons[ACCEPT]->SetBounds( left, actionY, fieldW, int( 44 * s ) );
@@ -358,7 +395,8 @@ void CHL2MPMainMenu::PerformLayout()
     m_QueueStatus->SetBounds( left, int( ( custom ? 652 : 492 ) * s ), mainW, int( 42 * s ) );
     m_PartyHeading->SetBounds( m_PartyX + pad, m_PartyY + pad, m_PartyW - pad * 2, int( 24 * s ) );
     m_PartyList->SetBounds( m_PartyX + pad, m_PartyY + int( 46 * s ), m_PartyW - pad * 2, int( ( m_GroupedLayout ? 86 : 28 ) * s ) );
-    FOR_EACH_VEC( m_Members, i ) { m_Members[i]->SetFont( m_BodyFont ); m_Members[i]->SetTall( int( 27 * s ) ); }
+    FOR_EACH_VEC( m_Members, i ) { m_Members[i]->SetFont( m_BodyFont ); m_Members[i]->SetTall( int( 27 * s ) ); m_Members[i]->SetBorder( NULL ); }
+    m_PartyList->GetScrollbar()->SetWide( MAX( 10, int( 12 * s ) ) ); m_FriendsList->GetScrollbar()->SetWide( MAX( 10, int( 12 * s ) ) );
     m_Status->SetBounds( m_PartyX + pad, m_PartyY + int( ( m_GroupedLayout ? 138 : 80 ) * s ), m_PartyW - pad * 2, int( 48 * s ) );
     const int partyActionY = m_PartyY + m_PartyH - int( ( m_GroupedLayout ? 92 : 54 ) * s );
     m_Buttons[CREATE_PARTY]->SetBounds( m_PartyX + pad, partyActionY, m_PartyW - pad * 2, int( 38 * s ) );
@@ -373,7 +411,7 @@ void CHL2MPMainMenu::PerformLayout()
     m_NewsTitle->SetBounds( left + pad, m_NewsY + int( 38 * s ), m_NewsW - pad * 2, int( 32 * s ) );
     m_NewsBody->SetBounds( left + pad, m_NewsY + int( 70 * s ), m_NewsW - pad * 2, int( 48 * s ) );
     m_ResultHeading->SetBounds( left, h - int( 92 * s ), mainW, int( 24 * s ) ); m_ResultDetails->SetBounds( left, h - int( 65 * s ), mainW, int( 42 * s ) );
-    for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( s, i <= QUIT ? m_NavFont : i >= DUEL && i <= CUSTOM ? m_CardFont : i >= MAP ? m_DetailFont : m_BodyFont, m_DetailFont, true );
+    for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( s, i <= QUIT ? m_NavFont : i >= DUEL && i <= CUSTOM ? m_CardFont : i >= BROWSE ? m_DetailFont : m_BodyFont, m_DetailFont, true );
     m_NextFriends = 0;
 }
 
@@ -387,6 +425,7 @@ void CHL2MPMainMenu::PaintBackground()
         const float sx = MIN( 1.0f, viewport / aspect ), sy = MIN( 1.0f, aspect / viewport );
         surface->DrawTexturedSubRect( 0, 0, w, h, ( 1 - sx ) / 2, ( 1 - sy ) / 2, ( 1 + sx ) / 2, ( 1 + sy ) / 2 );
     }
+    if ( m_Options->IsVisible() ) return;
     surface->DrawSetColor( Color( 4, 8, 12, 255 ) );
     surface->DrawFilledRectFade( 0, 0, int( w * 0.8f ), h, m_PlayPage ? 225 : 190, 0, true );
     surface->DrawFilledRectFade( 0, h / 2, w, h, 0, 150, false );
@@ -479,11 +518,15 @@ void CHL2MPMainMenu::OnTick()
     if ( custom && !coordinator.Busy() && coordinator.ResultHeading()[0] ) m_QueueStatus->SetText( VarArgs( "%s  %s", coordinator.ResultHeading(), coordinator.ResultDetails() ) );
     else if ( !coordinator.Busy() && limit > 0 && party.MemberCount() > limit ) m_QueueStatus->SetText( VarArgs( "This queue allows parties of up to %d. Choose Custom to play together.", limit ) );
     m_ResultHeading->SetVisible( m_PlayPage && !custom ); m_ResultDetails->SetVisible( m_PlayPage && !custom );
-    for ( int i = MAP; i <= BROWSE; ++i ) { m_Buttons[i]->SetVisible( m_PlayPage && custom && !coordinator.Busy() ); }
-    m_Buttons[MAP]->SetText( VarArgs( "MAP   %s  >", s_Maps[m_MapChoice] ) );
-    m_Buttons[SIZE]->SetText( m_SizeChoice ? VarArgs( "TEAMS   %dv%d  >", m_SizeChoice, m_SizeChoice ) : "TEAMS   FREE-FOR-ALL  >" );
-    m_Buttons[TIME]->SetText( VarArgs( "TIME   %d MINUTES  >", s_Times[m_TimeChoice] ) );
-    m_Buttons[FRAGS]->SetText( s_Frags[m_FragChoice] ? VarArgs( "FRAGS   %d  >", s_Frags[m_FragChoice] ) : "FRAGS   NO LIMIT  >" );
+    m_Buttons[BROWSE]->SetVisible( m_PlayPage && custom && !coordinator.Busy() );
+    int *choices[] = { &m_MapChoice, &m_SizeChoice, &m_TimeChoice, &m_FragChoice };
+    for ( int i = 0; i < 4; ++i )
+    {
+        const bool visible = m_PlayPage && custom && !coordinator.Busy() && !m_Options->IsVisible();
+        if ( !visible && m_CustomControls[i]->IsDropdownVisible() ) m_CustomControls[i]->HideMenu();
+        m_CustomControls[i]->SetVisible( visible ); m_CustomCaptions[i]->SetVisible( visible );
+        KeyValues *data = m_CustomControls[i]->GetActiveItemUserData(); if ( data ) *choices[i] = data->GetInt( "choice" );
+    }
     m_Buttons[CREATE_PARTY]->SetVisible( !grouped && !party.Pending() ); m_Buttons[CREATE_PARTY]->SetEnabled( party.Available() && !coordinator.Busy() );
     m_Buttons[INVITE]->SetVisible( grouped ); m_Buttons[LEAVE]->SetVisible( grouped || party.Pending() );
     m_Buttons[LEAVE]->SetEnabled( !coordinator.Busy() ); m_Buttons[INVITE]->SetEnabled( !coordinator.Busy() );
@@ -511,6 +554,9 @@ void CHL2MPMainMenu::OnTick()
     const bool news = !m_PlayPage && !inGame; m_NewsHeading->SetVisible( news ); m_NewsTitle->SetVisible( news ); m_NewsBody->SetVisible( news );
     UpdateFriends();
     if ( readyCheck && !m_WasReady ) m_Buttons[ACCEPT]->RequestFocus(); m_WasReady = readyCheck;
+    m_Title->SetVisible( true ); m_PartyHeading->SetVisible( true ); m_Status->SetVisible( true ); m_PartyList->SetVisible( true );
+    m_FriendsHeading->SetVisible( true ); m_FriendsHint->SetVisible( true ); m_FriendsList->SetVisible( true );
+    if ( m_Options->IsVisible() ) for ( int i = 0; i < GetChildCount(); ++i ) if ( GetChild( i ) != m_Options ) GetChild( i )->SetVisible( false );
 }
 
 void CHL2MPMainMenu::OnCommand( const char *command )
@@ -525,12 +571,12 @@ void CHL2MPMainMenu::OnCommand( const char *command )
         for ( int i = 0; i < ARRAYSIZE( s_Modes ); ++i ) if ( !Q_strcmp( command + 5, s_Modes[i] ) ) m_SelectedMode = i;
         OnTick(); InvalidateLayout( true );
     }
-    else if ( !Q_strcmp( command, "custom_map" ) ) { m_MapChoice = ( m_MapChoice + 1 ) % ARRAYSIZE( s_Maps ); OnTick(); }
-    else if ( !Q_strcmp( command, "custom_size" ) ) { m_SizeChoice = ( m_SizeChoice + 1 ) % 6; OnTick(); }
-    else if ( !Q_strcmp( command, "custom_time" ) ) { m_TimeChoice = ( m_TimeChoice + 1 ) % ARRAYSIZE( s_Times ); OnTick(); }
-    else if ( !Q_strcmp( command, "custom_frags" ) ) { m_FragChoice = ( m_FragChoice + 1 ) % ARRAYSIZE( s_Frags ); OnTick(); }
+    else if ( !Q_strcmp( command, "OpenOptionsDialog" ) ) { HL2MPOptions_Open( m_Options ); OnTick(); }
+    else if ( !Q_strcmp( command, "options_closed" ) ) { OnTick(); m_Buttons[OPTIONS]->RequestFocus(); }
+    else if ( !Q_strcmp( command, "refresh_menu_fonts" ) ) { m_FontWidth = 0; InvalidateLayout( true ); }
     else if ( !Q_strcmp( command, "find_match" ) )
     {
+        OnTick(); // Consume the latest dropdown selection before submitting rules.
         if ( m_SelectedMode == 6 ) HL2MPCoordinator().CustomMatch( s_Maps[m_MapChoice], m_SizeChoice, s_Times[m_TimeChoice], s_Frags[m_FragChoice] );
         else HL2MPCoordinator().Queue( s_Modes[m_SelectedMode] );
     }
@@ -542,7 +588,7 @@ void CHL2MPMainMenu::OnCommand( const char *command )
     else if ( !Q_strcmp( command, "queue_cancel" ) ) HL2MPCoordinator().Cancel();
     else
     {
-        const char *allowed[] = { "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit" };
+        const char *allowed[] = { "ResumeGame", "OpenServerBrowser", "Quit" };
         for ( int i = 0; i < ARRAYSIZE( allowed ); ++i ) if ( !Q_strcmp( command, allowed[i] ) ) { m_GameUI->SendMainMenuCommand( allowed[i] ); return; }
         BaseClass::OnCommand( command );
     }
