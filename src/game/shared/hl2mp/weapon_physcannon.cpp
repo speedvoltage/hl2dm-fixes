@@ -574,7 +574,7 @@ void CGrabController::DetachEntity( bool bClearVelocity )
 	}
 
 	m_attachedEntity = NULL;
-	if ( physenv )
+	if ( physenv && m_controller )
 	{
 		physenv->DestroyMotionController( m_controller );
 	}
@@ -1008,9 +1008,12 @@ void CWeaponPhysCannon::UpdateOnRemove(void)
 }
 
 #ifdef CLIENT_DLL
-void CWeaponPhysCannon::ResetPredictedObject( void )
+void CWeaponPhysCannon::ReleasePredictedObject( void )
 {
-	CBaseEntity *pAttachedObject = m_hAttachedObject.Get();
+	// Prediction can restore the network handle without restoring the physics
+	// controller. Release the objects we actually simulated, not a new handle
+	// from a later snapshot that may belong to a different grab.
+	CBaseEntity *pAttachedObject = m_grabController.GetAttached();
 	CBaseEntity *pOldAttachedObject = m_hOldAttachedObject.Get();
 
 	m_grabController.DetachEntity( false );
@@ -1025,9 +1028,14 @@ void CWeaponPhysCannon::ResetPredictedObject( void )
 		pOldAttachedObject->VPhysicsDestroyObject();
 	}
 
+	m_hOldAttachedObject = NULL;
+}
+
+void CWeaponPhysCannon::ResetPredictedObject( void )
+{
+	ReleasePredictedObject();
 	m_bActive = false;
 	m_hAttachedObject = NULL;
-	m_hOldAttachedObject = NULL;
 }
 
 void CWeaponPhysCannon::OnDataChanged( DataUpdateType_t type )
@@ -1182,6 +1190,12 @@ bool CWeaponPhysCannon::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	ForceDrop();
 	DestroyEffects();
+
+#ifdef CLIENT_DLL
+	// A predicted launch may already have cleared m_bActive, so ForceDrop's
+	// early-out must not leave a local physics controller on the released prop.
+	ReleasePredictedObject();
+#endif
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -2060,14 +2074,7 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 	}
 	
 #else
-	CBaseEntity *pObject = m_hAttachedObject.Get();
-
-	m_grabController.DetachEntity( wasLaunched );
-
-	if ( pObject )
-	{
-		pObject->VPhysicsDestroyObject();
-	}
+	ReleasePredictedObject();
 #endif
 
 	m_bActive = false;
@@ -2089,6 +2096,18 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 void CWeaponPhysCannon::ManagePredictedObject( void )
 {
 	CBaseEntity *pAttachedObject = m_hAttachedObject.Get();
+	C_BasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if ( !m_bActive || !pOwner || pOwner != C_BasePlayer::GetLocalPlayer() ||
+		pOwner->IsObserver() || pOwner->GetActiveWeapon() != this )
+	{
+		ReleasePredictedObject();
+		return;
+	}
+
+	if ( m_hOldAttachedObject.Get() != pAttachedObject || m_grabController.GetAttached() != pAttachedObject )
+	{
+		ReleasePredictedObject();
+	}
 
 	if ( m_hAttachedObject )
 	{
@@ -2118,16 +2137,6 @@ void CWeaponPhysCannon::ManagePredictedObject( void )
 			}
 		}
 	}
-	else
-	{
-		if ( m_hOldAttachedObject && m_hOldAttachedObject->VPhysicsGetObject() )
-		{
-			GetGrabController().DetachEntity( false );
-
-			m_hOldAttachedObject->VPhysicsDestroyObject();
-		}
-	}
-
 	m_hOldAttachedObject = m_hAttachedObject;
 }
 
@@ -2196,6 +2205,15 @@ void CWeaponPhysCannon::UpdateElementPosition( void )
 
 void CWeaponPhysCannon::ClientThink( void )
 {
+	// ItemPreFrame stops running once holstered. A delayed snapshot or replay
+	// can leave its local grab behind even after Holster has cleaned it once.
+	C_BasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if ( !pOwner || pOwner != C_BasePlayer::GetLocalPlayer() || pOwner->IsObserver() ||
+		pOwner->GetActiveWeapon() != this || !m_bActive || !m_hAttachedObject )
+	{
+		ReleasePredictedObject();
+	}
+
 	RefreshEffectAttachments();
 
 	if ( m_bActive && m_EffectState == EFFECT_HOLDING )

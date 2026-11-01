@@ -56,6 +56,7 @@ static const SettingDef s_Settings[] = {
     { GAME, CHOICE, "Developer console", "con_enable", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { GAME, CHOICE, "Crosshair", "crosshair", "HIDDEN=0|VISIBLE=1", 0, 0, 0 },
     { GAME, CHOICE, "Fast weapon switching", "hud_fastswitch", "DISABLED=0|ENABLED=1", 0, 0, 0 },
+    { GAME, CHOICE, "Weapon sway", "cl_wpn_sway_enabled", "OFF=0|ON=1", 0, 0, 0 },
     { GAME, CHOICE, "Switch to picked-up weapons", "cl_autowepswitch", "NO=0|YES=1", 0, 0, 0 },
     { GAME, CHOICE, "Frame rate counter", "cl_showfps", "HIDDEN=0|SIMPLE=1|SMOOTHED=2", 0, 0, 0 },
     { GAME, CHOICE, "Network graph", "net_graph", "HIDDEN=0|BASIC=1|DETAILED=2|TEXT=3", 0, 0, 0 },
@@ -80,11 +81,17 @@ static const BindingDef s_Bindings[] = {
     { "Sprint", "+speed", "SHIFT" }, { "Walk", "+walk", "ALT" },
     { "Use", "+use", "e" }, { "Primary attack", "+attack", "MOUSE1" },
     { "Secondary attack", "+attack2", "MOUSE2" }, { "Reload", "+reload", "r" },
-    { "Gravity gun", "phys_swap", "g" }, { "Last weapon", "lastinv", "q" },
+    { "Gravity gun swap", "phys_swap", "g" }, { "Last weapon", "lastinv", "q" },
     { "Next weapon", "invnext", "MWHEELDOWN" }, { "Previous weapon", "invprev", "MWHEELUP" },
     { "Weapon slot 1", "slot1", "1" }, { "Weapon slot 2", "slot2", "2" },
     { "Weapon slot 3", "slot3", "3" }, { "Weapon slot 4", "slot4", "4" },
     { "Weapon slot 5", "slot5", "5" }, { "Weapon slot 6", "slot6", "6" },
+    { "Crowbar / stunstick", "use weapon_crowbar;use weapon_stunstick", "" },
+    { "Gravity gun", "use weapon_physcannon", "" }, { "Pistol", "use weapon_pistol", "" },
+    { ".357 Magnum", "use weapon_357", "" }, { "SMG", "use weapon_smg1", "" },
+    { "Pulse rifle", "use weapon_ar2", "" }, { "Shotgun", "use weapon_shotgun", "" },
+    { "Crossbow", "use weapon_crossbow", "" }, { "Frag grenade", "use weapon_frag", "" },
+    { "RPG", "use weapon_rpg", "" }, { "SLAM", "use weapon_SLAM", "" },
     { "Flashlight", "impulse 100", "f" }, { "Suit zoom", "+zoom", "z" },
     { "Scoreboard", "+showscores", "TAB" }, { "Voice chat", "+voicerecord", "k" },
     { "Public chat", "messagemode", "y" }, { "Team chat", "messagemode2", "u" },
@@ -589,6 +596,7 @@ void CHL2MPOptions::ResetPage()
             if ( !Q_strcmp( m_BindingDraft[i].String(), s_Bindings[j].command ) ) m_BindingDraft[i] = "";
         for ( int i = 0; i < ARRAYSIZE( s_Bindings ); ++i )
         {
+            if ( !s_Bindings[i].key[0] ) continue;
             ButtonCode_t key = inputsystem->StringToButtonCode( s_Bindings[i].key ); if ( key > BUTTON_CODE_NONE && key < BUTTON_CODE_LAST ) m_BindingDraft[key] = s_Bindings[i].command;
         }
     }
