@@ -33,6 +33,17 @@ public:
     {
         BaseClass::OnCursorEntered(); if ( IsEnabled() ) vgui::surface()->PlaySound( "ui/buttonrollover.wav" );
     }
+    void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE
+    {
+        if ( code == KEY_ESCAPE && IsDropdownVisible() ) { HideMenu(); return; }
+        BaseClass::OnKeyCodeTyped( code );
+        // ComboBox updates its text on arrow keys but otherwise leaves the active item's data stale.
+        if ( code == KEY_UP || code == KEY_DOWN || code == KEY_HOME || code == KEY_END || code == KEY_PAGEUP || code == KEY_PAGEDOWN )
+        {
+            const int item = GetMenu()->GetCurrentlyHighlightedItem();
+            if ( item >= 0 ) SilentActivateItem( item );
+        }
+    }
     void OnShowMenu( vgui::Menu *menu ) OVERRIDE
     {
         menu->InvalidateLayout( true, true ); menu->SetBorder( NULL ); menu->SetBgColor( Color( 25, 31, 34, 255 ) );
@@ -68,6 +79,10 @@ public:
         SetContentAlignment( vgui::Label::a_center ); SetButtonBorderEnabled( false ); DrawFocusBox( false );
     }
     void Active( bool active ) { m_Active = active; Repaint(); }
+    void SetFont( vgui::HFont font ) OVERRIDE
+    {
+        BaseClass::SetFont( font ); InvalidateLayout( true );
+    }
     void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
     {
         BaseClass::ApplySchemeSettings( scheme ); SetButtonBorderEnabled( false ); DrawFocusBox( false );

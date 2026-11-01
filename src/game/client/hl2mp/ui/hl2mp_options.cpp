@@ -2,6 +2,9 @@
 #include "cdll_client_int.h"
 #include "hl2mp_options.h"
 #include "hl2mp_menucontrols.h"
+#include "hl2mp_playermodels.h"
+#include "matsys_controls/mdlpanel.h"
+#include "animation.h"
 #include "IGameUIFuncs.h"
 #include "inputsystem/iinputsystem.h"
 #include "materialsystem/materialsystem_config.h"
@@ -63,10 +66,10 @@ static const SettingDef s_Settings[] = {
     { MOUSE, CHOICE, "Mouse acceleration", "m_customaccel", "DISABLED=0|ENABLED=3", 0, 0, 0 },
     { MOUSE, SLIDER, "Zoom sensitivity", "zoom_sensitivity_ratio", "", 0.1f, 3, 0.01f },
     { MULTIPLAYER, TEXT, "Player name", "name", "", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Player model", "cl_playermodel", "COMBINE SOLDIER=models/combine_soldier.mdl|COMBINE ELITE=models/combine_super_soldier.mdl|METROPOLICE=models/police.mdl|REBEL / MALE=models/Humans/Group03/male_07.mdl|REBEL / FEMALE=models/Humans/Group03/female_01.mdl", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "Player model", "cl_playermodel", "", 0, 0, 0 },
     { MULTIPLAYER, SLIDER, "Field of view", "fov_desired", "", 75, 90, 1 },
-    { MULTIPLAYER, CHOICE, "Starting weapon", "cl_defaultweapon", "GRAVITY GUN=weapon_physcannon|PISTOL=weapon_pistol|SMG=weapon_smg1|MELEE=weapon_crowbar", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Server downloads", "cl_downloadfilter", "ALL FILES=all|EXCLUDE SOUNDS=nosounds|NONE=none", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "Starting weapon", "cl_defaultweapon", "GRAVITY GUN=weapon_physcannon|PISTOL=weapon_pistol|SMG=weapon_smg1|FRAG GRENADE=weapon_frag|CROWBAR=weapon_crowbar|STUNSTICK=weapon_stunstick", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "Server downloads", "cl_downloadfilter", "ALL FILES=all|EXCLUDE SOUNDS=nosounds|MAPS ONLY=mapsonly|NONE=none", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Upload my spray", "cl_allowupload", "NO=0|YES=1", 0, 0, 0 },
 };
 struct BindingDef { const char *label, *command, *key; };
@@ -145,6 +148,10 @@ public:
                     AddChoice( m_Combo, name, size );
                 }
             }
+            else if ( !Q_strcmp( def.cvar, "cl_playermodel" ) )
+            {
+                for ( int i = 0; i < ARRAYSIZE( s_PlayerModels ); ++i ) AddChoice( m_Combo, s_PlayerModels[i].name, s_PlayerModels[i].path );
+            }
             else
             {
                 char choices[1024]; Q_strncpy( choices, def.choices, sizeof( choices ) ); char *part = choices;
@@ -162,7 +169,10 @@ public:
             }
             int selected = -1;
             for ( int i = 0; i < m_Combo->GetItemCount(); ++i )
-                if ( SameValue( m_Combo->GetItemUserData( m_Combo->GetItemIDFromRow( i ) )->GetString( "value" ), value.draft.String() ) ) selected = i;
+            {
+                const char *choice = m_Combo->GetItemUserData( m_Combo->GetItemIDFromRow( i ) )->GetString( "value" );
+                if ( SameValue( choice, value.draft.String() ) || ( !Q_strcmp( def.cvar, "cl_playermodel" ) && !Q_stricmp( choice, value.draft.String() ) ) ) selected = i;
+            }
             // Keep custom/unsupported current values intact until explicitly changed.
             if ( selected < 0 ) { selected = m_Combo->GetItemCount(); AddChoice( m_Combo, value.available ? value.draft.String() : "UNAVAILABLE", value.draft.String() ); }
             m_Combo->SilentActivateItemByRow( selected ); m_Combo->SetEnabled( value.available );
@@ -170,9 +180,16 @@ public:
     }
     int Index() const { return m_Index; }
     void CloseDropdown() { if ( m_Combo ) m_Combo->HideMenu(); }
+    bool DropdownOpen() const { return m_Combo && m_Combo->GetMenu()->IsVisible(); }
     CUtlString Value()
     {
-        if ( m_Combo ) { KeyValues *data = m_Combo->GetActiveItemUserData(); return data ? data->GetString( "value" ) : m_InitialValue.String(); }
+        if ( m_Combo )
+        {
+            KeyValues *data = m_Combo->GetActiveItemUserData(); const char *value = data ? data->GetString( "value" ) : m_InitialValue.String();
+            // Model paths are case-insensitive; merely opening this page must not dirty the settings.
+            if ( !Q_strcmp( s_Settings[m_Index].cvar, "cl_playermodel" ) && !Q_stricmp( value, m_InitialValue.String() ) ) return m_InitialValue;
+            return value;
+        }
         char value[256];
         if ( m_Text ) { m_Text->GetText( value, sizeof( value ) ); return value; }
         if ( m_Slider->GetValue() == m_InitialSlider ) return m_InitialValue;
@@ -276,6 +293,44 @@ public:
     vgui::Label *title, *body; CHL2MPSettingsButton *yes, *no, *discard; bool capture;
 };
 
+class CPlayerPreview : public CMDLPanel
+{
+    DECLARE_CLASS_SIMPLE( CPlayerPreview, CMDLPanel );
+public:
+    CPlayerPreview( vgui::Panel *parent ) : BaseClass( parent, "PlayerPreview" ), m_Model( -1 ), m_SequencePending( false )
+    {
+        SetVisible( false ); SetGroundGrid( false ); SetIgnoreDoubleClick( true ); SetKeyBoardInputEnabled( false );
+        SetCameraFOV( 35 ); SetLookAtCamera( true );
+    }
+    void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
+    {
+        BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); SetBackgroundColor( Color( 18, 26, 30, 255 ) );
+    }
+    void SelectModel( int index )
+    {
+        if ( index == m_Model ) return;
+        m_Model = index; ClearMergeMDLs(); SetMDL( s_PlayerModels[index].path );
+        SetMergeMDL( "models/weapons/w_smg1.mdl" ); m_SequencePending = true;
+        SetModelAnglesAndPosition( QAngle( 0, 170, 0 ), vec3_origin );
+        ResetCameraPivot(); LookAt( Vector( 0, 0, 37 ), 30 );
+    }
+    void OnTick() OVERRIDE
+    {
+        if ( !IsVisible() || !GetParent()->IsVisible() ) return;
+        BaseClass::OnTick();
+        // Included animation models may finish loading a frame after SetMDL.
+        if ( m_SequencePending && m_RootMDL.m_pStudioHdr && m_RootMDL.m_pStudioHdr->SequencesAvailable() )
+        {
+            int sequence = LookupSequence( m_RootMDL.m_pStudioHdr, "idle_smg1" );
+            if ( sequence < 0 ) sequence = SelectWeightedSequence( m_RootMDL.m_pStudioHdr, ACT_IDLE );
+            SetSequence( MAX( sequence, 0 ), true ); m_SequencePending = false;
+            DevMsg( "Player preview: %s, sequence %d (%s)\n", s_PlayerModels[m_Model].path, sequence, GetSequenceName( m_RootMDL.m_pStudioHdr, MAX( sequence, 0 ) ) );
+        }
+    }
+private:
+    int m_Model; bool m_SequencePending;
+};
+
 class CHL2MPOptions : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CHL2MPOptions, vgui::EditablePanel );
@@ -300,6 +355,7 @@ private:
     CUtlVector<CSettingRow *> m_Rows; CUtlVector<CBindingRow *> m_KeyRows;
     vgui::PanelListPanel *m_List; vgui::Label *m_Heading, *m_Brand, *m_Status, *m_Hint, *m_PreviewTitle, *m_PreviewBody;
     CHL2MPSettingsButton *m_Back, *m_Tabs[5], *m_Subtabs[2], *m_Apply, *m_Discard, *m_Reset;
+    CPlayerPreview *m_PlayerPreview;
     COptionsOverlay *m_Overlay; vgui::HFont m_Font, m_SmallFont, m_TitleFont, m_BrandFont;
     Page m_Page; float m_Scale; int m_Width, m_Height, m_Confirmation, m_CaptureAction, m_CaptureSlot;
     int m_OldWidth, m_OldHeight, m_OldWindowed; double m_DisplayDeadline, m_FontRefreshAt; bool m_CloseAfterApply;
@@ -311,7 +367,8 @@ CHL2MPOptions::CHL2MPOptions( vgui::Panel *parent ) : BaseClass( parent, "Option
     SetVisible( false ); SetZPos( 100 ); SetKeyBoardInputEnabled( true ); SetMouseInputEnabled( true );
     m_Font = vgui::surface()->CreateFont(); m_SmallFont = vgui::surface()->CreateFont(); m_TitleFont = vgui::surface()->CreateFont(); m_BrandFont = vgui::surface()->CreateFont();
     m_Heading = Label( this, "SETTINGS" ); m_Brand = Label( this, "deathmatch" ); m_Status = Label( this, "" ); m_Hint = Label( this, "" ); m_Hint->SetWrap( true );
-    m_PreviewTitle = Label( this, "DM_LOCKDOWN" ); m_PreviewBody = Label( this, "Live menu scene\nGraphics changes take effect after Apply." );
+    m_PlayerPreview = new CPlayerPreview( this );
+    m_PreviewTitle = Label( this, "PLAYER MODEL" ); m_PreviewBody = Label( this, "Drag to rotate / scroll to zoom" );
     m_Back = new CHL2MPSettingsButton( this, "<  BACK", "back" );
     const char *tabs[] = { "VIDEO", "AUDIO", "GAME", "KEYBOARD / MOUSE", "MULTIPLAYER" };
     for ( int i = 0; i < 5; ++i ) m_Tabs[i] = new CHL2MPSettingsButton( this, tabs[i], VarArgs( "tab_%d", i ) );
@@ -416,13 +473,15 @@ void CHL2MPOptions::PerformLayout()
         m_Subtabs[i]->SetText( category == 0 ? i ? "ADVANCED VIDEO" : "DISPLAY" : i ? "KEY BINDINGS" : "MOUSE" );
         m_Subtabs[i]->Active( ( m_Page == ADVANCED || m_Page == BINDINGS ) == ( i == 1 ) );
     }
-    const bool preview = m_Page == ADVANCED && w >= int( 1200 * s );
+    const bool preview = m_Page == MULTIPLAYER;
     int listW = MIN( w - margin * 2, int( 850 * s ) ), listX = ( w - listW ) / 2;
-    if ( preview ) { listX = int( 470 * s ); listW = w - listX - margin; }
+    const int previewW = MIN( int( 300 * s ), ( w - margin * 2 ) / 3 ), previewH = MAX( 130, h - int( 360 * s ) );
+    if ( preview ) { listX = margin + previewW + int( 34 * s ); listW = w - listX - margin; }
     m_List->SetBounds( listX, int( 190 * s ), listW, MAX( 120, h - int( 318 * s ) ) );
+    m_PlayerPreview->SetVisible( preview ); m_PlayerPreview->SetBounds( margin, int( 190 * s ), previewW, previewH );
     m_PreviewTitle->SetVisible( preview ); m_PreviewBody->SetVisible( preview );
-    m_PreviewTitle->SetFont( m_TitleFont ); m_PreviewTitle->SetFgColor( Color( 238, 231, 213, 255 ) ); m_PreviewTitle->SetBounds( margin, int( 444 * s ), int( 370 * s ), int( 34 * s ) );
-    m_PreviewBody->SetFont( m_SmallFont ); m_PreviewBody->SetFgColor( Color( 194, 205, 207, 255 ) ); m_PreviewBody->SetBounds( margin, int( 484 * s ), int( 370 * s ), int( 78 * s ) );
+    m_PreviewTitle->SetFont( m_Font ); m_PreviewTitle->SetFgColor( Color( 238, 231, 213, 255 ) ); m_PreviewTitle->SetBounds( margin, int( 198 * s ) + previewH, previewW, int( 28 * s ) );
+    m_PreviewBody->SetFont( m_SmallFont ); m_PreviewBody->SetFgColor( Color( 161, 178, 184, 255 ) ); m_PreviewBody->SetBounds( margin, int( 228 * s ) + previewH, previewW, int( 30 * s ) );
     m_Hint->SetFont( m_SmallFont ); m_Hint->SetFgColor( Color( 161, 178, 184, 255 ) ); m_Hint->SetBounds( listX + 8, h - int( 120 * s ), listW - 16, int( 40 * s ) );
     m_Hint->SetText( m_Page == DISPLAY ? "Display changes have a 15-second confirmation. Gamma is controlled by the desktop in windowed mode." : m_Page == ADVANCED ? "Lighting and texture changes may take a moment. Some settings take effect on the next map." : m_Page == BINDINGS ? "Select a key to rebind it. Esc cancels; Backspace clears. Changes are saved with Apply." : m_Page == MULTIPLAYER ? "Server rules may limit your field of view, model and starting weapon." : "Changes remain pending until you select Apply. Reset Page restores this page's defaults." );
     const int footerY = h - int( 61 * s ), buttonW = int( 165 * s );
@@ -443,14 +502,7 @@ void CHL2MPOptions::PaintBackground()
 {
     vgui::ISurface *surface = vgui::surface(); const int w = GetWide(), h = GetTall();
     surface->DrawSetColor( Color( 21, 30, 35, 232 ) );
-    if ( m_Page == ADVANCED && m_PreviewTitle->IsVisible() )
-    {
-        // An unobscured window onto the actual rendered scene, not an unrelated preview image.
-        const int x = int( 42 * m_Scale ), y = int( 196 * m_Scale ), right = int( 424 * m_Scale ), bottom = int( 422 * m_Scale );
-        surface->DrawFilledRect( 0, 0, w, y ); surface->DrawFilledRect( 0, y, x, bottom ); surface->DrawFilledRect( right, y, w, bottom ); surface->DrawFilledRect( 0, bottom, w, h );
-        surface->DrawSetColor( Color( 204, 221, 223, 80 ) ); surface->DrawOutlinedRect( x, y, right, bottom );
-    }
-    else surface->DrawFilledRect( 0, 0, w, h );
+    surface->DrawFilledRect( 0, 0, w, h );
     surface->DrawSetColor( Color( 8, 14, 18, 150 ) ); surface->DrawFilledRect( 0, 0, w, int( 68 * m_Scale ) ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h );
     surface->DrawSetColor( Color( 204, 221, 223, 30 ) ); surface->DrawFilledRect( 0, int( 68 * m_Scale ), w, int( 68 * m_Scale ) + 1 ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h - int( 76 * m_Scale ) + 1 );
 }
@@ -546,6 +598,7 @@ void CHL2MPOptions::OnCaptureKey( int code )
 }
 void CHL2MPOptions::OnCommand( const char *command )
 {
+    if ( !Q_strcmp( command, "refresh_fonts" ) ) { m_Width = 0; InvalidateLayout( true ); return; }
     if ( !Q_strcmp( command, "confirm_discard" ) && m_Confirmation == 2 )
     {
         m_Overlay->SetVisible( false ); vgui::input()->ReleaseAppModalSurface(); m_Confirmation = 0; ReadCurrent(); Close(); return;
@@ -577,6 +630,7 @@ void CHL2MPOptions::OnCommand( const char *command )
 }
 void CHL2MPOptions::OnKeyCodeTyped( vgui::KeyCode code )
 {
+    if ( code == KEY_ESCAPE ) FOR_EACH_VEC( m_Rows, i ) if ( m_Rows[i]->DropdownOpen() ) { CloseDropdowns(); return; }
     if ( code == KEY_ESCAPE ) OnCommand( "back" ); else BaseClass::OnKeyCodeTyped( code );
 }
 void CHL2MPOptions::OnTick()
@@ -593,7 +647,21 @@ void CHL2MPOptions::OnTick()
     }
     if ( !IsVisible() ) return;
     int w, h; vgui::surface()->GetScreenSize( w, h ); if ( w != m_Width || h != m_Height ) InvalidateLayout( true );
-    const bool dirty = Dirty(); m_Apply->SetEnabled( dirty ); m_Apply->Active( dirty ); m_Discard->SetEnabled( dirty );
+    const bool dirty = Dirty();
+    if ( m_Page == MULTIPLAYER )
+    {
+        FOR_EACH_VEC( m_Rows, row ) if ( !Q_strcmp( s_Settings[m_Rows[row]->Index()].cvar, "cl_playermodel" ) )
+        {
+            const CUtlString model = m_Rows[row]->Value(); bool found = false;
+            for ( int i = 0; i < ARRAYSIZE( s_PlayerModels ); ++i ) if ( !Q_stricmp( model.String(), s_PlayerModels[i].path ) )
+            {
+                m_PlayerPreview->SelectModel( i ); m_PreviewTitle->SetText( s_PlayerModels[i].name ); found = true; break;
+            }
+            m_PlayerPreview->SetVisible( found );
+            if ( !found ) m_PreviewTitle->SetText( "MODEL UNAVAILABLE" );
+        }
+    }
+    m_Apply->SetEnabled( dirty ); m_Apply->Active( dirty ); m_Discard->SetEnabled( dirty );
     if ( dirty ) m_Status->SetText( "Unapplied changes" );
     else
     {

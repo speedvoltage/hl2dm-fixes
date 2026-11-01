@@ -5,6 +5,7 @@
 #include "hl2mp_coordinator.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_options.h"
+#include "hl2mp_serverbrowser.h"
 #include "GameUI/IGameUI.h"
 #include "ienginevgui.h"
 #include "filesystem.h"
@@ -221,7 +222,7 @@ private:
     CMatchmakingButton *m_Buttons[BUTTON_COUNT];
     CHL2MPDropdown *m_CustomControls[4];
     vgui::Label *m_CustomCaptions[4];
-    vgui::Panel *m_Options;
+    vgui::Panel *m_Options, *m_Browser;
     vgui::Label *m_Title, *m_Subtitle, *m_Tag, *m_PlayHeading, *m_ModeDescription;
     vgui::Label *m_PartyHeading, *m_Status, *m_QueueStatus, *m_ResultHeading, *m_ResultDetails;
     vgui::Label *m_FriendsHeading, *m_FriendsHint, *m_NewsHeading, *m_NewsTitle, *m_NewsBody;
@@ -234,7 +235,7 @@ private:
     int m_PartyX, m_PartyY, m_PartyW, m_PartyH, m_FriendsY, m_NewsX, m_NewsY, m_NewsW;
     bool m_PlayPage, m_WasBusy, m_WasReady, m_GroupedLayout, m_InGameLayout, m_BackgroundRequested;
     float m_Scale;
-    double m_NextFriends, m_IdleSince;
+    double m_NextFriends, m_IdleSince, m_FontRefreshAt;
 };
 
 static CHL2MPMainMenu *s_Menu = NULL;
@@ -245,7 +246,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_FontWidth( 0 ), m_FontHeight( 0 ),
     m_PartyX( 0 ), m_PartyY( 0 ), m_PartyW( 0 ), m_PartyH( 0 ), m_FriendsY( 0 ), m_NewsX( 0 ), m_NewsY( 0 ), m_NewsW( 0 ),
     m_PlayPage( false ), m_WasBusy( false ), m_WasReady( false ), m_GroupedLayout( false ), m_InGameLayout( false ),
-    m_BackgroundRequested( false ), m_Scale( 1 ), m_NextFriends( 0 ), m_IdleSince( Plat_FloatTime() )
+    m_BackgroundRequested( false ), m_Scale( 1 ), m_NextFriends( 0 ), m_IdleSince( Plat_FloatTime() ), m_FontRefreshAt( 0 )
 {
     SetProportional( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetCursor( vgui::dc_arrow );
     // Reuse locally installed retail maps without replacing the SDK engine.
@@ -312,6 +313,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
         m_CustomControls[field]->SilentActivateItemByRow( field == 2 ? 1 : 0 );
     }
     m_Options = HL2MPOptions_Create( this );
+    m_Browser = HL2MPServerBrowser_Create( this );
     HL2MPParty().Init(); HL2MPCoordinator().Init(); m_GameUI->SetMainMenuOverride( GetVPanel() );
     MakePopup( false ); GetFocusNavGroup().SetFocusTopLevel( true );
     OnTick(); m_Buttons[PLAY]->RequestFocus(); vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
@@ -425,7 +427,7 @@ void CHL2MPMainMenu::PaintBackground()
         const float sx = MIN( 1.0f, viewport / aspect ), sy = MIN( 1.0f, aspect / viewport );
         surface->DrawTexturedSubRect( 0, 0, w, h, ( 1 - sx ) / 2, ( 1 - sy ) / 2, ( 1 + sx ) / 2, ( 1 + sy ) / 2 );
     }
-    if ( m_Options->IsVisible() ) return;
+    if ( m_Options->IsVisible() || m_Browser->IsVisible() ) return;
     surface->DrawSetColor( Color( 4, 8, 12, 255 ) );
     surface->DrawFilledRectFade( 0, 0, int( w * 0.8f ), h, m_PlayPage ? 225 : 190, 0, true );
     surface->DrawFilledRectFade( 0, h / 2, w, h, 0, 150, false );
@@ -491,6 +493,8 @@ void CHL2MPMainMenu::OnTick()
     if ( matchmaking && !m_WasBusy ) m_PlayPage = true;
     m_WasBusy = matchmaking;
     int w, h; vgui::surface()->GetScreenSize( w, h );
+    if ( w != m_ScreenWidth || h != m_ScreenHeight ) m_FontRefreshAt = Plat_FloatTime() + 1;
+    if ( m_FontRefreshAt && Plat_FloatTime() >= m_FontRefreshAt ) { m_FontRefreshAt = 0; OnCommand( "refresh_menu_fonts" ); }
     if ( w != m_ScreenWidth || h != m_ScreenHeight || grouped != m_GroupedLayout || inGame != m_InGameLayout )
     {
         m_ScreenWidth = w; m_ScreenHeight = h; m_GroupedLayout = grouped; m_InGameLayout = inGame; InvalidateLayout( true );
@@ -522,7 +526,7 @@ void CHL2MPMainMenu::OnTick()
     int *choices[] = { &m_MapChoice, &m_SizeChoice, &m_TimeChoice, &m_FragChoice };
     for ( int i = 0; i < 4; ++i )
     {
-        const bool visible = m_PlayPage && custom && !coordinator.Busy() && !m_Options->IsVisible();
+        const bool visible = m_PlayPage && custom && !coordinator.Busy() && !m_Options->IsVisible() && !m_Browser->IsVisible();
         if ( !visible && m_CustomControls[i]->IsDropdownVisible() ) m_CustomControls[i]->HideMenu();
         m_CustomControls[i]->SetVisible( visible ); m_CustomCaptions[i]->SetVisible( visible );
         KeyValues *data = m_CustomControls[i]->GetActiveItemUserData(); if ( data ) *choices[i] = data->GetInt( "choice" );
@@ -556,7 +560,8 @@ void CHL2MPMainMenu::OnTick()
     if ( readyCheck && !m_WasReady ) m_Buttons[ACCEPT]->RequestFocus(); m_WasReady = readyCheck;
     m_Title->SetVisible( true ); m_PartyHeading->SetVisible( true ); m_Status->SetVisible( true ); m_PartyList->SetVisible( true );
     m_FriendsHeading->SetVisible( true ); m_FriendsHint->SetVisible( true ); m_FriendsList->SetVisible( true );
-    if ( m_Options->IsVisible() ) for ( int i = 0; i < GetChildCount(); ++i ) if ( GetChild( i ) != m_Options ) GetChild( i )->SetVisible( false );
+    vgui::Panel *overlay = m_Options->IsVisible() ? m_Options : m_Browser->IsVisible() ? m_Browser : NULL;
+    if ( overlay ) for ( int i = 0; i < GetChildCount(); ++i ) if ( GetChild( i ) != overlay ) GetChild( i )->SetVisible( false );
 }
 
 void CHL2MPMainMenu::OnCommand( const char *command )
@@ -571,9 +576,14 @@ void CHL2MPMainMenu::OnCommand( const char *command )
         for ( int i = 0; i < ARRAYSIZE( s_Modes ); ++i ) if ( !Q_strcmp( command + 5, s_Modes[i] ) ) m_SelectedMode = i;
         OnTick(); InvalidateLayout( true );
     }
+    else if ( !Q_strcmp( command, "OpenServerBrowser" ) ) { HL2MPServerBrowser_Open( m_Browser ); OnTick(); }
+    else if ( !Q_strcmp( command, "browser_closed" ) ) { OnTick(); m_Buttons[m_PlayPage ? BROWSE : SERVERS]->RequestFocus(); }
     else if ( !Q_strcmp( command, "OpenOptionsDialog" ) ) { HL2MPOptions_Open( m_Options ); OnTick(); }
     else if ( !Q_strcmp( command, "options_closed" ) ) { OnTick(); m_Buttons[OPTIONS]->RequestFocus(); }
-    else if ( !Q_strcmp( command, "refresh_menu_fonts" ) ) { m_FontWidth = 0; InvalidateLayout( true ); }
+    else if ( !Q_strcmp( command, "refresh_menu_fonts" ) )
+    {
+        m_FontWidth = 0; InvalidateLayout( true ); m_Options->OnCommand( "refresh_fonts" ); m_Browser->OnCommand( "refresh_fonts" );
+    }
     else if ( !Q_strcmp( command, "find_match" ) )
     {
         OnTick(); // Consume the latest dropdown selection before submitting rules.
@@ -588,7 +598,7 @@ void CHL2MPMainMenu::OnCommand( const char *command )
     else if ( !Q_strcmp( command, "queue_cancel" ) ) HL2MPCoordinator().Cancel();
     else
     {
-        const char *allowed[] = { "ResumeGame", "OpenServerBrowser", "Quit" };
+        const char *allowed[] = { "ResumeGame", "Quit" };
         for ( int i = 0; i < ARRAYSIZE( allowed ); ++i ) if ( !Q_strcmp( command, allowed[i] ) ) { m_GameUI->SendMainMenuCommand( allowed[i] ); return; }
         BaseClass::OnCommand( command );
     }
