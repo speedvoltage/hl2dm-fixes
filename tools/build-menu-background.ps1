@@ -56,3 +56,10 @@ $tga = Join-Path $staging ($TextureName + '.tga')
 & (Join-Path $SdkRoot 'bin/x64/vtex.exe') -nopause -nop4 -game (Join-Path $repoRoot 'game/mod_hl2mp') -outdir $output $tga
 if ($LASTEXITCODE -ne 0) { throw 'Menu texture compilation failed.' }
 if (-not (Test-Path -LiteralPath (Join-Path $output ($TextureName + '.vtf')))) { throw 'VTEX did not produce the menu texture.' }
+
+# The engine reads the initial background directly from a VTF before VGUI exists.
+if ($TextureName -eq 'dm_lockdown') {
+    foreach ($name in @('background01', 'background01_widescreen')) {
+        Copy-Item -LiteralPath (Join-Path $output 'dm_lockdown.vtf') -Destination (Join-Path $repoRoot ("game/mod_hl2mp/materials/console/$name.vtf")) -Force
+    }
+}

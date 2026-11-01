@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "cdll_client_int.h"
 #include "hl2mp_mainmenu.h"
+#include "hl2mp_loading.h"
 #include "hl2mp_party.h"
 #include "hl2mp_coordinator.h"
 #include "hl2mp_menucontrols.h"
@@ -482,10 +483,11 @@ void CHL2MPMainMenu::OnTick()
     CHL2MPParty &party = HL2MPParty(); CHL2MPCoordinator &coordinator = HL2MPCoordinator();
     const bool grouped = party.Lobby().IsValid(), readyCheck = coordinator.NeedsConfirmation();
     const bool inGame = engine->IsInGame() && !engine->IsLevelMainMenuBackground();
-    if ( engine->IsInGame() || engine->IsLevelMainMenuBackground() || engine->IsConnected() || engine->IsDrawingLoadingImage() || coordinator.Busy() ) { m_IdleSince = Plat_FloatTime(); m_BackgroundRequested = false; }
+    if ( engine->IsInGame() || engine->IsLevelMainMenuBackground() || engine->IsConnected() || engine->IsDrawingLoadingImage() || HL2MPLoading_IsVisible() || coordinator.Busy() ) { m_IdleSince = Plat_FloatTime(); m_BackgroundRequested = false; }
     else if ( mm_menu_background.GetBool() && !m_BackgroundRequested && filesystem->FileExists( "maps/dm_lockdown.bsp", "GAME" ) && Plat_FloatTime() - m_IdleSince > 3 )
     {
-        m_BackgroundRequested = true; engine->ClientCmd_Unrestricted( "maxplayers 1; map_background dm_lockdown" );
+        m_BackgroundRequested = true;
+        engine->ClientCmd_Unrestricted( "maxplayers 1; map_background dm_lockdown" );
     }
     const char *activeMode = coordinator.Mode();
     for ( int i = 0; i < ARRAYSIZE( s_Modes ); ++i ) if ( !Q_strcmp( activeMode, s_Modes[i] ) ) m_SelectedMode = i;
@@ -611,10 +613,12 @@ void HL2MPMainMenu_Create()
 	IGameUI *gameUI = factory ? static_cast<IGameUI *>( factory( GAMEUI_INTERFACE_VERSION, NULL ) ) : NULL;
 	if ( !gameUI ) { Warning( "Matchmaking menu: GameUI011 unavailable; using retail menu.\n" ); return; }
 	s_Menu = new CHL2MPMainMenu( gameUI );
+	HL2MPLoading_Create( gameUI );
 }
 
 void HL2MPMainMenu_Destroy()
 {
+	HL2MPLoading_Destroy();
 	delete s_Menu; s_Menu = NULL;
 }
 

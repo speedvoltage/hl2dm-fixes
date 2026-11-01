@@ -32,6 +32,7 @@ public:
 
 	virtual void	Init();
 	virtual void	Shutdown();
+	void LevelInit( const char *map ) OVERRIDE;
 	void OverrideView( CViewSetup *view ) OVERRIDE;
 	bool ShouldDrawViewModel() OVERRIDE;
 	bool ShouldDrawCrosshair() OVERRIDE;

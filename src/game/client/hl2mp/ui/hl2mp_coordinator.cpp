@@ -3,6 +3,7 @@
 #include "c_baseplayer.h"
 #include "inetchannelinfo.h"
 #include "hl2mp_coordinator.h"
+#include "hl2mp_loading.h"
 #include "hl2mp_party.h"
 #include "tier1/keyvaluesjson.h"
 #include "tier1/utlbuffer.h"
@@ -505,6 +506,7 @@ void CHL2MPCoordinator::Connect()
 	Q_strncpy( m_ConnectedMatch, m_MatchID, sizeof( m_ConnectedMatch ) );
 	Q_strncpy( m_ConnectedEndpoint, m_Endpoint, sizeof( m_ConnectedEndpoint ) );
 	m_NextGrant = 0;
+	HL2MPLoading_SetContext( !Q_strcmp( m_MatchMode, "custom" ) ? m_CustomMap : "", m_MatchMode );
 	engine->ClientCmd_Unrestricted( command );
 	SetStatus( "Connecting to your dedicated server..." );
 }

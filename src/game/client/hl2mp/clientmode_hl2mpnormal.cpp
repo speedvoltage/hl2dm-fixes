@@ -23,6 +23,7 @@
 #include "hl2mp_gamerules.h"
 #include "clienteffectprecachesystem.h"
 #include "hl2mp_mainmenu.h"
+#include "hl2mp_loading.h"
 #include "view_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -164,6 +165,12 @@ void ClientModeHL2MPNormal::Init()
 	{
 		Warning( "Couldn't load combine panel scheme!\n" );
 	}
+}
+
+void ClientModeHL2MPNormal::LevelInit( const char *map )
+{
+	HL2MPLoading_LevelInit( map );
+	BaseClass::LevelInit( map );
 }
 
 void ClientModeHL2MPNormal::Shutdown()

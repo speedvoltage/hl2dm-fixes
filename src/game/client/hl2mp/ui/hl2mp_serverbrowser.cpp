@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "cdll_client_int.h"
 #include "hl2mp_serverbrowser.h"
+#include "hl2mp_loading.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_coordinator.h"
 #include "filesystem.h"
@@ -340,6 +341,7 @@ void CHL2MPServerBrowser::Connect( const char *password )
     if ( !Compatible( m_Connecting ) || IsBlocked( m_Connecting ) || HL2MPCoordinator().Busy() ) return;
     ConVarRef serverPassword( "password", true ); if ( serverPassword.IsValid() ) serverPassword.SetValue( password );
     if ( Favorites() ) Favorites()->AddFavoriteGame( m_Connecting.m_nAppID, m_Connecting.m_NetAdr.GetIP(), m_Connecting.m_NetAdr.GetConnectionPort(), m_Connecting.m_NetAdr.GetQueryPort(), k_unFavoriteFlagHistory, uint32( time( NULL ) ) );
+    HL2MPLoading_SetContext( m_Connecting.m_szMap, "community", m_Connecting.GetName() );
     char command[80]; Q_snprintf( command, sizeof( command ), "connect %s\n", m_Connecting.m_NetAdr.GetConnectionAddressString() ); Close(); engine->ClientCmd_Unrestricted( command );
 }
 void CHL2MPServerBrowser::OnCommand( const char *command )
