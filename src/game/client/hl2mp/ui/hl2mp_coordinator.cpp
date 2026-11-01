@@ -54,6 +54,8 @@ CHL2MPCoordinator::CHL2MPCoordinator() : m_NextGrant( 0 ), m_PendingAction( ACTI
 	m_Endpoint[0] = m_JoinGrant[0] = m_ConnectedMatch[0] = 0;
 	m_ConnectedEndpoint[0] = m_ResultID[0] = m_ResultHeading[0] = m_ResultDetails[0] = 0;
 	m_MatchMode[0] = 0;
+	m_CustomMap[0] = 0; m_CustomTeamSize = 0; m_CustomTimeLimit = 20; m_CustomFragLimit = 0;
+	m_CustomSummary[0] = 0;
 	m_PartyID[0] = m_PartyLobby[0] = m_PartyLeader[0] = m_UserID[0] = m_PartyInvite[0] = m_ReadyPartyID[0] = 0;
 	m_PartyCount = m_LobbyCount = m_PartyRevision = m_ReadyRevision = 0;
 	m_WantSession = m_ReadyPending = m_ReadyValue = false;
@@ -183,10 +185,10 @@ void CHL2MPCoordinator::ReadParty( KeyValues *root )
 	if ( DecimalID( party->GetString( "lobby", "" ) ) ) Q_strncpy( m_PartyLobby, party->GetString( "lobby" ), sizeof( m_PartyLobby ) );
 	if ( SafeToken( party->GetString( "invite", "" ), 16, 120 ) ) Q_strncpy( m_PartyInvite, party->GetString( "invite" ), sizeof( m_PartyInvite ) );
 	KeyValues *members = party->FindKey( "members" );
-	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_PartyCount < 4; member = member->GetNextKey() )
+	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_PartyCount < HL2MP_MAX_PARTY_MEMBERS; member = member->GetNextKey() )
 		if ( DecimalID( member->GetString() ) ) Q_strncpy( m_PartyMembers[m_PartyCount++], member->GetString(), sizeof( m_PartyMembers[0] ) );
 	members = party->FindKey( "lobby_members" );
-	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_LobbyCount < 4; member = member->GetNextKey() )
+	for ( KeyValues *member = members ? members->GetFirstSubKey() : NULL; member && m_LobbyCount < HL2MP_MAX_PARTY_MEMBERS; member = member->GetNextKey() )
 		if ( DecimalID( member->GetString() ) ) Q_strncpy( m_LobbyMembers[m_LobbyCount++], member->GetString(), sizeof( m_LobbyMembers[0] ) );
 	KeyValues *ready = party->FindKey( "ready" );
 	for ( int i = 0; i < m_PartyCount; ++i )
@@ -398,9 +400,18 @@ void CHL2MPCoordinator::OnTicket( GetTicketForWebApiResponse_t *result )
 	Request( k_EHTTPMethodPOST, "/v1/auth/steam", body, true );
 }
 
+void CHL2MPCoordinator::CustomMatch( const char *map, int teamSize, int timeLimit, int fragLimit )
+{
+	if ( Busy() || !SafeToken( map, 1, 60 ) || teamSize < 0 || teamSize > 5 || timeLimit < 1 || timeLimit > 60 || fragLimit < 0 || fragLimit > 500 ) return;
+	Q_strncpy( m_CustomMap, map, sizeof( m_CustomMap ) );
+	m_CustomSummary[0] = 0;
+	m_CustomTeamSize = teamSize; m_CustomTimeLimit = timeLimit; m_CustomFragLimit = fragLimit;
+	Queue( "custom" );
+}
+
 void CHL2MPCoordinator::Queue( const char *mode )
 {
-	if ( Q_strcmp( mode, "duel" ) && Q_strcmp( mode, "team" ) && Q_strcmp( mode, "casual" ) ) return;
+	if ( HL2MPMatchTeamSize( mode ) < 0 ) return;
 	if ( Q_strcmp( m_BaseURL, CoordinatorURL() ) ) Tick();
 	if ( m_Request && !m_Searching && !m_MatchID[0] && m_AuthTicket == k_HAuthTicketInvalid )
 	{
@@ -425,7 +436,15 @@ void CHL2MPCoordinator::Queue( const char *mode )
 	if ( !PartySynchronized() ) { SetStatus( "Wait for your party to finish synchronizing." ); return; }
 	if ( Q_strcmp( m_UserID, m_PartyLeader ) ) { SetStatus( "The party leader starts matchmaking. Mark ready to join them." ); return; }
 	if ( !SafeToken( mm_region.GetString(), 1, 32 ) ) { SetStatus( "Choose a valid matchmaking region." ); return; }
-	char body[256];
+	char body[512];
+	if ( !Q_strcmp( mode, "custom" ) )
+	{
+		if ( !m_CustomMap[0] ) { SetStatus( "Choose your private match settings in Custom." ); return; }
+		Q_snprintf( body, sizeof( body ), "{\"map_name\":\"%s\",\"team_size\":%d,\"time_limit\":%d,\"frag_limit\":%d,\"region\":\"%s\",\"protocol\":1,\"party_id\":\"%s\",\"revision\":%d}",
+			m_CustomMap, m_CustomTeamSize, m_CustomTimeLimit, m_CustomFragLimit, mm_region.GetString(), m_PartyID, m_PartyRevision );
+		if ( Request( k_EHTTPMethodPOST, "/v1/custom/matches", body ) ) SetStatus( "Reserving a private server..." );
+		return;
+	}
 	Q_snprintf( body, sizeof( body ), "{\"mode\":\"%s\",\"region\":\"%s\",\"protocol\":1,\"party_id\":\"%s\",\"revision\":%d}", mode, mm_region.GetString(), m_PartyID, m_PartyRevision );
 	if ( Request( k_EHTTPMethodPOST, "/v1/queue", body ) ) SetStatus( "Starting matchmaking..." );
 }
@@ -512,8 +531,8 @@ void CHL2MPCoordinator::ReadLastMatch( KeyValues *last )
 	if ( !Q_strcmp( id, m_ResultID ) ) return;
 	Q_strncpy( m_ResultID, id, sizeof( m_ResultID ) );
 	const char *mode = last->GetString( "mode", "" );
-	const bool ranked = !Q_strcmp( mode, "duel" ) || !Q_strcmp( mode, "team" );
-	const char *name = !Q_strcmp( mode, "duel" ) ? "DUEL" : !Q_strcmp( mode, "team" ) ? "TEAM DEATHMATCH" : !Q_strcmp( mode, "casual" ) ? "CASUAL" : "MATCH";
+	const bool ranked = HL2MPMatchTeamSize( mode ) > 0;
+	const char *name = HL2MPMatchModeName( mode );
 	const char *outcome = last->GetString( "outcome", "" );
 	const char *title = cancelled ? "CANCELLED" : !finished ? "LEFT MATCH" :
 		!Q_strcmp( outcome, "win" ) ? "VICTORY" : !Q_strcmp( outcome, "loss" ) ? "DEFEAT" : !Q_strcmp( outcome, "draw" ) ? "DRAW" : "COMPLETE";
@@ -595,6 +614,14 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 			Q_strncpy( m_MatchID, match->GetString( "id" ), sizeof( m_MatchID ) );
 			Q_strncpy( m_MatchState, match->GetString( "state" ), sizeof( m_MatchState ) );
 			Q_strncpy( m_MatchMode, match->GetString( "mode", "" ), sizeof( m_MatchMode ) );
+			if ( !Q_strcmp( m_MatchMode, "custom" ) )
+			{
+				const int size = match->GetInt( "rules/team_size", 0 ), frags = match->GetInt( "rules/frag_limit", 0 );
+				char teams[32], limit[32];
+				if ( size ) Q_snprintf( teams, sizeof( teams ), "%dv%d", size, size ); else Q_strncpy( teams, "Free-for-all", sizeof( teams ) );
+				if ( frags ) Q_snprintf( limit, sizeof( limit ), "%d frags", frags ); else Q_strncpy( limit, "No frag limit", sizeof( limit ) );
+				Q_snprintf( m_CustomSummary, sizeof( m_CustomSummary ), "PRIVATE / %s / %s / %d minutes / %s", match->GetString( "map", "" ), teams, match->GetInt( "rules/time_limit", 0 ), limit );
+			}
 			if ( HasReadyCheck() )
 			{
 				m_Confirmed = match->GetInt( "you_accepted" ) != 0;
@@ -624,7 +651,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 					Q_snprintf( m_Endpoint, sizeof( m_Endpoint ), "%d.%d.%d.%d:%d", octets[0], octets[1], octets[2], octets[3], port );
 					Q_strncpy( m_JoinGrant, grant, sizeof( m_JoinGrant ) );
 					SetStatus( "Your match server is ready. Join or reconnect." );
-					if ( Q_strcmp( m_ConnectedMatch, m_MatchID ) && !engine->IsConnected() ) Connect();
+					if ( Q_strcmp( m_ConnectedMatch, m_MatchID ) && ( !engine->IsConnected() || engine->IsLevelMainMenuBackground() ) ) Connect();
 				}
 				else SetStatus( "The service returned an invalid server assignment." );
 			}
@@ -644,9 +671,13 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 	}
 }
 
-CON_COMMAND_F( mm_queue, "Search for a duel, team, or casual match.", FCVAR_CLIENTDLL )
+CON_COMMAND_F( mm_queue, "Search: duel, team (2v2), team3, team4, team5, or casual.", FCVAR_CLIENTDLL )
 {
 	if ( args.ArgC() == 2 ) HL2MPCoordinator().Queue( args[1] );
+}
+CON_COMMAND_F( mm_custom, "Private match: map team_size (0=FFA) minutes frag_limit (0=none).", FCVAR_CLIENTDLL )
+{
+	if ( args.ArgC() == 5 ) HL2MPCoordinator().CustomMatch( args[1], Q_atoi( args[2] ), Q_atoi( args[3] ), Q_atoi( args[4] ) );
 }
 CON_COMMAND_F( mm_queue_cancel, "Cancel a search or decline a ready check.", FCVAR_CLIENTDLL ) { HL2MPCoordinator().Cancel(); }
 CON_COMMAND_F( mm_match_accept, "Accept the current ready check.", FCVAR_CLIENTDLL ) { HL2MPCoordinator().Confirm(); }

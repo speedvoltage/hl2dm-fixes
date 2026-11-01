@@ -21,9 +21,15 @@ import time
 MODES = {
     "duel": {"team_size": 1, "map": "dm_lockdown", "ranked": True},
     "team": {"team_size": 2, "map": "dm_lockdown", "ranked": True},
+    "team3": {"team_size": 3, "map": "dm_lockdown", "ranked": True},
+    "team4": {"team_size": 4, "map": "dm_overwatch", "ranked": True},
+    "team5": {"team_size": 5, "map": "dm_overwatch", "ranked": True},
     "casual": {"team_size": 0, "map": "dm_lockdown", "ranked": False},
+    "custom": {"team_size": 0, "map": "dm_lockdown", "ranked": False},
 }
+CUSTOM_MAPS = {"dm_lockdown", "dm_overwatch", "dm_powerhouse", "dm_resistance", "dm_runoff", "dm_steamlab", "dm_underpass"}
 PROTOCOL = 1
+MAX_PARTY_MEMBERS = 10
 PRESENCE_SECONDS = 45
 SERVER_SECONDS = 30
 READY_SECONDS = 30
@@ -61,6 +67,10 @@ class Coordinator:
             with self.transaction() as state:
                 if state["version"] != 1:
                     raise RuntimeError("Unsupported coordinator database version")
+                for user in state["users"].values():
+                    for mode, spec in MODES.items():
+                        if spec["ranked"]:
+                            user["ratings"].setdefault(mode, 1500)
                 # Omitting configuration opens the existing pool unchanged (for
                 # another worker). An explicit list is the complete current pool,
                 # including an empty list used to revoke every server.
@@ -120,6 +130,7 @@ class Coordinator:
             "token_hash": digest(spec["token"]), "seen": old.get("seen", 0),
             "match": old.get("match"),
             "capacity": capacity,
+            "maps": list(spec.get("maps", sorted(CUSTOM_MAPS))),
         }
 
     def login(self, steam_id, ticket_fingerprint=None):
@@ -130,7 +141,7 @@ class Coordinator:
         with self.transaction() as s:
             if ticket_fingerprint and ticket_fingerprint in s["tickets"]:
                 raise Rejected("Ticket already exchanged; request a fresh Steam ticket", 401)
-            user = s["users"].setdefault(steam_id, {"party": None, "match": None, "seen": now, "ratings": {"duel": 1500, "team": 1500}})
+            user = s["users"].setdefault(steam_id, {"party": None, "match": None, "seen": now, "ratings": {mode: 1500 for mode, spec in MODES.items() if spec["ranked"]}})
             user["seen"] = now
             # A new login revokes older sessions, without changing party/match membership.
             s["sessions"] = {k: v for k, v in s["sessions"].items() if v["user"] != steam_id and v["expires"] > now}
@@ -179,7 +190,7 @@ class Coordinator:
                 return
             self._unlocked(s, target)
             self._unlocked(s, current)
-            if len(target["members"]) >= 4:
+            if len(target["members"]) >= MAX_PARTY_MEMBERS:
                 raise Rejected("Party is full")
             self._leave(s, actor)
             target["members"].append(actor)
@@ -198,7 +209,7 @@ class Coordinator:
         The lobby ID is a grouping hint, never proof of Steam membership.
         """
         if (not 1 <= len(lobby_id) <= 20 or not lobby_id.isascii() or not lobby_id.isdigit() or not 0 < int(lobby_id) < 2**64
-                or not 1 <= len(members) <= 4 or len(set(members)) != len(members) or actor not in members
+                or not 1 <= len(members) <= MAX_PARTY_MEMBERS or len(set(members)) != len(members) or actor not in members
                 or any(not 1 <= len(u) <= 20 or not u.isascii() or not u.isdigit() or not 0 < int(u) < 2**64 for u in members)):
             raise Rejected("Invalid party roster", 400)
         with self.transaction() as s:
@@ -250,7 +261,7 @@ class Coordinator:
                 party["ready"].append(actor)
 
     def enqueue(self, actor, mode, region, protocol, party_id=None, revision=None):
-        if mode not in MODES or protocol != PROTOCOL:
+        if mode not in MODES or mode == "custom" or protocol != PROTOCOL:
             raise Rejected("Incompatible mode or client version", 400)
         with self.transaction() as s:
             self._expire(s)
@@ -268,16 +279,56 @@ class Coordinator:
                 if existing["mode"] == mode and existing["region"] == region:
                     return
                 raise Rejected("Cancel your current search before changing queues")
-            limit = MODES[mode]["team_size"] or 4
+            limit = MODES[mode]["team_size"] or MAX_PARTY_MEMBERS
             if len(p["members"]) > limit:
                 raise Rejected(f"This mode allows parties of at most {limit}")
             if len(p["members"]) > 1 and set(p["members"]) != set(p["ready"]):
                 raise Rejected("Every party member must be ready")
             if any(self.clock() - s["users"][u]["seen"] > PRESENCE_SECONDS for u in p["members"]):
                 raise Rejected("A party member is offline")
-            if not any(server["region"] == region and mode in server["modes"] for server in s["servers"].values()):
+            required_slots = MODES[mode]["team_size"] * 2 or len(p["members"])
+            if not any(server["region"] == region and mode in server["modes"] and server["capacity"] >= required_slots for server in s["servers"].values()):
                 raise Rejected("No server pool is configured for this region and mode", 503)
             s["queue"][p["id"]] = {"mode": mode, "region": region, "created": self.clock()}
+
+    def custom_match(self, actor, region, map_name, team_size, time_limit, frag_limit, protocol, party_id=None, revision=None):
+        if (protocol != PROTOCOL or map_name not in CUSTOM_MAPS or type(team_size) is not int or not 0 <= team_size <= 5
+                or type(time_limit) is not int or not 1 <= time_limit <= 60
+                or type(frag_limit) is not int or not 0 <= frag_limit <= 500):
+            raise Rejected("Invalid private match settings", 400)
+        with self.transaction() as s:
+            self._expire(s)
+            p = self._party(s, actor)
+            if p.get("lobby") or party_id is not None:
+                self._party_snapshot(p, party_id, revision)
+            if p["leader"] != actor:
+                raise Rejected("Only the party leader can start a private match", 403)
+            self._unlocked(s, p)
+            if p.get("lobby") and set(p["members"]) != set(p["lobby_members"]):
+                raise Rejected("Waiting for every lobby member to join matchmaking")
+            count = len(p["members"])
+            if team_size and not 2 <= count <= team_size * 2:
+                raise Rejected("Invite between two players and the selected match capacity")
+            if count > 1 and set(p["members"]) != set(p["ready"]):
+                raise Rejected("Every party member must be ready")
+            if any(self.clock() - s["users"][u]["seen"] > PRESENCE_SECONDS for u in p["members"]):
+                raise Rejected("A party member is offline")
+            server = next((v for v in s["servers"].values() if "custom" in v["modes"] and v["region"] == region
+                           and map_name in v["maps"] and v["capacity"] >= (team_size * 2 or count)
+                           and not v["match"] and self.clock() - v["seen"] <= SERVER_SECONDS), None)
+            if not server:
+                raise Rejected("No private server is available for these settings", 503)
+            mid = identifier()
+            # A private party fills both sides; alternate members for balanced teams.
+            players = {u: {"team": i % 2 if team_size else 0, "accepted": False, "join_token": secrets.token_urlsafe(32)}
+                       for i, u in enumerate(p["members"])}
+            s["matches"][mid] = {"id": mid, "server": server["id"], "mode": "custom", "map": map_name,
+                "state": "ready_check", "deadline": self.clock() + READY_SECONDS, "players": players,
+                "rules": {"team_size": team_size, "time_limit": time_limit, "frag_limit": frag_limit}, "reason": None, "result": None}
+            server["match"] = mid
+            p["ready"] = []
+            for uid in players:
+                s["users"][uid]["match"] = mid
 
     def cancel_queue(self, actor):
         with self.transaction() as s:
@@ -331,8 +382,8 @@ class Coordinator:
             return [ids[:1], []]
         size = lambda group: sum(len(s["parties"][p]["members"]) for p in group)
         rating = lambda group: sum(s["users"][u]["ratings"][mode] for p in group for u in s["parties"][p]["members"]) / team_size
-        # Eight oldest parties bound combination work; max team size is two initially.
-        ids = ids[:8]
+        # Include enough solo parties for 5v5 while keeping the search bounded.
+        ids = ids[:12]
         best = None
         for count in range(1, team_size + 1):
             for rest in combinations(ids[1:], count - 1):
@@ -371,7 +422,10 @@ class Coordinator:
                             del s["queue"][pid]
                     continue
                 for mode in server["modes"]:
+                    if MODES[mode]["team_size"] * 2 > server["capacity"]:
+                        continue
                     ids = sorted((p for p, q in s["queue"].items() if q["mode"] == mode and q["region"] == server["region"]), key=lambda p: s["queue"][p]["created"])
+                    ids = [p for p in ids if len(s["parties"][p]["members"]) <= server["capacity"]]
                     if not ids:
                         continue
                     teams = self._teams(s, ids, MODES[mode]["team_size"], mode, now)
@@ -425,7 +479,7 @@ class Coordinator:
             if not mid:
                 return {"match": None}
             m = s["matches"][mid]
-            return {"match": {"id": mid, "state": m["state"], "mode": m["mode"], "map": m["map"], "players": [{"steam_id": u, "team": p["team"]} for u, p in m["players"].items()]}}
+            return {"match": {"id": mid, "state": m["state"], "mode": m["mode"], "map": m["map"], "rules": m.get("rules", {}), "players": [{"steam_id": u, "team": p["team"]} for u, p in m["players"].items()]}}
 
     def server_ready(self, server_id, match_id):
         with self.transaction() as s:
@@ -506,7 +560,7 @@ class Coordinator:
             if mid is None:
                 return
             m = s["matches"][mid]
-            if m["mode"] != "casual":
+            if MODES[m["mode"]]["ranked"]:
                 raise Rejected("Competitive matches must be completed or resolved by the server")
             self._leave_casual(s, m, actor)
 
@@ -514,14 +568,14 @@ class Coordinator:
         match["players"].pop(actor, None)
         if s["users"][actor]["match"] == match["id"]:
             s["users"][actor]["match"] = None
-            s["users"][actor]["last_match"] = {**self._match_summary(s, match, actor, "left"), "reason": "You left the casual match"}
+            s["users"][actor]["last_match"] = {**self._match_summary(s, match, actor, "left"), "reason": "You left the unranked match"}
         if not match["players"] and match["state"] not in TERMINAL:
             self._cancel(s, match, "Casual server is empty")
 
     def casual_disconnected(self, server_id, match_id, actor):
         with self.transaction() as s:
             m = self._server_match(s, server_id, match_id)
-            if m["mode"] != "casual":
+            if MODES[m["mode"]]["ranked"]:
                 raise Rejected("Competitive disconnects require match resolution")
             if m["state"] in TERMINAL:
                 return
@@ -541,6 +595,7 @@ class Coordinator:
             if user["match"]:
                 m = s["matches"][user["match"]]
                 match = {k: m[k] for k in ("id", "mode", "state", "map", "deadline")}
+                match["rules"] = m.get("rules", {})
                 match["seconds_remaining"] = max(0, math.ceil(m["deadline"] - self.clock()))
                 match["accepted"] = sum(p["accepted"] for p in m["players"].values())
                 match["players"] = len(m["players"])

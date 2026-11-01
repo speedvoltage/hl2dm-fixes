@@ -23,6 +23,7 @@
 #include "hl2mp_gamerules.h"
 #include "clienteffectprecachesystem.h"
 #include "hl2mp_mainmenu.h"
+#include "view_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -34,6 +35,30 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecacheHL2MPSpectatorGlowEffects )
 	CLIENTEFFECT_MATERIAL( "dev/glow_downsample" )
 	CLIENTEFFECT_MATERIAL( "dev/halo_add_to_screen" )
 CLIENTEFFECT_REGISTER_END()
+
+static ConVar mm_menu_camera_pitch( "mm_menu_camera_pitch", "9", FCVAR_CHEAT, "Preview the background camera pitch." );
+static ConVar mm_menu_camera_yaw( "mm_menu_camera_yaw", "210", FCVAR_CHEAT, "Preview the background camera yaw." );
+
+void ClientModeHL2MPNormal::OverrideView( CViewSetup *view )
+{
+	BaseClass::OverrideView( view );
+	if ( engine->IsLevelMainMenuBackground() )
+	{
+		view->angles.Init( mm_menu_camera_pitch.GetFloat(), mm_menu_camera_yaw.GetFloat(), 0 );
+		if ( ConVarRef( "mm_menu_motion" ).GetBool() ) view->angles.y += sinf( float( Plat_FloatTime() * 0.08 ) ) * 0.8f;
+		view->fov = 75;
+	}
+}
+
+bool ClientModeHL2MPNormal::ShouldDrawViewModel()
+{
+	return !engine->IsLevelMainMenuBackground() && BaseClass::ShouldDrawViewModel();
+}
+
+bool ClientModeHL2MPNormal::ShouldDrawCrosshair()
+{
+	return !engine->IsLevelMainMenuBackground() && BaseClass::ShouldDrawCrosshair();
+}
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------

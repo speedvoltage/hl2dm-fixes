@@ -7,7 +7,7 @@
 
 static const char *s_ModKey = "hl2dm_matchmaking";
 static const char *s_Protocol = "1";
-static const int s_MaxParty = 4;
+static const int s_MaxParty = HL2MP_MAX_PARTY_MEMBERS;
 
 CHL2MPParty &HL2MPParty()
 {
@@ -54,7 +54,7 @@ void CHL2MPParty::Create()
 	if ( HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before creating a party." ); return; }
 	if ( m_bPending || m_Lobby.IsValid() ) return;
 	if ( !Available() ) { SetStatus( "Sign in to Steam to create a party." ); return; }
-	SteamAPICall_t call = steamapicontext->SteamMatchmaking()->CreateLobby( k_ELobbyTypeFriendsOnly, s_MaxParty );
+	SteamAPICall_t call = steamapicontext->SteamMatchmaking()->CreateLobby( k_ELobbyTypePrivate, s_MaxParty );
 	if ( call == k_uAPICallInvalid ) { SetStatus( "Steam could not create a party. Try again." ); return; }
 	m_bPending = true;
 	m_bCancelPending = false;
@@ -67,6 +67,7 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 	m_bPending = false;
 	if ( failed || result->m_eResult != k_EResultOK || !Available() )
 	{
+		m_PendingInvite.Clear();
 		Warning( "Steam party creation: IO failure=%d, result=%d, online=%d\n", failed ? 1 : 0,
 			failed ? -1 : (int)result->m_eResult, Available() ? 1 : 0 );
 		SetStatus( !failed && result->m_eResult == k_EResultAccessDenied ?
@@ -85,6 +86,10 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 		return;
 	}
 	SetStatus( "Party ready. Invite friends using Steam." );
+	if ( m_PendingInvite.IsValid() )
+	{
+		CSteamID friendID = m_PendingInvite; m_PendingInvite.Clear(); InviteFriend( friendID );
+	}
 }
 
 void CHL2MPParty::Join( CSteamID lobby )
@@ -175,6 +180,7 @@ void CHL2MPParty::Leave( bool force )
 	if ( m_Lobby.IsValid() && steamapicontext && steamapicontext->SteamMatchmaking() )
 		steamapicontext->SteamMatchmaking()->LeaveLobby( m_Lobby );
 	m_Lobby.Clear();
+	m_PendingInvite.Clear();
 	m_bAwaitingMetadata = false;
 	SetStatus( m_bPending ? "Cancelling party request..." : "Play solo or create a party to invite friends." );
 }
@@ -188,6 +194,21 @@ void CHL2MPParty::Invite()
 		return;
 	}
 	steamapicontext->SteamFriends()->ActivateGameOverlayInviteDialog( m_Lobby );
+}
+
+void CHL2MPParty::InviteFriend( CSteamID friendID )
+{
+	if ( !Available() || !friendID.IsValid() || m_bPending || HL2MPCoordinator().Busy() || m_bAwaitingMetadata ) return;
+	if ( steamapicontext->SteamFriends()->GetFriendRelationship( friendID ) != k_EFriendRelationshipFriend ) return;
+	if ( !m_Lobby.IsValid() )
+	{
+		m_PendingInvite = friendID; Create();
+		if ( !m_bPending ) m_PendingInvite.Clear();
+		return;
+	}
+	if ( MemberCount() >= s_MaxParty ) { SetStatus( "Your party is full." ); return; }
+	SetStatus( steamapicontext->SteamMatchmaking()->InviteUserToLobby( m_Lobby, friendID ) ?
+		"Invitation sent." : "Steam could not send the invitation. Try again." );
 }
 
 bool CHL2MPParty::IsOwner() const
@@ -253,6 +274,8 @@ CON_COMMAND_F( mm_party_leave, "Leave your Steam party or cancel a pending reque
 
 CON_COMMAND_F( mm_party_status, "Show Steam party state for troubleshooting.", FCVAR_CLIENTDLL )
 {
+	Msg( "Steam AppID: %u, online: %d, friends: %d\n", steamapicontext && steamapicontext->SteamUtils() ? steamapicontext->SteamUtils()->GetAppID() : 0,
+		HL2MPParty().Available() ? 1 : 0, HL2MPParty().Available() ? steamapicontext->SteamFriends()->GetFriendCount( k_EFriendFlagImmediate ) : 0 );
 	Msg( "Party: %llu, members: %d, pending: %d, status: %s\n",
 		( unsigned long long )HL2MPParty().Lobby().ConvertToUint64(), HL2MPParty().MemberCount(),
 		HL2MPParty().Pending() ? 1 : 0, HL2MPParty().Status() );

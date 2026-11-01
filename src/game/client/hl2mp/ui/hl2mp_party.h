@@ -18,6 +18,7 @@ public:
 	void Join( CSteamID lobby );
 	void Leave( bool force = false );
 	void Invite();
+	void InviteFriend( CSteamID friendID );
 	void Tick();
 	bool Available() const;
 	bool Pending() const { return m_bPending; }
@@ -40,6 +41,7 @@ private:
 	bool Compatible() const;
 	void SetStatus( const char *text );
 	CSteamID m_Lobby;
+	CSteamID m_PendingInvite;
 	bool m_bPending;
 	bool m_bCancelPending;
 	bool m_bAwaitingMetadata;

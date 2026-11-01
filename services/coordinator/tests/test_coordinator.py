@@ -381,7 +381,7 @@ class CoordinatorTests(unittest.TestCase):
         departed = self.core.status(self.users[0])["last_match"]
         self.assertEqual((departed["state"], departed["mode"], departed["rating_change"], departed["rating"]), ("left", "casual", 0, None))
         self.core.report_result("eu-1", mid, None)
-        self.assertEqual(self.core.status(self.users[1])["ratings"], {"duel": 1500, "team": 1500})
+        self.assertTrue(all(rating == 1500 for rating in self.core.status(self.users[1])["ratings"].values()))
         summary = self.core.status(self.users[1])["last_match"]
         self.assertEqual((summary["outcome"], summary["mode"], summary["rating_change"], summary["rating"]), ("completed", "casual", 0, None))
         self.assertEqual(self.core.status(self.users[0])["last_match"], departed)

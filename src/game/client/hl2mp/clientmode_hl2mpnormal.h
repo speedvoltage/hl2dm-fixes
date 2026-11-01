@@ -32,6 +32,9 @@ public:
 
 	virtual void	Init();
 	virtual void	Shutdown();
+	void OverrideView( CViewSetup *view ) OVERRIDE;
+	bool ShouldDrawViewModel() OVERRIDE;
+	bool ShouldDrawCrosshair() OVERRIDE;
 	virtual int		GetDeathMessageStartHeight( void );
 	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
 };

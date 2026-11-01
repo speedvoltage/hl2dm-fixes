@@ -1,6 +1,6 @@
 "UnlitGeneric"
 {
-    "$basetexture" "vgui/matchmaking/city17_yard"
+    "$basetexture" "vgui/matchmaking/dm_lockdown"
     "$vertexcolor" "1"
     "$vertexalpha" "1"
     "$ignorez" "1"

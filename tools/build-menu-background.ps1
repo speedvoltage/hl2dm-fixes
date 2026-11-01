@@ -1,10 +1,12 @@
 [CmdletBinding()]
 param(
-    [string]$SdkRoot = 'C:\Program Files (x86)\Steam\steamapps\common\Source SDK Base 2013 Multiplayer'
+    [string]$SdkRoot = 'C:\Program Files (x86)\Steam\steamapps\common\Source SDK Base 2013 Multiplayer',
+    [string]$SourceImage = '',
+    [ValidatePattern('^[a-z0-9_]+$')][string]$TextureName = 'dm_lockdown'
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$source = Join-Path $repoRoot 'assets/menu/city17-yard.png'
+$source = if ($SourceImage) { $SourceImage } else { Join-Path $repoRoot 'assets/menu/dm_lockdown.jpg' }
 $staging = Join-Path $repoRoot 'artifacts/menu-texture'
 $output = Join-Path $repoRoot 'game/mod_hl2mp/materials/vgui/matchmaking'
 New-Item -ItemType Directory -Force -Path $staging, $output | Out-Null
@@ -43,14 +45,14 @@ public static class MenuTextureSource {
     }
 }
 '@
-$tga = Join-Path $staging 'city17_yard.tga'
+$tga = Join-Path $staging ($TextureName + '.tga')
 [MenuTextureSource]::Write($source, $tga)
 @'
 "nolod" "1"
 "nomip" "1"
 "clamps" "1"
 "clampt" "1"
-'@ | Set-Content -LiteralPath (Join-Path $staging 'city17_yard.txt') -Encoding Ascii
+'@ | Set-Content -LiteralPath (Join-Path $staging ($TextureName + '.txt')) -Encoding Ascii
 & (Join-Path $SdkRoot 'bin/x64/vtex.exe') -nopause -nop4 -game (Join-Path $repoRoot 'game/mod_hl2mp') -outdir $output $tga
 if ($LASTEXITCODE -ne 0) { throw 'Menu texture compilation failed.' }
-if (-not (Test-Path -LiteralPath (Join-Path $output 'city17_yard.vtf'))) { throw 'VTEX did not produce the menu texture.' }
+if (-not (Test-Path -LiteralPath (Join-Path $output ($TextureName + '.vtf')))) { throw 'VTEX did not produce the menu texture.' }

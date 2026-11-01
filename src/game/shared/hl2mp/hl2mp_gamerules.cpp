@@ -296,6 +296,7 @@ void CHL2MPRules::Think( void )
 {
 
 #ifndef CLIENT_DLL
+	if ( gpGlobals->eLoadType == MapLoad_Background ) return;
 	
 	CGameRules::Think();
 	if ( HL2MPMatchServerEnabled() && ( !HL2MPMatchServerPlaying() || g_fGameOver ) ) return;

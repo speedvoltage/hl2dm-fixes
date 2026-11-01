@@ -137,7 +137,7 @@ def worker(args):
                     if args.coordinator_outage == "sustained":
                         if not aborted or last["state"] != "cancelled" or last.get("reason") != "The dedicated server could not continue":
                             raise RuntimeError("The Linux native outage guard did not cancel the match")
-                        if last["rating_change"] != 0 or state["ratings"] != {"duel": 1500, "team": 1500}:
+                        if last["rating_change"] != 0 or any(r != 1500 for r in state["ratings"].values()):
                             raise RuntimeError("The cancelled Linux match changed a rating")
                     elif last.get("result") != {"winner": None, "rating_change_team_0": 0}:
                         raise RuntimeError("Linux match did not finish with an unrated casual result")

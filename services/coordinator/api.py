@@ -16,7 +16,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from .core import Coordinator, PROTOCOL, Rejected, digest
+from .core import Coordinator, MAX_PARTY_MEMBERS, PROTOCOL, Rejected, digest
 
 
 @dataclass(frozen=True)
@@ -53,13 +53,13 @@ class Ready(Input):
 
 class PartyLobby(Input):
     lobby_id: str = Field(pattern=r"^[0-9]{1,20}$")
-    members: list[str] = Field(min_length=1, max_length=4)
+    members: list[str] = Field(min_length=1, max_length=MAX_PARTY_MEMBERS)
     party_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     revision: int = Field(ge=0)
 
 
 class Queue(Input):
-    mode: Literal["duel", "team", "casual"]
+    mode: Literal["duel", "team", "team3", "team4", "team5", "casual"]
     region: str = Field(min_length=1, max_length=32, pattern=r"^[a-z0-9-]+$")
     protocol: int
     party_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
@@ -68,6 +68,17 @@ class Queue(Input):
 
 class Confirm(Input):
     accept: bool
+
+
+class CustomMatch(Input):
+    region: str = Field(min_length=1, max_length=32, pattern=r"^[a-z0-9-]+$")
+    map_name: str = Field(min_length=1, max_length=60)
+    team_size: int = Field(ge=0, le=5)
+    time_limit: int = Field(ge=1, le=60)
+    frag_limit: int = Field(ge=0, le=500)
+    protocol: int
+    party_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    revision: int | None = Field(default=None, ge=0)
 
 
 class Heartbeat(Input):
@@ -253,6 +264,11 @@ def create_app(core: Coordinator, settings=Settings(), steam_verifier=verify_ste
     @app.delete("/v1/queue")
     def cancel_queue(actor=Depends(player)):
         core.cancel_queue(actor)
+        return core.status(actor)
+
+    @app.post("/v1/custom/matches")
+    def custom_match(body: CustomMatch, actor=Depends(player)):
+        core.custom_match(actor, **body.model_dump())
         return core.status(actor)
 
     @app.post("/v1/matches/{match_id}/confirm")

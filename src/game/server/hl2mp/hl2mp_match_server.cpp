@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "hl2mp_match_server.h"
+#include "hl2mp_matchmaking_modes.h"
 #include "hl2mp_player.h"
 #include "hl2mp_gamerules.h"
 #include "igamesystem.h"
@@ -63,6 +64,7 @@ public:
 	{
 		m_URL[0] = m_Credential[0] = m_Match[0] = m_Mode[0] = m_Map[0] = m_State[0] = m_Abort[0] = 0;
 		m_Response.SetGameserverFlag();
+		m_TeamSize = 0;
 	}
 	bool Init() OVERRIDE;
 	void LevelInitPostEntity() OVERRIDE { m_LevelReady = true; m_NextHeartbeat = 0; }
@@ -100,6 +102,7 @@ private:
 	HTTPRequestHandle m_Request;
 	double m_NextRequest, m_NextHeartbeat, m_LastContact, m_AdmissionDeadline, m_Countdown, m_ReturnDeadline;
 	int m_Winner;
+	int m_TeamSize;
 	Operation m_Operation;
 	EHANDLE m_Authorizing;
 	Connection m_Clients[MAX_PLAYERS + 1];
@@ -160,7 +163,7 @@ int CMatchServer::Team( CBasePlayer *player )
 {
 	const int index = RosterIndex( player );
 	if ( index < 0 || !Client( player ).admitted ) return TEAM_SPECTATOR;
-	return !Q_strcmp( m_Mode, "team" ) ? ( m_Roster[index].team == 0 ? TEAM_COMBINE : TEAM_REBELS ) : TEAM_UNASSIGNED;
+	return m_TeamSize > 1 || ( !Q_strcmp( m_Mode, "custom" ) && m_TeamSize > 0 ) ? ( m_Roster[index].team == 0 ? TEAM_COMBINE : TEAM_REBELS ) : TEAM_UNASSIGNED;
 }
 
 void CMatchServer::Spawn( CHL2MP_Player *player )
@@ -282,9 +285,10 @@ void CMatchServer::Assignment( KeyValues *match )
 		Q_strncpy( m_Match, id, sizeof( m_Match ) );
 		Q_strncpy( m_Mode, match->GetString( "mode", "" ), sizeof( m_Mode ) );
 		Q_strncpy( m_Map, match->GetString( "map", "" ), sizeof( m_Map ) );
+		m_TeamSize = !Q_strcmp( m_Mode, "custom" ) ? match->GetInt( "rules/team_size", -1 ) : HL2MPMatchTeamSize( m_Mode );
 		char mapFile[96];
 		Q_snprintf( mapFile, sizeof( mapFile ), "maps/%s.bsp", m_Map );
-		if ( ( Q_strcmp( m_Mode, "duel" ) && Q_strcmp( m_Mode, "team" ) && Q_strcmp( m_Mode, "casual" ) ) ||
+		if ( HL2MPMatchTeamSize( m_Mode ) < 0 || m_TeamSize < 0 || m_TeamSize > 5 ||
 			!SafeText( m_Map, 1, 60 ) || !engine->IsMapValid( mapFile ) )
 			Q_strncpy( m_Abort, "server_error", sizeof( m_Abort ) );
 		Msg( "Matchmaking server: reservation %s (%s).\n", m_Match, m_Mode );
@@ -312,9 +316,14 @@ void CMatchServer::Assignment( KeyValues *match )
 	m_Roster = roster;
 	if ( m_Abort[0] || Q_strcmp( m_State, "starting" ) || m_Prepared ) return;
 	m_Prepared = true;
-	ConVarRef( "mp_teamplay" ).SetValue( !Q_strcmp( m_Mode, "team" ) ? 1 : 0 );
-	ConVarRef( "mp_timelimit" ).SetValue( !Q_strcmp( m_Mode, "duel" ) ? 10 : 20 );
-	ConVarRef( "mp_fraglimit" ).SetValue( !Q_strcmp( m_Mode, "team" ) ? 50 : 0 );
+	const bool custom = !Q_strcmp( m_Mode, "custom" );
+	const int minutes = custom ? match->GetInt( "rules/time_limit", 0 ) : !Q_strcmp( m_Mode, "duel" ) ? 10 : 20;
+	const int frags = custom ? match->GetInt( "rules/frag_limit", -1 ) : m_TeamSize > 1 ? 50 : 0;
+	if ( minutes < 1 || minutes > 60 || frags < 0 || frags > 500 ) { Q_strncpy( m_Abort, "server_error", sizeof( m_Abort ) ); return; }
+	ConVarRef( "mp_teamplay" ).SetValue( m_TeamSize > 1 || ( custom && m_TeamSize > 0 ) ? 1 : 0 );
+	ConVarRef( "mp_timelimit" ).SetValue( minutes );
+	ConVarRef( "mp_fraglimit" ).SetValue( frags );
+	Msg( "Matchmaking server: rules team_size=%d, minutes=%d, frags=%d.\n", m_TeamSize, minutes, frags );
 	ConVarRef( "sv_cheats" ).SetValue( 0 );
 	ConVarRef( "mp_restartgame" ).SetValue( 0 );
 	m_LevelReady = false;
@@ -427,10 +436,10 @@ void CMatchServer::Finished()
 		if ( index >= 0 && Client( player ).admitted ) m_Roster[index].frags = player->FragCount();
 	}
 	m_Winner = -1;
-	if ( Q_strcmp( m_Mode, "casual" ) )
+	if ( HL2MPMatchTeamSize( m_Mode ) > 0 )
 	{
 		int scores[2] = { 0, 0 };
-		if ( !Q_strcmp( m_Mode, "team" ) )
+		if ( m_TeamSize > 1 )
 		{
 			scores[0] = GetGlobalTeam( TEAM_COMBINE )->GetScore();
 			scores[1] = GetGlobalTeam( TEAM_REBELS )->GetScore();
@@ -499,7 +508,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 			m_Countdown = 0;
 			if ( m_AdmissionDeadline && now >= m_AdmissionDeadline ) Q_strncpy( m_Abort, "players_missing", sizeof( m_Abort ) );
 		}
-		if ( m_Playing && Q_strcmp( m_Mode, "casual" ) )
+		if ( m_Playing && HL2MPMatchTeamSize( m_Mode ) > 0 )
 		{
 			bool missing[2] = { false, false };
 			FOR_EACH_VEC( m_Roster, i ) if ( now - m_Roster[i].lastSeen > 90 ) missing[m_Roster[i].team] = true;
@@ -538,7 +547,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 		Send( READY, path, "{}" );
 		return;
 	}
-	if ( !Q_strcmp( m_State, "active" ) && !Q_strcmp( m_Mode, "casual" ) )
+	if ( !Q_strcmp( m_State, "active" ) && HL2MPMatchTeamSize( m_Mode ) == 0 )
 	{
 		FOR_EACH_VEC( m_Roster, i )
 		{

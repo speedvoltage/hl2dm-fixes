@@ -521,6 +521,14 @@ FodyWeavers.xsd
 /game/mod_hl2mp/downloadlists/
 /game/mod_hl2mp/download/
 /game/mod_hl2mp/maps/graphs/
+# Official maps copied from a local Steam installation by prepare-content.ps1.
+/game/mod_hl2mp/maps/dm_lockdown.bsp
+/game/mod_hl2mp/maps/dm_overwatch.bsp
+/game/mod_hl2mp/maps/dm_powerhouse.bsp
+/game/mod_hl2mp/maps/dm_resistance.bsp
+/game/mod_hl2mp/maps/dm_runoff.bsp
+/game/mod_hl2mp/maps/dm_steamlab.bsp
+/game/mod_hl2mp/maps/dm_underpass.bsp
 /game/mod_hl2mp/save/
 /game/mod_hl2mp/textwindow_temp.html
 /game/mod_hl2mp/stats.txt

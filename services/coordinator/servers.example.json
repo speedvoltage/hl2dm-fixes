@@ -5,6 +5,6 @@
     "address": "127.0.0.1",
     "port": 27015,
     "region": "eu",
-    "modes": ["duel", "team", "casual"]
+    "modes": ["duel", "team", "team3", "team4", "team5", "casual", "custom"]
   }
 ]

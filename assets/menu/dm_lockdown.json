@@ -1,0 +1,8 @@
+{
+  "source": "Native screenshot of Valve's dm_lockdown map, rendered by Source SDK Base 2013 Multiplayer",
+  "camera_origin": [-2860, 2500, 140],
+  "camera_angles": [9, 210, 0],
+  "field_of_view": 75,
+  "purpose": "Loading-screen and static-menu fallback; the main menu normally renders the live map",
+  "generated_image": false
+}
