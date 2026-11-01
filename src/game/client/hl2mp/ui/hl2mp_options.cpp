@@ -114,7 +114,7 @@ class CSettingRow : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CSettingRow, vgui::EditablePanel );
 public:
-    CSettingRow( vgui::Panel *parent, int index, const Setting &value ) : BaseClass( parent, "Setting" ), m_Index( index ), m_Combo( NULL ), m_Slider( NULL ), m_Text( NULL ), m_Amount( NULL ), m_Scale( 1 ), m_InitialSlider( 0 ), m_InitialValue( value.draft )
+    CSettingRow( vgui::Panel *parent, int index, const Setting &value ) : BaseClass( parent, "Setting" ), m_Index( index ), m_Combo( NULL ), m_Slider( NULL ), m_Text( NULL ), m_Amount( NULL ), m_Scale( 1 ), m_InitialSlider( 0 ), m_InitialValue( value.draft ), m_Highlighted( false ), m_Available( value.available )
     {
         SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label );
         if ( def.kind == SLIDER )
@@ -198,7 +198,7 @@ public:
     void Style( float scale, vgui::HFont font, vgui::HFont small )
     {
         m_Scale = scale; SetTall( int( 52 * scale ) ); m_Label->SetFont( font );
-        m_Label->SetFgColor( Color( 206, 214, 213, 255 ) );
+        m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
         if ( m_Text ) { m_Text->SetFont( font ); m_Text->SetBgColor( Color( 24, 31, 34, 160 ) ); m_Text->SetFgColor( Color( 236, 237, 230, 255 ) ); m_Text->SetBorder( NULL ); }
         if ( m_Amount ) { m_Amount->SetFont( small ); m_Amount->SetFgColor( Color( 221, 227, 225, 255 ) ); }
@@ -218,6 +218,13 @@ public:
     }
     void OnThink() OVERRIDE
     {
+        BaseClass::OnThink();
+        const bool highlighted = m_Available && ( HL2MPControlHighlighted( this ) || DropdownOpen() );
+        if ( highlighted != m_Highlighted )
+        {
+            m_Highlighted = highlighted;
+            m_Label->SetFgColor( highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) ); Repaint();
+        }
         if ( m_Amount )
         {
             const float value = atof( Value().String() );
@@ -226,11 +233,12 @@ public:
     }
     void PaintBackground() OVERRIDE
     {
-        vgui::surface()->DrawSetColor( Color( 212, 223, 225, 32 ) ); vgui::surface()->DrawFilledRect( 0, GetTall() - 1, GetWide(), GetTall() );
+        HL2MPPaintSettingRow( this, m_Highlighted, m_Scale );
     }
 private:
     int m_Index; CHL2MPDropdown *m_Combo; CHL2MPSettingsSlider *m_Slider; vgui::TextEntry *m_Text;
     vgui::Label *m_Label, *m_Amount; float m_Scale; int m_InitialSlider; CUtlString m_InitialValue;
+    bool m_Highlighted, m_Available;
 };
 
 class CBindingRow : public vgui::EditablePanel
@@ -261,7 +269,7 @@ public:
     }
     void PaintBackground() OVERRIDE
     {
-        vgui::surface()->DrawSetColor( Color( 212, 223, 225, 32 ) ); vgui::surface()->DrawFilledRect( 0, GetTall() - 1, GetWide(), GetTall() );
+        HL2MPPaintSettingRow( this, HL2MPControlHighlighted( this ), m_Scale );
     }
 private:
     float m_Scale; vgui::Label *m_Label; CHL2MPSettingsButton *m_Keys[2];

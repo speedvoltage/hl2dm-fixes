@@ -9,6 +9,7 @@
 #include "hl2mp_serverbrowser.h"
 #include "GameUI/IGameUI.h"
 #include "ienginevgui.h"
+#include "inetchannelinfo.h"
 #include "filesystem.h"
 #include "vgui/IVGui.h"
 #include "vgui/ISurface.h"
@@ -212,12 +213,14 @@ public:
     void PerformLayout() OVERRIDE;
     void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE;
     void PaintBackground() OVERRIDE;
+    void OnThink() OVERRIDE;
     void OnTick() OVERRIDE;
     void OnCommand( const char *command ) OVERRIDE;
+    void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE;
 private:
     void SetPlayPage( bool play );
     void UpdateFriends();
-    enum { PLAY, RESUME, SERVERS, OPTIONS, QUIT, BACK, DUEL, TEAM, TEAM3, TEAM4, TEAM5, CASUAL, CUSTOM,
+    enum { PLAY, RESUME, SERVERS, OPTIONS, DISCONNECT, QUIT, BACK, DUEL, TEAM, TEAM3, TEAM4, TEAM5, CASUAL, CUSTOM,
         FIND, CREATE_PARTY, INVITE, LEAVE, READY, ACCEPT, CANCEL, BROWSE, BUTTON_COUNT };
     IGameUI *m_GameUI;
     CMatchmakingButton *m_Buttons[BUTTON_COUNT];
@@ -289,9 +292,9 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     KeyValues *listSettings = new KeyValues( "ListSettings" ); listSettings->SetInt( "autohide_scrollbar", 1 );
     m_PartyList->ApplySettings( listSettings ); m_FriendsList->ApplySettings( listSettings ); listSettings->deleteThis();
     m_PartyList->SetVerticalBufferPixels( 0 ); m_FriendsList->SetVerticalBufferPixels( 2 );
-    const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "QUIT", "<  BACK",
+    const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "DISCONNECT", "QUIT", "<  BACK",
         "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "BROWSE SERVERS" };
-    const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "Quit", "back",
+    const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "disconnect", "Quit", "back",
         "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "OpenServerBrowser" };
     for ( int i = 0; i < BUTTON_COUNT; ++i )
     {
@@ -370,13 +373,14 @@ void CHL2MPMainMenu::PerformLayout()
     for ( int i = 0; i < ARRAYSIZE( details ); ++i ) details[i]->SetFont( m_DetailFont );
     m_Title->SetBounds( left, int( ( m_PlayPage ? 24 : 96 ) * s ), mainW, int( 100 * s ) );
     m_Subtitle->SetBounds( left, int( 66 * s ), mainW, int( 30 * s ) ); m_Tag->SetBounds( left, int( 194 * s ), mainW, int( 24 * s ) );
-    int navY = int( 274 * s ); const int navOrder[] = { RESUME, PLAY, SERVERS, OPTIONS, QUIT };
+    int navY = int( 274 * s ); const int navOrder[] = { RESUME, PLAY, SERVERS, OPTIONS, DISCONNECT, QUIT };
     for ( int i = 0; i < ARRAYSIZE( navOrder ); ++i )
     {
         int id = navOrder[i]; m_Buttons[id]->SetBounds( left - int( 14 * s ), navY, MIN( mainW, int( 460 * s ) ), int( 46 * s ) );
-        if ( id != RESUME || m_InGameLayout ) navY += int( 49 * s );
+        if ( ( id != RESUME && id != DISCONNECT ) || m_InGameLayout ) navY += int( 49 * s );
     }
     m_Buttons[BACK]->SetBounds( left - int( 14 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
+    if ( m_PlayPage ) m_Buttons[RESUME]->SetBounds( left + mainW - int( 190 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
     m_PlayHeading->SetBounds( left, int( 161 * s ), mainW, int( 38 * s ) );
     const int cardGap = int( 10 * s ), cardW = ( mainW - cardGap * 2 ) / 3;
     for ( int i = 0; i < 6; ++i ) m_Buttons[DUEL + i]->SetBounds( left + ( i % 3 ) * ( cardW + cardGap ), int( ( 210 + ( i / 3 ) * 76 ) * s ), cardW, int( 66 * s ) );
@@ -414,7 +418,7 @@ void CHL2MPMainMenu::PerformLayout()
     m_NewsTitle->SetBounds( left + pad, m_NewsY + int( 38 * s ), m_NewsW - pad * 2, int( 32 * s ) );
     m_NewsBody->SetBounds( left + pad, m_NewsY + int( 70 * s ), m_NewsW - pad * 2, int( 48 * s ) );
     m_ResultHeading->SetBounds( left, h - int( 92 * s ), mainW, int( 24 * s ) ); m_ResultDetails->SetBounds( left, h - int( 65 * s ), mainW, int( 42 * s ) );
-    for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( s, i <= QUIT ? m_NavFont : i >= DUEL && i <= CUSTOM ? m_CardFont : i >= BROWSE ? m_DetailFont : m_BodyFont, m_DetailFont, true );
+    for ( int i = 0; i < BUTTON_COUNT; ++i ) m_Buttons[i]->SetMenuScale( s, i == RESUME && m_PlayPage ? m_BodyFont : i <= QUIT ? m_NavFont : i >= DUEL && i <= CUSTOM ? m_CardFont : i >= BROWSE ? m_DetailFont : m_BodyFont, m_DetailFont, true );
     m_NextFriends = 0;
 }
 
@@ -487,6 +491,7 @@ void CHL2MPMainMenu::OnTick()
     else if ( mm_menu_background.GetBool() && !m_BackgroundRequested && filesystem->FileExists( "maps/dm_lockdown.bsp", "GAME" ) && Plat_FloatTime() - m_IdleSince > 3 )
     {
         m_BackgroundRequested = true;
+        Msg( "Menu background: starting the local dm_lockdown scene, not joining a match.\n" );
         engine->ClientCmd_Unrestricted( "maxplayers 1; map_background dm_lockdown" );
     }
     const char *activeMode = coordinator.Mode();
@@ -501,12 +506,13 @@ void CHL2MPMainMenu::OnTick()
     {
         m_ScreenWidth = w; m_ScreenHeight = h; m_GroupedLayout = grouped; m_InGameLayout = inGame; InvalidateLayout( true );
     }
-    for ( int i = PLAY; i <= QUIT; ++i ) m_Buttons[i]->SetVisible( !m_PlayPage && ( i != RESUME || inGame ) );
-    m_Buttons[BACK]->SetVisible( m_PlayPage ); m_Buttons[BACK]->SetEnabled( inGame || !coordinator.Busy() ); m_Buttons[BACK]->SetText( inGame ? "RESUME GAME" : "<  BACK" );
+    for ( int i = PLAY; i <= QUIT; ++i ) m_Buttons[i]->SetVisible( !m_PlayPage && ( ( i != RESUME && i != DISCONNECT ) || inGame ) );
+    m_Buttons[RESUME]->SetVisible( inGame );
+    m_Buttons[BACK]->SetVisible( m_PlayPage );
     m_Subtitle->SetVisible( !m_PlayPage ); m_Tag->SetVisible( !m_PlayPage ); m_PlayHeading->SetVisible( m_PlayPage );
     m_ModeDescription->SetVisible( m_PlayPage ); m_QueueStatus->SetVisible( m_PlayPage );
     const bool custom = m_SelectedMode == 6;
-    const bool canQueue = !party.Pending() && ( !grouped || ( party.IsOwner() && coordinator.PartySynchronized() ) ) && !coordinator.Busy();
+    const bool canQueue = !inGame && !party.Pending() && ( !grouped || ( party.IsOwner() && coordinator.PartySynchronized() ) ) && !coordinator.Busy();
     for ( int i = DUEL; i <= CUSTOM; ++i )
     {
         m_Buttons[i]->SetVisible( m_PlayPage );
@@ -521,7 +527,8 @@ void CHL2MPMainMenu::OnTick()
     m_Buttons[ACCEPT]->SetVisible( m_PlayPage && ( readyCheck || coordinator.HasServer() ) ); m_Buttons[ACCEPT]->SetText( coordinator.HasServer() ? "JOIN / RECONNECT" : "ACCEPT MATCH" );
     m_Buttons[CANCEL]->SetVisible( m_PlayPage && ( coordinator.Searching() || coordinator.HasReadyCheck() || coordinator.CanLeaveCasual() ) ); m_Buttons[CANCEL]->SetText( coordinator.CanLeaveCasual() ? "LEAVE MATCH" : "CANCEL / DECLINE" );
     m_QueueStatus->SetText( coordinator.Status() ); m_ResultHeading->SetText( coordinator.ResultHeading() ); m_ResultDetails->SetText( coordinator.ResultDetails() );
-    if ( custom && !coordinator.Busy() && coordinator.ResultHeading()[0] ) m_QueueStatus->SetText( VarArgs( "%s  %s", coordinator.ResultHeading(), coordinator.ResultDetails() ) );
+    if ( inGame && !coordinator.Busy() ) m_QueueStatus->SetText( "Disconnect from your current game before starting another match." );
+    else if ( custom && !coordinator.Busy() && coordinator.ResultHeading()[0] ) m_QueueStatus->SetText( VarArgs( "%s  %s", coordinator.ResultHeading(), coordinator.ResultDetails() ) );
     else if ( !coordinator.Busy() && limit > 0 && party.MemberCount() > limit ) m_QueueStatus->SetText( VarArgs( "This queue allows parties of up to %d. Choose Custom to play together.", limit ) );
     m_ResultHeading->SetVisible( m_PlayPage && !custom ); m_ResultDetails->SetVisible( m_PlayPage && !custom );
     m_Buttons[BROWSE]->SetVisible( m_PlayPage && custom && !coordinator.Busy() );
@@ -569,9 +576,11 @@ void CHL2MPMainMenu::OnTick()
 void CHL2MPMainMenu::OnCommand( const char *command )
 {
     if ( !Q_strcmp( command, "play" ) ) SetPlayPage( true );
-    else if ( !Q_strcmp( command, "back" ) )
+    else if ( !Q_strcmp( command, "back" ) ) SetPlayPage( false );
+    else if ( !Q_strcmp( command, "disconnect" ) )
     {
-        if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() ) m_GameUI->SendMainMenuCommand( "ResumeGame" ); else SetPlayPage( false );
+        if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() ) engine->ClientCmd_Unrestricted( "disconnect" );
+        SetPlayPage( false );
     }
     else if ( !Q_strncmp( command, "mode_", 5 ) )
     {
@@ -606,6 +615,36 @@ void CHL2MPMainMenu::OnCommand( const char *command )
     }
 }
 
+void CHL2MPMainMenu::OnThink()
+{
+    BaseClass::OnThink();
+    // GameUI's native menu is itself a popup, so our override must remain a
+    // popup for keyboard focus. Keep the console above it when a menu click
+    // raises this fullscreen panel; otherwise only console child widgets show.
+    if ( !IsVisible() ) return;
+    vgui::VPANEL console = 0;
+    for ( int i = 0; i < vgui::surface()->GetPopupCount(); ++i )
+    {
+        const vgui::VPANEL panel = vgui::surface()->GetPopup( i );
+        if ( panel == GetVPanel() )
+        {
+            if ( console ) vgui::surface()->BringToFront( console );
+            break;
+        }
+        if ( vgui::ipanel()->IsVisible( panel ) && !Q_strcmp( vgui::ipanel()->GetName( panel ), "GameConsole" ) ) console = panel;
+    }
+}
+
+void CHL2MPMainMenu::OnKeyCodeTyped( vgui::KeyCode code )
+{
+    if ( code == KEY_ESCAPE && m_PlayPage && !m_Options->IsVisible() && !m_Browser->IsVisible() )
+    {
+        for ( int i = 0; i < 4; ++i ) if ( m_CustomControls[i]->IsDropdownVisible() ) { m_CustomControls[i]->HideMenu(); return; }
+        SetPlayPage( false ); return;
+    }
+    BaseClass::OnKeyCodeTyped( code );
+}
+
 void HL2MPMainMenu_Create()
 {
 	if ( s_Menu || !mm_menu.GetBool() ) return;
@@ -628,4 +667,7 @@ CON_COMMAND_F( mm_menu_status, "Show menu and background state.", FCVAR_CLIENTDL
     Msg( "Menu: in_game=%d, background=%d, connected=%d, loading=%d, level=%s, local_player=%d\n",
         engine->IsInGame(), engine->IsLevelMainMenuBackground(), engine->IsConnected(), engine->IsDrawingLoadingImage(), engine->GetLevelName(), player ? 1 : 0 );
     if ( player ) Msg( "Menu player: %.1f %.1f %.1f\n", player->GetAbsOrigin().x, player->GetAbsOrigin().y, player->GetAbsOrigin().z );
+    INetChannelInfo *channel = engine->GetNetChannelInfo();
+    Msg( "Connection: %s; address=%s, loopback=%d\n", engine->IsLevelMainMenuBackground() ? "local menu background (not a match)" : engine->IsInGame() ? "game session" : "no active game",
+        channel ? channel->GetAddress() : "none", channel && channel->IsLoopback() );
 }

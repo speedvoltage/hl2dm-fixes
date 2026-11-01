@@ -1,18 +1,44 @@
 #ifndef HL2MP_MENUCONTROLS_H
 #define HL2MP_MENUCONTROLS_H
 #include "vgui/ISurface.h"
+#include "vgui/IInput.h"
+#include "vgui/IPanel.h"
 #include "vgui_controls/ComboBox.h"
 #include "vgui_controls/MenuItem.h"
 #include "vgui_controls/Slider.h"
 #include "vgui_controls/ScrollBar.h"
 #include "vgui_controls/ScrollBarSlider.h"
 
+// Use VGUI's hit-tested panel, so a console/dialog covering a control cannot
+// trigger its hover state just because the mouse shares the same coordinates.
+inline bool HL2MPControlHighlighted( vgui::Panel *control )
+{
+    if ( !control->IsEnabled() ) return false;
+    const vgui::VPANEL panel = control->GetVPanel();
+    const vgui::VPANEL hover = vgui::input()->GetMouseOver(), focus = vgui::input()->GetFocus();
+    return hover == panel || ( hover && vgui::ipanel()->HasParent( hover, panel ) ) ||
+        focus == panel || ( focus && vgui::ipanel()->HasParent( focus, panel ) );
+}
+
+inline void HL2MPPaintSettingRow( vgui::Panel *row, bool highlighted, float scale )
+{
+    if ( highlighted )
+    {
+        vgui::surface()->DrawSetColor( Color( 215, 225, 225, 22 ) );
+        vgui::surface()->DrawFilledRect( 0, 0, row->GetWide(), row->GetTall() );
+        vgui::surface()->DrawSetColor( Color( 235, 164, 79, 255 ) );
+        vgui::surface()->DrawFilledRect( 0, 0, MAX( 2, int( 2 * scale ) ), row->GetTall() );
+    }
+    vgui::surface()->DrawSetColor( Color( 212, 223, 225, highlighted ? 70 : 32 ) );
+    vgui::surface()->DrawFilledRect( 0, row->GetTall() - 1, row->GetWide(), row->GetTall() );
+}
+
 // Shared by matchmaking and Options so native popups use the same visual language.
 class CHL2MPDropdown : public vgui::ComboBox
 {
     DECLARE_CLASS_SIMPLE( CHL2MPDropdown, vgui::ComboBox );
 public:
-    CHL2MPDropdown( vgui::Panel *parent, const char *name ) : BaseClass( parent, name, 8, false ), m_Font( 0 ), m_Scale( 1 )
+    CHL2MPDropdown( vgui::Panel *parent, const char *name ) : BaseClass( parent, name, 8, false ), m_Font( 0 ), m_Scale( 1 ), m_Highlighted( false )
     {
         SetDropdownButtonVisible( false ); SetPaintBorderEnabled( false );
     }
@@ -23,7 +49,7 @@ public:
     }
     void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
     {
-        BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL );
+        BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); m_Highlighted = false;
         SetFgColor( Color( 229, 232, 229, 255 ) ); SetBgColor( Color( 25, 31, 34, 180 ) );
         SetSelectionBgColor( Color( 25, 31, 34, 180 ) ); SetSelectionTextColor( Color( 229, 232, 229, 255 ) );
         GetComboButton()->SetArmedSound( NULL ); GetComboButton()->SetDepressedSound( NULL ); GetComboButton()->SetReleasedSound( NULL );
@@ -32,6 +58,19 @@ public:
     void OnCursorEntered() OVERRIDE
     {
         BaseClass::OnCursorEntered(); if ( IsEnabled() ) vgui::surface()->PlaySound( "ui/buttonrollover.wav" );
+    }
+    void OnThink() OVERRIDE
+    {
+        BaseClass::OnThink();
+        const bool highlighted = IsEnabled() && ( HL2MPControlHighlighted( this ) || IsDropdownVisible() );
+        if ( highlighted != m_Highlighted )
+        {
+            m_Highlighted = highlighted;
+            const Color text = highlighted ? Color( 245, 184, 104, 255 ) : Color( 229, 232, 229, 255 );
+            const Color background = highlighted ? Color( 53, 60, 61, 235 ) : Color( 25, 31, 34, 180 );
+            SetFgColor( text ); SetSelectionTextColor( text ); SetBgColor( background ); SetSelectionBgColor( background );
+            Repaint();
+        }
     }
     void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE
     {
@@ -63,11 +102,12 @@ public:
     {
         BaseClass::Paint();
         const int x = GetWide() - int( 15 * m_Scale ), y = GetTall() / 2, d = MAX( 3, int( 4 * m_Scale ) );
-        vgui::surface()->DrawSetColor( IsEnabled() ? Color( 225, 229, 226, 255 ) : Color( 104, 111, 113, 255 ) );
+        vgui::surface()->DrawSetColor( !IsEnabled() ? Color( 104, 111, 113, 255 ) : m_Highlighted ? Color( 245, 184, 104, 255 ) : Color( 225, 229, 226, 255 ) );
         vgui::surface()->DrawLine( x - d, y - 2, x, y + d - 2 ); vgui::surface()->DrawLine( x, y + d - 2, x + d, y - 2 );
+        if ( m_Highlighted ) vgui::surface()->DrawFilledRect( 0, GetTall() - 1, GetWide(), GetTall() );
     }
 private:
-    vgui::HFont m_Font; float m_Scale;
+    vgui::HFont m_Font; float m_Scale; bool m_Highlighted;
 };
 
 class CHL2MPSettingsButton : public vgui::Button
@@ -114,7 +154,7 @@ public:
         int x, y, w, h, lo, hi; GetTrackRect( x, y, w, h ); GetNobPos( lo, hi );
         const int center = GetTall() / 2;
         vgui::surface()->DrawSetColor( Color( 91, 102, 106, 180 ) ); vgui::surface()->DrawFilledRect( x, center - 2, x + w, center + 2 );
-        vgui::surface()->DrawSetColor( IsEnabled() ? Color( 220, 224, 219, 255 ) : Color( 104, 111, 113, 255 ) );
+        vgui::surface()->DrawSetColor( !IsEnabled() ? Color( 104, 111, 113, 255 ) : HL2MPControlHighlighted( this ) ? Color( 245, 184, 104, 255 ) : Color( 220, 224, 219, 255 ) );
         vgui::surface()->DrawFilledRect( lo, center - 5, hi, center + 5 );
     }
 };
