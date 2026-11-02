@@ -45,14 +45,6 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	pPlayer->Spawn();
 	if ( gpGlobals->eLoadType == MapLoad_Background )
 	{
-		// Keep the server's visibility origin at the menu camera as well.
-		pPlayer->SetAbsOrigin( Vector( -2860, 2500, 140 ) );
-		pPlayer->SnapEyeAngles( QAngle( 9, 210, 0 ) );
-		pPlayer->SetMoveType( MOVETYPE_NOCLIP );
-		pPlayer->AddFlag( FL_FROZEN | FL_GODMODE );
-		pPlayer->AddEffects( EF_NODRAW );
-		pPlayer->m_Local.m_iHideHUD = HIDEHUD_ALL;
-		pPlayer->m_Local.m_bDrawViewmodel = false;
 		return;
 	}
 

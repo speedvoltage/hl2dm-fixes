@@ -343,6 +343,30 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::Spawn(void)
 {
+	if ( gpGlobals->eLoadType == MapLoad_Background )
+	{
+		// Source needs a local player for the camera/PVS, but the menu must not
+		// run the gameplay spawn, equip weapons, or create player physics.
+		Precache();
+		SetModel( "models/combine_soldier.mdl" );
+		SharedSpawn();
+		SetSimulatedEveryTick( true );
+		SetAnimatedEveryTick( true );
+		AddFlag( FL_CLIENT | FL_FROZEN );
+		InitFogController();
+		BaseClass::ChangeTeam( TEAM_SPECTATOR );
+		State_Transition( STATE_OBSERVER_MODE );
+		SetObserverMode( OBS_MODE_FIXED );
+		SetMoveType( MOVETYPE_NONE );
+		SetAbsOrigin( Vector( -2860, 2500, 140 ) );
+		SnapEyeAngles( QAngle( 9, 210, 0 ) );
+		SetViewOffset( vec3_origin );
+		AddEffects( EF_NODRAW | EF_NOSHADOW );
+		m_Local.m_iHideHUD = HIDEHUD_ALL;
+		m_Local.m_bDrawViewmodel = false;
+		return;
+	}
+
 	ResetLadderMove();
 
 	m_flNextModelChangeTime = 0.0f;
