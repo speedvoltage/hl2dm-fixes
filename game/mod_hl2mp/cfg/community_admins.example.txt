@@ -1,0 +1,7 @@
+// Copy this file to cfg/community_admins.txt on your dedicated server.
+// Use SteamID64, never player names or IPs. Example: "76561198000000000" "1"
+// Changes take effect on the next request. Listen-server hosts are automatic admins.
+// In game: Pause menu > Server Controls, or bind a key to community_menu.
+"CommunityAdmins"
+{
+}

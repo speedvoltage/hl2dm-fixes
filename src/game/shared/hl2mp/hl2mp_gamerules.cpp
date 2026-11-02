@@ -29,6 +29,7 @@
 	#include "iscorer.h"
 	#include "hl2mp_player.h"
 	#include "hl2mp_match_server.h"
+	#include "hl2mp_community.h"
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
@@ -61,9 +62,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 
 	#ifdef CLIENT_DLL
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
+		RecvPropBool( RECVINFO( m_bCommunityServer ) ),
 		RecvPropTime( RECVINFO( m_flGameStartTime ) ),
 	#else
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
+		SendPropBool( SENDINFO( m_bCommunityServer ) ),
 		SendPropTime( SENDINFO( m_flGameStartTime ) ),
 	#endif
 
@@ -199,6 +202,7 @@ CHL2MPRules::CHL2MPRules()
 	}
 
 	m_bTeamPlayEnabled = teamplay.GetBool();
+	m_bCommunityServer = !HL2MPMatchServerEnabled() && gpGlobals->eLoadType != MapLoad_Background;
 	m_flIntermissionEndTime = 0.0f;
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();
@@ -1041,6 +1045,11 @@ CAmmoDef *GetAmmoDef()
 
 void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 {
+	if ( message && !Q_strcmp( message->GetName(), "HL2MPCommunity" ) )
+	{
+		HL2MPCommunityRequest( ToBasePlayer( CBaseEntity::Instance( entity ) ), message );
+		return;
+	}
 	if ( message && !Q_strcmp( message->GetName(), "HL2MPMatchJoin" ) )
 	{
 		HL2MPMatchServerJoin( ToBasePlayer( CBaseEntity::Instance( entity ) ), message );

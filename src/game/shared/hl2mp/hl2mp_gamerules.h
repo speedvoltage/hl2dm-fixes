@@ -120,6 +120,8 @@ public:
 	void CleanUpMap();
 	void CheckRestartGame();
 	void RestartGame();
+	bool IsCommunityServer() const { return m_bCommunityServer; }
+	CNetworkVar( bool, m_bCommunityServer );
 
 	void OnNavMeshLoad( void );
 	

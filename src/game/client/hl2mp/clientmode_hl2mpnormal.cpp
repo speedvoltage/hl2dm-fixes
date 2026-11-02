@@ -24,6 +24,7 @@
 #include "clienteffectprecachesystem.h"
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_loading.h"
+#include "hl2mp_community.h"
 #include "view_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -158,6 +159,7 @@ void ClientModeHL2MPNormal::Init()
 {
 	BaseClass::Init();
 	HL2MPMainMenu_Create();
+	HL2MPCommunity_Init();
 
 	// Load up the combine control panel scheme
 	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/CombinePanelScheme.res", "CombineScheme" );

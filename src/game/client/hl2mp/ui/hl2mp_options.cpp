@@ -75,6 +75,7 @@ static const SettingDef s_Settings[] = {
 };
 struct BindingDef { const char *label, *command, *key; };
 static const BindingDef s_Bindings[] = {
+    { "Community server controls", "community_menu", "m" },
     { "Move forward", "+forward", "w" }, { "Move backward", "+back", "s" },
     { "Move left", "+moveleft", "a" }, { "Move right", "+moveright", "d" },
     { "Jump", "+jump", "SPACE" }, { "Duck", "+duck", "CTRL" },

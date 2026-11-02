@@ -5,6 +5,10 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "hl2mp_community.h"
+#include "istudiorender.h"
+#include "model_types.h"
+#include "materialsystem/imaterialsystem.h"
 #include "vcollide_parse.h"
 #include "c_hl2mp_player.h"
 #include "view.h"
@@ -345,7 +349,26 @@ int C_HL2MP_Player::DrawModel( int flags )
 	if ( !m_bReadyToDraw )
 		return 0;
 
-    return BaseClass::DrawModel(flags);
+	extern ConVar cl_bright_player_models;
+	IMaterial *overrideMaterial = NULL; OverrideType_t overrideType;
+	modelrender->GetMaterialOverride( &overrideMaterial, &overrideType );
+	if ( cl_bright_player_models.GetBool() && HL2MPCommunity_Available() && IsAlive() &&
+		( flags & STUDIO_RENDER ) && !( flags & ( STUDIO_SHADOWDEPTHTEXTURE | STUDIO_SSAODEPTHTEXTURE ) ) && !overrideMaterial )
+	{
+		// Keep every original material/texture and normal depth testing. Only
+		// replace the lighting for this player draw, never the world or weapons.
+		CMatRenderContextPtr context( materials );
+		static Vector ambient[6] = { Vector( 1, 1, 1 ), Vector( 1, 1, 1 ), Vector( 1, 1, 1 ),
+			Vector( 1, 1, 1 ), Vector( 1, 1, 1 ), Vector( 1, 1, 1 ) };
+		context->SetAmbientLight( 1, 1, 1 );
+		g_pStudioRender->SetAmbientLightColors( ambient ); g_pStudioRender->SetLocalLights( 0, NULL );
+		modelrender->SuppressEngineLighting( true );
+		int result = BaseClass::DrawModel( flags );
+		modelrender->SuppressEngineLighting( false );
+		modelrender->SetupLighting( GetAbsOrigin() );
+		return result;
+	}
+	return BaseClass::DrawModel( flags );
 }
 
 void C_HL2MP_Player::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )

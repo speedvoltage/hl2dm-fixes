@@ -58,5 +58,7 @@ void RegisterUserMessages( void )
 
 #ifdef HL2MP
 	usermessages->Register( "DamageHit", 16 );
+	usermessages->Register( "CommunityState", -1 );
+	usermessages->Register( "CommunityMap", -1 );
 #endif
 }
