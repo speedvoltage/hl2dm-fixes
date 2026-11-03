@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
+#include "ui/hl2mp_hud_customization.h"
 #include "hl2mp/ui/hl2mp_messages.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -173,7 +174,7 @@ bool CHudDeathNotice::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 void CHudDeathNotice::SetColorForNoticePlayer( int iTeamNumber, float flAlpha )
 {
-	surface()->DrawSetTextColor( GetFadedColor( GameResources()->GetTeamColor( iTeamNumber ), flAlpha ) );
+	surface()->DrawSetTextColor( GetFadedColor( HL2MPHudCustomEnabled() ? HL2MPHudStyle( HUD_KILLFEED ).foreground : GameResources()->GetTeamColor( iTeamNumber ), flAlpha ) );
 }
 
 void CHudDeathNotice::GetIconSize( CHudTexture *icon, int iMaxTall, int &iWide, int &iTall )
@@ -277,8 +278,21 @@ void CHudDeathNotice::Paint()
 		return;
 
 	RetireExpiredDeathNotices();
+	if ( HL2MPHudCustomEnabled() && !HL2MPHudStyle( HUD_KILLFEED ).visible ) return;
+	int customX = 0, customY = 0, customW = 0, customH = 0;
+	const vgui::HFont originalFont = m_hTextFont;
+	const float originalLineHeight = m_flLineHeight;
+	const Color originalBackground = m_clrBackground, originalIcon = m_clrIcon;
+	if ( HL2MPHudCustomEnabled() )
+	{
+		HL2MPHudBounds( HUD_KILLFEED, ScreenWidth(), ScreenHeight(), customX, customY, customW, customH );
+		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_KILLFEED );
+		m_hTextFont = HL2MPHudFont( HUD_KILLFEED, MAX( 10, int( 16 * ScreenHeight() / 720.0f * style.textScale ) ) );
+		m_flLineHeight = surface()->GetFontTall( m_hTextFont ) + 10; m_clrBackground = style.background; m_clrIcon = style.foreground;
+	}
 
 	int yStart = GetClientModeHL2MPNormal()->GetDeathMessageStartHeight();
+	if ( HL2MPHudCustomEnabled() ) yStart = customY;
 
 	surface()->DrawSetTextFont( m_hTextFont );
 	int iLineTall = MAX( 1, (int)m_flLineHeight );
@@ -338,6 +352,11 @@ void CHudDeathNotice::Paint()
 		int y = yStart + ( iLineTall + iLineSpacing ) * i;
 		int yText = y + ( iLineTall - iTextTall ) / 2;
 		int x = m_bRightJustify ? GetWide() - iTotalWide - iScreenPadding : iScreenPadding;
+		if ( HL2MPHudCustomEnabled() )
+		{
+			x = MAX( 0, customX + customW - iTotalWide );
+			if ( y + iLineTall > customY + customH ) break;
+		}
 
 		Vertex_t background[NUM_BACKGROUND_COORD];
 		GetBackgroundPolygonVerts( x, y, x + iTotalWide, y + iLineTall, background );
@@ -396,6 +415,8 @@ void CHudDeathNotice::Paint()
 		surface()->DrawSetTextFont( m_hTextFont );
 		surface()->DrawUnicodeString( victim, FONT_DRAW_NONADDITIVE );
 	}
+	m_hTextFont = originalFont; m_flLineHeight = originalLineHeight;
+	m_clrBackground = originalBackground; m_clrIcon = originalIcon;
 }
 
 //-----------------------------------------------------------------------------

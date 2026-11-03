@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "hl2mp_messages.h"
+#include "hl2mp_hud_customization.h"
 #include "cdll_client_int.h"
 #include "hl2mp_options.h"
 #include "hl2mp_menucontrols.h"
@@ -27,6 +28,8 @@ struct SettingDef
     Page page; Kind kind; const char *label, *cvar, *choices; float low, high, step;
 };
 static const SettingDef s_Settings[] = {
+    { AUDIO, CHOICE, "#HL2MP_VoteSounds", "cl_vote_sounds", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_VoteAnimations", "cl_vote_animations", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { DISPLAY, RESOLUTION, "#HL2MP_UI_d4055fafa379", "", "", 0, 0, 0 },
     { DISPLAY, WINDOW_MODE, "#HL2MP_UI_8e84f008a644", "", "#HL2MP_UI_1f8c000f9634=0|#HL2MP_UI_576290d91ca2=1", 0, 0, 0 },
     { DISPLAY, SLIDER, "#HL2MP_UI_7047dfe63f23", "mat_monitorgamma", "", 1.6f, 2.6f, 0.01f },
@@ -76,6 +79,9 @@ static const SettingDef s_Settings[] = {
 };
 struct BindingDef { const char *label, *command, *key; };
 static const BindingDef s_Bindings[] = {
+    { "#HL2MP_VoteYesBinding", "vote_yes", "F1" },
+    { "#HL2MP_VoteNoBinding", "vote_no", "F2" },
+    { "#HL2MP_HudEditor", "hud_editor", "" },
     { "#HL2MP_UI_68d2943ecb14", "community_menu", "m" },
     { "#HL2MP_UI_03244d3bb2b0", "+forward", "w" }, { "#HL2MP_UI_3a1635febaec", "+back", "s" },
     { "#HL2MP_UI_6c94221edd26", "+moveleft", "a" }, { "#HL2MP_UI_8d60decd44f3", "+moveright", "d" },
@@ -98,7 +104,7 @@ static const BindingDef s_Bindings[] = {
     { "#HL2MP_UI_f48570f44b23", "+showscores", "TAB" }, { "#HL2MP_UI_9bdbc177e89d", "+voicerecord", "k" },
     { "#HL2MP_UI_0acb3af87661", "messagemode", "y" }, { "#HL2MP_UI_87ba4c564992", "messagemode2", "u" },
     { "#HL2MP_UI_7be5610a028c", "impulse 201", "t" }, { "#HL2MP_UI_029320ad166c", "jpeg", "F5" },
-    { "#HL2MP_UI_2ef15ac2866f", "toggleconsole", "`" }, { "#HL2MP_UI_9e716cb3bff3", "changeteam", "F2" }
+    { "#HL2MP_UI_2ef15ac2866f", "toggleconsole", "`" }, { "#HL2MP_UI_9e716cb3bff3", "changeteam", "F3" }
 };
 
 static bool SameValue( const char *a, const char *b, bool numeric = true )
@@ -375,7 +381,7 @@ private:
     CUtlString m_BindingOriginal[BUTTON_CODE_LAST], m_BindingDraft[BUTTON_CODE_LAST];
     CUtlVector<CSettingRow *> m_Rows; CUtlVector<CBindingRow *> m_KeyRows;
     vgui::PanelListPanel *m_List; vgui::Label *m_Heading, *m_Brand, *m_Status, *m_Hint, *m_PreviewTitle, *m_PreviewBody;
-    CHL2MPSettingsButton *m_Back, *m_Tabs[5], *m_Subtabs[2], *m_Apply, *m_Discard, *m_Reset;
+    CHL2MPSettingsButton *m_Back, *m_HudEditor, *m_Tabs[5], *m_Subtabs[2], *m_Apply, *m_Discard, *m_Reset;
     CPlayerPreview *m_PlayerPreview;
     COptionsOverlay *m_Overlay; vgui::HFont m_Font, m_SmallFont, m_TitleFont, m_BrandFont;
     Page m_Page; float m_Scale; int m_Width, m_Height, m_Confirmation, m_CaptureAction, m_CaptureSlot;
@@ -391,6 +397,7 @@ CHL2MPOptions::CHL2MPOptions( vgui::Panel *parent ) : BaseClass( parent, "Option
     m_PlayerPreview = new CPlayerPreview( this );
     m_PreviewTitle = Label( this, "#HL2MP_UI_e40d2cc4d4b8" ); m_PreviewBody = Label( this, "#HL2MP_UI_3f22979928a9" );
     m_Back = new CHL2MPSettingsButton( this, "#HL2MP_UI_24c76252a90c", "back" );
+    m_HudEditor = new CHL2MPSettingsButton( this, "#HL2MP_HudEditor", "hud_editor" );
     const char *tabs[] = { "#HL2MP_UI_65b2f9ec331f", "#HL2MP_UI_859e89a729c2", "#HL2MP_UI_1fd5f5a768d3", "#HL2MP_UI_e3afec8a791d", "#HL2MP_UI_d730947f78c9" };
     for ( int i = 0; i < 5; ++i ) m_Tabs[i] = new CHL2MPSettingsButton( this, tabs[i], VarArgs( "tab_%d", i ) );
     for ( int i = 0; i < 2; ++i ) m_Subtabs[i] = new CHL2MPSettingsButton( this, "", VarArgs( "sub_%d", i ) );
@@ -488,6 +495,7 @@ void CHL2MPOptions::PerformLayout()
     m_Brand->SetFont( m_BrandFont ); m_Brand->SetFgColor( Color( 233, 236, 229, 255 ) ); m_Brand->SetBounds( margin + int( 110 * s ), int( 18 * s ), int( 300 * s ), int( 40 * s ) );
     m_Heading->SetFont( m_TitleFont ); m_Heading->SetFgColor( Color( 229, 232, 225, 255 ) ); m_Heading->SetBounds( w - margin - int( 150 * s ), int( 22 * s ), int( 150 * s ), int( 34 * s ) );
     m_Back->SetFont( m_SmallFont ); m_Back->SetBounds( margin - int( 10 * s ), int( 20 * s ), int( 95 * s ), int( 35 * s ) );
+    m_HudEditor->SetFont( m_SmallFont ); m_HudEditor->SetBounds( int( w * .43f ), int( 20 * s ), int( 200 * s ), int( 35 * s ) );
     const int tabWidth[] = { 110, 110, 100, 230, 160 }; const int sum = 710; int x = tabX;
     const int category = m_Page <= ADVANCED ? 0 : m_Page == AUDIO ? 1 : m_Page == GAME ? 2 : m_Page <= BINDINGS ? 3 : 4;
     for ( int i = 0; i < 5; ++i ) { int width = tabW * tabWidth[i] / sum; m_Tabs[i]->SetFont( m_SmallFont ); m_Tabs[i]->SetBounds( x, int( 78 * s ), width, int( 35 * s ) ); m_Tabs[i]->Active( category == i ); x += width; }
@@ -625,6 +633,7 @@ void CHL2MPOptions::OnCaptureKey( int code )
 }
 void CHL2MPOptions::OnCommand( const char *command )
 {
+    if ( !Q_strcmp( command, "hud_editor" ) ) { HL2MPHudEditor_Open(); return; }
     if ( !Q_strcmp( command, "refresh_fonts" ) ) { m_Width = 0; InvalidateLayout( true ); return; }
     if ( !Q_strcmp( command, "confirm_discard" ) && m_Confirmation == 2 )
     {
@@ -700,6 +709,11 @@ void CHL2MPOptions::OnTick()
 
 vgui::Panel *HL2MPOptions_Create( vgui::Panel *parent ) { return new CHL2MPOptions( parent ); }
 void HL2MPOptions_Open( vgui::Panel *panel ) { static_cast<CHL2MPOptions *>( panel )->Open(); }
+bool HL2MPOptions_RestoreFocus()
+{
+    if ( !s_Options || !s_Options->IsVisible() ) return false;
+    s_Options->RequestFocus(); engine->ClientCmd_Unrestricted( "gameui_preventescape" ); return true;
+}
 CON_COMMAND_F( mm_options_status, "Show Options page and pending changes.", FCVAR_CLIENTDLL )
 {
     if ( s_Options ) Msg( "Options: visible=%d page=%d dirty=%d\n", s_Options->IsVisible(), s_Options->CurrentPage(), s_Options->Dirty() );

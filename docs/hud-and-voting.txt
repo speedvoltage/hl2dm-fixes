@@ -1,0 +1,44 @@
+HUD editor
+Open Options > HUD Editor, or bind hud_editor in Keyboard / Mouse.
+Drag elements and their corner handles; the right-hand controls set position,
+size, text size, font, foreground/background colors and opacity. Relevant
+elements also offer labels, values, bars and crosshair controls.
+Classic, Compact and Minimal are built-in layouts. Five custom slots are saved
+locally. Apply writes cfg/hud_layout.res; Cancel restores the opening layout.
+User layouts and presets are excluded from release packages.
+HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
+
+Voting
+F1 / F2 default to Yes / No. Existing unrelated bindings are preserved; both
+commands are available in Keyboard / Mouse. Vote sounds and animations have
+their own settings. Server defaults are in cfg/voting.example.cfg.
+Kick votes require three authenticated human players. Team games use teammates;
+FFA uses all active humans. Spectators and bots cannot vote. A strict majority
+of the original electorate must vote Yes. Leaving does not reduce the threshold.
+The caller votes Yes; the target votes No. A ballot lasts 30 seconds, with a
+120-second caller cooldown. Listen hosts and configured admins are protected.
+Successful kicks block the authenticated Steam identity for five minutes.
+Community servers can choose 1-30 minutes; reserved matchmaking uses five.
+Ban state is held for the life of the server process, including map changes.
+
+End-of-map voting opens three seconds after the round ends, lasts 20 seconds,
+then displays the winner for five seconds before changing maps. Candidates are
+up to five unique installed maps from mapcyclefile, excluding the current map.
+There is no extension. Ties select randomly among the highest counts. No votes
+uses the ordinary mapcycle. Reserved matchmaking servers retain the coordinator's
+assigned map and return-to-lobby flow; their player kick votes remain available.
+
+Scoreboard
+Hold the scoreboard key, right-click to enable the mouse, then right-click a row.
+Actions include Steam profile, separate chat/voice mutes, mute both and kick vote.
+Red speaker/chat icons show local mute state; menu checks show which channel is
+muted. Mutes are session-local, cleared on disconnect and never written to disk.
+Reporting is disabled until the mod receives its own Steam AppID.
+
+Validation
+tools/test-vote-rules.cpp exercises the production majority, initial ballot,
+Steam/userid/team matching, map tie, timer and ban-limit helpers.
+Native Windows checks cover HUD dragging/save, map selection/result/change and
+scoreboard mute channels/indicators/disconnect cleanup. A full kick/rejoin test
+with three distinct authenticated Steam accounts is still required.
+New labels have localization keys; untranslated additions use English fallback.

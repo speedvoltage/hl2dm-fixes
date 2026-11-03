@@ -10,6 +10,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "voice_status.h"
+#ifdef HL2MP
+#include "hl2mp/hl2mp_local_mutes.h"
+#endif
 #include "r_efx.h"
 #include <vgui_controls/TextImage.h>
 #include <vgui/MouseCode.h>
@@ -381,7 +384,7 @@ void CVoiceStatus::UpdateServerState(bool bForce)
 			if ( !engine->GetPlayerInfo( playerIndex + 1, &pi ) )
 				continue;
 
-			if ( m_BanMgr.GetPlayerBan( pi.guid ) )
+			if ( IsPlayerBlocked( playerIndex + 1 ) )
 			{
 				banMask |= 1 << i;
 			}
@@ -498,12 +501,16 @@ void SetOrUpdateBounds(
 //-----------------------------------------------------------------------------
 bool CVoiceStatus::IsPlayerBlocked(int iPlayer)
 {
+#ifdef HL2MP
+	return ( HL2MPLocalMuteFlags( iPlayer ) & HL2MP_MUTE_VOICE ) != 0;
+#else
 	player_info_t pi;
 
 	if ( !engine->GetPlayerInfo( iPlayer, &pi ) )
 		return false;
 
 	return m_BanMgr.GetPlayerBan( pi.guid );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -551,6 +558,11 @@ bool CVoiceStatus::IsLocalPlayerSpeaking( void )
 //-----------------------------------------------------------------------------
 void CVoiceStatus::SetPlayerBlockedState(int iPlayer, bool blocked)
 {
+#ifdef HL2MP
+	HL2MPSetLocalMute( iPlayer, ( HL2MPLocalMuteFlags( iPlayer ) & HL2MP_MUTE_CHAT ) | ( blocked ? HL2MP_MUTE_VOICE : 0 ) );
+	UpdateServerState( true );
+	return;
+#endif
 	if (voice_clientdebug.GetInt())
 	{
 		Msg( "CVoiceStatus::SetPlayerBlockedState part 1\n" );

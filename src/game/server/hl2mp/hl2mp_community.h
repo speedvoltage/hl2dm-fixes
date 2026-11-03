@@ -3,4 +3,5 @@
 class CBasePlayer;
 class KeyValues;
 void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request );
+bool HL2MPCommunityIsProtected( CBasePlayer *player );
 #endif

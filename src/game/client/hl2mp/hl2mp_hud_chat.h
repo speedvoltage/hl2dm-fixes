@@ -69,6 +69,7 @@ public:
 	int				GetChatInputOffset( void );
 
 	virtual Color	GetClientColor( int clientIndex );
+	Color GetTextColorForClient( TextColor color, int clientIndex ) OVERRIDE;
 
 private:
 	enum WindowDragMode

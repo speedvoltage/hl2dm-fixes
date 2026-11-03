@@ -40,7 +40,7 @@ bool IsCommunity()
 
 bool IsAdmin( CBasePlayer *player )
 {
-    if ( !player || player->IsFakeClient() || !IsCommunity() ) return false;
+    if ( !player || player->IsFakeClient() ) return false;
     if ( !engine->IsDedicatedServer() )
     {
         INetChannelInfo *net = engine->GetPlayerNetInfo( player->entindex() );
@@ -128,6 +128,8 @@ CHL2MP_Player *Target( int userID )
     return NULL;
 }
 }
+
+bool HL2MPCommunityIsProtected( CBasePlayer *player ) { return IsAdmin( player ); }
 
 void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
 {

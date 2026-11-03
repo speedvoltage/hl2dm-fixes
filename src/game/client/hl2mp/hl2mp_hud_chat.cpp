@@ -6,6 +6,7 @@
 
 #include "cbase.h"
 #include "hl2mp_hud_chat.h"
+#include "ui/hl2mp_hud_customization.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
 #include "text_message.h"
@@ -155,7 +156,12 @@ void CHudChat::OnTick( void )
 	vgui::surface()->GetScreenSize( screenWide, screenTall );
 
 	const bool active = GetMessageMode() != MM_NONE;
-	if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall || active != m_bLastActive )
+	static HL2MPHudElementStyle previousStyle = {};
+	static bool previousCustom = false;
+	const bool custom = HL2MPHudCustomEnabled();
+	const bool styleChanged = previousCustom != custom || memcmp( &previousStyle, &HL2MPHudStyle( HUD_CHAT ), sizeof( previousStyle ) ) != 0;
+	if ( styleChanged ) { previousStyle = HL2MPHudStyle( HUD_CHAT ); previousCustom = custom; m_bWindowBoundsInitialized = false; }
+	if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall || active != m_bLastActive || styleChanged )
 	{
 		if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall )
 		{
@@ -171,6 +177,11 @@ void CHudChat::OnTick( void )
 	if ( m_pFiltersButton )
 	{
 		m_pFiltersButton->SetVisible( active );
+	}
+	if ( custom && GetChatHistory() )
+	{
+		GetChatHistory()->SetBgColor( HL2MPHudStyle( HUD_CHAT ).background );
+		GetChatHistory()->SetAlpha( HL2MPHudStyle( HUD_CHAT ).visible || active ? 255 : 0 );
 	}
 }
 
@@ -388,6 +399,11 @@ Color CHudChat::GetClientColor( int clientIndex )
 
 	return g_ColorYellow;
 }
+Color CHudChat::GetTextColorForClient( TextColor color, int clientIndex )
+{
+	if ( HL2MPHudCustomEnabled() && color == COLOR_NORMAL ) return HL2MPHudStyle( HUD_CHAT ).foreground;
+	return BaseClass::GetTextColorForClient( color, clientIndex );
+}
 void CHudChat::UpdateLayout( void )
 {
 	if ( !m_pChatInput || !GetChatHistory() )
@@ -416,6 +432,21 @@ void CHudChat::UpdateLayout( void )
 	if ( !m_bWindowBoundsInitialized )
 	{
 		RestoreWindowBounds( screenWide, screenTall, scale );
+	}
+	if ( HL2MPHudCustomEnabled() && m_iWindowDragMode == WINDOW_DRAG_NONE )
+	{
+		int x, y, w, h; HL2MPHudBounds( HUD_CHAT, screenWide, screenTall, x, y, w, h );
+		if ( GetMessageMode() == MM_NONE ) SetBounds( x, y, w, h );
+		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_CHAT );
+		GetChatHistory()->SetFont( HL2MPHudFont( HUD_CHAT, MAX( 10, int( 16 * screenTall / 720.0f * style.textScale ) ) ) );
+		GetChatHistory()->SetBgColor( style.background ); GetChatHistory()->SetFgColor( style.foreground );
+		GetChatHistory()->SetAlpha( style.visible || GetMessageMode() != MM_NONE ? 255 : 0 );
+	}
+	else if ( !HL2MPHudCustomEnabled() )
+	{
+		GetChatHistory()->SetFont( vgui::scheme()->GetIScheme( GetScheme() )->GetFont( "ChatFont", true ) );
+		GetChatHistory()->SetFgColor( Color( 255, 255, 255, 255 ) );
+		GetChatHistory()->SetAlpha( 255 );
 	}
 
 	int panelWide, panelTall;

@@ -11,6 +11,14 @@
 #include "c_team.h"
 #include "c_playerresource.h"
 #include "hl2mp_gamerules.h"
+#include "hl2mp/hl2mp_local_mutes.h"
+#include "hl2mp_vote.h"
+#include "voice_status.h"
+#include "steam/steam_api.h"
+#include "vgui/IInput.h"
+#include "vgui_controls/Menu.h"
+#include "vgui_controls/MenuItem.h"
+#include "ienginevgui.h"
 
 #include <KeyValues.h>
 #include <tier1/strtools.h>
@@ -23,6 +31,106 @@
 #include <vgui_controls/SectionedListPanel.h>
 
 using namespace vgui;
+static CHL2MPClientScoreBoardDialog *s_Scoreboard = NULL;
+class CPlayerAction : public MenuItem
+{
+    DECLARE_CLASS_SIMPLE( CPlayerAction, MenuItem );
+public:
+    CPlayerAction( Menu *menu, const char *text, const char *command, Panel *target, bool checkable ) : BaseClass( menu, command, text, NULL, checkable )
+    { SetCommand( command ); AddActionSignalTarget( target ); }
+    void ApplySchemeSettings( IScheme *scheme ) OVERRIDE
+    {
+        BaseClass::ApplySchemeSettings( scheme );
+        SetDefaultColor( Color( 235, 235, 230, 255 ), Color( 30, 30, 30, 255 ) );
+        SetArmedColor( Color( 255, 255, 255, 255 ), Color( 225, 108, 28, 255 ) );
+        SetDepressedColor( Color( 255, 255, 255, 255 ), Color( 225, 108, 28, 255 ) );
+        SetDisabledFgColor1( Color( 125, 125, 125, 255 ) ); SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
+        SetArmedSound( "ui/buttonrollover.wav" ); SetDepressedSound( "ui/buttonclick.wav" ); SetReleasedSound( NULL );
+    }
+};
+
+bool HL2MPScoreboardMouseInput( int down, int key )
+{
+    if ( key != MOUSE_RIGHT || !s_Scoreboard || !s_Scoreboard->IsVisible() ) return false;
+    if ( down ) s_Scoreboard->EnableMouse();
+    return true;
+}
+void CHL2MPClientScoreBoardDialog::EnableMouse()
+{
+    MakePopup( false ); SetCursor( dc_arrow );
+    SetMouseInputEnabled( true ); m_pPlayerList->SetMouseInputEnabled( true );
+    for ( int i = 0; i < m_pPlayerList->GetChildCount(); ++i ) m_pPlayerList->GetChild( i )->SetMouseInputEnabled( true );
+    SetKeyBoardInputEnabled( false ); MoveToFront();
+}
+void CHL2MPClientScoreBoardDialog::OnThink()
+{
+    BaseClass::OnThink();
+    // Some engine builds consume mouse bindings before ClientMode::KeyInput.
+    // Poll the physical button as well, just as the base scoreboard polls Tab.
+    if ( IsVisible() && !IsMouseInputEnabled() && !enginevgui->IsGameUIVisible() && !engine->Con_IsVisible() && input()->IsMouseDown( MOUSE_RIGHT ) ) EnableMouse();
+}
+void CHL2MPClientScoreBoardDialog::ShowPanel( bool show )
+{
+    if ( !show && m_Context ) m_Context->SetVisible( false );
+    BaseClass::ShowPanel( show );
+}
+void CHL2MPClientScoreBoardDialog::OnPlayerContext( int itemID )
+{
+    KeyValues *row = m_pPlayerList->GetItemData( itemID ); if ( !row ) return;
+    player_info_t p; int index = row->GetInt( "playerIndex" ); if ( !engine->GetPlayerInfo( index, &p ) ) return;
+    m_ContextIndex = index; m_ContextUser = p.userID; m_pPlayerList->SetSelectedItem( itemID );
+    if ( !m_Context ) m_Context = new vgui::Menu( this, "PlayerActions" );
+    m_Context->DeleteAllItems(); m_Context->SetBgColor( Color( 30, 30, 30, 255 ) ); m_Context->SetBorder( NULL ); m_Context->SetMinimumWidth( 230 );
+    const char *labels[] = { "#HL2MP_PlayerProfile", "#HL2MP_MuteChat", "#HL2MP_MuteVoice", "#HL2MP_MuteBoth", "#HL2MP_Unmute", "#HL2MP_VoteKick", "#HL2MP_ReportPlayer" };
+    const char *commands[] = { "profile", "mute_chat", "mute_voice", "mute_both", "unmute", "votekick", "report" };
+    int flags = HL2MPLocalMuteFlags( index );
+    for ( int i = 0; i < ARRAYSIZE( labels ); ++i )
+    {
+        vgui::MenuItem *item = new CPlayerAction( m_Context, HL2MPText( labels[i] ), commands[i], this, i == 1 || i == 2 );
+        int id = m_Context->AddMenuItem( item );
+        if ( i == 1 || i == 2 ) m_Context->SetMenuItemChecked( id, ( flags & ( i == 1 ? HL2MP_MUTE_CHAT : HL2MP_MUTE_VOICE ) ) != 0 );
+        item->SetEnabled( i == 0 ? p.friendsID != 0 : i == 6 ? false : index != engine->GetLocalPlayer() && ( i != 4 || flags != 0 ) && ( i != 5 || !p.fakeplayer ) );
+    }
+    int x, y; input()->GetCursorPos( x, y ); m_Context->SetPos( x, y ); m_Context->SetVisible( true ); m_Context->MoveToFront();
+}
+void CHL2MPClientScoreBoardDialog::OnCommand( const char *command )
+{
+    player_info_t p;
+    if ( !engine->GetPlayerInfo( m_ContextIndex, &p ) || p.userID != m_ContextUser ) { if ( m_Context ) m_Context->SetVisible( false ); return; }
+    if ( !Q_strcmp( command, "profile" ) )
+    {
+        if ( p.friendsID && steamapicontext && steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
+        { CSteamID id( p.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual ); steamapicontext->SteamFriends()->ActivateGameOverlayToUser( "steamid", id ); }
+    }
+    else if ( !Q_strcmp( command, "votekick" ) ) HL2MPVoteUI_CallKick( m_ContextUser );
+    else if ( !Q_strncmp( command, "mute_", 5 ) || !Q_strcmp( command, "unmute" ) )
+    {
+        int flags = HL2MPLocalMuteFlags( m_ContextIndex );
+        if ( !Q_strcmp( command, "mute_chat" ) ) flags ^= HL2MP_MUTE_CHAT;
+        else if ( !Q_strcmp( command, "mute_voice" ) ) flags ^= HL2MP_MUTE_VOICE;
+        else if ( !Q_strcmp( command, "mute_both" ) ) flags = 3; else flags = 0;
+        HL2MPSetLocalMute( m_ContextIndex, flags ); if ( GetClientVoiceMgr() ) GetClientVoiceMgr()->SetPlayerBlockedState( m_ContextIndex, ( flags & HL2MP_MUTE_VOICE ) != 0 );
+    }
+    if ( m_Context ) m_Context->SetVisible( false );
+}
+void CHL2MPClientScoreBoardDialog::Paint()
+{
+    BaseClass::Paint();
+    // Red speaker/chat glyphs are drawn separately from names and team colors.
+    for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+    {
+        int flags = HL2MPLocalMuteFlags( i ), row = FindItemIDForPlayerIndex( i ); if ( !flags || row < 0 ) continue;
+        int x, y, w, h; if ( !m_pPlayerList->GetItemBounds( row, x, y, w, h ) ) continue;
+        int listX, listY; m_pPlayerList->GetPos( listX, listY );
+        y += listY + h / 2; x = listX - 13;
+        if ( y < listY || y >= listY + m_pPlayerList->GetTall() ) continue;
+        surface()->DrawSetColor( Color( 245, 70, 65, 255 ) );
+        if ( flags & HL2MP_MUTE_VOICE )
+        { surface()->DrawFilledRect( x - 6, y - 3, x - 2, y + 4 ); surface()->DrawLine( x - 2, y - 3, x + 3, y - 7 ); surface()->DrawLine( x + 3, y - 7, x + 3, y + 7 ); surface()->DrawLine( x + 3, y + 7, x - 2, y + 3 ); surface()->DrawLine( x - 7, y + 7, x + 6, y - 7 ); }
+        if ( flags & HL2MP_MUTE_CHAT )
+        { surface()->DrawOutlinedRect( x - 6, y + 9, x + 5, y + 16 ); surface()->DrawLine( x - 7, y + 16, x + 6, y + 8 ); }
+    }
+}
 
 // id's of sections used in the scoreboard
 enum EScoreboardSections
@@ -85,6 +193,7 @@ public:
 CHL2MPClientScoreBoardDialog::CHL2MPClientScoreBoardDialog( IViewPort *pViewPort ) :
 	CClientScoreBoardDialog( pViewPort ),
 	m_pServerName( NULL ),
+	m_Context( NULL ), m_ContextUser( 0 ), m_ContextIndex( 0 ),
 	m_bgColor( 18, 19, 18, 238 ),
 	m_borderColor( 92, 88, 78, 190 ),
 	m_spectatorTextColor( 148, 151, 146, 255 ),
@@ -96,6 +205,8 @@ CHL2MPClientScoreBoardDialog::CHL2MPClientScoreBoardDialog( IViewPort *pViewPort
 	m_pServerName = dynamic_cast<Label *>( FindChildByName( "ServerName" ) );
 
 	ListenForGameEvent( "server_cvar" );
+	s_Scoreboard = this;
+	m_pPlayerList->AddActionSignalTarget( this );
 }
 
 //-----------------------------------------------------------------------------
@@ -103,11 +214,13 @@ CHL2MPClientScoreBoardDialog::CHL2MPClientScoreBoardDialog( IViewPort *pViewPort
 //-----------------------------------------------------------------------------
 CHL2MPClientScoreBoardDialog::~CHL2MPClientScoreBoardDialog()
 {
+	if ( s_Scoreboard == this ) s_Scoreboard = NULL;
 }
 
 void CHL2MPClientScoreBoardDialog::Update()
 {
 	BaseClass::Update();
+	if ( IsMouseInputEnabled() ) for ( int i = 0; i < m_pPlayerList->GetChildCount(); ++i ) m_pPlayerList->GetChild( i )->SetMouseInputEnabled( true );
 	UpdateMatchInfo();
 	InvalidateLayout();
 }
@@ -693,8 +806,8 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 		return;
 	}
 
-	m_pPlayerList->ClearSelection();
-	int selectedRow = -1;
+	int selectedRow = IsMouseInputEnabled() ? m_pPlayerList->GetSelectedItem() : -1;
+	if ( !IsMouseInputEnabled() ) m_pPlayerList->ClearSelection();
 
 	const bool teamplay = HL2MPRules() && HL2MPRules()->IsTeamplay();
 	IGameResources *resources = GameResources();
@@ -740,7 +853,7 @@ void CHL2MPClientScoreBoardDialog::UpdatePlayerInfo()
 
 		m_pPlayerList->SetItemFgColor( itemID, playerColor );
 		m_pPlayerList->SetItemBgColor( itemID, Color( 0, 0, 0, 0 ) );
-		if ( playerIndex == localPlayer->entindex() )
+		if ( !IsMouseInputEnabled() && playerIndex == localPlayer->entindex() )
 		{
 			selectedRow = itemID;
 		}

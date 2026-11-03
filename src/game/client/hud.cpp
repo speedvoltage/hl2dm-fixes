@@ -11,6 +11,9 @@
 // implementation of CHud class
 //
 #include "cbase.h"
+#ifdef HL2MP
+#include "hl2mp/ui/hl2mp_hud_customization.h"
+#endif
 #include "hud_macros.h"
 #include "history_resource.h"
 #include "iinput.h"
@@ -287,6 +290,9 @@ void CHudElement::SetHiddenBits( int iBits )
 //-----------------------------------------------------------------------------
 bool CHudElement::ShouldDraw( void )
 {
+#ifdef HL2MP
+	if ( HL2MPHudReplaces( GetName() ) ) return false;
+#endif
 	bool bShouldDraw = ( !gHUD.IsHidden( m_iHiddenBits ) );
 
 	if ( bShouldDraw )

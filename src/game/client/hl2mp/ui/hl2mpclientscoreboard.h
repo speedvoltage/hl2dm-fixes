@@ -16,6 +16,7 @@
 namespace vgui
 {
 class Label;
+class Menu;
 }
 
 //-----------------------------------------------------------------------------
@@ -32,6 +33,9 @@ public:
 
 	void Update() OVERRIDE;
 	void FireGameEvent( IGameEvent *event ) OVERRIDE;
+	void ShowPanel( bool show ) OVERRIDE;
+	void OnCommand( const char *command ) OVERRIDE;
+	void EnableMouse();
 
 protected:
 	// scoreboard overrides
@@ -45,6 +49,9 @@ protected:
 	void PaintBorder() OVERRIDE;
 	void ApplySchemeSettings( vgui::IScheme *pScheme ) OVERRIDE;
 	void PerformLayout() OVERRIDE;
+	void Paint() OVERRIDE;
+	void OnThink() OVERRIDE;
+	MESSAGE_FUNC_INT( OnPlayerContext, "ItemContextMenu", itemID );
 
 private:
 	void AddHeader() OVERRIDE; // add the start header of the scoreboard
@@ -64,11 +71,15 @@ private:
 	};
 
 	vgui::Label *m_pServerName;
+	vgui::Menu *m_Context;
+	int m_ContextUser, m_ContextIndex;
 	// rounded corners
 	Color m_bgColor;
 	Color					 m_borderColor;
 	Color m_spectatorTextColor;
 	Color m_dividerColor;
 };
+
+bool HL2MPScoreboardMouseInput( int down, int key );
 
 #endif // CHL2MPCLIENTSCOREBOARDDIALOG_H

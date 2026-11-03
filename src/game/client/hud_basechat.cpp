@@ -6,6 +6,9 @@
 //=============================================================================//
 
 #include "cbase.h"
+#ifdef HL2MP
+#include "hl2mp/hl2mp_local_mutes.h"
+#endif
 #include "hud_basechat.h"
 
 #include <vgui/IScheme.h>
@@ -1797,6 +1800,10 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 			return;
 	}
 
+	// HL2DM exposes independent, session-local voice and text controls.
+#ifdef HL2MP
+	if ( HL2MPLocalMuteFlags( iPlayerIndex ) & HL2MP_MUTE_CHAT ) return;
+#else
 	// If a player is muted for voice, also mute them for text because jerks gonna jerk.
 	if ( cl_mute_all_comms.GetBool() && iPlayerIndex != 0 )
 	{
@@ -1804,6 +1811,7 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 			return;
 	}
 
+#endif
 	if ( !cl_enable_text_chat.GetBool() && ( iPlayerIndex != 0 ) )
 		return;
 

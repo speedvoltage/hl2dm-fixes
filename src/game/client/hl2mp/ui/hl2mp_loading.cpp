@@ -253,6 +253,7 @@ public:
             char text[1024]; V_UnicodeToUTF8( label->GetWString( "text", L"" ), text, sizeof( text ) );
             if ( Q_stristr( text, "Matchmaking_" ) ) SetPanelText( info, HL2MPMatchReasonToken( text ) );
             else if ( Q_stristr( text, "Removed_by_server_admin" ) ) SetPanelText( info, "#HL2MP_AdminRemoved" );
+            else if ( Q_stristr( text, "HL2MP_VoteRemoved" ) ) SetPanelText( info, "#HL2MP_VoteRemoved" );
         }
         m_ErrorDialog = error;
     }

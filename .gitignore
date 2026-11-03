@@ -535,3 +535,5 @@ FodyWeavers.xsd
 /game/mod_hl2mp/cfg/serverbrowser_blocked.vdf
 /game/mod_hl2mp/cfg/community_admins.txt
 /game/mod_hl2mp/cfg/banned_user.cfg
+/game/mod_hl2mp/cfg/hud_layout.res
+/game/mod_hl2mp/cfg/hud_profile_*.res

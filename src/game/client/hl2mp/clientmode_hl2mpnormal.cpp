@@ -27,6 +27,8 @@
 #include "hl2mp_loading.h"
 #include "hl2mp_messages.h"
 #include "hl2mp_community.h"
+#include "hl2mp_vote.h"
+#include "hl2mp_hud_customization.h"
 #include "view_shared.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -167,6 +169,8 @@ void ClientModeHL2MPNormal::Init()
 	HL2MPMainMenu_Create();
 	HL2MPCommunity_Init();
 	HL2MPIntegrity_Init();
+	HL2MPHudCustomization_Init();
+	HL2MPVoteUI_Init();
 
 	// Load up the combine control panel scheme
 	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/CombinePanelScheme.res", "CombineScheme" );
@@ -178,8 +182,15 @@ void ClientModeHL2MPNormal::Init()
 
 void ClientModeHL2MPNormal::LevelInit( const char *map )
 {
+	HL2MPVoteUI_Reset();
 	HL2MPLoading_LevelInit( map );
 	BaseClass::LevelInit( map );
+}
+
+int ClientModeHL2MPNormal::KeyInput( int down, ButtonCode_t keynum, const char *binding )
+{
+	if ( HL2MPScoreboardMouseInput( down, keynum ) ) return 0;
+	return BaseClass::KeyInput( down, keynum, binding );
 }
 
 void ClientModeHL2MPNormal::Shutdown()

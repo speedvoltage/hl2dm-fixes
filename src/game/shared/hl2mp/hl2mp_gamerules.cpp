@@ -31,6 +31,7 @@
 	#include "hl2mp_player.h"
 	#include "hl2mp_match_server.h"
 	#include "hl2mp_community.h"
+	#include "hl2mp_vote.h"
 	#include "weapon_hl2mpbasehlmpcombatweapon.h"
 	#include "team.h"
 	#include "voice_gamemgr.h"
@@ -310,7 +311,7 @@ void CHL2MPRules::Think( void )
 	if ( g_fGameOver )   // someone else quit the game already
 	{
 		// check to see if we should change levels now
-		if ( m_flIntermissionEndTime < gpGlobals->curtime )
+		if ( !HL2MPVoteHoldsIntermission() && m_flIntermissionEndTime < gpGlobals->curtime )
 		{
 			if ( !m_bChangelevelDone )
 			{
@@ -395,7 +396,8 @@ void CHL2MPRules::GoToIntermission( void )
 	HL2MPMatchServerFinished();
 	g_fGameOver = true;
 
-	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
+	HL2MPVoteReset();
+	m_flIntermissionEndTime = gpGlobals->curtime + ( HL2MPVoteBeginIntermission() ? 29 : mp_chattime.GetInt() );
 
 	for ( int i = 0; i < MAX_PLAYERS; i++ )
 	{
@@ -417,7 +419,7 @@ bool CHL2MPRules::CheckGameOver()
 	if ( g_fGameOver )   // someone else quit the game already
 	{
 		// check to see if we should change levels now
-		if ( m_flIntermissionEndTime < gpGlobals->curtime )
+		if ( !HL2MPVoteHoldsIntermission() && m_flIntermissionEndTime < gpGlobals->curtime )
 		{
 			ChangeLevel(); // intermission is over			
 		}
@@ -1066,6 +1068,11 @@ void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 		}
 		return;
 	}
+	if ( message && !Q_strcmp( message->GetName(), "HL2MPVote" ) )
+	{
+		HL2MPVoteRequest( sender, message );
+		return;
+	}
 	if ( message && !Q_strcmp( message->GetName(), "HL2MPCommunity" ) )
 	{
 		HL2MPCommunityRequest( ToBasePlayer( CBaseEntity::Instance( entity ) ), message );
@@ -1081,6 +1088,7 @@ void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 
 void CHL2MPRules::RestartGame()
 {
+	HL2MPVoteReset();
 	// bounds check
 	if ( mp_timelimit.GetInt() < 0 )
 	{

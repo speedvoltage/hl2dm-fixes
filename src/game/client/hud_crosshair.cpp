@@ -6,6 +6,9 @@
 //=============================================================================//
 
 #include "cbase.h"
+#ifdef HL2MP
+#include "hl2mp/ui/hl2mp_hud_customization.h"
+#endif
 #include "hud.h"
 #include "hud_crosshair.h"
 #include "iclientmode.h"
@@ -248,6 +251,9 @@ void CHudCrosshair::Paint( void )
 
 	if( bBehindCamera )
 		return;
+#ifdef HL2MP
+	if ( HL2MPHudDrawCrosshair( int( x ), int( y ) ) ) return;
+#endif
 
 	float flWeaponScale = 1.f;
 	int iTextureW = m_pCrosshair->Width();

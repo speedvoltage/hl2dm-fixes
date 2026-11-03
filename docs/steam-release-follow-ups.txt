@@ -1,0 +1,13 @@
+When Valve assigns the mod's own Steam AppID:
+- Implement the scoreboard's Report player action and confirm the reporting destination.
+- Keep reports distinct from local chat/voice mutes and server kick votes.
+- Do not route reports through another game's temporary AppID.
+
+HUD/voting labels introduced in November 2026 are localization-ready.
+New strings without an existing translation use English fallback; their keys
+are listed in assets/localization/ui.json under pending_translation_keys.
+Review these alongside the existing draft translations before release.
+
+HPH reference: https://gamebanana.com/mods/345189
+Used as a design reference for presets and per-element HUD controls.
+The mod does not redistribute HPH code, fonts, textures or executables.
