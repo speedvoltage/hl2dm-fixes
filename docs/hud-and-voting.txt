@@ -1,4 +1,5 @@
 HUD editor
+The original game HUD is the default. Enable Custom HUD in the editor to opt in.
 Open Options > HUD Editor, or bind hud_editor in Keyboard / Mouse.
 Drag elements and their corner handles; the right-hand controls set position,
 size, text size, font, foreground/background colors and opacity. Relevant
@@ -6,6 +7,8 @@ elements also offer labels, values, bars and crosshair controls.
 Classic, Compact and Minimal are built-in layouts. Five custom slots are saved
 locally. Apply writes cfg/hud_layout.res; Cancel restores the opening layout.
 User layouts and presets are excluded from release packages.
+Preview zoom offers Fit, 100% and 200%; right-drag pans the zoomed view.
+Killfeed samples use the in-game death-notice renderer and weapon/skull icons.
 HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
 
 Voting

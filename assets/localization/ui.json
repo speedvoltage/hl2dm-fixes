@@ -5088,9 +5088,9 @@
       ]
     },
     "HL2MP_HudDragHint": {
-      "english": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "english": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "contexts": [
-        "HUD editor / player votes"
+        "HUD editor preview"
       ]
     },
     "HL2MP_HudClassic": {
@@ -5426,6 +5426,24 @@
       "english": "Low health warning color",
       "contexts": [
         "HUD editor / player votes"
+      ]
+    },
+    "HL2MP_HudPreviewFit": {
+      "english": "Preview: Fit",
+      "contexts": [
+        "HUD editor preview"
+      ]
+    },
+    "HL2MP_HudPreview100": {
+      "english": "Preview: 100%",
+      "contexts": [
+        "HUD editor preview"
+      ]
+    },
+    "HL2MP_HudPreview200": {
+      "english": "Preview: 200%",
+      "contexts": [
+        "HUD editor preview"
       ]
     }
   },
@@ -6281,7 +6299,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -6335,7 +6353,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7188,7 +7209,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -7242,7 +7263,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8095,7 +8119,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -8149,7 +8173,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9002,7 +9029,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -9056,7 +9083,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -9909,7 +9939,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -9963,7 +9993,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -10816,7 +10849,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -10870,7 +10903,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -11723,7 +11759,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -11777,7 +11813,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -12630,7 +12669,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -12684,7 +12723,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -13537,7 +13579,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -13591,7 +13633,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -14444,7 +14489,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -14498,7 +14543,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -15351,7 +15399,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -15405,7 +15453,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -16258,7 +16309,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -16312,7 +16363,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -17165,7 +17219,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -17219,7 +17273,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -18072,7 +18129,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -18126,7 +18183,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -18979,7 +19039,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -19033,7 +19093,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -19886,7 +19949,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -19940,7 +20003,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -20793,7 +20859,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -20847,7 +20913,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -21700,7 +21769,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -21754,7 +21823,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -22607,7 +22679,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -22661,7 +22733,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -23514,7 +23589,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -23568,7 +23643,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -24421,7 +24499,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -24475,7 +24553,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -25328,7 +25409,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -25382,7 +25463,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -26235,7 +26319,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -26289,7 +26373,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -27142,7 +27229,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -27196,7 +27283,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -28049,7 +28139,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -28103,7 +28193,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -28956,7 +29049,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -29010,7 +29103,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -29863,7 +29959,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -29917,7 +30013,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -30770,7 +30869,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -30824,7 +30923,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -31677,7 +31779,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -31731,7 +31833,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -32584,7 +32689,7 @@
       "HL2MP_HudVote": "VOTE PANEL",
       "HL2MP_HudChatSample": "Player: Ready for the next round?",
       "HL2MP_HudVoteSample": "Vote to kick player?    YES / NO",
-      "HL2MP_HudDragHint": "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.",
+      "HL2MP_HudDragHint": "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.",
       "HL2MP_HudClassic": "Classic",
       "HL2MP_HudCompact": "Compact / centered",
       "HL2MP_HudMinimal": "Minimal",
@@ -32638,7 +32743,10 @@
       "HL2MP_UI_153cd6b353f5": "Custom slot {0}",
       "HL2MP_VoteSounds": "Vote notification sounds",
       "HL2MP_VoteAnimations": "Vote animations",
-      "HL2MP_HudLowHealth": "Low health warning color"
+      "HL2MP_HudLowHealth": "Low health warning color",
+      "HL2MP_HudPreviewFit": "Preview: Fit",
+      "HL2MP_HudPreview100": "Preview: 100%",
+      "HL2MP_HudPreview200": "Preview: 200%"
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",
@@ -32730,6 +32838,9 @@
     "HL2MP_UI_153cd6b353f5",
     "HL2MP_VoteSounds",
     "HL2MP_VoteAnimations",
-    "HL2MP_HudLowHealth"
+    "HL2MP_HudLowHealth",
+    "HL2MP_HudPreviewFit",
+    "HL2MP_HudPreview100",
+    "HL2MP_HudPreview200"
   ]
 }

@@ -873,7 +873,7 @@ static const Message s_Messages[] = {
     { "HL2MP_HudVote", "VOTE PANEL", NULL },
     { "HL2MP_HudChatSample", "Player: Ready for the next round?", NULL },
     { "HL2MP_HudVoteSample", "Vote to kick player?    YES / NO", NULL },
-    { "HL2MP_HudDragHint", "Drag elements to move them. Drag the orange corner to resize. Changes are previewed live; Apply saves your layout. Custom slots store five separate presets.", NULL },
+    { "HL2MP_HudDragHint", "Drag elements or their orange corner to move or resize. Zoom for a closer look; right-drag to pan. Custom HUD is optional. Apply saves; Cancel restores your layout.", NULL },
     { "HL2MP_HudClassic", "Classic", NULL },
     { "HL2MP_HudCompact", "Compact / centered", NULL },
     { "HL2MP_HudMinimal", "Minimal", NULL },
@@ -928,4 +928,7 @@ static const Message s_Messages[] = {
     { "HL2MP_VoteSounds", "Vote notification sounds", NULL },
     { "HL2MP_VoteAnimations", "Vote animations", NULL },
     { "HL2MP_HudLowHealth", "Low health warning color", NULL },
+    { "HL2MP_HudPreviewFit", "Preview: Fit", NULL },
+    { "HL2MP_HudPreview100", "Preview: 100%", NULL },
+    { "HL2MP_HudPreview200", "Preview: 200%", NULL },
 };
