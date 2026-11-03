@@ -175,6 +175,7 @@ extern vgui::IInputInternal *g_InputInternal;
 
 #ifdef HL2MP
 #include "hl2mp_integrity.h"
+#include "hl2mp/ui/hl2mp_messages.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -937,10 +938,11 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if ( (filesystem = (IFileSystem *)appSystemFactory(FILESYSTEM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
 #ifdef HL2MP
-	char integrityReason[256];
+	HL2MPMessages_Init();
+	char integrityReason[2048];
 	if ( !HL2MPIntegrity_Check( integrityReason, sizeof( integrityReason ) ) )
 	{
-		Error( "HL2DM Matchmaking cannot start safely.\n%s\n", integrityReason );
+		Error( "%s\n", integrityReason );
 		return false;
 	}
 #endif

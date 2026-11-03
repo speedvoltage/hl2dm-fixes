@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp_messages.h"
 #include "cdll_client_int.h"
 #include "hl2mp_options.h"
 #include "hl2mp_menucontrols.h"
@@ -26,78 +27,78 @@ struct SettingDef
     Page page; Kind kind; const char *label, *cvar, *choices; float low, high, step;
 };
 static const SettingDef s_Settings[] = {
-    { DISPLAY, RESOLUTION, "Resolution", "", "", 0, 0, 0 },
-    { DISPLAY, WINDOW_MODE, "Display mode", "", "FULLSCREEN=0|WINDOWED=1", 0, 0, 0 },
-    { DISPLAY, SLIDER, "Display gamma", "mat_monitorgamma", "", 1.6f, 2.6f, 0.01f },
-    { DISPLAY, CHOICE, "Frame rate limit", "fps_max", "60 FPS=60|120 FPS=120|144 FPS=144|165 FPS=165|240 FPS=240|300 FPS=300|UNLIMITED=0", 0, 0, 0 },
-    { DISPLAY, CHOICE, "Menu animations", "mm_menu_motion", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Vertical sync", "mat_vsync", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Anti-aliasing", "mat_antialias", "NONE=0|2x MSAA=2|4x MSAA=4|8x MSAA=8", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Texture detail", "mat_picmip", "LOW=2|MEDIUM=1|HIGH=0|VERY HIGH=-1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Model detail", "r_rootlod", "LOW=2|MEDIUM=1|HIGH=0", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Texture filtering", "mat_forceaniso", "BILINEAR / TRILINEAR=1|2x ANISOTROPIC=2|4x ANISOTROPIC=4|8x ANISOTROPIC=8|16x ANISOTROPIC=16", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Trilinear filtering", "mat_trilinear", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "High dynamic range", "mat_hdr_level", "NONE=0|BLOOM ONLY=1|FULL=2", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Detailed shadows", "r_shadowrendertotexture", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Water reflections", "r_waterforceexpensive", "SIMPLE=0|REFLECT WORLD=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Reflect objects in water", "r_waterforcereflectentities", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Bump mapping", "mat_bumpmap", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Specular reflections", "mat_specular", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Color correction", "mat_colorcorrection", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { ADVANCED, CHOICE, "Motion blur", "mat_motion_blur_enabled", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { AUDIO, SLIDER, "Master volume", "volume", "%", 0, 1, 0.01f },
-    { AUDIO, SLIDER, "Music volume", "snd_musicvolume", "%", 0, 1, 0.01f },
-    { AUDIO, CHOICE, "Speaker configuration", "snd_surround_speakers", "HEADPHONES=0|STEREO=2|QUAD=4|5.1 SURROUND=5|7.1 SURROUND=7", 0, 0, 0 },
-    { AUDIO, CHOICE, "High quality sound", "snd_pitchquality", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { AUDIO, CHOICE, "Mute when unfocused", "snd_mute_losefocus", "NO=0|YES=1", 0, 0, 0 },
-    { AUDIO, CHOICE, "Voice chat", "voice_enable", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { AUDIO, SLIDER, "Incoming voice volume", "voice_scale", "%", 0, 1, 0.01f },
-    { AUDIO, CHOICE, "Closed captions", "closecaption", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { GAME, SLIDER, "Field of view", "fov_desired", "", 70, 110, 1 },
-    { GAME, CHOICE, "Developer console", "con_enable", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { GAME, CHOICE, "Crosshair", "crosshair", "HIDDEN=0|VISIBLE=1", 0, 0, 0 },
-    { GAME, CHOICE, "Fast weapon switching", "hud_fastswitch", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { GAME, CHOICE, "Weapon sway", "cl_wpn_sway_enabled", "OFF=0|ON=1", 0, 0, 0 },
-    { GAME, CHOICE, "Switch to picked-up weapons", "cl_autowepswitch", "NO=0|YES=1", 0, 0, 0 },
-    { GAME, CHOICE, "Frame rate counter", "cl_showfps", "HIDDEN=0|SIMPLE=1|SMOOTHED=2", 0, 0, 0 },
-    { GAME, CHOICE, "Network graph", "net_graph", "HIDDEN=0|BASIC=1|DETAILED=2|TEXT=3", 0, 0, 0 },
-    { MOUSE, SLIDER, "Mouse sensitivity", "sensitivity", "", 0.1f, 10, 0.01f },
-    { MOUSE, CHOICE, "Raw mouse input", "m_rawinput", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { MOUSE, CHOICE, "Invert mouse", "m_pitch", "NO=0.022|YES=-0.022", 0, 0, 0 },
-    { MOUSE, CHOICE, "Mouse filtering", "m_filter", "DISABLED=0|ENABLED=1", 0, 0, 0 },
-    { MOUSE, CHOICE, "Mouse acceleration", "m_customaccel", "DISABLED=0|ENABLED=3", 0, 0, 0 },
-    { MOUSE, SLIDER, "Zoom sensitivity", "zoom_sensitivity_ratio", "", 0.1f, 3, 0.01f },
-    { MULTIPLAYER, TEXT, "In-game name", "cl_player_name", "", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Player model", "cl_playermodel", "", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Starting weapon", "cl_defaultweapon", "GRAVITY GUN=weapon_physcannon|PISTOL=weapon_pistol|SMG=weapon_smg1|FRAG GRENADE=weapon_frag|CROWBAR=weapon_crowbar|STUNSTICK=weapon_stunstick", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Server downloads", "cl_downloadfilter", "ALL FILES=all|EXCLUDE SOUNDS=nosounds|MAPS ONLY=mapsonly|NONE=none", 0, 0, 0 },
-    { MULTIPLAYER, CHOICE, "Upload my spray", "cl_allowupload", "NO=0|YES=1", 0, 0, 0 },
+    { DISPLAY, RESOLUTION, "#HL2MP_UI_d4055fafa379", "", "", 0, 0, 0 },
+    { DISPLAY, WINDOW_MODE, "#HL2MP_UI_8e84f008a644", "", "#HL2MP_UI_1f8c000f9634=0|#HL2MP_UI_576290d91ca2=1", 0, 0, 0 },
+    { DISPLAY, SLIDER, "#HL2MP_UI_7047dfe63f23", "mat_monitorgamma", "", 1.6f, 2.6f, 0.01f },
+    { DISPLAY, CHOICE, "#HL2MP_UI_3217f73e9359", "fps_max", "#HL2MP_UI_8de37d25b589=60|#HL2MP_UI_e3f90dba7a06=120|#HL2MP_UI_5a0539d38b23=144|#HL2MP_UI_c8b7db9a9f83=165|#HL2MP_UI_d9974ecf7e02=240|#HL2MP_UI_9af4b5b70855=300|#HL2MP_UI_5b43530641e7=0", 0, 0, 0 },
+    { DISPLAY, CHOICE, "#HL2MP_UI_f0be9af548e6", "mm_menu_motion", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_0d0feef89d87", "mat_vsync", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_c77c3af22c64", "mat_antialias", "#HL2MP_UI_c627c09c14e5=0|#HL2MP_UI_dd3d0252a272=2|#HL2MP_UI_093551bb6d5a=4|#HL2MP_UI_8d27abe1615b=8", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_a71699b3f84f", "mat_picmip", "#HL2MP_UI_5fbdda1b8c72=2|#HL2MP_UI_7c48dd672a68=1|#HL2MP_UI_b43e72eed048=0|#HL2MP_UI_8307aa354b9c=-1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_39693b11904b", "r_rootlod", "#HL2MP_UI_5fbdda1b8c72=2|#HL2MP_UI_7c48dd672a68=1|#HL2MP_UI_b43e72eed048=0", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_527a443989b5", "mat_forceaniso", "#HL2MP_UI_25c640705d2e=1|#HL2MP_UI_bad304e4870b=2|#HL2MP_UI_0120b9f39efd=4|#HL2MP_UI_c6c65e26d25a=8|#HL2MP_UI_8b96b679cd52=16", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_0fcd7191313b", "mat_trilinear", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_ebf85a2d90c4", "mat_hdr_level", "#HL2MP_UI_c627c09c14e5=0|#HL2MP_UI_77bb64a32051=1|#HL2MP_UI_cb6839cad021=2", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_3bed4ed47a7a", "r_shadowrendertotexture", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_b3ed8df3c63f", "r_waterforceexpensive", "#HL2MP_UI_699f1a05a909=0|#HL2MP_UI_6256748e2556=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_8931060940fb", "r_waterforcereflectentities", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_8d7eb34db686", "mat_bumpmap", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_6ca5b122fb88", "mat_specular", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_fed656fa774a", "mat_colorcorrection", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { ADVANCED, CHOICE, "#HL2MP_UI_d74639ba02f0", "mat_motion_blur_enabled", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { AUDIO, SLIDER, "#HL2MP_UI_b041a7d44291", "volume", "%", 0, 1, 0.01f },
+    { AUDIO, SLIDER, "#HL2MP_UI_d8773f37c57e", "snd_musicvolume", "%", 0, 1, 0.01f },
+    { AUDIO, CHOICE, "#HL2MP_UI_d0a9712be5c7", "snd_surround_speakers", "#HL2MP_UI_7e7b997153ea=0|#HL2MP_UI_453cdbf55416=2|#HL2MP_UI_f08148e1d00b=4|#HL2MP_UI_a052ceded18c=5|#HL2MP_UI_b044c3b8e547=7", 0, 0, 0 },
+    { AUDIO, CHOICE, "#HL2MP_UI_1703c7185ed1", "snd_pitchquality", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { AUDIO, CHOICE, "#HL2MP_UI_38f4ccfb71ad", "snd_mute_losefocus", "#HL2MP_UI_23794d91c53a=0|#HL2MP_UI_f91711645937=1", 0, 0, 0 },
+    { AUDIO, CHOICE, "#HL2MP_UI_9bdbc177e89d", "voice_enable", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { AUDIO, SLIDER, "#HL2MP_UI_36020013a785", "voice_scale", "%", 0, 1, 0.01f },
+    { AUDIO, CHOICE, "#HL2MP_UI_b111974dec44", "closecaption", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, SLIDER, "#HL2MP_UI_1fab91bbb0d3", "fov_desired", "", 70, 110, 1 },
+    { GAME, CHOICE, "#HL2MP_UI_2ef15ac2866f", "con_enable", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_8b3214b0cef9", "crosshair", "#HL2MP_UI_84dc5c33ad8b=0|#HL2MP_UI_5cea256d1b64=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_408dcdeb70d1", "hud_fastswitch", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_7c9008467e04", "cl_wpn_sway_enabled", "#HL2MP_UI_38cca6bea010=0|#HL2MP_UI_e8a01133b135=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_7be992fd080d", "cl_autowepswitch", "#HL2MP_UI_23794d91c53a=0|#HL2MP_UI_f91711645937=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_8d697ccaf256", "cl_showfps", "#HL2MP_UI_84dc5c33ad8b=0|#HL2MP_UI_699f1a05a909=1|#HL2MP_UI_d0fa8409c4d2=2", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_UI_673913077c1e", "net_graph", "#HL2MP_UI_84dc5c33ad8b=0|#HL2MP_UI_ed85253568ad=1|#HL2MP_UI_9f103c905145=2|#HL2MP_UI_e4ba216b53e6=3", 0, 0, 0 },
+    { MOUSE, SLIDER, "#HL2MP_UI_73ba9f3d3b7f", "sensitivity", "", 0.1f, 10, 0.01f },
+    { MOUSE, CHOICE, "#HL2MP_UI_71f3192afcf4", "m_rawinput", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { MOUSE, CHOICE, "#HL2MP_UI_05d3bc41d49c", "m_pitch", "#HL2MP_UI_23794d91c53a=0.022|#HL2MP_UI_f91711645937=-0.022", 0, 0, 0 },
+    { MOUSE, CHOICE, "#HL2MP_UI_62c2c23d2939", "m_filter", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { MOUSE, CHOICE, "#HL2MP_UI_c87c19ec9ea0", "m_customaccel", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=3", 0, 0, 0 },
+    { MOUSE, SLIDER, "#HL2MP_UI_3e7f5befa927", "zoom_sensitivity_ratio", "", 0.1f, 3, 0.01f },
+    { MULTIPLAYER, TEXT, "#HL2MP_UI_2c885aae8c11", "cl_player_name", "", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "#HL2MP_UI_bea1ab02338b", "cl_playermodel", "", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "#HL2MP_UI_88982a293a87", "cl_defaultweapon", "#HL2MP_UI_0a3cd20ffde0=weapon_physcannon|#HL2MP_UI_a1c6c25aa56c=weapon_pistol|#HL2MP_UI_3dba79845196=weapon_smg1|#HL2MP_UI_efd31cc3da3f=weapon_frag|#HL2MP_UI_2fe1555090e1=weapon_crowbar|#HL2MP_UI_25abc6029146=weapon_stunstick", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "#HL2MP_UI_6973064b1e2d", "cl_downloadfilter", "#HL2MP_UI_00ff6750e125=all|#HL2MP_UI_62f137e4275f=nosounds|#HL2MP_UI_3676cce01a6f=mapsonly|#HL2MP_UI_c627c09c14e5=none", 0, 0, 0 },
+    { MULTIPLAYER, CHOICE, "#HL2MP_UI_c92f116269de", "cl_allowupload", "#HL2MP_UI_23794d91c53a=0|#HL2MP_UI_f91711645937=1", 0, 0, 0 },
 };
 struct BindingDef { const char *label, *command, *key; };
 static const BindingDef s_Bindings[] = {
-    { "Community server controls", "community_menu", "m" },
-    { "Move forward", "+forward", "w" }, { "Move backward", "+back", "s" },
-    { "Move left", "+moveleft", "a" }, { "Move right", "+moveright", "d" },
-    { "Jump", "+jump", "SPACE" }, { "Duck", "+duck", "CTRL" },
-    { "Sprint", "+speed", "SHIFT" }, { "Walk", "+walk", "ALT" },
-    { "Use", "+use", "e" }, { "Primary attack", "+attack", "MOUSE1" },
-    { "Secondary attack", "+attack2", "MOUSE2" }, { "Reload", "+reload", "r" },
-    { "Gravity gun swap", "phys_swap", "g" }, { "Last weapon", "lastinv", "q" },
-    { "Next weapon", "invnext", "MWHEELDOWN" }, { "Previous weapon", "invprev", "MWHEELUP" },
-    { "Weapon slot 1", "slot1", "1" }, { "Weapon slot 2", "slot2", "2" },
-    { "Weapon slot 3", "slot3", "3" }, { "Weapon slot 4", "slot4", "4" },
-    { "Weapon slot 5", "slot5", "5" }, { "Weapon slot 6", "slot6", "6" },
-    { "Crowbar / stunstick", "use weapon_crowbar;use weapon_stunstick", "" },
-    { "Gravity gun", "use weapon_physcannon", "" }, { "Pistol", "use weapon_pistol", "" },
-    { ".357 Magnum", "use weapon_357", "" }, { "SMG", "use weapon_smg1", "" },
-    { "Pulse rifle", "use weapon_ar2", "" }, { "Shotgun", "use weapon_shotgun", "" },
-    { "Crossbow", "use weapon_crossbow", "" }, { "Frag grenade", "use weapon_frag", "" },
-    { "RPG", "use weapon_rpg", "" }, { "SLAM", "use weapon_SLAM", "" },
-    { "Flashlight", "impulse 100", "f" }, { "Suit zoom", "+zoom", "z" },
-    { "Scoreboard", "+showscores", "TAB" }, { "Voice chat", "+voicerecord", "k" },
-    { "Public chat", "messagemode", "y" }, { "Team chat", "messagemode2", "u" },
-    { "Spray", "impulse 201", "t" }, { "Screenshot", "jpeg", "F5" },
-    { "Developer console", "toggleconsole", "`" }, { "Change team", "changeteam", "F2" }
+    { "#HL2MP_UI_68d2943ecb14", "community_menu", "m" },
+    { "#HL2MP_UI_03244d3bb2b0", "+forward", "w" }, { "#HL2MP_UI_3a1635febaec", "+back", "s" },
+    { "#HL2MP_UI_6c94221edd26", "+moveleft", "a" }, { "#HL2MP_UI_8d60decd44f3", "+moveright", "d" },
+    { "#HL2MP_UI_9ee0ca3e24d6", "+jump", "SPACE" }, { "#HL2MP_UI_3b67f1c91f4f", "+duck", "CTRL" },
+    { "#HL2MP_UI_fd04788626e5", "+speed", "SHIFT" }, { "#HL2MP_UI_08ee52ae125a", "+walk", "ALT" },
+    { "#HL2MP_UI_c36d819e7bc6", "+use", "e" }, { "#HL2MP_UI_5ecdbaec7148", "+attack", "MOUSE1" },
+    { "#HL2MP_UI_275b159b41a5", "+attack2", "MOUSE2" }, { "#HL2MP_UI_bdc090ec61e3", "+reload", "r" },
+    { "#HL2MP_UI_0d21659ad887", "phys_swap", "g" }, { "#HL2MP_UI_6a89521ef03a", "lastinv", "q" },
+    { "#HL2MP_UI_ece56e44bc6e", "invnext", "MWHEELDOWN" }, { "#HL2MP_UI_72a97e60da7a", "invprev", "MWHEELUP" },
+    { "#HL2MP_UI_80ffed93a6ee", "slot1", "1" }, { "#HL2MP_UI_41d071a98b9c", "slot2", "2" },
+    { "#HL2MP_UI_e8ce41424fab", "slot3", "3" }, { "#HL2MP_UI_b6a0a795d009", "slot4", "4" },
+    { "#HL2MP_UI_4926cd49b167", "slot5", "5" }, { "#HL2MP_UI_c774f6787d3b", "slot6", "6" },
+    { "#HL2MP_UI_7b242d99506d", "use weapon_crowbar;use weapon_stunstick", "" },
+    { "#HL2MP_UI_4de640566f2e", "use weapon_physcannon", "" }, { "#HL2MP_UI_af93da41d026", "use weapon_pistol", "" },
+    { "#HL2MP_UI_b142c03ce41d", "use weapon_357", "" }, { "#HL2MP_UI_3dba79845196", "use weapon_smg1", "" },
+    { "#HL2MP_UI_2328547e2a46", "use weapon_ar2", "" }, { "#HL2MP_UI_050991792ba0", "use weapon_shotgun", "" },
+    { "#HL2MP_UI_44f05d349059", "use weapon_crossbow", "" }, { "#HL2MP_UI_e3cc8ec3b3f8", "use weapon_frag", "" },
+    { "#HL2MP_UI_9871087b1b18", "use weapon_rpg", "" }, { "#HL2MP_UI_4ebe6dcee2b2", "use weapon_SLAM", "" },
+    { "#HL2MP_UI_e2ed3c69bc28", "impulse 100", "f" }, { "#HL2MP_UI_be09a7860cc2", "+zoom", "z" },
+    { "#HL2MP_UI_f48570f44b23", "+showscores", "TAB" }, { "#HL2MP_UI_9bdbc177e89d", "+voicerecord", "k" },
+    { "#HL2MP_UI_0acb3af87661", "messagemode", "y" }, { "#HL2MP_UI_87ba4c564992", "messagemode2", "u" },
+    { "#HL2MP_UI_7be5610a028c", "impulse 201", "t" }, { "#HL2MP_UI_029320ad166c", "jpeg", "F5" },
+    { "#HL2MP_UI_2ef15ac2866f", "toggleconsole", "`" }, { "#HL2MP_UI_9e716cb3bff3", "changeteam", "F2" }
 };
 
 static bool SameValue( const char *a, const char *b, bool numeric = true )
@@ -125,7 +126,7 @@ class CSettingRow : public vgui::EditablePanel
 public:
     CSettingRow( vgui::Panel *parent, int index, const Setting &value ) : BaseClass( parent, "Setting" ), m_Index( index ), m_Combo( NULL ), m_Slider( NULL ), m_Text( NULL ), m_Amount( NULL ), m_Scale( 1 ), m_InitialSlider( 0 ), m_InitialValue( value.draft ), m_Highlighted( false ), m_Available( value.available )
     {
-        SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label );
+        SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label ); m_Label->SetWrap( true );
         if ( def.kind == SLIDER )
         {
             m_Slider = new CHL2MPSettingsSlider( this ); m_Slider->SetRange( int( def.low / def.step + 0.5f ), int( def.high / def.step + 0.5f ) );
@@ -153,7 +154,7 @@ public:
                 {
                     char name[64], size[32]; Q_snprintf( size, sizeof( size ), "%dx%d", modes[i].m_Width, modes[i].m_Height );
                     const float aspect = float( modes[i].m_Width ) / modes[i].m_Height;
-                    Q_snprintf( name, sizeof( name ), "%s   %s", size, fabs( aspect - 16.0f / 9 ) < .02f ? "16:9" : fabs( aspect - 16.0f / 10 ) < .02f ? "16:10" : fabs( aspect - 4.0f / 3 ) < .02f ? "4:3" : "" );
+                    HL2MPFormatInto( name, sizeof( name ), "%s   %s", size, fabs( aspect - 16.0f / 9 ) < .02f ? "16:9" : fabs( aspect - 16.0f / 10 ) < .02f ? "16:10" : fabs( aspect - 4.0f / 3 ) < .02f ? "4:3" : "" );
                     AddChoice( m_Combo, name, size );
                 }
             }
@@ -183,7 +184,7 @@ public:
                 if ( SameValue( choice, value.draft.String() ) || ( !Q_strcmp( def.cvar, "cl_playermodel" ) && !Q_stricmp( choice, value.draft.String() ) ) ) selected = i;
             }
             // Keep custom/unsupported current values intact until explicitly changed.
-            if ( selected < 0 ) { selected = m_Combo->GetItemCount(); AddChoice( m_Combo, value.available ? value.draft.String() : "UNAVAILABLE", value.draft.String() ); }
+            if ( selected < 0 ) { selected = m_Combo->GetItemCount(); AddChoice( m_Combo, value.available ? value.draft.String() : "#HL2MP_UI_eb0be6d636d5", value.draft.String() ); }
             m_Combo->SilentActivateItemByRow( selected ); m_Combo->SetEnabled( value.available );
         }
     }
@@ -217,6 +218,9 @@ public:
     {
         BaseClass::PerformLayout(); const int w = GetWide(), h = GetTall(), valueW = int( w * .43f ), left = w - valueW - int( 12 * m_Scale );
         m_Label->SetBounds( int( 8 * m_Scale ), 0, left - int( 16 * m_Scale ), h );
+        m_Label->GetTextImage()->SetSize( m_Label->GetWide(), h );
+        m_Label->GetTextImage()->RecalculateNewLinePositions();
+        m_Label->InvalidateLayout( true );
         if ( m_Combo ) m_Combo->SetBounds( left, int( 9 * m_Scale ), valueW, h - int( 18 * m_Scale ) );
         if ( m_Text ) m_Text->SetBounds( left, int( 9 * m_Scale ), valueW, h - int( 18 * m_Scale ) );
         if ( m_Slider )
@@ -292,7 +296,7 @@ public:
     {
         title = Label( this, "" ); body = Label( this, "" ); body->SetWrap( true );
         yes = new CHL2MPSettingsButton( this, "", "confirm_yes" ); no = new CHL2MPSettingsButton( this, "", "confirm_no" );
-        discard = new CHL2MPSettingsButton( this, "DISCARD AND CLOSE", "confirm_discard" );
+        discard = new CHL2MPSettingsButton( this, "#HL2MP_UI_f07a6caf7491", "confirm_discard" );
         SetVisible( false ); SetZPos( 200 );
     }
     void OnCommand( const char *command ) OVERRIDE { GetParent()->OnCommand( command ); }
@@ -383,14 +387,14 @@ CHL2MPOptions::CHL2MPOptions( vgui::Panel *parent ) : BaseClass( parent, "Option
 {
     SetVisible( false ); SetZPos( 100 ); SetKeyBoardInputEnabled( true ); SetMouseInputEnabled( true );
     m_Font = vgui::surface()->CreateFont(); m_SmallFont = vgui::surface()->CreateFont(); m_TitleFont = vgui::surface()->CreateFont(); m_BrandFont = vgui::surface()->CreateFont();
-    m_Heading = Label( this, "SETTINGS" ); m_Brand = Label( this, "deathmatch" ); m_Status = Label( this, "" ); m_Hint = Label( this, "" ); m_Hint->SetWrap( true );
+    m_Heading = Label( this, "#HL2MP_UI_02f6ea12816a" ); m_Brand = Label( this, "deathmatch" ); m_Status = Label( this, "" ); m_Hint = Label( this, "" ); m_Hint->SetWrap( true );
     m_PlayerPreview = new CPlayerPreview( this );
-    m_PreviewTitle = Label( this, "PLAYER MODEL" ); m_PreviewBody = Label( this, "Drag to rotate / scroll to zoom" );
-    m_Back = new CHL2MPSettingsButton( this, "<  BACK", "back" );
-    const char *tabs[] = { "VIDEO", "AUDIO", "GAME", "KEYBOARD / MOUSE", "MULTIPLAYER" };
+    m_PreviewTitle = Label( this, "#HL2MP_UI_e40d2cc4d4b8" ); m_PreviewBody = Label( this, "#HL2MP_UI_3f22979928a9" );
+    m_Back = new CHL2MPSettingsButton( this, "#HL2MP_UI_24c76252a90c", "back" );
+    const char *tabs[] = { "#HL2MP_UI_65b2f9ec331f", "#HL2MP_UI_859e89a729c2", "#HL2MP_UI_1fd5f5a768d3", "#HL2MP_UI_e3afec8a791d", "#HL2MP_UI_d730947f78c9" };
     for ( int i = 0; i < 5; ++i ) m_Tabs[i] = new CHL2MPSettingsButton( this, tabs[i], VarArgs( "tab_%d", i ) );
     for ( int i = 0; i < 2; ++i ) m_Subtabs[i] = new CHL2MPSettingsButton( this, "", VarArgs( "sub_%d", i ) );
-    m_Apply = new CHL2MPSettingsButton( this, "APPLY CHANGES", "apply" ); m_Discard = new CHL2MPSettingsButton( this, "DISCARD CHANGES", "discard" ); m_Reset = new CHL2MPSettingsButton( this, "RESET PAGE", "reset" );
+    m_Apply = new CHL2MPSettingsButton( this, "#HL2MP_UI_33bf9eeb20a9", "apply" ); m_Discard = new CHL2MPSettingsButton( this, "#HL2MP_UI_90ffc153ae42", "discard" ); m_Reset = new CHL2MPSettingsButton( this, "#HL2MP_UI_1897247b6a8e", "reset" );
     m_List = new vgui::PanelListPanel( this, "Settings" ); m_List->SetFirstColumnWidth( 0 ); m_List->SetVerticalBufferPixels( 0 );
     HL2MPStyleScrollBar( m_List->GetScrollbar() );
     KeyValues *list = new KeyValues( "List" ); list->SetInt( "autohide_scrollbar", 1 ); m_List->ApplySettings( list ); list->deleteThis();
@@ -445,7 +449,7 @@ int CHL2MPOptions::KeyCode( int action, int slot )
 }
 const char *CHL2MPOptions::KeyName( int action, int slot )
 {
-    int code = KeyCode( action, slot ); return code ? inputsystem->ButtonCodeToString( ButtonCode_t( code ) ) : "UNBOUND";
+    int code = KeyCode( action, slot ); return code ? HL2MPKeyName( inputsystem->ButtonCodeToString( ButtonCode_t( code ) ) ) : "#HL2MP_UI_d16f3e00e8e4";
 }
 void CHL2MPOptions::BuildRows()
 {
@@ -491,7 +495,7 @@ void CHL2MPOptions::PerformLayout()
     {
         m_Subtabs[i]->SetVisible( category == 0 || category == 3 ); m_Subtabs[i]->SetFont( m_SmallFont );
         m_Subtabs[i]->SetBounds( w / 2 + int( ( i * 180 - 180 ) * s ), int( 126 * s ), int( 180 * s ), int( 30 * s ) );
-        m_Subtabs[i]->SetText( category == 0 ? i ? "ADVANCED VIDEO" : "DISPLAY" : i ? "KEY BINDINGS" : "MOUSE" );
+        m_Subtabs[i]->SetText( category == 0 ? i ? "#HL2MP_UI_4abe99dcd8fd" : "#HL2MP_UI_27cd427750d2" : i ? "#HL2MP_UI_9c30292123d6" : "#HL2MP_UI_92297327e6e2" );
         m_Subtabs[i]->Active( ( m_Page == ADVANCED || m_Page == BINDINGS ) == ( i == 1 ) );
     }
     const bool preview = m_Page == MULTIPLAYER;
@@ -504,8 +508,8 @@ void CHL2MPOptions::PerformLayout()
     m_PreviewTitle->SetFont( m_Font ); m_PreviewTitle->SetFgColor( Color( 238, 231, 213, 255 ) ); m_PreviewTitle->SetBounds( margin, int( 198 * s ) + previewH, previewW, int( 28 * s ) );
     m_PreviewBody->SetFont( m_SmallFont ); m_PreviewBody->SetFgColor( Color( 161, 178, 184, 255 ) ); m_PreviewBody->SetBounds( margin, int( 228 * s ) + previewH, previewW, int( 30 * s ) );
     m_Hint->SetFont( m_SmallFont ); m_Hint->SetFgColor( Color( 161, 178, 184, 255 ) ); m_Hint->SetBounds( listX + 8, h - int( 120 * s ), listW - 16, int( 40 * s ) );
-    m_Hint->SetText( m_Page == DISPLAY ? "Display changes have a 15-second confirmation. Gamma is controlled by the desktop in windowed mode." : m_Page == ADVANCED ? "Lighting and texture changes may take a moment. Some settings take effect on the next map." : m_Page == BINDINGS ? "Select a key to rebind it. Esc cancels; Backspace clears. Changes are saved with Apply." : m_Page == MULTIPLAYER ? "Leave the in-game name empty to use your Steam name. Repeated name changes may take a few seconds." : "Changes remain pending until you select Apply. Reset Page restores this page's defaults." );
-    const int footerY = h - int( 61 * s ), buttonW = int( 165 * s );
+    m_Hint->SetText( m_Page == DISPLAY ? "#HL2MP_UI_e9808de2e7db" : m_Page == ADVANCED ? "#HL2MP_UI_cd58f604c67e" : m_Page == BINDINGS ? "#HL2MP_UI_766afd9b32b4" : m_Page == MULTIPLAYER ? "#HL2MP_UI_fec06a334932" : "#HL2MP_UI_16a1cb4185e4" );
+    const int footerY = h - int( 61 * s ), buttonW = int( 210 * s );
     CHL2MPSettingsButton *footer[] = { m_Reset, m_Discard, m_Apply };
     for ( int i = 0; i < 3; ++i ) { footer[i]->SetFont( m_SmallFont ); footer[i]->SetBounds( w - margin - ( 3 - i ) * buttonW, footerY, buttonW - int( 8 * s ), int( 38 * s ) ); }
     m_Status->SetFont( m_SmallFont ); m_Status->SetFgColor( Color( 235, 174, 98, 255 ) ); m_Status->SetBounds( margin, footerY, MAX( 10, w - margin * 2 - buttonW * 3 ), int( 38 * s ) );
@@ -532,9 +536,9 @@ void CHL2MPOptions::Confirm( int type )
     CloseDropdowns(); m_Confirmation = type; m_Overlay->capture = type == 3; m_Overlay->SetVisible( true ); m_Overlay->MoveToFront();
     m_Overlay->yes->SetVisible( type != 3 ); m_Overlay->no->SetVisible( type != 3 );
     m_Overlay->discard->SetVisible( type == 2 );
-    m_Overlay->title->SetText( type == 1 ? "KEEP THESE DISPLAY SETTINGS?" : type == 2 ? "UNAPPLIED CHANGES" : VarArgs( "BIND: %s", s_Bindings[m_CaptureAction].label ) );
-    m_Overlay->body->SetText( type == 2 ? "Apply your changes, discard them, or keep editing." : type == 3 ? "Press a keyboard key or mouse button. Esc cancels. Backspace clears this binding. An existing use of the selected key will be reassigned." : "" );
-    m_Overlay->yes->SetText( type == 1 ? "KEEP CHANGES" : "APPLY AND CLOSE" ); m_Overlay->no->SetText( type == 1 ? "REVERT DISPLAY" : "KEEP EDITING" );
+    m_Overlay->title->SetText( type == 1 ? "#HL2MP_UI_e9f18dd287a2" : type == 2 ? "#HL2MP_UI_1b5e21310a85" : HL2MPFormat( "BIND: %s", HL2MPText( s_Bindings[m_CaptureAction].label ) ) );
+    m_Overlay->body->SetText( type == 2 ? "#HL2MP_UI_d49587ce0499" : type == 3 ? "#HL2MP_UI_3ca6ad236ca5" : "" );
+    m_Overlay->yes->SetText( type == 1 ? "#HL2MP_UI_efcae5aba181" : "#HL2MP_UI_568026c7f7b8" ); m_Overlay->no->SetText( type == 1 ? "#HL2MP_UI_d93ce6b97ed7" : "#HL2MP_UI_5425cd70bd52" );
     vgui::input()->SetAppModalSurface( m_Overlay->GetVPanel() ); m_Overlay->RequestFocus();
     InvalidateLayout( true );
 }
@@ -579,7 +583,7 @@ void CHL2MPOptions::Commit()
     }
     engine->ClientCmd_Unrestricted( "mat_savechanges; host_writeconfig\n" );
     for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i ) m_Settings[i].original = m_Settings[i].draft;
-    m_DisplayDeadline = 0; m_Status->SetText( "Changes applied" );
+    m_DisplayDeadline = 0; m_Status->SetText( "#HL2MP_UI_9cf6dbd76c0c" );
     if ( m_CloseAfterApply ) { m_CloseAfterApply = false; Close(); }
 }
 void CHL2MPOptions::RevertDisplay()
@@ -588,7 +592,7 @@ void CHL2MPOptions::RevertDisplay()
     m_DisplayDeadline = 0; m_CloseAfterApply = false; m_FontRefreshAt = Plat_FloatTime() + 1;
     for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i )
         if ( s_Settings[i].kind == RESOLUTION || s_Settings[i].kind == WINDOW_MODE ) m_Settings[i].draft = m_Settings[i].original;
-    m_Status->SetText( "Display reverted" ); BuildRows();
+    m_Status->SetText( "#HL2MP_UI_982a12acf6fe" ); BuildRows();
 }
 void CHL2MPOptions::ResetPage()
 {
@@ -607,7 +611,7 @@ void CHL2MPOptions::ResetPage()
             ButtonCode_t key = inputsystem->StringToButtonCode( s_Bindings[i].key ); if ( key > BUTTON_CODE_NONE && key < BUTTON_CODE_LAST ) m_BindingDraft[key] = s_Bindings[i].command;
         }
     }
-    BuildRows(); m_Status->SetText( "Defaults staged" );
+    BuildRows(); m_Status->SetText( "#HL2MP_UI_5a0f171a40a2" );
 }
 void CHL2MPOptions::OnCaptureKey( int code )
 {
@@ -647,7 +651,7 @@ void CHL2MPOptions::OnCommand( const char *command )
     }
     else if ( !Q_strcmp( command, "back" ) ) { if ( Dirty() ) Confirm( 2 ); else Close(); }
     else if ( !Q_strcmp( command, "apply" ) ) Apply();
-    else if ( !Q_strcmp( command, "discard" ) ) { ReadCurrent(); BuildRows(); m_Status->SetText( "Changes discarded" ); }
+    else if ( !Q_strcmp( command, "discard" ) ) { ReadCurrent(); BuildRows(); m_Status->SetText( "#HL2MP_UI_6fb7a4651054" ); }
     else if ( !Q_strcmp( command, "reset" ) ) ResetPage();
     else BaseClass::OnCommand( command );
 }
@@ -665,7 +669,7 @@ void CHL2MPOptions::OnTick()
     }
     if ( m_DisplayDeadline )
     {
-        m_Overlay->body->SetText( VarArgs( "The previous display mode will be restored in %d seconds unless you keep these changes.", MAX( 0, int( ceil( m_DisplayDeadline - Plat_FloatTime() ) ) ) ) );
+        m_Overlay->body->SetText( HL2MPFormat( "The previous display mode will be restored in %d seconds unless you keep these changes.", MAX( 0, int( ceil( m_DisplayDeadline - Plat_FloatTime() ) ) ) ) );
         if ( Plat_FloatTime() >= m_DisplayDeadline ) OnCommand( "confirm_no" );
     }
     if ( !IsVisible() ) return;
@@ -681,15 +685,15 @@ void CHL2MPOptions::OnTick()
                 m_PlayerPreview->SelectModel( i ); m_PreviewTitle->SetText( s_PlayerModels[i].name ); found = true; break;
             }
             m_PlayerPreview->SetVisible( found );
-            if ( !found ) m_PreviewTitle->SetText( "MODEL UNAVAILABLE" );
+            if ( !found ) m_PreviewTitle->SetText( "#HL2MP_UI_c8154474aee0" );
         }
     }
     m_Apply->SetEnabled( dirty ); m_Apply->Active( dirty ); m_Discard->SetEnabled( dirty );
-    if ( dirty ) m_Status->SetText( "Unapplied changes" );
+    if ( dirty ) m_Status->SetText( "#HL2MP_UI_5695b150c3dd" );
     else
     {
-        char status[64]; m_Status->GetText( status, sizeof( status ) );
-        if ( !Q_strcmp( status, "Unapplied changes" ) ) m_Status->SetText( "" );
+        char status[1024]; m_Status->GetText( status, sizeof( status ) );
+        if ( !Q_strcmp( status, HL2MPText( "#HL2MP_UI_5695b150c3dd" ) ) ) m_Status->SetText( "" );
     }
 }
 }

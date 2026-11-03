@@ -55,20 +55,20 @@ struct MapCard
     const char *map, *title, *description;
 };
 const MapCard s_Maps[] = {
-    { "dm_lockdown", "LOCKDOWN", "Cell blocks, narrow corridors and a contested central yard." },
-    { "dm_overwatch", "OVERWATCH", "City streets below. Rooftop sightlines above. Watch your angles." },
-    { "dm_powerhouse", "POWERHOUSE", "Industrial halls and exposed routes through a derelict power station." },
-    { "dm_resistance", "RESISTANCE", "A ruined city battleground. Keep moving between cover." },
-    { "dm_runoff", "RUNOFF", "An industrial complex with open ground and close-quarters routes." },
-    { "dm_steamlab", "STEAM LAB", "Tight industrial passages connect a network of laboratories." },
-    { "dm_underpass", "UNDERPASS", "Urban cover, concrete passages and fights across different elevations." }
+    { "dm_lockdown", "#HL2MP_UI_90f856c19355", "#HL2MP_UI_6d88b7e2b876" },
+    { "dm_overwatch", "#HL2MP_UI_e1ca2870940e", "#HL2MP_UI_0d0756e1b80f" },
+    { "dm_powerhouse", "#HL2MP_UI_82da1eedfc4a", "#HL2MP_UI_7ea1af5c6717" },
+    { "dm_resistance", "#HL2MP_UI_89be0e0647c5", "#HL2MP_UI_1dec0779a5ce" },
+    { "dm_runoff", "#HL2MP_UI_c357ce3d342a", "#HL2MP_UI_125729e2f72c" },
+    { "dm_steamlab", "#HL2MP_UI_1dd3334c17d1", "#HL2MP_UI_afa7c6ee249c" },
+    { "dm_underpass", "#HL2MP_UI_4e02bef8e43a", "#HL2MP_UI_f6856c34f5de" }
 };
 const char *s_Tips[] = {
-    "Use the gravity gun to turn loose physics objects into weapons.",
-    "Listen for footsteps and weapon fire to track nearby opponents.",
-    "Learn the routes between health, suit chargers and weapon pickups.",
-    "Switch weapons when reloading would leave you exposed.",
-    "In team matches, move together and cover different angles."
+    "#HL2MP_UI_52073f6c2130",
+    "#HL2MP_UI_9ab9e2bbdd8b",
+    "#HL2MP_UI_ecb58bfa7a74",
+    "#HL2MP_UI_1f9cd0b80015",
+    "#HL2MP_UI_edb2f0a4fa38"
 };
 
 // A server-supplied name is display data, never a material path or console command.
@@ -97,12 +97,12 @@ public:
         SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
         SetProportional( false ); SetKeyBoardInputEnabled( false ); SetMouseInputEnabled( false );
         m_Logo = Label( "Logo", "deathmatch" );
-        m_Tag = Label( "Tag", "HALF-LIFE 2  /  MULTIPLAYER" );
+        m_Tag = Label( "Tag", "#HL2MP_UI_dd67c326ae8a" );
         m_Mode = Label( "Mode", "" );
-        m_Map = Label( "Map", "CONNECTING" );
+        m_Map = Label( "Map", "#HL2MP_UI_a0e1a519f04a" );
         m_Description = Label( "Description", "" ); m_Description->SetWrap( true );
         m_Server = Label( "Server", "" );
-        m_TipHeading = Label( "TipHeading", "FIELD NOTES" );
+        m_TipHeading = Label( "TipHeading", "#HL2MP_UI_12c42506eefd" );
         m_Tip = Label( "Tip", "" ); m_Tip->SetWrap( true );
         ListenForGameEvent( "server_spawn" );
         ListenForGameEvent( "game_newmap" );
@@ -306,20 +306,20 @@ private:
             }
         }
         char title[128]; Q_strncpy( title, m_Context.map, sizeof( title ) ); Q_strupr( title );
-        m_Map->SetText( index >= 0 ? s_Maps[index].title : title[0] ? title : "CONNECTING" );
-        m_Description->SetText( index >= 0 ? s_Maps[index].description : title[0] ? "Community map. Match rules are set by the server." : "Preparing your connection to the server." );
-        const char *mode = "DEATHMATCH";
-        if ( !Q_strcmp( m_Context.mode, "menu" ) ) mode = "MAIN MENU";
-        else if ( !Q_strcmp( m_Context.mode, "duel" ) ) mode = "COMPETITIVE  /  1v1";
-        else if ( !Q_strcmp( m_Context.mode, "team" ) ) mode = "COMPETITIVE  /  2v2";
-        else if ( !Q_strcmp( m_Context.mode, "team3" ) ) mode = "COMPETITIVE  /  3v3";
-        else if ( !Q_strcmp( m_Context.mode, "team4" ) ) mode = "COMPETITIVE  /  4v4";
-        else if ( !Q_strcmp( m_Context.mode, "team5" ) ) mode = "COMPETITIVE  /  5v5";
-        else if ( !Q_strcmp( m_Context.mode, "casual" ) ) mode = "CASUAL";
-        else if ( !Q_strcmp( m_Context.mode, "custom" ) ) mode = "PRIVATE MATCH";
-        else if ( !Q_strcmp( m_Context.mode, "community" ) ) mode = "COMMUNITY SERVER";
-        else if ( !Q_strcmp( m_Context.mode, "listen" ) ) mode = "LISTEN SERVER  /  DEATHMATCH";
-        else if ( !Q_strcmp( m_Context.mode, "listen_team" ) ) mode = "LISTEN SERVER  /  TEAM DEATHMATCH";
+        m_Map->SetText( index >= 0 ? s_Maps[index].title : title[0] ? title : "#HL2MP_UI_a0e1a519f04a" );
+        m_Description->SetText( index >= 0 ? s_Maps[index].description : title[0] ? "#HL2MP_UI_fb10f50b23d6" : "#HL2MP_UI_c68c7f69f3eb" );
+        const char *mode = "#HL2MP_UI_127aad574b83";
+        if ( !Q_strcmp( m_Context.mode, "menu" ) ) mode = "#HL2MP_UI_cb2a495822a6";
+        else if ( !Q_strcmp( m_Context.mode, "duel" ) ) mode = "#HL2MP_UI_e7def291093c";
+        else if ( !Q_strcmp( m_Context.mode, "team" ) ) mode = "#HL2MP_UI_b938e9d84260";
+        else if ( !Q_strcmp( m_Context.mode, "team3" ) ) mode = "#HL2MP_UI_9fe23f8da144";
+        else if ( !Q_strcmp( m_Context.mode, "team4" ) ) mode = "#HL2MP_UI_937a9a5ec4b7";
+        else if ( !Q_strcmp( m_Context.mode, "team5" ) ) mode = "#HL2MP_UI_9f447deb2a04";
+        else if ( !Q_strcmp( m_Context.mode, "casual" ) ) mode = "#HL2MP_UI_ff2fb9e38104";
+        else if ( !Q_strcmp( m_Context.mode, "custom" ) ) mode = "#HL2MP_UI_20b3f3627b47";
+        else if ( !Q_strcmp( m_Context.mode, "community" ) ) mode = "#HL2MP_UI_9cfb5935b8af";
+        else if ( !Q_strcmp( m_Context.mode, "listen" ) ) mode = "#HL2MP_UI_7c4960bb51c5";
+        else if ( !Q_strcmp( m_Context.mode, "listen_team" ) ) mode = "#HL2MP_UI_9e907940e783";
         m_Mode->SetText( mode );
         wchar_t server[256]; V_UTF8ToUnicode( m_Context.server, server, sizeof( server ) ); m_Server->SetText( server );
     }

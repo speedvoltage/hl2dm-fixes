@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp_messages.h"
 #include "cdll_client_int.h"
 #include "hl2mp_serverbrowser.h"
 #include "hl2mp_loading.h"
@@ -19,14 +20,14 @@ namespace
 {
 enum Source { INTERNET, FAVORITES, HISTORY, LAN, FRIENDS, SPECTATE, BLOCKED };
 enum Filter { GAME, POPULATION, PING, SECURITY, PASSWORD, FILTER_COUNT };
-static const char *s_Sources[] = { "INTERNET", "FAVORITES", "HISTORY", "LAN", "FRIENDS", "SPECTATE", "BLOCKED" };
-static const char *s_Columns[] = { "SERVER", "MAP", "PLAYERS", "PING", "ACCESS" };
+static const char *s_Sources[] = { "#HL2MP_UI_0c21e780658d", "#HL2MP_UI_5aa5c2e09710", "#HL2MP_UI_23e04084df12", "#HL2MP_UI_3b3394489677", "#HL2MP_UI_15037d080b19", "#HL2MP_UI_d5c2cd835c14", "#HL2MP_UI_a1f4014f85aa" };
+static const char *s_Columns[] = { "#HL2MP_UI_830ef117e138", "#HL2MP_UI_4cf644d78bfc", "#HL2MP_UI_a1e4b72d1fe8", "#HL2MP_UI_906055e56391", "#HL2MP_UI_c01a38705dd6" };
 static ISteamMatchmakingServers *Servers() { return steamapicontext ? steamapicontext->SteamMatchmakingServers() : NULL; }
 static ISteamMatchmaking *Favorites() { return steamapicontext ? steamapicontext->SteamMatchmaking() : NULL; }
 static AppId_t CurrentApp() { return steamapicontext && steamapicontext->SteamUtils() ? steamapicontext->SteamUtils()->GetAppID() : 0; }
 static void SetLabelText( vgui::Label *label, const char *text )
 {
-    wchar_t wide[2048]; V_UTF8ToUnicode( text, wide, sizeof( wide ) ); label->SetText( wide );
+    wchar_t wide[2048]; V_UTF8ToUnicode( HL2MPText( text ), wide, sizeof( wide ) ); label->SetText( wide );
 }
 static void ReadText( vgui::TextEntry *entry, char *text, int size )
 {
@@ -73,9 +74,9 @@ public:
     {
         RemoveActionSignalTarget( parent ); AddActionSignalTarget( target );
         m_Labels[0] = MakeLabel( this, server.GetName() ); m_Labels[1] = MakeLabel( this, server.m_szMap );
-        m_Labels[2] = MakeLabel( this, VarArgs( "%d / %d", server.m_nPlayers, server.m_nMaxPlayers ) );
-        m_Labels[3] = MakeLabel( this, server.m_bHadSuccessfulResponse ? VarArgs( "%d ms", server.m_nPing ) : "--" );
-        m_Labels[4] = MakeLabel( this, server.m_bPassword ? "PASSWORD" : server.m_bSecure ? "VAC" : "OPEN" );
+        m_Labels[2] = MakeLabel( this, HL2MPFormat( "%d / %d", server.m_nPlayers, server.m_nMaxPlayers ) );
+        m_Labels[3] = MakeLabel( this, server.m_bHadSuccessfulResponse ? HL2MPFormat( "%d ms", server.m_nPing ) : "--" );
+        m_Labels[4] = MakeLabel( this, server.m_bPassword ? "#HL2MP_UI_0be64ae89ddd" : server.m_bSecure ? "VAC" : "#HL2MP_UI_6e10953f3e4c" );
     }
     void Style( vgui::HFont font, float scale, bool selected )
     {
@@ -120,7 +121,7 @@ public:
     {
         SetVisible( false ); SetZPos( 200 ); title = MakeLabel( this, "" ); body = MakeLabel( this, "" ); body->SetWrap( true );
         entry = new vgui::TextEntry( this, "AddressOrPassword" ); entry->SetMaximumCharCount( 63 );
-        yes = new CHL2MPSettingsButton( this, "", "dialog_accept" ); no = new CHL2MPSettingsButton( this, "CANCEL", "dialog_cancel" );
+        yes = new CHL2MPSettingsButton( this, "", "dialog_accept" ); no = new CHL2MPSettingsButton( this, "#HL2MP_UI_ad8d698573fc", "dialog_cancel" );
         yes->ServerStyle( true ); no->ServerStyle();
         yes->RemoveActionSignalTarget( this ); yes->AddActionSignalTarget( parent ); no->RemoveActionSignalTarget( this ); no->AddActionSignalTarget( parent );
     }
@@ -174,17 +175,17 @@ CHL2MPServerBrowser::CHL2MPServerBrowser( vgui::Panel *parent ) : BaseClass( par
 {
     SetVisible( false ); SetZPos( 100 ); SetKeyBoardInputEnabled( true ); SetMouseInputEnabled( true );
     m_Font = m_Small = m_Title = 0;
-    m_Heading = MakeLabel( this, "COMMUNITY SERVERS" ); m_Count = MakeLabel( this, "" ); m_Details = MakeLabel( this, "Select a server to see its details." ); m_Details->SetWrap( true );
-    m_Hint = MakeLabel( this, "" ); m_Hint->SetWrap( true ); m_SearchLabel = MakeLabel( this, "SEARCH NAME / TAGS" ); m_MapLabel = MakeLabel( this, "MAP" );
+    m_Heading = MakeLabel( this, "#HL2MP_UI_c7d7578712de" ); m_Count = MakeLabel( this, "" ); m_Details = MakeLabel( this, "#HL2MP_UI_286032df4379" ); m_Details->SetWrap( true );
+    m_Hint = MakeLabel( this, "" ); m_Hint->SetWrap( true ); m_SearchLabel = MakeLabel( this, "#HL2MP_UI_d7c104c5a85e" ); m_MapLabel = MakeLabel( this, "#HL2MP_UI_4cf644d78bfc" );
     m_Search = new vgui::TextEntry( this, "Search" ); m_Search->SetMaximumCharCount( 127 ); m_Map = new vgui::TextEntry( this, "Map" ); m_Map->SetMaximumCharCount( 63 );
-    m_Back = new CHL2MPSettingsButton( this, "<  BACK", "back" );
+    m_Back = new CHL2MPSettingsButton( this, "#HL2MP_UI_24c76252a90c", "back" );
     for ( int i = 0; i < 7; ++i ) m_Tabs[i] = new CHL2MPSettingsButton( this, s_Sources[i], VarArgs( "source_%d", i ) );
     for ( int i = 0; i < 5; ++i ) { m_Headers[i] = new CHL2MPSettingsButton( this, s_Columns[i], VarArgs( "sort_%d", i ) ); m_Headers[i]->SetContentAlignment( vgui::Label::a_west ); m_Headers[i]->SetTextInset( 8, 0 ); }
     for ( int i = 0; i < FILTER_COUNT; ++i ) { m_Filters[i] = new CHL2MPDropdown( this, VarArgs( "Filter%d", i ) ); m_Filters[i]->ServerStyle(); }
-    Choices( m_Filters[GAME], "THIS MOD|RETAIL HL2: DEATHMATCH" ); Choices( m_Filters[POPULATION], "ANY POPULATION|HAS PLAYERS|HAS OPEN SLOTS|EMPTY" );
-    Choices( m_Filters[PING], "ANY PING|UNDER 50 ms|UNDER 100 ms|UNDER 150 ms|UNDER 250 ms" ); Choices( m_Filters[SECURITY], "ANY SECURITY|VAC SECURED" ); Choices( m_Filters[PASSWORD], "ANY ACCESS|NO PASSWORD|PASSWORD REQUIRED" );
-    m_Refresh = new CHL2MPSettingsButton( this, "REFRESH", "refresh" ); m_Add = new CHL2MPSettingsButton( this, "FIND BY ADDRESS", "address" );
-    m_Favorite = new CHL2MPSettingsButton( this, "ADD FAVORITE", "favorite" ); m_Block = new CHL2MPSettingsButton( this, "BLOCK", "block" ); m_Connect = new CHL2MPSettingsButton( this, "CONNECT", "connect" );
+    Choices( m_Filters[GAME], "#HL2MP_UI_70a9a450e211|#HL2MP_UI_04f62ae5ed54" ); Choices( m_Filters[POPULATION], "#HL2MP_UI_843d13080204|#HL2MP_UI_9da932eb01ab|#HL2MP_UI_04b4d122757e|#HL2MP_UI_cc1d2f838445" );
+    Choices( m_Filters[PING], "#HL2MP_UI_8e5ecfaf4808|#HL2MP_UI_3b79c159883b|#HL2MP_UI_9cfcd6d71fda|#HL2MP_UI_0ee726e80620|#HL2MP_UI_d40ed06cd3cf" ); Choices( m_Filters[SECURITY], "#HL2MP_UI_3032c17bef69|#HL2MP_UI_b79419e37a59" ); Choices( m_Filters[PASSWORD], "#HL2MP_UI_b347c7b5d0a3|#HL2MP_UI_1f0c65992f4b|#HL2MP_UI_f103b053f57a" );
+    m_Refresh = new CHL2MPSettingsButton( this, "#HL2MP_UI_1c3108ccf1f5", "refresh" ); m_Add = new CHL2MPSettingsButton( this, "#HL2MP_UI_f4c1d6ee1475", "address" );
+    m_Favorite = new CHL2MPSettingsButton( this, "#HL2MP_UI_bf223b688949", "favorite" ); m_Block = new CHL2MPSettingsButton( this, "#HL2MP_UI_38a42c0b64ac", "block" ); m_Connect = new CHL2MPSettingsButton( this, "#HL2MP_UI_5bb4dc6f47d4", "connect" );
     CHL2MPSettingsButton *buttons[] = { m_Back, m_Refresh, m_Add, m_Favorite, m_Block, m_Connect };
     for ( int i = 0; i < ARRAYSIZE( buttons ); ++i ) buttons[i]->ServerStyle( buttons[i] == m_Connect );
     for ( int i = 0; i < 7; ++i ) m_Tabs[i]->ServerStyle();
@@ -218,7 +219,7 @@ void CHL2MPServerBrowser::Refresh()
 {
     CancelQueries(); m_Servers.Purge(); m_Selected = -1; m_Dirty = true; m_Message = "";
     if ( m_Source == BLOCKED ) { m_Servers = m_Blocked; return; }
-    if ( !Servers() || !QueryApp() ) { m_Message = "Steam server browsing is unavailable. Check that Steam is running."; return; }
+    if ( !Servers() || !QueryApp() ) { m_Message = "#HL2MP_UI_b650dc072c4f"; return; }
     m_Searching = true;
     // Query the game's pool, then apply reversible local filters without restarting discovery.
     switch ( m_Source )
@@ -231,7 +232,7 @@ void CHL2MPServerBrowser::Refresh()
     case SPECTATE: m_Request = Servers()->RequestSpectatorServerList( QueryApp(), NULL, 0, this ); break;
     default: break;
     }
-    if ( !m_Request ) { m_Searching = false; m_Message = "Steam could not start the server search. Try Refresh."; }
+    if ( !m_Request ) { m_Searching = false; m_Message = "#HL2MP_UI_42e4e4eb69d5"; }
 }
 void CHL2MPServerBrowser::AddServer( const gameserveritem_t &server )
 {
@@ -251,17 +252,17 @@ void CHL2MPServerBrowser::ServerFailedToRespond( HServerListRequest request, int
 void CHL2MPServerBrowser::RefreshComplete( HServerListRequest request, EMatchMakingServerResponse response )
 {
     if ( request != m_Request ) return; m_Searching = false; m_Dirty = true;
-    if ( response == eServerFailedToRespond ) m_Message = "The server search did not respond. Try Refresh or Find by Address.";
+    if ( response == eServerFailedToRespond ) m_Message = "#HL2MP_UI_c12c64b0ef39";
 }
 void CHL2MPServerBrowser::ServerResponded( gameserveritem_t &server )
 {
     m_PingRequest = HSERVERQUERY_INVALID; AddServer( server );
     FOR_EACH_VEC( m_Servers, i ) if ( SameServer( m_Servers[i], server ) ) m_Selected = i;
-    m_Message = "Server found. Select Connect to join, or Add Favorite to save it.";
+    m_Message = "#HL2MP_UI_0999a56d1071";
 }
 void CHL2MPServerBrowser::ServerFailedToRespond()
 {
-    m_PingRequest = HSERVERQUERY_INVALID; m_Message = "No reply from that address. Check the server's query port and try again.";
+    m_PingRequest = HSERVERQUERY_INVALID; m_Message = "#HL2MP_UI_7bb14cfbfad9";
 }
 bool CHL2MPServerBrowser::Compatible( const gameserveritem_t &server ) const
 {
@@ -285,7 +286,7 @@ void CHL2MPServerBrowser::SaveBlocked()
     {
         KeyValues *entry = new KeyValues( VarArgs( "%d", i ) ); entry->SetString( "address", m_Blocked[i].m_NetAdr.GetConnectionAddressString() ); entry->SetInt( "queryport", m_Blocked[i].m_NetAdr.GetQueryPort() ); entry->SetInt( "app", m_Blocked[i].m_nAppID ); root->AddSubKey( entry );
     }
-    if ( !root->SaveToFile( filesystem, "cfg/serverbrowser_blocked.vdf", "MOD" ) ) m_Message = "Could not save the blocked server list.";
+    if ( !root->SaveToFile( filesystem, "cfg/serverbrowser_blocked.vdf", "MOD" ) ) m_Message = "#HL2MP_UI_043ae18acfdd";
     root->deleteThis();
 }
 bool CHL2MPServerBrowser::Matches( const gameserveritem_t &server ) const
@@ -324,18 +325,18 @@ void CHL2MPServerBrowser::UpdateDetails()
 {
     const bool selected = m_Servers.IsValidIndex( m_Selected );
     m_Favorite->SetEnabled( selected && Favorites() ); m_Block->SetEnabled( selected && ( m_Source != HISTORY || Favorites() ) );
-    m_Block->SetText( m_Source == BLOCKED ? "UNBLOCK" : m_Source == HISTORY ? "REMOVE HISTORY" : "BLOCK" );
+    m_Block->SetText( m_Source == BLOCKED ? "#HL2MP_UI_7fc5f24a07fb" : m_Source == HISTORY ? "#HL2MP_UI_67634830f599" : "#HL2MP_UI_38a42c0b64ac" );
     m_Connect->SetEnabled( selected && m_Source != BLOCKED && Compatible( m_Servers[m_Selected] ) && !HL2MPCoordinator().Busy() ); m_Connect->Active( m_Connect->IsEnabled() );
-    if ( !selected ) { m_Details->SetText( m_Visible.Count() ? "Select a server to see its details. Double-click to connect." : m_Searching ? "Discovering servers..." : "No servers match. Change filters, refresh, or find a server by address." ); m_Favorite->SetText( "ADD FAVORITE" ); return; }
-    const gameserveritem_t &server = m_Servers[m_Selected]; m_Favorite->SetText( IsFavorite( server ) ? "REMOVE FAVORITE" : "ADD FAVORITE" );
-    SetLabelText( m_Details, VarArgs( "%s  /  %s\n%s  /  %d players, %d bots  /  %s%s\n%s", server.GetName(), server.m_NetAdr.GetConnectionAddressString(), server.m_szMap, MAX( 0, server.m_nPlayers - server.m_nBotPlayers ), server.m_nBotPlayers, server.m_bSecure ? "VAC secured" : "Not VAC secured", server.m_bPassword ? "  /  Password required" : "", !server.m_bHadSuccessfulResponse ? "Server not responding." : !Compatible( server ) ? "This server requires a different game build. Browsing and favorites are available." : HL2MPCoordinator().Busy() ? "Finish or cancel matchmaking before joining a community server." : server.m_szGameTags ) );
+    if ( !selected ) { m_Details->SetText( m_Visible.Count() ? "#HL2MP_UI_f1573bde51e0" : m_Searching ? "#HL2MP_UI_78a8383a4c6e" : "#HL2MP_UI_342764449d4a" ); m_Favorite->SetText( "#HL2MP_UI_bf223b688949" ); return; }
+    const gameserveritem_t &server = m_Servers[m_Selected]; m_Favorite->SetText( IsFavorite( server ) ? "#HL2MP_UI_54666878eb36" : "#HL2MP_UI_bf223b688949" );
+    SetLabelText( m_Details, HL2MPFormat( "%s  /  %s\n%s  /  %d players, %d bots  /  %s%s\n%s", server.GetName(), server.m_NetAdr.GetConnectionAddressString(), server.m_szMap, MAX( 0, server.m_nPlayers - server.m_nBotPlayers ), server.m_nBotPlayers, server.m_bSecure ? HL2MPText( "#HL2MP_UI_2d65ac78f571" ) : HL2MPText( "#HL2MP_UI_95ff2ff65452" ), server.m_bPassword ? HL2MPText( "#HL2MP_UI_92d1e10d673c" ) : "", !server.m_bHadSuccessfulResponse ? HL2MPText( "#HL2MP_UI_b692eda91d22" ) : !Compatible( server ) ? HL2MPText( "#HL2MP_UI_28460d278f44" ) : HL2MPCoordinator().Busy() ? HL2MPText( "#HL2MP_UI_45e14f5dd7de" ) : server.m_szGameTags ) );
 }
 void CHL2MPServerBrowser::ShowDialog( bool password )
 {
     for ( int i = 0; i < FILTER_COUNT; ++i ) m_Filters[i]->HideMenu();
-    m_PasswordDialog = password; m_Dialog->title->SetText( password ? "SERVER PASSWORD" : "FIND A SERVER" );
-    SetLabelText( m_Dialog->body, password ? m_Connecting.GetName() : "Enter an IPv4 address and query port, for example 192.168.1.20:27015. The server will be checked before you connect." );
-    m_Dialog->entry->SetText( "" ); m_Dialog->entry->SetTextHidden( password ); m_Dialog->yes->SetText( password ? "CONNECT" : "FIND SERVER" );
+    m_PasswordDialog = password; m_Dialog->title->SetText( password ? "#HL2MP_UI_eb788282755c" : "#HL2MP_UI_508f63fa1da9" );
+    SetLabelText( m_Dialog->body, password ? m_Connecting.GetName() : "#HL2MP_UI_a2b9fab7fa12" );
+    m_Dialog->entry->SetText( "" ); m_Dialog->entry->SetTextHidden( password ); m_Dialog->yes->SetText( password ? "#HL2MP_UI_5bb4dc6f47d4" : "#HL2MP_UI_c7a64142dc81" );
     m_Dialog->SetVisible( true ); m_Dialog->MoveToFront(); vgui::input()->SetAppModalSurface( m_Dialog->GetVPanel() ); m_Dialog->entry->RequestFocus();
 }
 void CHL2MPServerBrowser::HideDialog()
@@ -362,7 +363,7 @@ void CHL2MPServerBrowser::OnCommand( const char *command )
         int row = m_Visible.Find( m_Selected ) + ( !Q_strcmp( command, "next" ) ? 1 : -1 );
         if ( m_Visible.Count() ) { row = clamp( row, 0, m_Visible.Count() - 1 ); OnCommand( VarArgs( "select_%d", m_Visible[row] ) ); m_Rows[row]->RequestFocus(); m_List->ScrollToItem( row ); }
     }
-    else if ( !Q_strcmp( command, "refresh" ) ) { if ( m_Searching || m_PingRequest != HSERVERQUERY_INVALID ) { CancelQueries(); m_Message = "Search stopped."; } else Refresh(); }
+    else if ( !Q_strcmp( command, "refresh" ) ) { if ( m_Searching || m_PingRequest != HSERVERQUERY_INVALID ) { CancelQueries(); m_Message = "#HL2MP_UI_acf16c738e05"; } else Refresh(); }
     else if ( !Q_strcmp( command, "address" ) ) { if ( Servers() ) ShowDialog( false ); }
     else if ( !Q_strcmp( command, "dialog_cancel" ) ) HideDialog();
     else if ( !Q_strcmp( command, "dialog_accept" ) && m_Dialog->IsVisible() )
@@ -371,12 +372,12 @@ void CHL2MPServerBrowser::OnCommand( const char *command )
         if ( m_PasswordDialog ) { HideDialog(); Connect( value ); memset( value, 0, sizeof( value ) ); }
         else
         {
-            uint32 ip; uint16 port; if ( !ParseAddress( value, ip, port ) ) { m_Dialog->body->SetText( "Enter a valid IPv4 address with an optional port from 1 to 65535." ); return; }
+            uint32 ip; uint16 port; if ( !ParseAddress( value, ip, port ) ) { m_Dialog->body->SetText( "#HL2MP_UI_b46da8027490" ); return; }
             HideDialog(); if ( !Servers() ) return;
             if ( m_PingRequest != HSERVERQUERY_INVALID ) Servers()->CancelServerQuery( m_PingRequest );
             m_Search->SetText( "" ); m_Map->SetText( "" ); for ( int i = 1; i < FILTER_COUNT; ++i ) m_Filters[i]->SilentActivateItemByRow( 0 );
             if ( m_Source == BLOCKED ) { m_Source = INTERNET; Refresh(); InvalidateLayout( true ); }
-            m_PingRequest = Servers()->PingServer( ip, port, this ); m_Message = m_PingRequest == HSERVERQUERY_INVALID ? "Could not start the address lookup." : "Checking server address...";
+            m_PingRequest = Servers()->PingServer( ip, port, this ); m_Message = m_PingRequest == HSERVERQUERY_INVALID ? "#HL2MP_UI_441fd0b421cf" : "#HL2MP_UI_3e86e17920fd";
         }
     }
     else if ( !Q_strcmp( command, "connect" ) && m_Servers.IsValidIndex( m_Selected ) && m_Connect->IsEnabled() )
@@ -418,9 +419,9 @@ void CHL2MPServerBrowser::OnTick()
     if ( m_FilterState != state ) { m_FilterState = state; m_Dirty = true; }
     const int game = m_Filters[GAME]->GetActiveItem(); if ( game != m_LastGame ) { m_LastGame = game; Refresh(); }
     if ( m_Dirty && Plat_FloatTime() >= m_NextRebuild ) Rebuild();
-    UpdateDetails(); m_Refresh->SetText( m_Searching || m_PingRequest != HSERVERQUERY_INVALID ? "STOP SEARCH" : "REFRESH" ); m_Add->SetEnabled( Servers() != NULL );
-    m_Count->SetText( VarArgs( "%d SERVERS%s", m_Visible.Count(), m_Searching ? "  /  SEARCHING..." : "" ) );
-    m_Hint->SetText( m_Message.Length() ? m_Message.String() : m_Source == BLOCKED ? "Blocked servers are hidden from the other tabs. Select a server to unblock it." : "Community servers use their own rules. Favorites and history are saved through Steam." );
+    UpdateDetails(); m_Refresh->SetText( m_Searching || m_PingRequest != HSERVERQUERY_INVALID ? "#HL2MP_UI_e2c8c18fdf1b" : "#HL2MP_UI_1c3108ccf1f5" ); m_Add->SetEnabled( Servers() != NULL );
+    m_Count->SetText( HL2MPFormat( "%d SERVERS%s", m_Visible.Count(), m_Searching ? HL2MPText( "#HL2MP_UI_31b7bcb0e9d4" ) : "" ) );
+    m_Hint->SetText( m_Message.Length() ? m_Message.String() : m_Source == BLOCKED ? "#HL2MP_UI_db92a468b8de" : "#HL2MP_UI_3dae63aacbe1" );
     for ( int i = 0; i < 5; ++i ) { m_Headers[i]->Active( i == m_Sort ); m_Headers[i]->SetText( VarArgs( "%s%s", s_Columns[i], i == m_Sort ? m_Ascending ? "  +" : "  -" : "" ) ); }
 }
 void CHL2MPServerBrowser::PerformLayout()

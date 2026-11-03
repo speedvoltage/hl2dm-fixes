@@ -1080,9 +1080,9 @@ void CHL2MP_Player::ChangeTeam( int iTeam )
 /*	if ( GetNextTeamChangeTime() >= gpGlobals->curtime )
 	{
 		char szReturnString[128];
-		Q_snprintf( szReturnString, sizeof( szReturnString ), "Please wait %d more seconds before trying to switch teams again.\n", (int)(GetNextTeamChangeTime() - gpGlobals->curtime) );
+		Q_snprintf( szReturnString, sizeof( szReturnString ), "%d", (int)(GetNextTeamChangeTime() - gpGlobals->curtime) );
 
-		ClientPrint( this, HUD_PRINTTALK, szReturnString );
+		ClientPrint( this, HUD_PRINTTALK, "#HL2MP_TeamCooldown", szReturnString );
 		return;
 	}*/
 
@@ -1734,7 +1734,8 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 {
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( UTIL_GetCommandClient() );
 	const int iFragLimit = MAX( fraglimit.GetInt(), 0 );
-	char szMessage[128];
+	char szMessage[128], szTime[32] = "", szFrags[16];
+	Q_snprintf( szFrags, sizeof( szFrags ), "%d", iFragLimit );
 
 	if ( mp_timelimit.GetInt() <= 0 )
 	{
@@ -1753,7 +1754,7 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 		const int iHours = iTimeRemaining / 3600;
 		const int iMinutes = ( iTimeRemaining / 60 ) % 60;
 		const int iSeconds = iTimeRemaining % 60;
-		char szTime[32];
+
 
 		if ( iHours > 0 )
 		{
@@ -1776,7 +1777,7 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 
 	if ( pPlayer )
 	{
-		ClientPrint( pPlayer, HUD_PRINTTALK, szMessage );
+		ClientPrint( pPlayer, HUD_PRINTTALK, mp_timelimit.GetInt() > 0 ? ( iFragLimit > 0 ? "#HL2MP_TimeFrags" : "#HL2MP_TimeOnly" ) : ( iFragLimit > 0 ? "#HL2MP_FragsOnly" : "#HL2MP_NoLimits" ), mp_timelimit.GetInt() > 0 ? szTime : szFrags, szFrags );
 	}
 	else
 	{

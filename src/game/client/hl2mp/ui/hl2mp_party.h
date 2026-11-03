@@ -47,7 +47,7 @@ private:
 	bool m_bAwaitingMetadata;
 	bool m_bInitialized;
 	double m_flMetadataDeadline;
-	char m_Status[256];
+	char m_Status[2048];
 	CCallResult<CHL2MPParty, LobbyCreated_t> m_CreateResult;
 	CCallResult<CHL2MPParty, LobbyEnter_t> m_JoinResult;
 	CCallbackManual<CHL2MPParty, GameLobbyJoinRequested_t> m_InviteCallback;

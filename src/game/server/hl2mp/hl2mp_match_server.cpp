@@ -394,7 +394,7 @@ void CMatchServer::Response( HTTPRequestCompleted_t *result, bool failed )
 			player->IncrementFragCount( m_Roster[index].frags );
 			player->IncrementDeathCount( m_Roster[index].deaths );
 			if ( !Playing() ) player->AddFlag( FL_FROZEN );
-			ClientPrint( player, HUD_PRINTTALK, "Welcome to your match." );
+			ClientPrint( player, HUD_PRINTTALK, "#HL2MP_UI_f685c330d29f" );
 			Msg( "Matchmaking server: admitted player %d.\n", player->GetUserID() );
 		}
 	}
@@ -422,7 +422,7 @@ void CMatchServer::CheckCoordinatorContact()
 	Q_strncpy( m_Abort, "server_error", sizeof( m_Abort ) );
 	m_Playing = false;
 	m_Countdown = 0;
-	UTIL_ClientPrintAll( HUD_PRINTCENTER, "Match cancelled: matchmaking service unavailable" );
+	UTIL_ClientPrintAll( HUD_PRINTCENTER, "#HL2MP_UI_43e95cf51ce9" );
 	Msg( "Matchmaking server: coordinator contact lost; cancelling without a result.\n" );
 }
 
@@ -495,7 +495,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 			if ( !m_Countdown )
 			{
 				m_Countdown = now + ( !Q_strcmp( m_Mode, "casual" ) ? 0 : 5 );
-				if ( Q_strcmp( m_Mode, "casual" ) ) UTIL_ClientPrintAll( HUD_PRINTCENTER, "Match begins in 5 seconds" );
+				if ( Q_strcmp( m_Mode, "casual" ) ) UTIL_ClientPrintAll( HUD_PRINTCENTER, "#HL2MP_UI_85c3e26bd346" );
 			}
 			if ( now >= m_Countdown )
 			{

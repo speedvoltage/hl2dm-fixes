@@ -374,8 +374,8 @@ void CHL2MPRules::Think( void )
 
 	if( m_bAwaitingReadyRestart && m_bHeardAllPlayersReady )
 	{
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "All players ready. Game will restart in 5 seconds" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "All players ready. Game will restart in 5 seconds" );
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, "#HL2MP_ReadyRestart" );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "#HL2MP_ReadyRestart" );
 
 		m_flRestartGameTime = gpGlobals->curtime + 5;
 		m_bAwaitingReadyRestart = false;
@@ -813,8 +813,8 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 			Q_snprintf( szReturnString, sizeof (szReturnString ), "cl_playermodel %s\n", pCurrentModel );
 			engine->ClientCommand ( pHL2Player->edict(), szReturnString );
 
-			Q_snprintf( szReturnString, sizeof( szReturnString ), "Please wait %d more seconds before trying to switch.\n", (int)(pHL2Player->GetNextModelChangeTime() - gpGlobals->curtime) );
-			ClientPrint( pHL2Player, HUD_PRINTTALK, szReturnString );
+			Q_snprintf( szReturnString, sizeof( szReturnString ), "%d", (int)(pHL2Player->GetNextModelChangeTime() - gpGlobals->curtime) );
+			ClientPrint( pHL2Player, HUD_PRINTTALK, "#HL2MP_ModelCooldown", szReturnString );
 			return;
 		}
 
@@ -827,7 +827,7 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 			char szReturnString[128];
 			Q_snprintf( szReturnString, sizeof( szReturnString ), "Your player model is: %s\n", pszCurrentModelName );
 
-			ClientPrint( pHL2Player, HUD_PRINTTALK, szReturnString );
+			ClientPrint( pHL2Player, HUD_PRINTTALK, "#HL2MP_PlayerModel", pszCurrentModelName );
 		}
 		else
 		{
@@ -1274,8 +1274,8 @@ void CHL2MPRules::CheckRestartGame( void )
 		// let the players know
 		char strRestartDelay[64];
 		Q_snprintf( strRestartDelay, sizeof( strRestartDelay ), "%d", iRestartDelay );
-		UTIL_ClientPrintAll( HUD_PRINTCENTER, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
-		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Game will restart in %s1 %s2", strRestartDelay, iRestartDelay == 1 ? "SECOND" : "SECONDS" );
+		UTIL_ClientPrintAll( HUD_PRINTCENTER, iRestartDelay == 1 ? "#HL2MP_RestartSecond" : "#HL2MP_RestartSeconds", strRestartDelay );
+		UTIL_ClientPrintAll( HUD_PRINTCONSOLE, iRestartDelay == 1 ? "#HL2MP_RestartSecond" : "#HL2MP_RestartSeconds", strRestartDelay );
 
 		m_flRestartGameTime = gpGlobals->curtime + iRestartDelay;
 		m_bCompleteReset = true;

@@ -67,27 +67,17 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	if ( HL2MPRules()->IsTeamplay() == true )
 	{
 		const int iTeam = pPlayer->GetTeamNumber();
-		if ( iTeam == TEAM_COMBINE || iTeam == TEAM_REBELS )
-		{
-			const Color teamColor = iTeam == TEAM_COMBINE ? COLOR_BLUE : COLOR_RED;
-			char szTeamMessage[128];
-			Q_snprintf( szTeamMessage, sizeof( szTeamMessage ), "\x01You are on team \x07%02X%02X%02X%s\x01\n", (unsigned int)teamColor.r(), (unsigned int)teamColor.g(), (unsigned int)teamColor.b(), pPlayer->GetTeam()->GetName() );
-			ClientPrint( pPlayer, HUD_PRINTTALK, szTeamMessage );
-		}
-		else
-		{
-		ClientPrint( pPlayer, HUD_PRINTTALK, "You are on team %s1\n", pPlayer->GetTeam()->GetName() );
-		}
+        ClientPrint( pPlayer, HUD_PRINTTALK, "#HL2MP_YourTeam", iTeam == TEAM_COMBINE ? "#HL2MP_TeamCombine" : iTeam == TEAM_REBELS ? "#HL2MP_TeamRebels" : "#HL2MP_Spectators" );
 	}
 
 	if ( HL2MPMatchServerEnabled() )
 	{
-		ClientPrint( pPlayer, HUD_PRINTCENTER, "Joining your match..." );
+		ClientPrint( pPlayer, HUD_PRINTCENTER, "#HL2MP_UI_efa0c3f4105b" );
 		return;
 	}
 
 	const ConVar *hostname = cvar->FindVar( "hostname" );
-	const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
+	const char *title = (hostname) ? hostname->GetString() : "#HL2MP_UI_ff7f63fa3784";
 
 	KeyValues *data = new KeyValues("data");
 	data->SetString( "title", title );		// info panel title

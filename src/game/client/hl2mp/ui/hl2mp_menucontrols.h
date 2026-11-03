@@ -8,6 +8,7 @@
 #include "vgui_controls/Slider.h"
 #include "vgui_controls/ScrollBar.h"
 #include "vgui_controls/ScrollBarSlider.h"
+#include "vgui_controls/TextImage.h"
 
 namespace HL2MPServerTheme
 {
@@ -145,9 +146,18 @@ class CHL2MPSettingsButton : public vgui::Button
 public:
     CHL2MPSettingsButton( vgui::Panel *parent, const char *text, const char *command ) : BaseClass( parent, command, text, parent, command ), m_Active( false ), m_ServerStyle( false ), m_Primary( false )
     {
+        SetCenterWrap( true ); SetTextInset( 6, 0 );
         SetContentAlignment( vgui::Label::a_center ); SetButtonBorderEnabled( false ); DrawFocusBox( false );
     }
     void Active( bool active ) { m_Active = active; Repaint(); }
+    void PerformLayout() OVERRIDE
+    {
+        // VGUI otherwise measures wrapped text using the previous width, which
+        // can leave a stale height and clip the first line after a resize.
+        GetTextImage()->SetSize( MAX( 1, GetWide() - 12 ), GetTall() );
+        GetTextImage()->RecalculateNewLinePositions();
+        BaseClass::PerformLayout();
+    }
     void ServerStyle( bool primary = false ) { m_ServerStyle = true; m_Primary = primary; InvalidateLayout( false, true ); }
     void SetFont( vgui::HFont font ) OVERRIDE
     {

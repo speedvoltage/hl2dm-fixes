@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp_messages.h"
 #include "c_playerresource.h"
 #include "hl2mp_community.h"
 #include "hl2mp_gamerules.h"
@@ -35,9 +36,9 @@ public:
     CCommunityConfirmation( vgui::Panel *parent ) : BaseClass( parent, "Confirmation" )
     {
         SetVisible( false ); SetZPos( 200 ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true );
-        heading = new vgui::Label( this, "Heading", "CONFIRM ACTION" );
+        heading = new vgui::Label( this, "Heading", "#HL2MP_UI_7ae41c475592" );
         body = new vgui::Label( this, "Body", "" ); body->SetWrap( true );
-        yes = new CHL2MPSettingsButton( this, "CONFIRM", "confirm" ); no = new CHL2MPSettingsButton( this, "CANCEL", "cancel" );
+        yes = new CHL2MPSettingsButton( this, "#HL2MP_UI_8adb7edfc88f", "confirm" ); no = new CHL2MPSettingsButton( this, "#HL2MP_UI_ad8d698573fc", "cancel" );
         yes->ServerStyle( true ); no->ServerStyle();
         yes->RemoveActionSignalTarget( this ); yes->AddActionSignalTarget( parent );
         no->RemoveActionSignalTarget( this ); no->AddActionSignalTarget( parent );
@@ -138,28 +139,28 @@ CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "Co
     s_Panel = this; memset( &m_State, 0, sizeof( m_State ) );
     SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true );
     m_TitleFont = vgui::surface()->CreateFont(); m_BodyFont = vgui::surface()->CreateFont(); m_SmallFont = vgui::surface()->CreateFont();
-    m_Title = new vgui::Label( this, "Title", "SERVER CONTROLS" );
+    m_Title = new vgui::Label( this, "Title", "#HL2MP_UI_0bff1b6f6df3" );
     m_Access = new vgui::Label( this, "Access", "" ); m_Info = new vgui::Label( this, "Info", "" );
     m_Status = new vgui::Label( this, "Status", "" ); m_Confirm = new CCommunityConfirmation( this );
-    const char *sections[] = { "MATCH", "SERVER RULES", "PLAYER" };
-    const char *captions[] = { "Game mode", "Current map", "Next map", "Time limit (minutes, 0 = unlimited)", "Frag limit (0 = unlimited)", "Join a team", "Manage player", "Ban duration", "Custom minutes" };
+    const char *sections[] = { "#HL2MP_UI_eaa42a15398b", "#HL2MP_UI_5a4effe2cffe", "#HL2MP_UI_fd49e5bc2a30" };
+    const char *captions[] = { "#HL2MP_UI_ede76ceab6f1", "#HL2MP_UI_a6e14d931afd", "#HL2MP_UI_24b274dda498", "#HL2MP_UI_a092ca8db875", "#HL2MP_UI_475bba55cc00", "#HL2MP_UI_6a275336d8c3", "#HL2MP_UI_52327f55d2ec", "#HL2MP_UI_e6862630c208", "#HL2MP_UI_5902193cc0d9" };
     for ( int i = 0; i < 3; ++i ) m_Sections[i] = new vgui::Label( this, sections[i], sections[i] );
     for ( int i = 0; i < 9; ++i ) m_Captions[i] = new vgui::Label( this, captions[i], captions[i] );
     for ( int i = 0; i < DROPDOWNS; ++i ) { m_Drop[i] = new CHL2MPDropdown( this, VarArgs( "Choice%d", i ) ); m_Drop[i]->ServerStyle(); }
-    Choice( m_Drop[MODE], "DEATHMATCH", 0 ); Choice( m_Drop[MODE], "TEAM DEATHMATCH", 1 );
-    Choice( m_Drop[DURATION], "5 MINUTES", 5 ); Choice( m_Drop[DURATION], "15 MINUTES", 15 ); Choice( m_Drop[DURATION], "30 MINUTES", 30 );
-    Choice( m_Drop[DURATION], "1 HOUR", 60 ); Choice( m_Drop[DURATION], "4 HOURS", 240 ); Choice( m_Drop[DURATION], "1 DAY", 1440 );
-    Choice( m_Drop[DURATION], "1 WEEK", 10080 ); Choice( m_Drop[DURATION], "30 DAYS", 43200 ); Choice( m_Drop[DURATION], "PERMANENT", 0 ); Choice( m_Drop[DURATION], "CUSTOM", -1 );
-    const char *texts[] = { "CHANGE MAP / MODE", "SET NEXT MAP", "PAUSE", "RESTART ROUND", "APPLY RULES", "JOIN / AUTO-ASSIGN", "SPECTATE", "KICK", "BAN", "<  BACK", "RESUME GAME" };
+    Choice( m_Drop[MODE], "#HL2MP_UI_127aad574b83", 0 ); Choice( m_Drop[MODE], "#HL2MP_UI_f756ee9002fc", 1 );
+    Choice( m_Drop[DURATION], "#HL2MP_UI_cad356dd83d4", 5 ); Choice( m_Drop[DURATION], "#HL2MP_UI_6c112b4e8512", 15 ); Choice( m_Drop[DURATION], "#HL2MP_UI_7883d6a6ae23", 30 );
+    Choice( m_Drop[DURATION], "#HL2MP_UI_f164fcdfc441", 60 ); Choice( m_Drop[DURATION], "#HL2MP_UI_1ed8853d3908", 240 ); Choice( m_Drop[DURATION], "#HL2MP_UI_d53d8ffbe3f1", 1440 );
+    Choice( m_Drop[DURATION], "#HL2MP_UI_b872640f8c86", 10080 ); Choice( m_Drop[DURATION], "#HL2MP_UI_c915e80e682b", 43200 ); Choice( m_Drop[DURATION], "#HL2MP_UI_ae2081bb8d46", 0 ); Choice( m_Drop[DURATION], "#HL2MP_UI_7cd5885327fd", -1 );
+    const char *texts[] = { "#HL2MP_UI_f51418e18b22", "#HL2MP_UI_defdaf4434fc", "#HL2MP_UI_ca6456daeccf", "#HL2MP_UI_dfcc426df3d9", "#HL2MP_UI_8a629300668e", "#HL2MP_UI_7042306b802b", "#HL2MP_UI_d5c2cd835c14", "#HL2MP_UI_b880b38fa7b1", "#HL2MP_UI_52465d569d82", "#HL2MP_UI_24c76252a90c", "#HL2MP_UI_d485c9082df8" };
     const char *commands[] = { "changelevel", "nextmap", "pause", "restart", "settings", "join", "spectate", "kick", "ban", "close", "resume" };
     for ( int i = 0; i < BUTTONS; ++i ) { m_Button[i] = new CHL2MPSettingsButton( this, texts[i], commands[i] ); m_Button[i]->ServerStyle( i == APPLY ); }
     m_Time = new vgui::TextEntry( this, "Time" ); m_Frags = new vgui::TextEntry( this, "Frags" );
     m_Time->SetAllowNumericInputOnly( true ); m_Frags->SetAllowNumericInputOnly( true ); m_Time->SetMaximumCharCount( 4 ); m_Frags->SetMaximumCharCount( 4 );
     m_BanMinutes = new vgui::TextEntry( this, "BanMinutes" ); m_BanMinutes->SetAllowNumericInputOnly( true ); m_BanMinutes->SetMaximumCharCount( 6 ); m_BanMinutes->SetText( "60" );
-    m_Friendly = new vgui::CheckButton( this, "Friendly", "Friendly fire" );
-    m_Stay = new vgui::CheckButton( this, "Stay", "Weapon stay" );
-    m_Respawn = new vgui::CheckButton( this, "Respawn", "Force respawn" );
-    m_Bright = new vgui::CheckButton( this, "Bright", "Bright player models" );
+    m_Friendly = new vgui::CheckButton( this, "Friendly", "#HL2MP_UI_d5134a5bdfcc" );
+    m_Stay = new vgui::CheckButton( this, "Stay", "#HL2MP_UI_18d384fbe9ba" );
+    m_Respawn = new vgui::CheckButton( this, "Respawn", "#HL2MP_UI_d8205bf54d70" );
+    m_Bright = new vgui::CheckButton( this, "Bright", "#HL2MP_UI_319a60acdb89" );
     m_Bright->AddActionSignalTarget( this );
 }
 
@@ -247,10 +248,10 @@ void CServerControls::Open( bool fromHotkey )
     if ( m_Pending ) { m_Pending->deleteThis(); m_Pending = NULL; }
     m_Received = m_MapsDone = false; m_Drop[MAP_NOW]->DeleteAllItems(); m_Drop[MAP_NEXT]->DeleteAllItems();
     m_Drop[DURATION]->SilentActivateItemByRow( 2 ); m_Drop[TEAM]->DeleteAllItems();
-    Choice( m_Drop[TEAM], "AUTO-ASSIGN / PLAY", 0 );
-    if ( HL2MPRules()->IsTeamplay() ) { Choice( m_Drop[TEAM], "COMBINE", TEAM_COMBINE ); Choice( m_Drop[TEAM], "REBELS", TEAM_REBELS ); }
+    Choice( m_Drop[TEAM], "#HL2MP_UI_3cced94f86b9", 0 );
+    if ( HL2MPRules()->IsTeamplay() ) { Choice( m_Drop[TEAM], "#HL2MP_UI_46f29c2f51a0", TEAM_COMBINE ); Choice( m_Drop[TEAM], "#HL2MP_UI_f185ee05cab6", TEAM_REBELS ); }
     m_Drop[TEAM]->SilentActivateItemByRow( 0 ); m_Bright->SetSelected( cl_bright_player_models.GetBool() );
-    m_Status->SetText( "Requesting server settings..." ); SetVisible( true ); MoveToFront(); RequestFocus(); InvalidateLayout( true, true ); Request( "open" );
+    m_Status->SetText( "#HL2MP_UI_a4999ebc061c" ); SetVisible( true ); MoveToFront(); RequestFocus(); InvalidateLayout( true, true ); Request( "open" );
 }
 void CServerControls::Close( bool resume )
 {
@@ -267,18 +268,18 @@ void CServerControls::Receive( const ServerState &state )
     if ( m_Received && m_State.generation != state.generation ) { Close(); return; }
     m_State = state;
     if ( !state.enabled ) { Close(); return; }
-    if ( !m_Received || !Q_strcmp( state.status, "Server settings applied." ) )
+    if ( !m_Received || !Q_strcmp( state.status, "#HL2MP_UI_35cf85d0b20a" ) )
     {
         m_Time->SetText( VarArgs( "%d", state.minutes ) ); m_Frags->SetText( VarArgs( "%d", state.frags ) );
         m_Friendly->SetSelected( state.friendly ); m_Stay->SetSelected( state.stay ); m_Respawn->SetSelected( state.respawn );
         m_Drop[MODE]->SilentActivateItemByRow( state.teamplay ? 1 : 0 );
     }
-    m_Received = true; m_Access->SetText( state.admin ? "ADMIN ACCESS" : "PLAYER ACCESS / SERVER RULES ARE READ-ONLY" );
-    m_Info->SetText( VarArgs( "%s  /  %s  /  NEXT: %s", state.map, state.teamplay ? "TEAM DEATHMATCH" : "DEATHMATCH", state.next[0] ? state.next : "MAP CYCLE" ) );
+    m_Received = true; m_Access->SetText( state.admin ? "#HL2MP_UI_986e85ebcad9" : "#HL2MP_UI_87419fb92681" );
+    m_Info->SetText( HL2MPFormat( "%s  /  %s  /  NEXT: %s", state.map, state.teamplay ? HL2MPText( "#HL2MP_UI_f756ee9002fc" ) : HL2MPText( "#HL2MP_UI_127aad574b83" ), state.next[0] ? state.next : HL2MPText( "#HL2MP_UI_541e1279cdfe" ) ) );
     if ( state.status[0] ) m_Status->SetText( state.status );
-    else if ( !state.admin ) m_Status->SetText( "The host or a listed administrator can change server settings." );
-    else m_Status->SetText( state.paused ? "Game paused. Use RESUME to continue." : "Changes apply to this server. Map and mode changes reload the map." );
-    m_Button[PAUSE]->SetText( state.paused ? "RESUME" : "PAUSE" );
+    else if ( !state.admin ) m_Status->SetText( "#HL2MP_UI_f3ca27a9487d" );
+    else m_Status->SetText( state.paused ? "#HL2MP_UI_0f84a5f7ba54" : "#HL2MP_UI_54ee3d6ef407" );
+    m_Button[PAUSE]->SetText( state.paused ? "#HL2MP_UI_0747c96a23db" : "#HL2MP_UI_ca6456daeccf" );
     if ( !m_Pending && !m_Drop[PLAYER]->IsDropdownVisible() ) RefreshPlayers();
 }
 void CServerControls::Map( int generation, const char *map )
@@ -361,9 +362,9 @@ void CServerControls::OnCommand( const char *command )
     else if ( !Q_strcmp( command, "changelevel" ) || !Q_strcmp( command, "nextmap" ) )
     {
         m_Drop[!Q_strcmp( command, "changelevel" ) ? MAP_NOW : MAP_NEXT]->GetText( text, sizeof( text ) ); message->SetString( "map", text ); message->SetInt( "teamplay", Value( m_Drop[MODE] ) );
-        if ( !Q_strcmp( command, "changelevel" ) ) { Confirm( command, VarArgs( "Load %s in %s mode? This ends the current round.", text, Value( m_Drop[MODE] ) ? "team deathmatch" : "deathmatch" ), message ); return; }
+        if ( !Q_strcmp( command, "changelevel" ) ) { Confirm( command, HL2MPFormat( "Load %s in %s mode? This ends the current round.", text, Value( m_Drop[MODE] ) ? HL2MPText( "#HL2MP_UI_5733010b622d" ) : HL2MPText( "#HL2MP_UI_7c04d94e2260" ) ), message ); return; }
     }
-    else if ( !Q_strcmp( command, "restart" ) ) { Confirm( command, "Restart the round? Scores and player loadouts will reset.", message ); return; }
+    else if ( !Q_strcmp( command, "restart" ) ) { Confirm( command, "#HL2MP_UI_149fa905b451", message ); return; }
     else if ( !Q_strcmp( command, "kick" ) || !Q_strcmp( command, "ban" ) )
     {
         int minutes = Value( m_Drop[DURATION] );
@@ -372,12 +373,12 @@ void CServerControls::OnCommand( const char *command )
             char custom[16]; m_BanMinutes->GetText( custom, sizeof( custom ) ); minutes = 0;
             bool valid = custom[0] != 0;
             for ( const char *c = custom; *c; ++c ) { if ( *c < '0' || *c > '9' ) { valid = false; break; } minutes = minutes * 10 + *c - '0'; }
-            if ( !valid || minutes < 1 || minutes > 525600 ) { message->deleteThis(); m_Status->SetText( "Custom bans: enter 1 to 525600 minutes. Use PERMANENT for no expiry." ); return; }
+            if ( !valid || minutes < 1 || minutes > 525600 ) { message->deleteThis(); m_Status->SetText( "#HL2MP_UI_1f327e750845" ); return; }
         }
         message->SetInt( "userid", Value( m_Drop[PLAYER] ) ); message->SetInt( "minutes", minutes ); m_Drop[PLAYER]->GetText( text, sizeof( text ) );
-        char duration[64]; m_Drop[DURATION]->GetText( duration, sizeof( duration ) );
-        if ( Value( m_Drop[DURATION] ) < 0 ) Q_snprintf( duration, sizeof( duration ), "%d MINUTES", minutes );
-        Confirm( command, !Q_strcmp( command, "ban" ) ? VarArgs( "Ban %s from this server (%s)?", text, duration ) : VarArgs( "Kick %s from this server?", text ), message ); return;
+        char duration[512]; m_Drop[DURATION]->GetText( duration, sizeof( duration ) );
+        if ( Value( m_Drop[DURATION] ) < 0 ) HL2MPFormatInto( duration, sizeof( duration ), "%d MINUTES", minutes );
+        Confirm( command, !Q_strcmp( command, "ban" ) ? HL2MPFormat( "Ban %s from this server (%s)?", text, duration ) : HL2MPFormat( "Kick %s from this server?", text ), message ); return;
     }
     else { message->deleteThis(); BaseClass::OnCommand( command ); return; }
     engine->ServerCmdKeyValues( message ); m_NextPoll = Plat_FloatTime() + 2;

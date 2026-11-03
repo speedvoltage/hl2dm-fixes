@@ -6,6 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+#include "hl2mp/ui/hl2mp_messages.h"
 #include "hl2mpclientscoreboard.h"
 #include "c_team.h"
 #include "c_playerresource.h"
@@ -550,7 +551,7 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 			}
 
 			wchar_t teamName[64];
-			g_pVGuiLocalize->ConvertANSIToUnicode( team->Get_Name(), teamName, sizeof( teamName ) );
+			V_wcsncpy( teamName, HL2MPWideText( teamNumber == TEAM_COMBINE ? "#HL2MP_TeamCombine" : "#HL2MP_TeamRebels" ), sizeof( teamName ) );
 			SetSectionHeader( teamNumber, teamName, team->Get_Number_Players(), team->Get_Score(), true );
 		}
 	}
@@ -570,11 +571,11 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 	wchar_t spectatorName[64];
 	if ( spectatorTeam )
 	{
-		g_pVGuiLocalize->ConvertANSIToUnicode( spectatorTeam->Get_Name(), spectatorName, sizeof( spectatorName ) );
+		V_wcsncpy( spectatorName, HL2MPWideText( "#HL2MP_Spectators" ), sizeof( spectatorName ) );
 	}
 	else
 	{
-		g_pVGuiLocalize->ConvertANSIToUnicode( "Spectators", spectatorName, sizeof( spectatorName ) );
+		V_wcsncpy( spectatorName, HL2MPWideText( "#HL2MP_Spectators" ), sizeof( spectatorName ) );
 	}
 	SetSectionHeader( TEAM_SPECTATOR, spectatorName, spectatorPlayers, 0, false );
 }
@@ -671,7 +672,7 @@ bool CHL2MPClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues
 
 	if (g_PR->GetPing( playerIndex ) < 1)
 	{
-		kv->SetString( "ping", g_PR->IsFakePlayer( playerIndex ) ? "BOT" : "" );
+		kv->SetString( "ping", g_PR->IsFakePlayer( playerIndex ) ? HL2MPText( "#HL2MP_Bot" ) : "" );
 	}
 	else
 	{
@@ -818,11 +819,11 @@ void CHL2MPClientScoreBoardDialog::UpdateMatchInfo()
 	static ConVarRef fragLimit( "mp_fraglimit" );
 	if ( fragLimit.IsValid() && fragLimit.GetInt() > 0 )
 	{
-		V_snwprintf( fragLimitText, ARRAYSIZE( fragLimitText ), L"Frag limit %d", fragLimit.GetInt() );
+		V_UTF8ToUnicode( HL2MPFormat( "Frag limit %d", fragLimit.GetInt() ), fragLimitText, sizeof( fragLimitText ) );
 	}
 	else
 	{
-		V_wcsncpy( fragLimitText, L"No frag limit", sizeof( fragLimitText ) );
+		V_wcsncpy( fragLimitText, HL2MPWideText( "#HL2MP_NoFragLimit" ), sizeof( fragLimitText ) );
 	}
 
 	wchar_t matchInfo[512];

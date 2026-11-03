@@ -5,6 +5,7 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
+#include "hl2mp/ui/hl2mp_messages.h"
 #include "hudelement.h"
 #include "hud_macros.h"
 #include "c_playerresource.h"
@@ -488,20 +489,20 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	{
 		if ( !strcmp( fullkilledwith, "d_worldspawn" ) )
 		{
-			Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s died.\n", deathMsg.Victim.szName );
+			HL2MPFormatInto( sDeathMsg, sizeof( sDeathMsg ), "%s died.\n", deathMsg.Victim.szName );
 		}
 		else	//d_world
 		{
-			Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s suicided.\n", deathMsg.Victim.szName );
+			HL2MPFormatInto( sDeathMsg, sizeof( sDeathMsg ), "%s suicided.\n", deathMsg.Victim.szName );
 		}
 	}
 	else
 	{
-		Q_snprintf( sDeathMsg, sizeof( sDeathMsg ), "%s killed %s", deathMsg.Killer.szName, deathMsg.Victim.szName );
+		HL2MPFormatInto( sDeathMsg, sizeof( sDeathMsg ), "%s killed %s", deathMsg.Killer.szName, deathMsg.Victim.szName );
 
 		if ( fullkilledwith && *fullkilledwith && (*fullkilledwith > 13 ) )
 		{
-			Q_strncat( sDeathMsg, VarArgs( " with %s.\n", fullkilledwith+6 ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
+			Q_strncat( sDeathMsg, HL2MPFormat( " with %s.\n", fullkilledwith+6 ), sizeof( sDeathMsg ), COPY_ALL_CHARACTERS );
 		}
 	}
 

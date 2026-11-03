@@ -159,7 +159,10 @@ ClientModeHL2MPNormal::~ClientModeHL2MPNormal()
 //-----------------------------------------------------------------------------
 void ClientModeHL2MPNormal::Init()
 {
+	HL2MPMessages_Init();
 	BaseClass::Init();
+	// Base HUD initialization can load stock English files; restore our selected
+	// language before creating controls or resolving weapon/chat labels.
 	HL2MPMessages_Init();
 	HL2MPMainMenu_Create();
 	HL2MPCommunity_Init();

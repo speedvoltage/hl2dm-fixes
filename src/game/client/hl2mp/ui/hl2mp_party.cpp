@@ -18,7 +18,7 @@ CHL2MPParty &HL2MPParty()
 CHL2MPParty::CHL2MPParty() : m_bPending( false ), m_bCancelPending( false ),
 	m_bAwaitingMetadata( false ), m_bInitialized( false ), m_flMetadataDeadline( 0 )
 {
-	SetStatus( "Play solo or create a party to invite friends." );
+	SetStatus( "#HL2MP_UI_94cf9f9fe786" );
 }
 
 void CHL2MPParty::SetStatus( const char *text ) { Q_strncpy( m_Status, text, sizeof( m_Status ) ); }
@@ -51,14 +51,14 @@ void CHL2MPParty::Shutdown()
 
 void CHL2MPParty::Create()
 {
-	if ( HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before creating a party." ); return; }
+	if ( HL2MPCoordinator().Busy() ) { SetStatus( "#HL2MP_UI_844b8ecba2bc" ); return; }
 	if ( m_bPending || m_Lobby.IsValid() ) return;
-	if ( !Available() ) { SetStatus( "Sign in to Steam to create a party." ); return; }
+	if ( !Available() ) { SetStatus( "#HL2MP_UI_68a5f4eb5f5c" ); return; }
 	SteamAPICall_t call = steamapicontext->SteamMatchmaking()->CreateLobby( k_ELobbyTypePrivate, s_MaxParty );
-	if ( call == k_uAPICallInvalid ) { SetStatus( "Steam could not create a party. Try again." ); return; }
+	if ( call == k_uAPICallInvalid ) { SetStatus( "#HL2MP_UI_933a5441388c" ); return; }
 	m_bPending = true;
 	m_bCancelPending = false;
-	SetStatus( "Creating party..." );
+	SetStatus( "#HL2MP_UI_eba02ced3067" );
 	m_CreateResult.Set( call, this, &CHL2MPParty::OnCreated );
 }
 
@@ -71,8 +71,8 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 		Warning( "Steam party creation: IO failure=%d, result=%d, online=%d\n", failed ? 1 : 0,
 			failed ? -1 : (int)result->m_eResult, Available() ? 1 : 0 );
 		SetStatus( !failed && result->m_eResult == k_EResultAccessDenied ?
-			"Steam parties are not available for this app yet. You can still use the server browser." :
-			"Party creation failed. Check your Steam connection and try again." );
+			"#HL2MP_UI_230ba4c04b5e" :
+			"#HL2MP_UI_6d344630a4c0" );
 		return;
 	}
 	m_Lobby = CSteamID( result->m_ulSteamIDLobby );
@@ -82,10 +82,10 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 		 !mm->SetLobbyData( m_Lobby, "protocol", s_Protocol ) )
 	{
 		Leave( true );
-		SetStatus( "Could not initialize the party. Please try again." );
+		SetStatus( "#HL2MP_UI_d2639771a746" );
 		return;
 	}
-	SetStatus( "Party ready. Invite friends using Steam." );
+	SetStatus( "#HL2MP_UI_dad84d7cbaff" );
 	if ( m_PendingInvite.IsValid() )
 	{
 		CSteamID friendID = m_PendingInvite; m_PendingInvite.Clear(); InviteFriend( friendID );
@@ -94,22 +94,22 @@ void CHL2MPParty::OnCreated( LobbyCreated_t *result, bool failed )
 
 void CHL2MPParty::Join( CSteamID lobby )
 {
-	if ( HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before joining another party." ); return; }
+	if ( HL2MPCoordinator().Busy() ) { SetStatus( "#HL2MP_UI_a1682bd406df" ); return; }
 	if ( m_bPending || lobby == m_Lobby ) return;
-	if ( !Available() ) { SetStatus( "Sign in to Steam to join a party." ); return; }
-	if ( !lobby.IsValid() || !lobby.IsLobby() ) { SetStatus( "Invalid party invite." ); return; }
+	if ( !Available() ) { SetStatus( "#HL2MP_UI_98bb91206ac5" ); return; }
+	if ( !lobby.IsValid() || !lobby.IsLobby() ) { SetStatus( "#HL2MP_UI_6bba057b409c" ); return; }
 	// Joining from the overlay is an explicit user action. Do not interrupt a match.
 	if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() )
 	{
-		SetStatus( "Disconnect from your current server before joining another party." );
+		SetStatus( "#HL2MP_UI_a3bed83e2981" );
 		return;
 	}
 	Leave();
 	SteamAPICall_t call = steamapicontext->SteamMatchmaking()->JoinLobby( lobby );
-	if ( call == k_uAPICallInvalid ) { SetStatus( "Steam could not join this party." ); return; }
+	if ( call == k_uAPICallInvalid ) { SetStatus( "#HL2MP_UI_82962f044013" ); return; }
 	m_bPending = true;
 	m_bCancelPending = false;
-	SetStatus( "Joining party..." );
+	SetStatus( "#HL2MP_UI_2fd5ca86810a" );
 	m_JoinResult.Set( call, this, &CHL2MPParty::OnEntered );
 }
 
@@ -128,17 +128,17 @@ void CHL2MPParty::OnEntered( LobbyEnter_t *result, bool failed )
 	{
 		Warning( "Steam party join: IO failure=%d, response=%u, online=%d\n", failed ? 1 : 0,
 			failed ? 0 : result->m_EChatRoomEnterResponse, Available() ? 1 : 0 );
-		SetStatus( "Unable to join. The party may be full, closed, or no longer available." );
+		SetStatus( "#HL2MP_UI_cf0661b10921" );
 		return;
 	}
 	m_Lobby = CSteamID( result->m_ulSteamIDLobby );
 	if ( m_bCancelPending ) { Leave( true ); return; }
-	if ( Compatible() ) { SetStatus( "Joined party." ); return; }
+	if ( Compatible() ) { SetStatus( "#HL2MP_UI_990e9e288ca2" ); return; }
 	// Metadata may arrive after LobbyEnter. Allow a bounded refresh before rejecting.
 	m_bAwaitingMetadata = true;
 	m_flMetadataDeadline = Plat_FloatTime() + 10.0;
 	steamapicontext->SteamMatchmaking()->RequestLobbyData( m_Lobby );
-	SetStatus( "Checking party version..." );
+	SetStatus( "#HL2MP_UI_e8adc3126aa4" );
 }
 
 void CHL2MPParty::OnInvite( GameLobbyJoinRequested_t *result ) { Join( result->m_steamIDLobby ); }
@@ -148,13 +148,13 @@ void CHL2MPParty::OnData( LobbyDataUpdate_t *result )
 	if ( CSteamID( result->m_ulSteamIDLobby ) != m_Lobby || !result->m_bSuccess ) return;
 	if ( Compatible() )
 	{
-		if ( m_bAwaitingMetadata ) SetStatus( "Joined party." );
+		if ( m_bAwaitingMetadata ) SetStatus( "#HL2MP_UI_990e9e288ca2" );
 		m_bAwaitingMetadata = false;
 	}
 	else if ( !m_bAwaitingMetadata )
 	{
 		Leave( true );
-		SetStatus( "Party version changed. Please create or join a compatible party." );
+		SetStatus( "#HL2MP_UI_1db6e1679bf6" );
 	}
 }
 
@@ -163,18 +163,18 @@ void CHL2MPParty::Tick()
 	if ( m_Lobby.IsValid() && !Available() )
 	{
 		Leave( true );
-		SetStatus( "Steam connection lost. Reconnect, then create or join a party." );
+		SetStatus( "#HL2MP_UI_6a75564f6836" );
 	}
 	if ( m_bAwaitingMetadata && Plat_FloatTime() >= m_flMetadataDeadline )
 	{
 		Leave( true );
-		SetStatus( "This party is unavailable or uses a different mod version." );
+		SetStatus( "#HL2MP_UI_2c11082c52d2" );
 	}
 }
 
 void CHL2MPParty::Leave( bool force )
 {
-	if ( !force && HL2MPCoordinator().Busy() ) { SetStatus( "Finish or cancel matchmaking before leaving your party." ); return; }
+	if ( !force && HL2MPCoordinator().Busy() ) { SetStatus( "#HL2MP_UI_fd3a94b2c260" ); return; }
 	// Keep pending call results registered so a late success is immediately left.
 	m_bCancelPending = m_bPending;
 	if ( m_Lobby.IsValid() && steamapicontext && steamapicontext->SteamMatchmaking() )
@@ -182,7 +182,7 @@ void CHL2MPParty::Leave( bool force )
 	m_Lobby.Clear();
 	m_PendingInvite.Clear();
 	m_bAwaitingMetadata = false;
-	SetStatus( m_bPending ? "Cancelling party request..." : "Play solo or create a party to invite friends." );
+	SetStatus( m_bPending ? "#HL2MP_UI_141eb43ec0be" : "#HL2MP_UI_94cf9f9fe786" );
 }
 
 void CHL2MPParty::Invite()
@@ -190,7 +190,7 @@ void CHL2MPParty::Invite()
 	if ( !Available() || !m_Lobby.IsValid() || m_bAwaitingMetadata ) return;
 	if ( !steamapicontext->SteamUtils() || !steamapicontext->SteamUtils()->IsOverlayEnabled() )
 	{
-		SetStatus( "Enable the Steam overlay to invite friends." );
+		SetStatus( "#HL2MP_UI_76394340cd6f" );
 		return;
 	}
 	steamapicontext->SteamFriends()->ActivateGameOverlayInviteDialog( m_Lobby );
@@ -206,9 +206,9 @@ void CHL2MPParty::InviteFriend( CSteamID friendID )
 		if ( !m_bPending ) m_PendingInvite.Clear();
 		return;
 	}
-	if ( MemberCount() >= s_MaxParty ) { SetStatus( "Your party is full." ); return; }
+	if ( MemberCount() >= s_MaxParty ) { SetStatus( "#HL2MP_UI_55a82cd09b4d" ); return; }
 	SetStatus( steamapicontext->SteamMatchmaking()->InviteUserToLobby( m_Lobby, friendID ) ?
-		"Invitation sent." : "Steam could not send the invitation. Try again." );
+		"#HL2MP_UI_b413595d29d8" : "#HL2MP_UI_39424227138e" );
 }
 
 bool CHL2MPParty::IsOwner() const

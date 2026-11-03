@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp_messages.h"
 #include "cdll_client_int.h"
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_community.h"
@@ -190,7 +191,7 @@ public:
         for ( int i = 0; i < HL2MPParty().MemberCount(); ++i ) if ( HL2MPParty().Member( i ) == m_ID ) inParty = true;
         m_Name->SetText( friends->GetFriendPersonaName( m_ID ) );
         m_Name->SetFgColor( Color( 222, 225, 223, 255 ) );
-        m_Presence->SetText( inParty ? "In your party" : playing && game.m_gameID.AppID() == steamapicontext->SteamUtils()->GetAppID() ? "Playing Half-Life 2: Deathmatch" : playing ? "In game" : online ? "Online" : "Offline" );
+        m_Presence->SetText( inParty ? "#HL2MP_UI_161d0e559668" : playing && game.m_gameID.AppID() == steamapicontext->SteamUtils()->GetAppID() ? "#HL2MP_UI_fef1e293cf4e" : playing ? "#HL2MP_UI_88a30612baf9" : online ? "#HL2MP_UI_0d21bd52022c" : "#HL2MP_UI_a1794783aab7" );
         m_Presence->SetFgColor( online ? Color( 153, 194, 163, 255 ) : Color( 143, 150, 153, 255 ) );
         m_Invite->SetEnabled( online && !inParty && !HL2MPParty().Pending() && !HL2MPCoordinator().Busy() && HL2MPParty().MemberCount() < HL2MP_MAX_PARTY_MEMBERS );
         m_Invite->SetMenuScale( scale, body, detail ); InvalidateLayout();
@@ -277,13 +278,13 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_CardFont = vgui::surface()->CreateFont(); m_BodyFont = vgui::surface()->CreateFont(); m_SectionFont = vgui::surface()->CreateFont(); m_DetailFont = vgui::surface()->CreateFont();
     m_Background = vgui::surface()->CreateNewTextureID(); vgui::surface()->DrawSetTextureFile( m_Background, "vgui/matchmaking/dm_lockdown", true, false );
     m_Title = new vgui::Label( this, "Title", "deathmatch" ); m_Subtitle = new vgui::Label( this, "Subtitle", "HALF+LIFE'" );
-    m_Tag = new vgui::Label( this, "Tag", "M A T C H M A K I N G" ); m_PlayHeading = new vgui::Label( this, "PlayHeading", "#HL2MP_Play" );
+    m_Tag = new vgui::Label( this, "Tag", "#HL2MP_UI_1fda097e248b" ); m_PlayHeading = new vgui::Label( this, "PlayHeading", "#HL2MP_Play" );
     m_PlayHeading->SetAllCaps( true );
-    m_ModeDescription = new vgui::Label( this, "ModeDescription", "" ); m_PartyHeading = new vgui::Label( this, "PartyHeading", "YOUR PARTY" );
+    m_ModeDescription = new vgui::Label( this, "ModeDescription", "" ); m_PartyHeading = new vgui::Label( this, "PartyHeading", "#HL2MP_UI_a74955cdd80d" );
     m_Status = new vgui::Label( this, "PartyStatus", "" ); m_QueueStatus = new vgui::Label( this, "QueueStatus", "" );
     m_ResultHeading = new vgui::Label( this, "ResultHeading", "" ); m_ResultDetails = new vgui::Label( this, "ResultDetails", "" );
-    m_FriendsHeading = new vgui::Label( this, "FriendsHeading", "FRIENDS" ); m_FriendsHint = new vgui::Label( this, "FriendsHint", "" );
-    m_NewsHeading = new vgui::Label( this, "NewsHeading", "LATEST UPDATES" );
+    m_FriendsHeading = new vgui::Label( this, "FriendsHeading", "#HL2MP_UI_15037d080b19" ); m_FriendsHint = new vgui::Label( this, "FriendsHint", "" );
+    m_NewsHeading = new vgui::Label( this, "NewsHeading", "#HL2MP_UI_2e817e740d9d" );
     m_NewsTitle = new vgui::Label( this, "NewsTitle", "" ); m_NewsBody = new vgui::Label( this, "NewsBody", "" );
     KeyValues *news = new KeyValues( "MenuNews" );
     if ( news->LoadFromFile( filesystem, "resource/matchmaking_news.res", "GAME" ) )
@@ -305,8 +306,8 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     KeyValues *listSettings = new KeyValues( "ListSettings" ); listSettings->SetInt( "autohide_scrollbar", 1 );
     m_PartyList->ApplySettings( listSettings ); m_FriendsList->ApplySettings( listSettings ); listSettings->deleteThis();
     m_PartyList->SetVerticalBufferPixels( 0 ); m_FriendsList->SetVerticalBufferPixels( 2 );
-    const char *texts[BUTTON_COUNT] = { "#HL2MP_Play", "RESUME GAME", "CREATE SERVER", "SERVER BROWSER", "OPTIONS", "SERVER CONTROLS", "DISCONNECT", "#HL2MP_Quit", "<  BACK",
-        "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "BROWSE SERVERS" };
+    const char *texts[BUTTON_COUNT] = { "#HL2MP_Play", "#HL2MP_UI_d485c9082df8", "#HL2MP_UI_6e142bc97c2d", "#HL2MP_UI_77514e83ed7f", "#HL2MP_UI_d0b1a869600d", "#HL2MP_UI_0bff1b6f6df3", "#HL2MP_UI_6ab06dcfaa51", "#HL2MP_Quit", "#HL2MP_UI_24c76252a90c",
+        "#HL2MP_UI_52046b6a11c7", "2v2", "3v3", "4v4", "5v5", "#HL2MP_UI_ff2fb9e38104", "#HL2MP_UI_7cd5885327fd", "#HL2MP_UI_87179ba7e30e", "#HL2MP_UI_3f3afe36093f", "#HL2MP_UI_96bfc81cd68f", "#HL2MP_UI_1732ef2228a0", "#HL2MP_UI_682dce1170c3", "#HL2MP_UI_8dbc715a78d4", "#HL2MP_UI_ad8d698573fc", "#HL2MP_UI_cdf5e9dc26c7" };
     const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "host", "OpenServerBrowser", "OpenOptionsDialog", "community", "disconnect", "Quit", "back",
         "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "OpenServerBrowser" };
     for ( int i = 0; i < BUTTON_COUNT; ++i )
@@ -314,8 +315,8 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
         const CMatchmakingButton::Style style = i <= BACK ? CMatchmakingButton::NAVIGATION : i <= CUSTOM ? CMatchmakingButton::MODE : ( i == FIND || i == ACCEPT ) ? CMatchmakingButton::PRIMARY : CMatchmakingButton::ACTION;
         m_Buttons[i] = new CMatchmakingButton( this, commands[i], texts[i], style ); m_Buttons[i]->SetTabPosition( i + 1 );
     }
-    for ( int i = DUEL; i <= CUSTOM; ++i ) m_Buttons[i]->SetDetail( i <= TEAM5 ? "RANKED" : i == CASUAL ? "UNRANKED" : "BROWSE / PRIVATE", 0, -1 );
-    const char *captions[] = { "MAP", "TEAMS", "TIME", "FRAGS" };
+    for ( int i = DUEL; i <= CUSTOM; ++i ) m_Buttons[i]->SetDetail( i <= TEAM5 ? "#HL2MP_UI_a5e7f2390196" : i == CASUAL ? "#HL2MP_UI_b93415f22711" : "#HL2MP_UI_b07baa39a011", 0, -1 );
+    const char *captions[] = { "#HL2MP_UI_4cf644d78bfc", "#HL2MP_UI_a3b0e8567eae", "#HL2MP_UI_5888675d99b9", "#HL2MP_UI_bde401c16483" };
     for ( int field = 0; field < 4; ++field )
     {
         m_CustomCaptions[field] = new vgui::Label( this, "CustomCaption", captions[field] );
@@ -324,7 +325,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
         const int count = field == 0 ? ARRAYSIZE( s_Maps ) : field == 1 ? 6 : field == 2 ? ARRAYSIZE( s_Times ) : ARRAYSIZE( s_Frags );
         for ( int i = 0; i < count; ++i )
         {
-            const char *text = field == 0 ? s_Maps[i] : field == 1 ? ( i ? VarArgs( "%dv%d", i, i ) : "FREE-FOR-ALL" ) : field == 2 ? VarArgs( "%d MINUTES", s_Times[i] ) : s_Frags[i] ? VarArgs( "%d FRAGS", s_Frags[i] ) : "NO LIMIT";
+            const char *text = field == 0 ? s_Maps[i] : field == 1 ? ( i ? VarArgs( "%dv%d", i, i ) : "#HL2MP_UI_bfa9f9e6fcea" ) : field == 2 ? HL2MPFormat( "%d MINUTES", s_Times[i] ) : s_Frags[i] ? HL2MPFormat( "%d FRAGS", s_Frags[i] ) : "#HL2MP_UI_15adb74bbd16";
             KeyValues *data = new KeyValues( "Choice", "choice", i ); m_CustomControls[field]->AddItem( text, data ); data->deleteThis();
         }
         m_CustomControls[field]->SilentActivateItemByRow( field == 2 ? 1 : 0 );
@@ -492,8 +493,8 @@ void CHL2MPMainMenu::UpdateFriends()
     }
     FOR_EACH_VEC( m_Friends, i ) m_Friends[i]->Update( m_Scale, m_BodyFont, m_DetailFont );
     m_FriendsList->InvalidateLayout( true );
-    m_FriendsHeading->SetText( VarArgs( "FRIENDS  /  %d ONLINE", online ) );
-    m_FriendsHint->SetText( !HL2MPParty().Available() ? "Sign in to Steam to see your friends." : !ids.Count() ? "Your Steam friends will appear here." : HL2MPParty().Status() );
+    m_FriendsHeading->SetText( HL2MPFormat( "FRIENDS  /  %d ONLINE", online ) );
+    m_FriendsHint->SetText( !HL2MPParty().Available() ? "#HL2MP_UI_c5a1e325757d" : !ids.Count() ? "#HL2MP_UI_e755a9b4a542" : HL2MPParty().Status() );
 }
 
 void CHL2MPMainMenu::OnTick()
@@ -549,17 +550,17 @@ void CHL2MPMainMenu::OnTick()
         // Selecting a mode is useful even while sign-in is unavailable.
         m_Buttons[i]->SetEnabled( !coordinator.Busy() ); m_Buttons[i]->SetModeSelected( i == DUEL + m_SelectedMode );
     }
-    const char *descriptions[] = { "One opponent. Every frag counts. Ranked 1v1.", "Two teams of two. Queue together and fight together.", "Three per team. Your party stays on the same side.", "Four per team. Coordinate, control, and win.", "Five per team. Bring your full squad.", "Drop in, warm up, or stay a while. Unranked deathmatch.", "Browse community servers, or play a private unranked match with your party." };
+    const char *descriptions[] = { "#HL2MP_UI_6f2d9698bc92", "#HL2MP_UI_8344c1e9a2dd", "#HL2MP_UI_93e82849c523", "#HL2MP_UI_a57602af05e4", "#HL2MP_UI_adff56416301", "#HL2MP_UI_437047a64571", "#HL2MP_UI_6579a0881404" };
     m_ModeDescription->SetText( custom && coordinator.Busy() && coordinator.CustomSummary()[0] ? coordinator.CustomSummary() : descriptions[m_SelectedMode] );
     const int limit = HL2MPMatchTeamSize( s_Modes[m_SelectedMode] );
     m_Buttons[FIND]->SetVisible( m_PlayPage && !coordinator.Busy() ); m_Buttons[FIND]->SetEnabled( canQueue && ( limit == 0 || party.MemberCount() <= limit ) );
-    m_Buttons[FIND]->SetText( custom ? "START PRIVATE MATCH" : "FIND MATCH" );
-    m_Buttons[ACCEPT]->SetVisible( m_PlayPage && ( readyCheck || coordinator.HasServer() ) ); m_Buttons[ACCEPT]->SetText( coordinator.HasServer() ? "JOIN / RECONNECT" : "ACCEPT MATCH" );
-    m_Buttons[CANCEL]->SetVisible( m_PlayPage && ( coordinator.Searching() || coordinator.HasReadyCheck() || coordinator.CanLeaveCasual() ) ); m_Buttons[CANCEL]->SetText( coordinator.CanLeaveCasual() ? "LEAVE MATCH" : "CANCEL / DECLINE" );
+    m_Buttons[FIND]->SetText( custom ? "#HL2MP_UI_1a1165cc58f7" : "#HL2MP_UI_87179ba7e30e" );
+    m_Buttons[ACCEPT]->SetVisible( m_PlayPage && ( readyCheck || coordinator.HasServer() ) ); m_Buttons[ACCEPT]->SetText( coordinator.HasServer() ? "#HL2MP_UI_ec746680f516" : "#HL2MP_UI_8dbc715a78d4" );
+    m_Buttons[CANCEL]->SetVisible( m_PlayPage && ( coordinator.Searching() || coordinator.HasReadyCheck() || coordinator.CanLeaveCasual() ) ); m_Buttons[CANCEL]->SetText( coordinator.CanLeaveCasual() ? "#HL2MP_UI_ff26f2bfd505" : "#HL2MP_UI_fa3be523d7ad" );
     m_QueueStatus->SetText( coordinator.Status() ); m_ResultHeading->SetText( coordinator.ResultHeading() ); m_ResultDetails->SetText( coordinator.ResultDetails() );
-    if ( inGame && !coordinator.Busy() ) m_QueueStatus->SetText( "Disconnect from your current game before starting another match." );
-    else if ( custom && !coordinator.Busy() && coordinator.ResultHeading()[0] ) m_QueueStatus->SetText( VarArgs( "%s  %s", coordinator.ResultHeading(), coordinator.ResultDetails() ) );
-    else if ( !coordinator.Busy() && limit > 0 && party.MemberCount() > limit ) m_QueueStatus->SetText( VarArgs( "This queue allows parties of up to %d. Choose Custom to play together.", limit ) );
+    if ( inGame && !coordinator.Busy() ) m_QueueStatus->SetText( "#HL2MP_UI_b6109341840c" );
+    else if ( custom && !coordinator.Busy() && coordinator.ResultHeading()[0] ) m_QueueStatus->SetText( HL2MPFormat( "%s  %s", HL2MPText( coordinator.ResultHeading() ), HL2MPText( coordinator.ResultDetails() ) ) );
+    else if ( !coordinator.Busy() && limit > 0 && party.MemberCount() > limit ) m_QueueStatus->SetText( HL2MPFormat( "This queue allows parties of up to %d. Choose Custom to play together.", limit ) );
     m_ResultHeading->SetVisible( m_PlayPage && !custom ); m_ResultDetails->SetVisible( m_PlayPage && !custom );
     m_Buttons[BROWSE]->SetVisible( m_PlayPage && custom && !coordinator.Busy() );
     int *choices[] = { &m_MapChoice, &m_SizeChoice, &m_TimeChoice, &m_FragChoice };
@@ -574,9 +575,9 @@ void CHL2MPMainMenu::OnTick()
     m_Buttons[INVITE]->SetVisible( grouped ); m_Buttons[LEAVE]->SetVisible( grouped || party.Pending() );
     m_Buttons[LEAVE]->SetEnabled( !coordinator.Busy() ); m_Buttons[INVITE]->SetEnabled( !coordinator.Busy() );
     m_Buttons[READY]->SetVisible( grouped ); m_Buttons[READY]->SetEnabled( coordinator.PartySynchronized() && !coordinator.Busy() );
-    m_Buttons[READY]->SetText( coordinator.PartyReady() ? "READY  /  UNREADY" : "READY TO PLAY" );
-    m_Status->SetText( party.Available() ? ( grouped ? coordinator.PartyStatus() : party.Status() ) : "Steam is offline. The server browser is available." );
-    m_PartyHeading->SetText( grouped ? VarArgs( "YOUR PARTY  /  %d OF 10%s", party.MemberCount(), party.IsOwner() ? "  /  LEADER" : "" ) : "YOUR PARTY  /  SOLO" );
+    m_Buttons[READY]->SetText( coordinator.PartyReady() ? "#HL2MP_UI_1d2ea98bb652" : "#HL2MP_UI_682dce1170c3" );
+    m_Status->SetText( party.Available() ? ( grouped ? coordinator.PartyStatus() : party.Status() ) : "#HL2MP_UI_a4615fc09eed" );
+    m_PartyHeading->SetText( grouped ? HL2MPFormat( "YOUR PARTY  /  %d OF 10%s", party.MemberCount(), party.IsOwner() ? HL2MPText( "#HL2MP_UI_2dc1f25ab9c7" ) : "" ) : "#HL2MP_UI_f8f12500a989" );
     const int memberCount = MAX( 1, party.MemberCount() );
     if ( m_Members.Count() != memberCount )
     {
@@ -591,7 +592,7 @@ void CHL2MPMainMenu::OnTick()
     FOR_EACH_VEC( m_Members, i )
     {
         const bool ready = coordinator.PartyMemberReady( party.Member( i ) );
-        m_Members[i]->SetText( i < party.MemberCount() ? VarArgs( "%s  /  %s", ready ? "READY" : "WAITING", party.MemberName( i ) ) : party.Available() ? steamapicontext->SteamFriends()->GetPersonaName() : "You" );
+        m_Members[i]->SetText( i < party.MemberCount() ? HL2MPFormat( "%s  /  %s", ready ? HL2MPText( "#HL2MP_UI_c2e3ac47f4a3" ) : HL2MPText( "#HL2MP_UI_77aaf105c28c" ), party.MemberName( i ) ) : party.Available() ? steamapicontext->SteamFriends()->GetPersonaName() : "#HL2MP_UI_08b041935798" );
         m_Members[i]->SetFgColor( ready ? Color( 155, 206, 159, 255 ) : Color( 215, 219, 221, 255 ) );
     }
     const bool news = !m_PlayPage && !inGame; m_NewsHeading->SetVisible( news ); m_NewsTitle->SetVisible( news ); m_NewsBody->SetVisible( news );

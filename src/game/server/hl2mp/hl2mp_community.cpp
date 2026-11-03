@@ -139,14 +139,14 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
     double &deadline = read ? s_NextStatus[slot] : s_NextRequest[slot];
     if ( Plat_FloatTime() < deadline ) return;
     deadline = Plat_FloatTime() + ( read ? 0.5 : 0.1 );
-    if ( !IsCommunity() ) { State( player, "Server controls are available in community games." ); return; }
+    if ( !IsCommunity() ) { State( player, "#HL2MP_UI_053a17602ed4" ); return; }
     if ( !Q_strcmp( action, "status" ) || !Q_strcmp( action, "open" ) )
     {
         State( player, "" );
         if ( !Q_strcmp( action, "open" ) && IsAdmin( player ) ) Maps( player );
         return;
     }
-    if ( request->GetInt( "generation", -1 ) != s_Generation ) { State( player, "The map changed. Reopen server controls." ); return; }
+    if ( request->GetInt( "generation", -1 ) != s_Generation ) { State( player, "#HL2MP_UI_a369c9516cc4" ); return; }
     if ( !Q_strcmp( action, "join" ) )
     {
         int team;
@@ -169,38 +169,38 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
             if ( spectator ) p->Spawn();
         }
         else p->HandleCommand_JoinTeam( team );
-        State( player, "Player selection updated." ); return;
+        State( player, "#HL2MP_UI_790b66c62d7f" ); return;
     }
-    if ( !IsAdmin( player ) ) { State( player, "Only the host or a listed server admin can change these settings." ); return; }
+    if ( !IsAdmin( player ) ) { State( player, "#HL2MP_UI_41953aaf144c" ); return; }
     if ( !Q_strcmp( action, "settings" ) )
     {
         int time, frags, friendly, stay, respawn;
         if ( !Integer( request, "time", 0, 1440, time ) || !Integer( request, "frags", 0, 9999, frags ) ||
             !Integer( request, "friendly", 0, 1, friendly ) || !Integer( request, "stay", 0, 1, stay ) ||
-            !Integer( request, "respawn", 0, 1, respawn ) ) { State( player, "Enter valid limits: 0-1440 minutes and 0-9999 frags." ); return; }
+            !Integer( request, "respawn", 0, 1, respawn ) ) { State( player, "#HL2MP_UI_04597937940c" ); return; }
         ConVarRef( "mp_timelimit" ).SetValue( time ); ConVarRef( "mp_fraglimit" ).SetValue( frags );
         ConVarRef( "mp_friendlyfire" ).SetValue( friendly ); ConVarRef( "mp_weaponstay" ).SetValue( stay );
-        ConVarRef( "mp_forcerespawn" ).SetValue( respawn ); State( player, "Server settings applied." ); return;
+        ConVarRef( "mp_forcerespawn" ).SetValue( respawn ); State( player, "#HL2MP_UI_35cf85d0b20a" ); return;
     }
     if ( !Q_strcmp( action, "pause" ) )
     {
         int paused; if ( !Integer( request, "paused", 0, 1, paused ) ) return;
-        engine->SetPausedForced( paused != 0 ); State( player, paused ? "Game paused by an admin." : "Game resumed." ); return;
+        engine->SetPausedForced( paused != 0 ); State( player, paused ? "#HL2MP_UI_8c5198bc01f3" : "#HL2MP_UI_4fd6750f0b4a" ); return;
     }
     if ( !Q_strcmp( action, "restart" ) )
     {
-        engine->SetPausedForced( false ); HL2MPRules()->RestartGame(); State( player, "Round restarted." ); return;
+        engine->SetPausedForced( false ); HL2MPRules()->RestartGame(); State( player, "#HL2MP_UI_9f9feba67456" ); return;
     }
     if ( !Q_strcmp( action, "nextmap" ) )
     {
         const char *map = request->GetString( "map" );
-        if ( !SafeMap( map ) ) { State( player, "Choose a map installed on this server." ); return; }
-        ConVarRef( "nextlevel" ).SetValue( map ); State( player, "Next map updated." ); return;
+        if ( !SafeMap( map ) ) { State( player, "#HL2MP_UI_29de38a7aba3" ); return; }
+        ConVarRef( "nextlevel" ).SetValue( map ); State( player, "#HL2MP_UI_294b5bec01e7" ); return;
     }
     if ( !Q_strcmp( action, "changelevel" ) )
     {
         int team; const char *map = request->GetString( "map" );
-        if ( !Integer( request, "teamplay", 0, 1, team ) || !SafeMap( map ) ) { State( player, "Choose a valid map and game mode." ); return; }
+        if ( !Integer( request, "teamplay", 0, 1, team ) || !SafeMap( map ) ) { State( player, "#HL2MP_UI_7acfc1ea04ef" ); return; }
         ConVarRef( "mp_teamplay" ).SetValue( team ); engine->SetPausedForced( false ); engine->ChangeLevel( map, NULL ); return;
     }
     if ( !Q_strcmp( action, "kick" ) || !Q_strcmp( action, "ban" ) )
@@ -208,19 +208,19 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
         int userID; if ( !Integer( request, "userid", 1, 9999999, userID ) ) return;
         CHL2MP_Player *target = Target( userID );
         if ( !target || target == player || ( !engine->IsDedicatedServer() && target == UTIL_GetListenServerHost() ) )
-        { State( player, "Choose another connected player." ); return; }
+        { State( player, "#HL2MP_UI_9c17af276b9b" ); return; }
         if ( !Q_strcmp( action, "ban" ) )
         {
             int minutes;
-            if ( !Integer( request, "minutes", 0, 525600, minutes ) ) { State( player, "Ban duration must be 0-525600 minutes; 0 means permanent." ); return; }
+            if ( !Integer( request, "minutes", 0, 525600, minutes ) ) { State( player, "#HL2MP_UI_bdaab418a648" ); return; }
             const CSteamID *id = engine->GetClientSteamID( target->edict() );
             if ( !id || !id->IsValid() || !id->BIndividualAccount() || !engine->IsClientFullyAuthenticated( target->edict() ) )
-            { State( player, "Bans require an authenticated Steam player." ); return; }
+            { State( player, "#HL2MP_UI_a2b40989b298" ); return; }
             // Only server-derived numeric identities reach the engine command buffer.
             engine->ServerCommand( UTIL_VarArgs( "banid %d STEAM_0:%u:%u\nwriteid\n", minutes, id->GetAccountID() & 1, id->GetAccountID() >> 1 ) );
         }
         engine->ServerCommand( UTIL_VarArgs( "kickid %d #HL2MP_AdminRemoved\n", userID ) );
-        State( player, !Q_strcmp( action, "ban" ) ? "Player banned." : "Player kicked." ); return;
+        State( player, !Q_strcmp( action, "ban" ) ? "#HL2MP_UI_f0f77cf97a5f" : "#HL2MP_UI_3825dfdb4268" ); return;
     }
-    State( player, "Unknown server action." );
+    State( player, "#HL2MP_UI_c68397d7c3fe" );
 }

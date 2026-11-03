@@ -62,8 +62,8 @@ CHL2MPCoordinator::CHL2MPCoordinator() : m_NextGrant( 0 ), m_PendingAction( ACTI
 	m_PartyCount = m_LobbyCount = m_PartyRevision = m_ReadyRevision = 0;
 	m_WantSession = m_ReadyPending = m_ReadyValue = false;
 	m_NextSignIn = 0;
-	Q_strncpy( m_PartyStatus, "Create a party to invite friends.", sizeof( m_PartyStatus ) );
-	SetStatus( "Choose a mode to find a match." );
+	Q_strncpy( m_PartyStatus, "#HL2MP_UI_abc56b258f28", sizeof( m_PartyStatus ) );
+	SetStatus( "#HL2MP_UI_46c4bfe10c2b" );
 }
 
 void CHL2MPCoordinator::SetStatus( const char *text )
@@ -153,7 +153,7 @@ void CHL2MPCoordinator::Tick()
 		if ( steamapicontext && steamapicontext->SteamUser() ) steamapicontext->SteamUser()->CancelAuthTicket( m_AuthTicket );
 		m_AuthTicket = k_HAuthTicketInvalid;
 		m_PendingMode[0] = 0;
-		SetStatus( "Steam sign-in timed out. Please try again." );
+		SetStatus( "#HL2MP_UI_a9facc2152d3" );
 	}
 	if ( !m_Request && m_PendingAction != ACTION_NONE ) DispatchAction();
 	if ( HL2MPParty().Lobby().IsValid() ) m_WantSession = true;
@@ -258,7 +258,7 @@ void CHL2MPCoordinator::SyncParty()
 	if ( ( m_Searching || HasReadyCheck() ) && !synchronized )
 	{
 		Cancel();
-		Q_strncpy( m_PartyStatus, "Party changed. Cancelling the search...", sizeof( m_PartyStatus ) );
+		Q_strncpy( m_PartyStatus, "#HL2MP_UI_b0ed5e79a8ff", sizeof( m_PartyStatus ) );
 		return;
 	}
 	if ( m_Searching || m_MatchID[0] ) return;
@@ -279,7 +279,7 @@ void CHL2MPCoordinator::SyncParty()
 		return;
 	}
 	if ( !party.MemberCount() ) return;
-	Q_strncpy( m_PartyStatus, "Synchronizing your party...", sizeof( m_PartyStatus ) );
+	Q_strncpy( m_PartyStatus, "#HL2MP_UI_b653bb5525fc", sizeof( m_PartyStatus ) );
 	char lobby[24]; Q_snprintf( lobby, sizeof( lobby ), "%llu", (unsigned long long)party.Lobby().ConvertToUint64() );
 	if ( party.IsOwner() )
 	{
@@ -313,7 +313,7 @@ void CHL2MPCoordinator::SyncParty()
 		// Lobby data can invite us, but cannot redirect Steam credentials to another service.
 		if ( Q_strcmp( m_BaseURL, party.MatchmakingData( "mm_url" ) ) )
 		{
-			Q_strncpy( m_PartyStatus, "Your party uses a different matchmaking service.", sizeof( m_PartyStatus ) );
+			Q_strncpy( m_PartyStatus, "#HL2MP_UI_1c7958faa054", sizeof( m_PartyStatus ) );
 			return;
 		}
 		if ( Q_strcmp( target, m_PartyID ) )
@@ -323,19 +323,19 @@ void CHL2MPCoordinator::SyncParty()
 			return;
 		}
 	}
-	Q_strncpy( m_PartyStatus, synchronized ? "Mark ready when you want the leader to start matchmaking." : "Waiting for every member to join matchmaking...", sizeof( m_PartyStatus ) );
+	Q_strncpy( m_PartyStatus, synchronized ? "#HL2MP_UI_1358833774b1" : "#HL2MP_UI_b6362211f5e8", sizeof( m_PartyStatus ) );
 }
 
 bool CHL2MPCoordinator::Request( EHTTPMethod method, const char *path, const char *body, bool auth )
 {
 	if ( m_Request ) return false;
-	if ( !ValidURL( m_BaseURL ) ) { SetStatus( "Matchmaking is not configured yet. The server browser is available." ); return false; }
+	if ( !ValidURL( m_BaseURL ) ) { SetStatus( "#HL2MP_UI_6aa38ab3572e" ); return false; }
 	ISteamHTTP *http = steamapicontext ? steamapicontext->SteamHTTP() : NULL;
-	if ( !http ) { SetStatus( "Steam networking is unavailable." ); return false; }
+	if ( !http ) { SetStatus( "#HL2MP_UI_1b45b6cb9f20" ); return false; }
 	char url[768];
 	Q_snprintf( url, sizeof( url ), "%s%s", m_BaseURL, path );
 	m_Request = http->CreateHTTPRequest( method, url );
-	if ( !m_Request ) { SetStatus( "Could not start the matchmaking request." ); return false; }
+	if ( !m_Request ) { SetStatus( "#HL2MP_UI_d56874b072ef" ); return false; }
 	http->SetHTTPRequestAbsoluteTimeoutMS( m_Request, 12000 );
 	// Plain HTTP is accepted only for the loopback development endpoint.
 	// Steam rejects a plain HTTP request if a verified TLS certificate is required.
@@ -352,7 +352,7 @@ bool CHL2MPCoordinator::Request( EHTTPMethod method, const char *path, const cha
 	if ( !valid || !http->SendHTTPRequest( m_Request, &call ) )
 	{
 		ReleaseRequest();
-		SetStatus( "Could not send the matchmaking request." );
+		SetStatus( "#HL2MP_UI_ad5ee8e4e6fb" );
 		return false;
 	}
 	m_AuthRequest = auth;
@@ -364,17 +364,17 @@ bool CHL2MPCoordinator::Request( EHTTPMethod method, const char *path, const cha
 void CHL2MPCoordinator::SignIn()
 {
 	m_NextSignIn = Plat_FloatTime() + 30;
-	if ( !ValidURL( m_BaseURL ) ) { SetStatus( "Matchmaking is not configured yet. The server browser is available." ); m_PendingMode[0] = 0; return; }
+	if ( !ValidURL( m_BaseURL ) ) { SetStatus( "#HL2MP_UI_6aa38ab3572e" ); m_PendingMode[0] = 0; return; }
 	if ( !steamapicontext || !steamapicontext->SteamUser() || !steamapicontext->SteamUser()->BLoggedOn() )
 	{
-		SetStatus( "Sign in to Steam to use matchmaking." );
+		SetStatus( "#HL2MP_UI_1624e78a88c1" );
 		m_PendingMode[0] = 0;
 		return;
 	}
 	m_AuthTicket = steamapicontext->SteamUser()->GetAuthTicketForWebApi( "hl2dm-matchmaking" );
 	m_AuthDeadline = Plat_FloatTime() + 20;
 	if ( m_AuthTicket == k_HAuthTicketInvalid ) m_PendingMode[0] = 0;
-	SetStatus( m_AuthTicket == k_HAuthTicketInvalid ? "Could not request a Steam sign-in ticket." : "Signing in to matchmaking..." );
+	SetStatus( m_AuthTicket == k_HAuthTicketInvalid ? "#HL2MP_UI_67342b75f04b" : "#HL2MP_UI_d19297b56c59" );
 }
 
 void CHL2MPCoordinator::OnTicket( GetTicketForWebApiResponse_t *result )
@@ -385,7 +385,7 @@ void CHL2MPCoordinator::OnTicket( GetTicketForWebApiResponse_t *result )
 		steamapicontext->SteamUser()->CancelAuthTicket( m_AuthTicket );
 		m_AuthTicket = k_HAuthTicketInvalid;
 		m_PendingMode[0] = 0;
-		SetStatus( "Steam could not authenticate this session." );
+		SetStatus( "#HL2MP_UI_ffbcef0add49" );
 		return;
 	}
 	char body[5200];
@@ -421,7 +421,7 @@ void CHL2MPCoordinator::Queue( const char *mode )
 		return;
 	}
 	if ( Busy() || HL2MPParty().Pending() ) return;
-	if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() ) { SetStatus( "Disconnect from your current server before searching." ); return; }
+	if ( engine->IsInGame() && !engine->IsLevelMainMenuBackground() ) { SetStatus( "#HL2MP_UI_fbf761532a5e" ); return; }
 	m_WantSession = true;
 	if ( !m_Token[0] )
 	{
@@ -435,20 +435,20 @@ void CHL2MPCoordinator::Queue( const char *mode )
 		Request( k_EHTTPMethodGET, "/v1/me" );
 		return;
 	}
-	if ( !PartySynchronized() ) { SetStatus( "Wait for your party to finish synchronizing." ); return; }
-	if ( Q_strcmp( m_UserID, m_PartyLeader ) ) { SetStatus( "The party leader starts matchmaking. Mark ready to join them." ); return; }
-	if ( !SafeToken( mm_region.GetString(), 1, 32 ) ) { SetStatus( "Choose a valid matchmaking region." ); return; }
+	if ( !PartySynchronized() ) { SetStatus( "#HL2MP_UI_22efc5c1c42b" ); return; }
+	if ( Q_strcmp( m_UserID, m_PartyLeader ) ) { SetStatus( "#HL2MP_UI_716a8919242c" ); return; }
+	if ( !SafeToken( mm_region.GetString(), 1, 32 ) ) { SetStatus( "#HL2MP_UI_4ad7551f65fd" ); return; }
 	char body[512];
 	if ( !Q_strcmp( mode, "custom" ) )
 	{
-		if ( !m_CustomMap[0] ) { SetStatus( "Choose your private match settings in Custom." ); return; }
+		if ( !m_CustomMap[0] ) { SetStatus( "#HL2MP_UI_3e8334d9db05" ); return; }
 		Q_snprintf( body, sizeof( body ), "{\"map_name\":\"%s\",\"team_size\":%d,\"time_limit\":%d,\"frag_limit\":%d,\"region\":\"%s\",\"protocol\":1,\"party_id\":\"%s\",\"revision\":%d}",
 			m_CustomMap, m_CustomTeamSize, m_CustomTimeLimit, m_CustomFragLimit, mm_region.GetString(), m_PartyID, m_PartyRevision );
-		if ( Request( k_EHTTPMethodPOST, "/v1/custom/matches", body ) ) SetStatus( "Reserving a private server..." );
+		if ( Request( k_EHTTPMethodPOST, "/v1/custom/matches", body ) ) SetStatus( "#HL2MP_UI_d2a716741fde" );
 		return;
 	}
 	Q_snprintf( body, sizeof( body ), "{\"mode\":\"%s\",\"region\":\"%s\",\"protocol\":1,\"party_id\":\"%s\",\"revision\":%d}", mode, mm_region.GetString(), m_PartyID, m_PartyRevision );
-	if ( Request( k_EHTTPMethodPOST, "/v1/queue", body ) ) SetStatus( "Starting matchmaking..." );
+	if ( Request( k_EHTTPMethodPOST, "/v1/queue", body ) ) SetStatus( "#HL2MP_UI_2c169cc97ee4" );
 }
 
 void CHL2MPCoordinator::Cancel()
@@ -494,8 +494,8 @@ void CHL2MPCoordinator::DispatchAction()
 void CHL2MPCoordinator::UpdateReadyStatus()
 {
 	const int seconds = MAX( 0, (int)ceil( m_ReadyExpires - Plat_FloatTime() ) );
-	Q_snprintf( m_Status, sizeof( m_Status ), "%s  %d / %d ready.  %ds remaining.",
-		m_Confirmed ? "You accepted." : "Match found! Accept to play.", m_ReadyAccepted, m_ReadyPlayers, seconds );
+	HL2MPFormatInto( m_Status, sizeof( m_Status ), "%s  %d / %d ready.  %ds remaining.",
+		m_Confirmed ? HL2MPText( "#HL2MP_UI_d8833ce27bf9" ) : HL2MPText( "#HL2MP_UI_df02de344251" ), m_ReadyAccepted, m_ReadyPlayers, seconds );
 }
 
 void CHL2MPCoordinator::Connect()
@@ -509,7 +509,7 @@ void CHL2MPCoordinator::Connect()
 	m_NextGrant = 0;
 	HL2MPLoading_SetContext( !Q_strcmp( m_MatchMode, "custom" ) ? m_CustomMap : "", m_MatchMode );
 	engine->ClientCmd_Unrestricted( command );
-	SetStatus( "Connecting to your dedicated server..." );
+	SetStatus( "#HL2MP_UI_6bbccb887ab1" );
 }
 
 void CHL2MPCoordinator::ReadLastMatch( KeyValues *last )
@@ -535,16 +535,16 @@ void CHL2MPCoordinator::ReadLastMatch( KeyValues *last )
 	Q_strncpy( m_ResultID, id, sizeof( m_ResultID ) );
 	const char *mode = last->GetString( "mode", "" );
 	const bool ranked = HL2MPMatchTeamSize( mode ) > 0;
-	const char *name = HL2MPMatchModeName( mode );
+	const char *name = HL2MPText( HL2MPMatchModeName( mode ) );
 	const char *outcome = last->GetString( "outcome", "" );
-	const char *title = cancelled ? "CANCELLED" : !finished ? "LEFT MATCH" :
-		!Q_strcmp( outcome, "win" ) ? "VICTORY" : !Q_strcmp( outcome, "loss" ) ? "DEFEAT" : !Q_strcmp( outcome, "draw" ) ? "DRAW" : "COMPLETE";
-	Q_snprintf( m_ResultHeading, sizeof( m_ResultHeading ), "LAST MATCH  /  %s  /  %s", name, title );
+	const char *title = cancelled ? "#HL2MP_UI_8ab6812a66e4" : !finished ? "#HL2MP_UI_42b391457b99" :
+		!Q_strcmp( outcome, "win" ) ? "#HL2MP_UI_29cc6f0a0f6a" : !Q_strcmp( outcome, "loss" ) ? "#HL2MP_UI_054dda0f8dd7" : !Q_strcmp( outcome, "draw" ) ? "#HL2MP_UI_3017385a0abf" : "#HL2MP_UI_894981ff0205";
+	HL2MPFormatInto( m_ResultHeading, sizeof( m_ResultHeading ), "LAST MATCH  /  %s  /  %s", name, HL2MPText( title ) );
 	if ( finished && ranked && last->FindKey( "rating" ) )
-		Q_snprintf( m_ResultDetails, sizeof( m_ResultDetails ), "Rating: %d (%+d). Ready for another match.", last->GetInt( "rating" ), last->GetInt( "rating_change" ) );
+		HL2MPFormatInto( m_ResultDetails, sizeof( m_ResultDetails ), "Rating: %d (%+d). Ready for another match.", last->GetInt( "rating" ), last->GetInt( "rating_change" ) );
 	else if ( !finished )
 		HL2MPMessageText( HL2MPMatchReasonToken( last->GetString( "reason", "" ) ), m_ResultDetails, sizeof( m_ResultDetails ) );
-	else Q_strncpy( m_ResultDetails, !Q_strcmp( mode, "casual" ) ? "No ranking. Play another round whenever you like." : "Match complete. Ready for another match.", sizeof( m_ResultDetails ) );
+	else Q_strncpy( m_ResultDetails, !Q_strcmp( mode, "casual" ) ? "#HL2MP_UI_4ea5ad14b10a" : "#HL2MP_UI_be8173c38b3d", sizeof( m_ResultDetails ) );
 }
 
 void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed )
@@ -579,7 +579,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 	{
 		// A rejected mutation may mean our roster revision is stale. Read before retrying.
 		m_PartyID[0] = 0;
-		SetStatus( root ? root->GetString( "error", "Matchmaking request failed. Please try again." ) : "Matchmaking connection lost. Retrying shortly..." );
+		SetStatus( root ? HL2MPServiceError( root->GetString( "error" ) ) : "#HL2MP_UI_cb97c64b38bd" );
 		m_NextPoll = Plat_FloatTime() + 5;
 		if ( result->m_eStatusCode == 401 ) { m_Token[0] = m_MatchID[0] = m_MatchState[0] = m_PartyID[0] = 0; m_Searching = false; m_PendingAction = ACTION_NONE; }
 		m_PendingMode[0] = 0;
@@ -592,7 +592,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 		if ( !SafeToken( token, 32, 120 ) || root->GetInt( "protocol" ) != 1 )
 		{
 			m_PendingMode[0] = 0;
-			SetStatus( "The matchmaking service returned an incompatible session." );
+			SetStatus( "#HL2MP_UI_53f16b9876f8" );
 		}
 		else
 		{
@@ -601,7 +601,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 			Queue( mode );
 		}
 	}
-	else if ( root->GetInt( "protocol" ) != 1 ) SetStatus( "Please update the mod to use this matchmaking service." );
+	else if ( root->GetInt( "protocol" ) != 1 ) SetStatus( "#HL2MP_UI_5054a4af864e" );
 	else
 	{
 		ReadParty( root );
@@ -620,10 +620,10 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 			if ( !Q_strcmp( m_MatchMode, "custom" ) )
 			{
 				const int size = match->GetInt( "rules/team_size", 0 ), frags = match->GetInt( "rules/frag_limit", 0 );
-				char teams[32], limit[32];
-				if ( size ) Q_snprintf( teams, sizeof( teams ), "%dv%d", size, size ); else Q_strncpy( teams, "Free-for-all", sizeof( teams ) );
-				if ( frags ) Q_snprintf( limit, sizeof( limit ), "%d frags", frags ); else Q_strncpy( limit, "No frag limit", sizeof( limit ) );
-				Q_snprintf( m_CustomSummary, sizeof( m_CustomSummary ), "PRIVATE / %s / %s / %d minutes / %s", match->GetString( "map", "" ), teams, match->GetInt( "rules/time_limit", 0 ), limit );
+				char teams[64], limit[256];
+				if ( size ) Q_snprintf( teams, sizeof( teams ), "%dv%d", size, size ); else Q_strncpy( teams, HL2MPText( "#HL2MP_UI_bfa9f9e6fcea" ), sizeof( teams ) );
+				if ( frags ) HL2MPFormatInto( limit, sizeof( limit ), "%d frags", frags ); else Q_strncpy( limit, HL2MPText( "#HL2MP_UI_563a80332c99" ), sizeof( limit ) );
+				HL2MPFormatInto( m_CustomSummary, sizeof( m_CustomSummary ), "PRIVATE / %s / %s / %d minutes / %s", match->GetString( "map", "" ), teams, match->GetInt( "rules/time_limit", 0 ), limit );
 			}
 			if ( HasReadyCheck() )
 			{
@@ -638,7 +638,7 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 					m_PreviewCaptured = true;
 				}
 			}
-			else if ( !Q_strcmp( m_MatchState, "starting" ) ) SetStatus( "Players ready. Preparing your dedicated server..." );
+			else if ( !Q_strcmp( m_MatchState, "starting" ) ) SetStatus( "#HL2MP_UI_d37547b3e9f5" );
 			else if ( !Q_strcmp( m_MatchState, "active" ) )
 			{
 				KeyValues *connection = match->FindKey( "connection" );
@@ -653,16 +653,16 @@ void CHL2MPCoordinator::OnResponse( HTTPRequestCompleted_t *result, bool failed 
 				{
 					Q_snprintf( m_Endpoint, sizeof( m_Endpoint ), "%d.%d.%d.%d:%d", octets[0], octets[1], octets[2], octets[3], port );
 					Q_strncpy( m_JoinGrant, grant, sizeof( m_JoinGrant ) );
-					SetStatus( "Your match server is ready. Join or reconnect." );
+					SetStatus( "#HL2MP_UI_ece51e42546e" );
 					if ( Q_strcmp( m_ConnectedMatch, m_MatchID ) && ( !engine->IsConnected() || engine->IsLevelMainMenuBackground() ) ) Connect();
 				}
-				else SetStatus( "The service returned an invalid server assignment." );
+				else SetStatus( "#HL2MP_UI_09acfd29b4a4" );
 			}
 		}
-		else if ( m_Searching ) Q_snprintf( m_Status, sizeof( m_Status ), "Searching for %s in %s...", queue->GetString( "mode" ), queue->GetString( "region" ) );
+		else if ( m_Searching ) HL2MPFormatInto( m_Status, sizeof( m_Status ), "Searching for %s in %s...", HL2MPText( HL2MPMatchModeName( queue->GetString( "mode" ) ) ), queue->GetString( "region" ) );
 		else
 		{
-			SetStatus( "Ready. Choose a mode to find a match." );
+			SetStatus( "#HL2MP_UI_b5e1d02c571e" );
 		}
 		ReadLastMatch( root->FindKey( "last_match" ) );
 	}

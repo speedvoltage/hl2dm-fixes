@@ -60,7 +60,7 @@ private:
 	int m_PartyCount;
 	int m_LobbyCount;
 	int m_PartyRevision;
-	char m_PartyStatus[256];
+	char m_PartyStatus[2048];
 	bool m_WantSession;
 	double m_NextSignIn;
 	bool m_ReadyPending;
@@ -69,10 +69,10 @@ private:
 	int m_ReadyRevision;
 	char m_BaseURL[512];
 	char m_Token[128];
-	char m_Status[256];
+	char m_Status[2048];
 	char m_PendingMode[16];
 	char m_CustomMap[64];
-	char m_CustomSummary[160];
+	char m_CustomSummary[2048];
 	int m_CustomTeamSize, m_CustomTimeLimit, m_CustomFragLimit;
 	char m_MatchID[40];
 	char m_MatchState[32];
@@ -83,8 +83,8 @@ private:
 	char m_ConnectedMatch[40];
 	char m_ConnectedEndpoint[64];
 	char m_ResultID[40];
-	char m_ResultHeading[128];
-	char m_ResultDetails[256];
+	char m_ResultHeading[2048];
+	char m_ResultDetails[2048];
 	double m_NextGrant;
 	PendingAction m_PendingAction;
 	HTTPRequestHandle m_Request;

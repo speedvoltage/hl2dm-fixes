@@ -19,9 +19,9 @@ inline int HL2MPMatchTeamSize( const char *mode )
 
 inline const char *HL2MPMatchModeName( const char *mode )
 {
-	if ( !Q_strcmp( mode, "custom" ) ) return "PRIVATE MATCH";
-	const char *names[] = { "CASUAL", "1v1 DUEL", "2v2 TEAM DEATHMATCH", "3v3 TEAM DEATHMATCH", "4v4 TEAM DEATHMATCH", "5v5 TEAM DEATHMATCH" };
+	if ( !Q_strcmp( mode, "custom" ) ) return "#HL2MP_UI_20b3f3627b47";
+	const char *names[] = { "#HL2MP_UI_ff2fb9e38104", "#HL2MP_UI_52046b6a11c7", "#HL2MP_UI_8bcd949595e0", "#HL2MP_UI_bbf0d9176234", "#HL2MP_UI_50cbc1f839ea", "#HL2MP_UI_f9dd708e0a1c" };
 	const int size = HL2MPMatchTeamSize( mode );
-	return size >= 0 ? names[size] : "MATCH";
+	return size >= 0 ? names[size] : "#HL2MP_UI_eaa42a15398b";
 }
 #endif

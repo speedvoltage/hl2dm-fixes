@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp/ui/hl2mp_messages.h"
 #include "hud.h"
 #include "hudelement.h"
 #include "iclientmode.h"
@@ -181,7 +182,7 @@ void CHudServerInfo::Paint()
 			if ( pTeams[i] )
 			{
 				V_snwprintf( wszScores[i], ARRAYSIZE( wszScores[i] ), L"%d", pTeams[i]->Get_Score() );
-				g_pVGuiLocalize->ConvertANSIToUnicode( pTeams[i]->Get_Name(), wszNames[i], sizeof( wszNames[i] ) );
+				V_wcsncpy( wszNames[i], HL2MPWideText( i == 0 ? "#HL2MP_TeamCombine" : "#HL2MP_TeamRebels" ), sizeof( wszNames[i] ) );
 			}
 			vgui::surface()->GetTextSize( m_hFont, wszScores[i], iWide, iTall );
 			iSideWide = MAX( iSideWide, iWide );
