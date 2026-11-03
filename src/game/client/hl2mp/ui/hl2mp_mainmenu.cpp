@@ -2,6 +2,7 @@
 #include "cdll_client_int.h"
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_community.h"
+#include "hl2mp_host.h"
 #include "hl2mp_loading.h"
 #include "hl2mp_party.h"
 #include "hl2mp_coordinator.h"
@@ -26,7 +27,7 @@
 static CDllDemandLoader s_GameUI( "GameUI" );
 static ConVar mm_menu( "mm_menu", "1", FCVAR_ARCHIVE, "Use the matchmaking main menu (restart required)." );
 static ConVar mm_menu_motion( "mm_menu_motion", "1", FCVAR_ARCHIVE, "Animate the matchmaking menu." );
-static ConVar mm_menu_background( "mm_menu_background", "1", FCVAR_ARCHIVE, "Render dm_lockdown behind the main menu." );
+static ConVar cl_community_binding_initialized( "cl_community_binding_initialized", "0", FCVAR_ARCHIVE, "Community-controls shortcut has been initialized." );
 static const Color s_Amber( 235, 164, 79, 255 );
 
 static void MenuFontFile( const char *face, const char *file )
@@ -46,7 +47,7 @@ class CMatchmakingButton : public vgui::Button
 {
 	DECLARE_CLASS_SIMPLE( CMatchmakingButton, vgui::Button );
 public:
-	enum Style { NAVIGATION, ACTION, PRIMARY, MODE };
+	enum Style { NAVIGATION, ACTION, PRIMARY, MODE, ICON };
 	CMatchmakingButton( vgui::Panel *parent, const char *name, const char *text, Style style )
 		: BaseClass( parent, name, text, parent, name ), m_Style( style ), m_Font( 0 ), m_Detail( NULL ),
 		m_Hover( 0 ), m_LastThink( Plat_FloatTime() ), m_Scale( 1 ), m_Selected( false ), m_Compact( false ), m_Texture( -1 ), m_ModeIndex( 0 )
@@ -127,8 +128,8 @@ public:
 		else
 		{
 			surface->DrawSetColor( Color( 230, 235, 235, 255 ) );
-			surface->DrawFilledRectFade( 0, 0, w, h, int( ( m_Style == ACTION ? 12 : 0 ) + 34 * m_Hover ), 0, true );
-			if ( m_Style == ACTION )
+			surface->DrawFilledRectFade( 0, 0, w, h, int( ( m_Style == ACTION || m_Style == ICON ? 12 : 0 ) + 34 * m_Hover ), 0, true );
+			if ( m_Style == ACTION || m_Style == ICON )
 			{
 				surface->DrawSetColor( Color( 220, 225, 225, int( 45 + 70 * m_Hover ) ) );
 				surface->DrawOutlinedRect( 0, 0, w, h );
@@ -141,6 +142,14 @@ public:
 		}
 	}
 	void PaintBorder() OVERRIDE {}
+	void Paint() OVERRIDE
+	{
+		if ( m_Style != ICON ) { BaseClass::Paint(); return; }
+		const int x = GetWide() / 2, y = GetTall() / 2, arm = MAX( 3, int( 4 * m_Scale ) );
+		vgui::surface()->DrawSetColor( IsEnabled() ? Color( 230, 230, 226, 255 ) : Color( 110, 110, 110, 255 ) );
+		vgui::surface()->DrawFilledRect( x - arm, y, x + arm + 1, y + 1 );
+		vgui::surface()->DrawFilledRect( x, y - arm, x + 1, y + arm + 1 );
+	}
 private:
 	Style m_Style;
 	vgui::HFont m_Font;
@@ -165,7 +174,7 @@ public:
         m_Avatar->SetShouldScaleImage( true ); m_Avatar->SetMouseInputEnabled( false );
         m_Name = new vgui::Label( this, "Name", "" ); m_Presence = new vgui::Label( this, "Presence", "" );
         m_Name->SetMouseInputEnabled( false ); m_Presence->SetMouseInputEnabled( false );
-        m_Invite = new CMatchmakingButton( this, "invite", "+", CMatchmakingButton::ACTION );
+        m_Invite = new CMatchmakingButton( this, "invite", "", CMatchmakingButton::ICON );
     }
     CSteamID ID() const { return m_ID; }
     void Update( float scale, vgui::HFont body, vgui::HFont detail )
@@ -221,13 +230,13 @@ public:
 private:
     void SetPlayPage( bool play );
     void UpdateFriends();
-    enum { PLAY, RESUME, SERVERS, OPTIONS, COMMUNITY, DISCONNECT, QUIT, BACK, DUEL, TEAM, TEAM3, TEAM4, TEAM5, CASUAL, CUSTOM,
+    enum { PLAY, RESUME, HOST, SERVERS, OPTIONS, COMMUNITY, DISCONNECT, QUIT, BACK, DUEL, TEAM, TEAM3, TEAM4, TEAM5, CASUAL, CUSTOM,
         FIND, CREATE_PARTY, INVITE, LEAVE, READY, ACCEPT, CANCEL, BROWSE, BUTTON_COUNT };
     IGameUI *m_GameUI;
     CMatchmakingButton *m_Buttons[BUTTON_COUNT];
     CHL2MPDropdown *m_CustomControls[4];
     vgui::Label *m_CustomCaptions[4];
-    vgui::Panel *m_Options, *m_Browser, *m_Community;
+    vgui::Panel *m_Options, *m_Browser, *m_Community, *m_Host;
     vgui::Label *m_Title, *m_Subtitle, *m_Tag, *m_PlayHeading, *m_ModeDescription;
     vgui::Label *m_PartyHeading, *m_Status, *m_QueueStatus, *m_ResultHeading, *m_ResultDetails;
     vgui::Label *m_FriendsHeading, *m_FriendsHint, *m_NewsHeading, *m_NewsTitle, *m_NewsBody;
@@ -238,9 +247,9 @@ private:
     int m_ScreenWidth, m_ScreenHeight, m_Background, m_SelectedMode, m_MapChoice, m_SizeChoice, m_TimeChoice, m_FragChoice;
     int m_FontWidth, m_FontHeight;
     int m_PartyX, m_PartyY, m_PartyW, m_PartyH, m_FriendsY, m_NewsX, m_NewsY, m_NewsW;
-    bool m_PlayPage, m_WasBusy, m_WasReady, m_GroupedLayout, m_InGameLayout, m_BackgroundRequested;
+    bool m_PlayPage, m_WasBusy, m_WasReady, m_GroupedLayout, m_InGameLayout;
     float m_Scale;
-    double m_NextFriends, m_IdleSince, m_FontRefreshAt;
+    double m_NextFriends, m_FontRefreshAt, m_BindingReadyAt;
 };
 
 static CHL2MPMainMenu *s_Menu = NULL;
@@ -251,7 +260,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_FontWidth( 0 ), m_FontHeight( 0 ),
     m_PartyX( 0 ), m_PartyY( 0 ), m_PartyW( 0 ), m_PartyH( 0 ), m_FriendsY( 0 ), m_NewsX( 0 ), m_NewsY( 0 ), m_NewsW( 0 ),
     m_PlayPage( false ), m_WasBusy( false ), m_WasReady( false ), m_GroupedLayout( false ), m_InGameLayout( false ),
-    m_BackgroundRequested( false ), m_Scale( 1 ), m_NextFriends( 0 ), m_IdleSince( Plat_FloatTime() ), m_FontRefreshAt( 0 )
+    m_Scale( 1 ), m_NextFriends( 0 ), m_FontRefreshAt( 0 ), m_BindingReadyAt( Plat_FloatTime() + 2 )
 {
     SetProportional( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetCursor( vgui::dc_arrow );
     // Reuse locally installed retail maps without replacing the SDK engine.
@@ -293,9 +302,9 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     KeyValues *listSettings = new KeyValues( "ListSettings" ); listSettings->SetInt( "autohide_scrollbar", 1 );
     m_PartyList->ApplySettings( listSettings ); m_FriendsList->ApplySettings( listSettings ); listSettings->deleteThis();
     m_PartyList->SetVerticalBufferPixels( 0 ); m_FriendsList->SetVerticalBufferPixels( 2 );
-    const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "SERVER BROWSER", "OPTIONS", "SERVER CONTROLS", "DISCONNECT", "QUIT", "<  BACK",
+    const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "CREATE SERVER", "SERVER BROWSER", "OPTIONS", "SERVER CONTROLS", "DISCONNECT", "QUIT", "<  BACK",
         "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "BROWSE SERVERS" };
-    const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "OpenServerBrowser", "OpenOptionsDialog", "community", "disconnect", "Quit", "back",
+    const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "host", "OpenServerBrowser", "OpenOptionsDialog", "community", "disconnect", "Quit", "back",
         "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "OpenServerBrowser" };
     for ( int i = 0; i < BUTTON_COUNT; ++i )
     {
@@ -320,6 +329,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_Options = HL2MPOptions_Create( this );
     m_Browser = HL2MPServerBrowser_Create( this );
     m_Community = HL2MPCommunity_Create( this );
+    m_Host = HL2MPHost_Create( this );
     HL2MPParty().Init(); HL2MPCoordinator().Init(); m_GameUI->SetMainMenuOverride( GetVPanel() );
     MakePopup( false ); GetFocusNavGroup().SetFocusTopLevel( true );
     OnTick(); m_Buttons[PLAY]->RequestFocus(); vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
@@ -375,11 +385,11 @@ void CHL2MPMainMenu::PerformLayout()
     for ( int i = 0; i < ARRAYSIZE( details ); ++i ) details[i]->SetFont( m_DetailFont );
     m_Title->SetBounds( left, int( ( m_PlayPage ? 24 : 96 ) * s ), mainW, int( 100 * s ) );
     m_Subtitle->SetBounds( left, int( 66 * s ), mainW, int( 30 * s ) ); m_Tag->SetBounds( left, int( 194 * s ), mainW, int( 24 * s ) );
-    int navY = int( 274 * s ); const int navOrder[] = { RESUME, PLAY, SERVERS, OPTIONS, COMMUNITY, DISCONNECT, QUIT };
+    int navY = int( 260 * s ); const int navOrder[] = { RESUME, PLAY, HOST, SERVERS, OPTIONS, COMMUNITY, DISCONNECT, QUIT };
     for ( int i = 0; i < ARRAYSIZE( navOrder ); ++i )
     {
         int id = navOrder[i]; m_Buttons[id]->SetBounds( left - int( 14 * s ), navY, MIN( mainW, int( 460 * s ) ), int( 46 * s ) );
-        if ( id == COMMUNITY ? HL2MPCommunity_Available() : ( id != RESUME && id != DISCONNECT ) || m_InGameLayout ) navY += int( 49 * s );
+        if ( id == HOST ? !m_InGameLayout : id == COMMUNITY ? HL2MPCommunity_Available() : ( id != RESUME && id != DISCONNECT ) || m_InGameLayout ) navY += int( 45 * s );
     }
     m_Buttons[BACK]->SetBounds( left - int( 14 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
     if ( m_PlayPage ) m_Buttons[RESUME]->SetBounds( left + mainW - int( 190 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
@@ -434,7 +444,7 @@ void CHL2MPMainMenu::PaintBackground()
         const float sx = MIN( 1.0f, viewport / aspect ), sy = MIN( 1.0f, aspect / viewport );
         surface->DrawTexturedSubRect( 0, 0, w, h, ( 1 - sx ) / 2, ( 1 - sy ) / 2, ( 1 + sx ) / 2, ( 1 + sy ) / 2 );
     }
-    if ( m_Options->IsVisible() || m_Browser->IsVisible() || m_Community->IsVisible() ) return;
+    if ( m_Options->IsVisible() || m_Browser->IsVisible() || m_Community->IsVisible() || m_Host->IsVisible() ) return;
     surface->DrawSetColor( Color( 4, 8, 12, 255 ) );
     surface->DrawFilledRectFade( 0, 0, int( w * 0.8f ), h, m_PlayPage ? 225 : 190, 0, true );
     surface->DrawFilledRectFade( 0, h / 2, w, h, 0, 150, false );
@@ -489,12 +499,25 @@ void CHL2MPMainMenu::OnTick()
     CHL2MPParty &party = HL2MPParty(); CHL2MPCoordinator &coordinator = HL2MPCoordinator();
     const bool grouped = party.Lobby().IsValid(), readyCheck = coordinator.NeedsConfirmation();
     const bool inGame = engine->IsInGame() && !engine->IsLevelMainMenuBackground();
-    if ( engine->IsInGame() || engine->IsLevelMainMenuBackground() || engine->IsConnected() || engine->IsDrawingLoadingImage() || HL2MPLoading_IsVisible() || coordinator.Busy() ) { m_IdleSince = Plat_FloatTime(); m_BackgroundRequested = false; }
-    else if ( mm_menu_background.GetBool() && !m_BackgroundRequested && filesystem->FileExists( "maps/dm_lockdown.bsp", "GAME" ) && Plat_FloatTime() - m_IdleSince > 3 )
+    if ( !cl_community_binding_initialized.GetBool() && Plat_FloatTime() >= m_BindingReadyAt )
     {
-        m_BackgroundRequested = true;
-        Msg( "Menu background: starting the local dm_lockdown scene, not joining a match.\n" );
-        engine->ClientCmd_Unrestricted( "maxplayers 1; map_background dm_lockdown" );
+        cl_community_binding_initialized.SetValue( 1 );
+        bool alreadyBound = false;
+        for ( int key = 0; key < BUTTON_CODE_LAST; ++key )
+        {
+            const char *binding = engine->Key_BindingForKey( ButtonCode_t( key ) );
+            if ( binding && !Q_strcmp( binding, "community_menu" ) ) alreadyBound = true;
+        }
+        if ( !alreadyBound )
+        {
+            const ButtonCode_t keys[] = { KEY_M, KEY_F6, KEY_F7 };
+            const char *commands[] = { "bind m community_menu", "bind F6 community_menu", "bind F7 community_menu" };
+            for ( int i = 0; i < ARRAYSIZE( keys ); ++i )
+            {
+                const char *binding = engine->Key_BindingForKey( keys[i] );
+                if ( !binding || !binding[0] ) { engine->ClientCmd_Unrestricted( commands[i] ); break; }
+            }
+        }
     }
     const char *activeMode = coordinator.Mode();
     for ( int i = 0; i < ARRAYSIZE( s_Modes ); ++i ) if ( !Q_strcmp( activeMode, s_Modes[i] ) ) m_SelectedMode = i;
@@ -510,6 +533,7 @@ void CHL2MPMainMenu::OnTick()
     }
     for ( int i = PLAY; i <= QUIT; ++i ) m_Buttons[i]->SetVisible( !m_PlayPage && ( ( i != RESUME && i != DISCONNECT ) || inGame ) );
     m_Buttons[RESUME]->SetVisible( inGame );
+    m_Buttons[HOST]->SetVisible( !m_PlayPage && !inGame ); m_Buttons[HOST]->SetEnabled( !coordinator.Busy() );
     m_Buttons[COMMUNITY]->SetVisible( !m_PlayPage && HL2MPCommunity_Available() );
     m_Buttons[BACK]->SetVisible( m_PlayPage );
     m_Subtitle->SetVisible( !m_PlayPage ); m_Tag->SetVisible( !m_PlayPage ); m_PlayHeading->SetVisible( m_PlayPage );
@@ -538,7 +562,7 @@ void CHL2MPMainMenu::OnTick()
     int *choices[] = { &m_MapChoice, &m_SizeChoice, &m_TimeChoice, &m_FragChoice };
     for ( int i = 0; i < 4; ++i )
     {
-        const bool visible = m_PlayPage && custom && !coordinator.Busy() && !m_Options->IsVisible() && !m_Browser->IsVisible() && !m_Community->IsVisible();
+        const bool visible = m_PlayPage && custom && !coordinator.Busy() && !m_Options->IsVisible() && !m_Browser->IsVisible() && !m_Community->IsVisible() && !m_Host->IsVisible();
         if ( !visible && m_CustomControls[i]->IsDropdownVisible() ) m_CustomControls[i]->HideMenu();
         m_CustomControls[i]->SetVisible( visible ); m_CustomCaptions[i]->SetVisible( visible );
         KeyValues *data = m_CustomControls[i]->GetActiveItemUserData(); if ( data ) *choices[i] = data->GetInt( "choice" );
@@ -572,7 +596,7 @@ void CHL2MPMainMenu::OnTick()
     if ( readyCheck && !m_WasReady ) m_Buttons[ACCEPT]->RequestFocus(); m_WasReady = readyCheck;
     m_Title->SetVisible( true ); m_PartyHeading->SetVisible( true ); m_Status->SetVisible( true ); m_PartyList->SetVisible( true );
     m_FriendsHeading->SetVisible( true ); m_FriendsHint->SetVisible( true ); m_FriendsList->SetVisible( true );
-    vgui::Panel *overlay = m_Options->IsVisible() ? m_Options : m_Browser->IsVisible() ? m_Browser : m_Community->IsVisible() ? m_Community : NULL;
+    vgui::Panel *overlay = m_Options->IsVisible() ? m_Options : m_Browser->IsVisible() ? m_Browser : m_Community->IsVisible() ? m_Community : m_Host->IsVisible() ? m_Host : NULL;
     if ( overlay ) for ( int i = 0; i < GetChildCount(); ++i ) if ( GetChild( i ) != overlay ) GetChild( i )->SetVisible( false );
 }
 
@@ -596,9 +620,12 @@ void CHL2MPMainMenu::OnCommand( const char *command )
     else if ( !Q_strcmp( command, "options_closed" ) ) { OnTick(); m_Buttons[OPTIONS]->RequestFocus(); }
     else if ( !Q_strcmp( command, "community" ) ) { HL2MPCommunity_Open( m_Community ); OnTick(); }
     else if ( !Q_strcmp( command, "community_closed" ) ) { OnTick(); m_Buttons[COMMUNITY]->RequestFocus(); }
+    else if ( !Q_strcmp( command, "host" ) ) { HL2MPHost_Open( m_Host ); OnTick(); }
+    else if ( !Q_strcmp( command, "host_closed" ) ) { OnTick(); m_Buttons[HOST]->RequestFocus(); }
     else if ( !Q_strcmp( command, "refresh_menu_fonts" ) )
     {
         m_FontWidth = 0; InvalidateLayout( true ); m_Options->OnCommand( "refresh_fonts" ); m_Browser->OnCommand( "refresh_fonts" ); m_Community->OnCommand( "refresh_fonts" );
+        m_Host->OnCommand( "refresh_fonts" );
     }
     else if ( !Q_strcmp( command, "find_match" ) )
     {
@@ -642,7 +669,7 @@ void CHL2MPMainMenu::OnThink()
 
 void CHL2MPMainMenu::OnKeyCodeTyped( vgui::KeyCode code )
 {
-    if ( code == KEY_ESCAPE && m_PlayPage && !m_Options->IsVisible() && !m_Browser->IsVisible() && !m_Community->IsVisible() )
+    if ( code == KEY_ESCAPE && m_PlayPage && !m_Options->IsVisible() && !m_Browser->IsVisible() && !m_Community->IsVisible() && !m_Host->IsVisible() )
     {
         for ( int i = 0; i < 4; ++i ) if ( m_CustomControls[i]->IsDropdownVisible() ) { m_CustomControls[i]->HideMenu(); return; }
         SetPlayPage( false ); return;

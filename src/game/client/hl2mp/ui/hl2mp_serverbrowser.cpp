@@ -69,7 +69,7 @@ class CServerRow : public CHL2MPSettingsButton
 {
     DECLARE_CLASS_SIMPLE( CServerRow, CHL2MPSettingsButton );
 public:
-    CServerRow( vgui::Panel *parent, vgui::Panel *target, int index, const gameserveritem_t &server ) : BaseClass( parent, "", VarArgs( "select_%d", index ) ), m_Index( index ), m_Target( target )
+    CServerRow( vgui::Panel *parent, vgui::Panel *target, int index, const gameserveritem_t &server ) : BaseClass( parent, "", VarArgs( "select_%d", index ) ), m_Index( index ), m_Target( target ), m_Selected( false )
     {
         RemoveActionSignalTarget( parent ); AddActionSignalTarget( target );
         m_Labels[0] = MakeLabel( this, server.GetName() ); m_Labels[1] = MakeLabel( this, server.m_szMap );
@@ -79,10 +79,10 @@ public:
     }
     void Style( vgui::HFont font, float scale, bool selected )
     {
-        SetTall( int( 43 * scale ) ); Active( selected );
+        SetTall( int( 54 * scale ) ); m_Selected = selected; Active( selected );
         for ( int i = 0; i < 5; ++i )
         {
-            m_Labels[i]->SetFont( font ); m_Labels[i]->SetFgColor( selected ? Color( 245, 184, 104, 255 ) : Color( 211, 221, 220, 255 ) );
+            m_Labels[i]->SetFont( font ); m_Labels[i]->SetFgColor( HL2MPServerTheme::Text() );
             m_Labels[i]->InvalidateLayout( true );
         }
         InvalidateLayout( true );
@@ -94,7 +94,8 @@ public:
     }
     void PaintBackground() OVERRIDE
     {
-        BaseClass::PaintBackground(); vgui::surface()->DrawSetColor( Color( 204, 221, 223, 25 ) ); vgui::surface()->DrawFilledRect( 0, GetTall() - 1, GetWide(), GetTall() );
+        const bool hover = HL2MPControlHighlighted( this );
+        HL2MPServerTheme::Rounded( 0, 0, GetWide(), GetTall(), m_Selected ? HL2MPServerTheme::Orange() : Color( hover ? 56 : 25, hover ? 56 : 25, hover ? 56 : 25, 255 ) );
     }
     void OnMouseDoublePressed( vgui::MouseCode code ) OVERRIDE
     {
@@ -108,7 +109,7 @@ public:
         else BaseClass::OnKeyCodeTyped( code );
     }
 private:
-    int m_Index; vgui::Panel *m_Target; vgui::Label *m_Labels[5];
+    int m_Index; vgui::Panel *m_Target; bool m_Selected; vgui::Label *m_Labels[5];
 };
 
 class CBrowserDialog : public vgui::EditablePanel
@@ -120,6 +121,7 @@ public:
         SetVisible( false ); SetZPos( 200 ); title = MakeLabel( this, "" ); body = MakeLabel( this, "" ); body->SetWrap( true );
         entry = new vgui::TextEntry( this, "AddressOrPassword" ); entry->SetMaximumCharCount( 63 );
         yes = new CHL2MPSettingsButton( this, "", "dialog_accept" ); no = new CHL2MPSettingsButton( this, "CANCEL", "dialog_cancel" );
+        yes->ServerStyle( true ); no->ServerStyle();
         yes->RemoveActionSignalTarget( this ); yes->AddActionSignalTarget( parent ); no->RemoveActionSignalTarget( this ); no->AddActionSignalTarget( parent );
     }
     void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE
@@ -127,7 +129,7 @@ public:
         if ( code == KEY_ESCAPE || code == KEY_ENTER ) GetParent()->OnCommand( code == KEY_ESCAPE ? "dialog_cancel" : "dialog_accept" );
         else BaseClass::OnKeyCodeTyped( code );
     }
-    void PaintBackground() OVERRIDE { vgui::surface()->DrawSetColor( Color( 3, 7, 10, 242 ) ); vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() ); }
+    void PaintBackground() OVERRIDE { vgui::surface()->DrawSetColor( Color( 24, 24, 24, 250 ) ); vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() ); }
     vgui::Label *title, *body; vgui::TextEntry *entry; CHL2MPSettingsButton *yes, *no;
 };
 
@@ -178,12 +180,16 @@ CHL2MPServerBrowser::CHL2MPServerBrowser( vgui::Panel *parent ) : BaseClass( par
     m_Back = new CHL2MPSettingsButton( this, "<  BACK", "back" );
     for ( int i = 0; i < 7; ++i ) m_Tabs[i] = new CHL2MPSettingsButton( this, s_Sources[i], VarArgs( "source_%d", i ) );
     for ( int i = 0; i < 5; ++i ) { m_Headers[i] = new CHL2MPSettingsButton( this, s_Columns[i], VarArgs( "sort_%d", i ) ); m_Headers[i]->SetContentAlignment( vgui::Label::a_west ); m_Headers[i]->SetTextInset( 8, 0 ); }
-    for ( int i = 0; i < FILTER_COUNT; ++i ) m_Filters[i] = new CHL2MPDropdown( this, VarArgs( "Filter%d", i ) );
+    for ( int i = 0; i < FILTER_COUNT; ++i ) { m_Filters[i] = new CHL2MPDropdown( this, VarArgs( "Filter%d", i ) ); m_Filters[i]->ServerStyle(); }
     Choices( m_Filters[GAME], "THIS MOD|RETAIL HL2: DEATHMATCH" ); Choices( m_Filters[POPULATION], "ANY POPULATION|HAS PLAYERS|HAS OPEN SLOTS|EMPTY" );
     Choices( m_Filters[PING], "ANY PING|UNDER 50 ms|UNDER 100 ms|UNDER 150 ms|UNDER 250 ms" ); Choices( m_Filters[SECURITY], "ANY SECURITY|VAC SECURED" ); Choices( m_Filters[PASSWORD], "ANY ACCESS|NO PASSWORD|PASSWORD REQUIRED" );
     m_Refresh = new CHL2MPSettingsButton( this, "REFRESH", "refresh" ); m_Add = new CHL2MPSettingsButton( this, "FIND BY ADDRESS", "address" );
     m_Favorite = new CHL2MPSettingsButton( this, "ADD FAVORITE", "favorite" ); m_Block = new CHL2MPSettingsButton( this, "BLOCK", "block" ); m_Connect = new CHL2MPSettingsButton( this, "CONNECT", "connect" );
-    m_List = new vgui::PanelListPanel( this, "Servers" ); m_List->SetFirstColumnWidth( 0 ); m_List->SetVerticalBufferPixels( 0 ); HL2MPStyleScrollBar( m_List->GetScrollbar() );
+    CHL2MPSettingsButton *buttons[] = { m_Back, m_Refresh, m_Add, m_Favorite, m_Block, m_Connect };
+    for ( int i = 0; i < ARRAYSIZE( buttons ); ++i ) buttons[i]->ServerStyle( buttons[i] == m_Connect );
+    for ( int i = 0; i < 7; ++i ) m_Tabs[i]->ServerStyle();
+    for ( int i = 0; i < 5; ++i ) m_Headers[i]->ServerStyle();
+    m_List = new vgui::PanelListPanel( this, "Servers" ); m_List->SetFirstColumnWidth( 0 ); m_List->SetVerticalBufferPixels( 6 ); HL2MPStyleScrollBar( m_List->GetScrollbar() );
     m_Dialog = new CBrowserDialog( this );
     KeyValues *blocked = new KeyValues( "BlockedServers" );
     if ( blocked->LoadFromFile( filesystem, "cfg/serverbrowser_blocked.vdf", "MOD" ) )
@@ -310,7 +316,7 @@ void CHL2MPServerBrowser::Rebuild()
     if ( m_Visible.Find( m_Selected ) == m_Visible.InvalidIndex() ) m_Selected = -1;
     FOR_EACH_VEC( m_Visible, i )
     {
-        CServerRow *row = new CServerRow( m_List, this, m_Visible[i], m_Servers[m_Visible[i]] ); row->Style( m_Small, m_Scale, m_Selected == m_Visible[i] ); m_Rows.AddToTail( row ); m_List->AddItem( NULL, row );
+        CServerRow *row = new CServerRow( m_List, this, m_Visible[i], m_Servers[m_Visible[i]] ); row->Style( m_Font, m_Scale, m_Selected == m_Visible[i] ); m_Rows.AddToTail( row ); m_List->AddItem( NULL, row );
     }
     m_List->InvalidateLayout( true ); m_List->GetScrollbar()->SetValue( scroll ); UpdateDetails();
 }
@@ -350,7 +356,7 @@ void CHL2MPServerBrowser::OnCommand( const char *command )
     if ( !Q_strcmp( command, "back" ) ) { if ( m_Dialog->IsVisible() ) HideDialog(); else Close(); }
     else if ( !Q_strncmp( command, "source_", 7 ) ) { int source = atoi( command + 7 ); if ( source >= 0 && source < 7 ) { m_Source = Source( source ); Refresh(); InvalidateLayout( true ); } }
     else if ( !Q_strncmp( command, "sort_", 5 ) ) { int column = atoi( command + 5 ); if ( column >= 0 && column < 5 ) { m_Ascending = column == m_Sort ? !m_Ascending : true; m_Sort = column; m_Dirty = true; } }
-    else if ( !Q_strncmp( command, "select_", 7 ) ) { int index = atoi( command + 7 ); if ( m_Servers.IsValidIndex( index ) ) { m_Selected = index; FOR_EACH_VEC( m_Rows, i ) m_Rows[i]->Style( m_Small, m_Scale, m_Visible[i] == index ); UpdateDetails(); } }
+    else if ( !Q_strncmp( command, "select_", 7 ) ) { int index = atoi( command + 7 ); if ( m_Servers.IsValidIndex( index ) ) { m_Selected = index; FOR_EACH_VEC( m_Rows, i ) m_Rows[i]->Style( m_Font, m_Scale, m_Visible[i] == index ); UpdateDetails(); } }
     else if ( !Q_strcmp( command, "next" ) || !Q_strcmp( command, "previous" ) )
     {
         int row = m_Visible.Find( m_Selected ) + ( !Q_strcmp( command, "next" ) ? 1 : -1 );
@@ -426,24 +432,24 @@ void CHL2MPServerBrowser::PerformLayout()
         m_Font = vgui::surface()->CreateFont(); m_Small = vgui::surface()->CreateFont(); m_Title = vgui::surface()->CreateFont();
         vgui::surface()->SetFontGlyphSet( m_Font, "GorDIN", MAX( 13, int( 18 * s ) ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
         vgui::surface()->SetFontGlyphSet( m_Small, "GorDIN", MAX( 11, int( 15 * s ) ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
-        vgui::surface()->SetFontGlyphSet( m_Title, "GorDIN", int( 28 * s ), 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
+        vgui::surface()->SetFontGlyphSet( m_Title, "GorDIN Bold", int( 30 * s ), 600, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS );
     }
     m_Width = w; m_Height = h; const int margin = int( 42 * s ), width = w - margin * 2;
     m_Back->SetFont( m_Small ); m_Back->SetBounds( margin - 10, int( 20 * s ), int( 95 * s ), int( 35 * s ) );
-    m_Heading->SetFont( m_Title ); m_Heading->SetFgColor( Color( 234, 237, 231, 255 ) ); m_Heading->SetBounds( margin + int( 110 * s ), int( 20 * s ), width - int( 110 * s ), int( 40 * s ) );
+    m_Heading->SetFont( m_Title ); m_Heading->SetFgColor( HL2MPServerTheme::Orange() ); m_Heading->SetBounds( margin + int( 110 * s ), int( 20 * s ), width - int( 110 * s ), int( 40 * s ) );
     for ( int i = 0; i < 7; ++i ) { m_Tabs[i]->SetFont( m_Small ); m_Tabs[i]->SetBounds( margin + width * i / 7, int( 78 * s ), width / 7, int( 35 * s ) ); m_Tabs[i]->Active( i == m_Source ); }
     m_SearchLabel->SetBounds( margin, int( 127 * s ), width * .60f, int( 20 * s ) ); m_MapLabel->SetBounds( margin + width * .64f, int( 127 * s ), width * .36f, int( 20 * s ) );
     m_Search->SetBounds( margin, int( 151 * s ), width * .61f, int( 32 * s ) ); m_Map->SetBounds( margin + width * .64f, int( 151 * s ), width * .36f, int( 32 * s ) );
     for ( int i = 0; i < FILTER_COUNT; ++i ) { m_Filters[i]->Style( m_Small, s ); m_Filters[i]->SetBounds( margin + width * i / FILTER_COUNT, int( 194 * s ), width / FILTER_COUNT - 8, int( 33 * s ) ); }
     const int tableW = width - int( 14 * s ); const float columns[] = { 0, .43f, .66f, .78f, .88f, 1 };
     for ( int i = 0; i < 5; ++i ) { m_Headers[i]->SetFont( m_Small ); m_Headers[i]->SetBounds( margin + tableW * columns[i], int( 240 * s ), tableW * ( columns[i+1] - columns[i] ), int( 32 * s ) ); }
-    const int tableY = int( 277 * s ), tableBottom = h - int( 206 * s );
+    const int tableY = int( 277 * s ), tableBottom = h - int( 195 * s );
     m_List->SetBounds( margin, tableY, width, MAX( 70, tableBottom - tableY ) ); m_List->SetPaintBackgroundEnabled( false ); m_List->SetBorder( NULL ); m_List->GetScrollbar()->SetWide( MAX( 10, int( 12 * s ) ) );
-    FOR_EACH_VEC( m_Rows, i ) m_Rows[i]->Style( m_Small, s, m_Visible[i] == m_Selected );
-    m_Count->SetBounds( margin, tableBottom + int( 8 * s ), width, int( 25 * s ) ); m_Details->SetBounds( margin, tableBottom + int( 38 * s ), width, int( 69 * s ) );
+    FOR_EACH_VEC( m_Rows, i ) m_Rows[i]->Style( m_Font, s, m_Visible[i] == m_Selected );
+    m_Count->SetBounds( margin, tableBottom + int( 8 * s ), width, int( 25 * s ) ); m_Details->SetBounds( margin, tableBottom + int( 38 * s ), width, int( 54 * s ) );
     m_Hint->SetBounds( margin, h - int( 95 * s ), width, int( 30 * s ) );
-    vgui::Label *labels[] = { m_Count, m_Details, m_Hint, m_SearchLabel, m_MapLabel }; for ( int i = 0; i < 5; ++i ) { labels[i]->SetFont( m_Small ); labels[i]->SetFgColor( i == 0 ? Color( 235, 174, 98, 255 ) : Color( 177, 195, 198, 255 ) ); }
-    vgui::TextEntry *entries[] = { m_Search, m_Map, m_Dialog->entry }; for ( int i = 0; i < 3; ++i ) { entries[i]->SetFont( m_Font ); entries[i]->SetBgColor( Color( 29, 40, 44, 240 ) ); entries[i]->SetFgColor( Color( 235, 238, 230, 255 ) ); entries[i]->SetBorder( NULL ); }
+    vgui::Label *labels[] = { m_Count, m_Details, m_Hint, m_SearchLabel, m_MapLabel }; for ( int i = 0; i < 5; ++i ) { labels[i]->SetFont( m_Small ); labels[i]->SetFgColor( i == 0 ? HL2MPServerTheme::Orange() : HL2MPServerTheme::Muted() ); }
+    vgui::TextEntry *entries[] = { m_Search, m_Map, m_Dialog->entry }; for ( int i = 0; i < 3; ++i ) { entries[i]->SetFont( m_Font ); entries[i]->SetBgColor( Color( 24, 24, 24, 255 ) ); entries[i]->SetFgColor( HL2MPServerTheme::Text() ); entries[i]->SetBorder( NULL ); }
     CHL2MPSettingsButton *footer[] = { m_Refresh, m_Add, m_Favorite, m_Block, m_Connect };
     for ( int i = 0; i < 5; ++i ) { footer[i]->SetFont( m_Small ); footer[i]->SetBounds( margin + width * i / 5, h - int( 55 * s ), width / 5 - 8, int( 36 * s ) ); }
     m_Dialog->SetBounds( 0, 0, w, h ); const int dw = MIN( width, int( 640 * s ) ), dx = ( w - dw ) / 2, dy = h / 2 - int( 130 * s );
@@ -455,9 +461,9 @@ void CHL2MPServerBrowser::PerformLayout()
 void CHL2MPServerBrowser::PaintBackground()
 {
     vgui::ISurface *surface = vgui::surface(); const int w = GetWide(), h = GetTall();
-    surface->DrawSetColor( Color( 21, 30, 35, 238 ) ); surface->DrawFilledRect( 0, 0, w, h );
-    surface->DrawSetColor( Color( 8, 14, 18, 170 ) ); surface->DrawFilledRect( 0, 0, w, int( 68 * m_Scale ) ); surface->DrawFilledRect( 0, h - int( 65 * m_Scale ), w, h );
-    surface->DrawSetColor( Color( 204, 221, 223, 35 ) ); surface->DrawFilledRect( 0, int( 68 * m_Scale ), w, int( 68 * m_Scale ) + 1 ); surface->DrawFilledRect( 0, h - int( 65 * m_Scale ), w, h - int( 65 * m_Scale ) + 1 );
+    surface->DrawSetColor( Color( 32, 32, 32, 250 ) ); surface->DrawFilledRect( 0, 0, w, h );
+    surface->DrawSetColor( Color( 26, 26, 26, 255 ) ); surface->DrawFilledRect( 0, 0, w, int( 68 * m_Scale ) ); surface->DrawFilledRect( 0, h - int( 65 * m_Scale ), w, h );
+    surface->DrawSetColor( HL2MPServerTheme::Orange() ); surface->DrawFilledRect( int( 134 * m_Scale ), int( 20 * m_Scale ), int( 138 * m_Scale ), int( 56 * m_Scale ) );
 }
 }
 

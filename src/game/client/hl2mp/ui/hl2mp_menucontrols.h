@@ -9,6 +9,26 @@
 #include "vgui_controls/ScrollBar.h"
 #include "vgui_controls/ScrollBarSlider.h"
 
+namespace HL2MPServerTheme
+{
+inline Color Orange() { return Color( 232, 112, 27, 255 ); }
+inline Color Text() { return Color( 239, 238, 235, 255 ); }
+inline Color Muted() { return Color( 170, 170, 167, 255 ); }
+inline void Rounded( int x, int y, int w, int h, Color color, int radius = 4 )
+{
+    radius = MIN( radius, MIN( w, h ) / 2 );
+    vgui::ISurface *surface = vgui::surface(); surface->DrawSetColor( color );
+    surface->DrawFilledRect( x, y + radius, x + w, y + h - radius );
+    for ( int row = 0; row < radius; ++row )
+    {
+        const float dy = radius - row - 0.5f;
+        const int inset = int( radius - sqrtf( radius * radius - dy * dy ) + 0.5f );
+        surface->DrawFilledRect( x + inset, y + row, x + w - inset, y + row + 1 );
+        surface->DrawFilledRect( x + inset, y + h - row - 1, x + w - inset, y + h - row );
+    }
+}
+}
+
 // Use VGUI's hit-tested panel, so a console/dialog covering a control cannot
 // trigger its hover state just because the mouse shares the same coordinates.
 inline bool HL2MPControlHighlighted( vgui::Panel *control )
@@ -38,10 +58,11 @@ class CHL2MPDropdown : public vgui::ComboBox
 {
     DECLARE_CLASS_SIMPLE( CHL2MPDropdown, vgui::ComboBox );
 public:
-    CHL2MPDropdown( vgui::Panel *parent, const char *name ) : BaseClass( parent, name, 8, false ), m_Font( 0 ), m_Scale( 1 ), m_Highlighted( false )
+    CHL2MPDropdown( vgui::Panel *parent, const char *name ) : BaseClass( parent, name, 8, false ), m_Font( 0 ), m_Scale( 1 ), m_Highlighted( false ), m_ServerStyle( false )
     {
         SetDropdownButtonVisible( false ); SetPaintBorderEnabled( false );
     }
+    void ServerStyle() { m_ServerStyle = true; InvalidateLayout( false, true ); }
     void Style( vgui::HFont font, float scale )
     {
         m_Font = font; m_Scale = scale; SetFont( font );
@@ -52,6 +73,7 @@ public:
         BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); m_Highlighted = false;
         SetFgColor( Color( 229, 232, 229, 255 ) ); SetBgColor( Color( 25, 31, 34, 180 ) );
         SetSelectionBgColor( Color( 25, 31, 34, 180 ) ); SetSelectionTextColor( Color( 229, 232, 229, 255 ) );
+        if ( m_ServerStyle ) { SetBgColor( Color( 29, 29, 29, 255 ) ); SetSelectionBgColor( Color( 29, 29, 29, 255 ) ); }
         GetComboButton()->SetArmedSound( NULL ); GetComboButton()->SetDepressedSound( NULL ); GetComboButton()->SetReleasedSound( NULL );
         if ( m_Font ) Style( m_Font, m_Scale );
     }
@@ -66,8 +88,8 @@ public:
         if ( highlighted != m_Highlighted )
         {
             m_Highlighted = highlighted;
-            const Color text = highlighted ? Color( 245, 184, 104, 255 ) : Color( 229, 232, 229, 255 );
-            const Color background = highlighted ? Color( 53, 60, 61, 235 ) : Color( 25, 31, 34, 180 );
+            const Color text = m_ServerStyle ? ( highlighted ? HL2MPServerTheme::Orange() : HL2MPServerTheme::Text() ) : highlighted ? Color( 245, 184, 104, 255 ) : Color( 229, 232, 229, 255 );
+            const Color background = m_ServerStyle ? Color( highlighted ? 48 : 29, highlighted ? 48 : 29, highlighted ? 48 : 29, 255 ) : highlighted ? Color( 53, 60, 61, 235 ) : Color( 25, 31, 34, 180 );
             SetFgColor( text ); SetSelectionTextColor( text ); SetBgColor( background ); SetSelectionBgColor( background );
             Repaint();
         }
@@ -88,12 +110,19 @@ public:
         menu->InvalidateLayout( true, true ); menu->SetBorder( NULL ); menu->SetBgColor( Color( 25, 31, 34, 255 ) );
         if ( m_Font ) menu->SetFont( m_Font );
         menu->SetMenuItemHeight( MAX( 24, int( 34 * m_Scale ) ) );
+        if ( m_ServerStyle ) menu->SetBgColor( Color( 29, 29, 29, 255 ) );
         for ( int i = 0; i < menu->GetItemCount(); ++i )
         {
             vgui::MenuItem *item = menu->GetMenuItem( menu->GetMenuID( i ) );
             item->SetDefaultColor( Color( 225, 229, 226, 255 ), Color( 25, 31, 34, 255 ) );
             item->SetArmedColor( Color( 245, 184, 104, 255 ), Color( 53, 60, 61, 255 ) );
             item->SetDepressedColor( Color( 245, 184, 104, 255 ), Color( 53, 60, 61, 255 ) );
+            if ( m_ServerStyle )
+            {
+                item->SetDefaultColor( HL2MPServerTheme::Text(), Color( 29, 29, 29, 255 ) );
+                item->SetArmedColor( HL2MPServerTheme::Text(), HL2MPServerTheme::Orange() );
+                item->SetDepressedColor( HL2MPServerTheme::Text(), HL2MPServerTheme::Orange() );
+            }
             item->SetArmedSound( "ui/buttonrollover.wav" ); item->SetDepressedSound( "ui/buttonclick.wav" ); item->SetReleasedSound( NULL );
         }
         vgui::surface()->PlaySound( "ui/buttonclick.wav" );
@@ -107,18 +136,19 @@ public:
         if ( m_Highlighted ) vgui::surface()->DrawFilledRect( 0, GetTall() - 1, GetWide(), GetTall() );
     }
 private:
-    vgui::HFont m_Font; float m_Scale; bool m_Highlighted;
+    vgui::HFont m_Font; float m_Scale; bool m_Highlighted, m_ServerStyle;
 };
 
 class CHL2MPSettingsButton : public vgui::Button
 {
     DECLARE_CLASS_SIMPLE( CHL2MPSettingsButton, vgui::Button );
 public:
-    CHL2MPSettingsButton( vgui::Panel *parent, const char *text, const char *command ) : BaseClass( parent, command, text, parent, command ), m_Active( false )
+    CHL2MPSettingsButton( vgui::Panel *parent, const char *text, const char *command ) : BaseClass( parent, command, text, parent, command ), m_Active( false ), m_ServerStyle( false ), m_Primary( false )
     {
         SetContentAlignment( vgui::Label::a_center ); SetButtonBorderEnabled( false ); DrawFocusBox( false );
     }
     void Active( bool active ) { m_Active = active; Repaint(); }
+    void ServerStyle( bool primary = false ) { m_ServerStyle = true; m_Primary = primary; InvalidateLayout( false, true ); }
     void SetFont( vgui::HFont font ) OVERRIDE
     {
         BaseClass::SetFont( font ); InvalidateLayout( true );
@@ -129,17 +159,30 @@ public:
         SetDefaultColor( Color( 204, 211, 210, 255 ), Color( 0, 0, 0, 0 ) );
         SetArmedColor( Color( 255, 235, 199, 255 ), Color( 0, 0, 0, 0 ) );
         SetDepressedColor( Color( 245, 184, 104, 255 ), Color( 0, 0, 0, 0 ) );
+        if ( m_ServerStyle )
+        {
+            SetDefaultColor( HL2MPServerTheme::Text(), Color( 0, 0, 0, 0 ) );
+            SetArmedColor( HL2MPServerTheme::Text(), Color( 0, 0, 0, 0 ) );
+            SetDepressedColor( HL2MPServerTheme::Text(), Color( 0, 0, 0, 0 ) );
+            SetDisabledFgColor1( Color( 106, 106, 104, 255 ) ); SetDisabledFgColor2( Color( 0, 0, 0, 0 ) );
+        }
         SetArmedSound( "ui/buttonrollover.wav" ); SetDepressedSound( "ui/buttonclick.wav" ); SetReleasedSound( NULL );
     }
     void PaintBackground() OVERRIDE
     {
+        if ( m_ServerStyle )
+        {
+            const bool hover = IsEnabled() && HL2MPControlHighlighted( this );
+            HL2MPServerTheme::Rounded( 0, 0, GetWide(), GetTall(), IsEnabled() && ( m_Active || m_Primary ) ? ( hover ? Color( 248, 132, 39, 255 ) : HL2MPServerTheme::Orange() ) : Color( hover ? 65 : 38, hover ? 65 : 38, hover ? 65 : 38, 255 ) );
+            return;
+        }
         vgui::surface()->DrawSetColor( Color( 215, 225, 225, IsArmed() || HasFocus() ? 30 : m_Active ? 20 : 0 ) );
         vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() );
         if ( m_Active ) { vgui::surface()->DrawSetColor( Color( 235, 164, 79, 255 ) ); vgui::surface()->DrawFilledRect( 0, GetTall() - 2, GetWide(), GetTall() ); }
     }
     void PaintBorder() OVERRIDE {}
 private:
-    bool m_Active;
+    bool m_Active, m_ServerStyle, m_Primary;
 };
 
 class CHL2MPSettingsSlider : public vgui::Slider

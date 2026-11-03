@@ -212,7 +212,7 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
         if ( !Q_strcmp( action, "ban" ) )
         {
             int minutes;
-            if ( !Integer( request, "minutes", 0, 10080, minutes ) ) return;
+            if ( !Integer( request, "minutes", 0, 525600, minutes ) ) { State( player, "Ban duration must be 0-525600 minutes; 0 means permanent." ); return; }
             const CSteamID *id = engine->GetClientSteamID( target->edict() );
             if ( !id || !id->IsValid() || !id->BIndividualAccount() || !engine->IsClientFullyAuthenticated( target->edict() ) )
             { State( player, "Bans require an authenticated Steam player." ); return; }
