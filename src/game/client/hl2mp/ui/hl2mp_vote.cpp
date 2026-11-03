@@ -32,9 +32,14 @@ class CVotePanel : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CVotePanel, vgui::EditablePanel );
 public:
-    CVotePanel() : BaseClass( g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 ), m_Preview( false ), m_PreviousModal( NULL ), m_PreviewGameUI(false), m_LastYes(0), m_LastNo(0), m_LastGeneration(-1), m_LastChoice(-1), m_YesFlash(0), m_NoFlash(0)
+    CVotePanel( vgui::Panel *owner = NULL, bool previewOnly = false ) : BaseClass( owner ? owner : g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 ), m_Preview( false ), m_PreviewOnly( previewOnly ), m_PreviewGameUI(false), m_LastYes(0), m_LastNo(0), m_LastGeneration(-1), m_LastChoice(-1), m_YesFlash(0), m_NoFlash(0)
     {
-        MakePopup( false ); SetZPos( 250 ); SetVisible( false ); SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false ); SetCursor( vgui::dc_arrow );
+        // An editor preview must be a child of its modal owner. A sibling popup
+        // can capture input while the engine paints it behind the editor.
+        m_PreviewOwner = owner;
+        if ( previewOnly && !owner ) SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
+        if ( !owner ) MakePopup( false );
+        SetZPos( previewOnly ? 1000 : 250 ); SetVisible( false ); SetMouseInputEnabled( previewOnly ); SetKeyBoardInputEnabled( previewOnly ); SetCursor( vgui::dc_arrow );
         m_Font = m_Title = vgui::INVALID_FONT;
         m_Close = new CHL2MPSettingsButton( this, "X", "close_preview" ); m_Close->ServerStyle(); m_Close->SetVisible( false ); m_Close->SetMouseInputEnabled(true);m_Close->SetKeyBoardInputEnabled(true);
         const char *testLabels[]={"#HL2MP_VoteTestAgain","#HL2MP_VoteTestPass","#HL2MP_VoteTestFail"}; const char *testCmds[]={"preview_restart","preview_pass","preview_fail"};
@@ -44,14 +49,21 @@ public:
         for ( int i = 0; i < MAX_MAPS; ++i ) { m_Maps[i] = new CHL2MPSettingsButton( this, "", VarArgs( "map_%d", i ) ); m_Maps[i]->ServerStyle(); m_Maps[i]->SetMouseInputEnabled( true ); }
         vgui::ivgui()->AddTickSignal( GetVPanel(), 50 );
     }
+    ~CVotePanel()
+    {
+        vgui::ivgui()->RemoveTickSignal( GetVPanel() );
+        RestoreModal();
+    }
     void OnTick() OVERRIDE
     {
         const double now = Plat_FloatTime();
         if ( m_Preview )
         {
+            if ( m_PreviewOwner && !m_PreviewOwner->IsVisible() ) { ClosePreview(); return; }
             if (now>=m_PreviewState.deadline && m_PreviewState.phase==KICK) Result(false);
             Feedback(); SetVisible( true ); Repaint(); return;
         }
+        if ( m_PreviewOnly ) return;
         if ( !cl_vote_bindings_initialized.GetBool() && now > 5 )
         {
             const char *commands[] = { "vote_yes", "vote_no" }; const ButtonCode_t keys[] = { KEY_F1, KEY_F2 };
@@ -212,18 +224,36 @@ public:
     }
     void Preview()
     {
-        if(m_Preview){ClosePreview();return;}
+        if ( !m_PreviewOnly || m_Preview ) return;
         m_PreviousModal=vgui::input()->GetAppModalSurface();m_PreviewGameUI=enginevgui->IsGameUIVisible();m_Preview=true;
         if(!m_PreviewGameUI)engine->ClientCmd_Unrestricted("gameui_activate;gameui_preventescape");
-        SetParent(enginevgui->GetPanel(PANEL_GAMEUIDLL));SetZPos(900);SetMouseInputEnabled(true);SetKeyBoardInputEnabled(true);ResetPreview();
-        SetVisible(true);InvalidateLayout(true);MoveToFront();RequestFocus();vgui::input()->SetAppModalSurface(GetVPanel());
+        ResetPreview(); SetVisible( true ); InvalidateLayout( true );
+        vgui::input()->SetAppModalSurface( GetVPanel() ); RequestFocus(); MoveToFront();
+    }
+    void RestoreModal()
+    {
+        vgui::VPANEL capture = vgui::input()->GetMouseCapture();
+        if ( capture && ( capture == GetVPanel() || vgui::ipanel()->HasParent( capture, GetVPanel() ) ) )
+            vgui::input()->SetMouseCapture( NULL );
+        if ( vgui::input()->GetAppModalSurface() == GetVPanel() )
+        {
+            vgui::VPANEL previous = m_PreviousModal.Get();
+            if ( previous && vgui::ipanel()->IsVisible( previous ) )
+            {
+                vgui::input()->SetAppModalSurface( previous );
+                vgui::ipanel()->RequestFocus( previous );
+            }
+            else vgui::input()->ReleaseAppModalSurface();
+        }
+        m_PreviousModal = NULL;
     }
     void ClosePreview()
     {
-        if ( !m_Preview ) return; m_Preview = false; SetZPos( 250 ); SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false ); SetVisible( false );
-        if ( vgui::input()->GetAppModalSurface() == GetVPanel() ) { if ( m_PreviousModal ) { vgui::input()->SetAppModalSurface( m_PreviousModal ); vgui::ipanel()->RequestFocus( m_PreviousModal ); } else vgui::input()->ReleaseAppModalSurface(); }
-        m_PreviousModal = NULL; SetParent( g_pClientMode->GetViewport() );m_LastGeneration=-1;
+        if ( !m_Preview ) return;
+        m_Preview = false; SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false ); SetVisible( false );
+        RestoreModal();
         if(!m_PreviewGameUI)engine->ClientCmd_Unrestricted("gameui_allowescape;gameui_hide");
+        MarkForDeletion();
     }
     void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE
     {
@@ -237,10 +267,11 @@ public:
     }
 private:
     bool m_PreviewGameUI; int m_ContentH,m_LastYes,m_LastNo,m_LastGeneration,m_LastChoice; double m_YesFlash,m_NoFlash; vgui::Label *m_Header; CHL2MPSettingsButton *m_Test[3];
-    bool m_Preview; VoteState m_PreviewState; vgui::VPANEL m_PreviousModal; CHL2MPSettingsButton *m_Close;
+    bool m_Preview, m_PreviewOnly; VoteState m_PreviewState; vgui::VPanelHandle m_PreviousModal; vgui::PHandle m_PreviewOwner; CHL2MPSettingsButton *m_Close;
     int m_LastPhase; double m_Started, m_NextPoll; int m_FontTall; vgui::HFont m_Font, m_Title; vgui::Label *m_Body; CHL2MPSettingsButton *m_Maps[MAX_MAPS];
 };
 vgui::DHANDLE<CVotePanel> s_Panel;
+vgui::DHANDLE<CVotePanel> s_Preview;
 void StateMessage( bf_read &r )
 {
     VoteState s = s_State;
@@ -260,18 +291,23 @@ void MapMessage( bf_read &r )
 }
 void Cast( int choice )
 {
-    if(s_Panel&&s_Panel->IsPreview()) { s_Panel->PreviewChoice(choice);return; }
+    if(s_Preview&&s_Preview->IsPreview()) { s_Preview->PreviewChoice(choice);return; }
     if ( s_State.phase != KICK || !s_State.canVote || s_State.choice >= 0 ) return;
     Send( "cast", choice );
 }
 }
 void HL2MPVoteUI_Init() { usermessages->HookMessage( "HL2MPVote", StateMessage ); usermessages->HookMessage( "HL2MPVoteMap", MapMessage ); if ( !s_Panel ) s_Panel = new CVotePanel; }
-void HL2MPVoteUI_Preview() { if ( s_Panel ) s_Panel->Preview(); }
-void HL2MPVoteUI_ClosePreview() { if ( s_Panel ) s_Panel->ClosePreview(); }
+void HL2MPVoteUI_Preview( vgui::Panel *owner )
+{
+    if ( s_Preview && s_Preview->IsPreview() ) { s_Preview->ClosePreview(); return; }
+    s_Preview = new CVotePanel( owner, true );
+    s_Preview->Preview();
+}
+void HL2MPVoteUI_ClosePreview() { if ( s_Preview ) s_Preview->ClosePreview(); }
 void HL2MPVoteUI_Reset() { memset( &s_State, 0, sizeof( s_State ) ); }
 void HL2MPVoteUI_CallKick( int userid )
 {
-    player_info_t p;if(ConVarRef("developer").GetInt()>0 && engine->GetPlayerInfo(engine->GetLocalPlayer(),&p) && p.userID==userid) { if(s_Panel)s_Panel->Preview();return; }
+    player_info_t p;if(ConVarRef("developer").GetInt()>0 && engine->GetPlayerInfo(engine->GetLocalPlayer(),&p) && p.userID==userid) { HL2MPVoteUI_Preview();return; }
     Send("kick",userid);
 }
 bool HL2MPVoteUI_IsMapVote() { return s_State.phase == MAP_BALLOT || s_State.phase == MAP_RESULT; }
@@ -285,9 +321,9 @@ CON_COMMAND_F( cl_vote_status, "Show the current vote and local ballot state.", 
 
 CON_COMMAND_F(cl_vote_preview,"Local self-kick simulation: cl_vote_preview [self|pass|fail|close]. Requires developer 1.",FCVAR_CLIENTDLL)
 {
-    if(!ConVarRef("developer").GetInt() || !s_Panel)return;
+    if(!ConVarRef("developer").GetInt())return;
     const char *action=args.ArgC()>1?args[1]:"self";
-    if(!Q_stricmp(action,"close")) { s_Panel->ClosePreview();return; }
-    if(!s_Panel->IsPreview())s_Panel->Preview();
-    if(!Q_stricmp(action,"pass"))s_Panel->Result(true);else if(!Q_stricmp(action,"fail"))s_Panel->Result(false);else s_Panel->ResetPreview();
+    if(!Q_stricmp(action,"close")) { HL2MPVoteUI_ClosePreview();return; }
+    if(!s_Preview || !s_Preview->IsPreview())HL2MPVoteUI_Preview();
+    if(!Q_stricmp(action,"pass"))s_Preview->Result(true);else if(!Q_stricmp(action,"fail"))s_Preview->Result(false);else s_Preview->ResetPreview();
 }

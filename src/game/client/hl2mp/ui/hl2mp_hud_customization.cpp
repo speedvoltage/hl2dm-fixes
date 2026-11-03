@@ -773,7 +773,7 @@ void CHudEditor::OnCommand( const char *command )
     if ( !Q_strcmp( command, "cancel" ) ) { Close( false ); return; }
     if ( !Q_strcmp( command, "layout" ) || !Q_strcmp( command, "appearance" ) ) { section = !Q_strcmp( command, "appearance" ); BuildRows(); return; }
     if ( !Q_strcmp( command, "color_fg" ) || !Q_strcmp( command, "color_bg" ) ) { picker->Open( !Q_strcmp( command, "color_bg" ) ); return; }
-    if ( !Q_strcmp( command, "vote_preview" ) ) { HL2MPVoteUI_Preview(); return; }
+    if ( !Q_strcmp( command, "vote_preview" ) ) { HL2MPVoteUI_Preview( this ); return; }
     if ( !Q_strcmp( command, "center_x" ) || !Q_strcmp( command, "center_y" ) )
     {
         Edited(); HL2MPHudElementStyle &p = s_Layout.parts[selected];
