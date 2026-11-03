@@ -12,11 +12,26 @@ Five custom slots are saved locally with the separate slot selector. Picking a
 preset previews it immediately. Apply writes cfg/hud_layout.res; Cancel restores
 the opening layout and HUD selection. Saved slots remain saved after Cancel.
 User layouts and presets are excluded from release packages.
-Preview zoom offers Fit, 100% and 200%; right-drag pans the zoomed view.
+Preview zoom offers Fit and 75-400%. Use the wheel over the canvas or +/- keys
+(including the numpad); right-drag pans the zoomed view. Nearby edges and centers
+snap within seven canvas pixels, with cyan guides. Hold Alt to bypass snapping.
+Ctrl+Z / Ctrl+Y and toolbar buttons undo/redo up to 64 edits in the current editor
+session. Dragging and slider gestures are grouped. View navigation is not an edit.
+The Help box contains the controls previously displayed below the canvas.
+Crosshair Appearance has a 16-shape gallery. All weapons is the shared default;
+each of the twelve weapons can override shape, color, opacity, size, gap, length,
+thickness, outline and dot. Disable a weapon override to inherit shared settings.
+Version-1 layouts load unchanged; version-2 layouts/presets save the overrides.
 Killfeed samples use the in-game death-notice renderer and weapon/skull icons.
-Vote Preview opens the real vote panel with isolated sample names and counts.
+Vote Preview opens the real vote panel with your own name and sample counts.
 Yes/No keys simulate a local choice; no request or ballot is sent to the server.
-Close it with Escape or X to keep editing.
+Restart / Pass / Fail preview both outcomes without kicking or banning anyone.
+Close it with Escape or X to keep editing. With developer 1, cl_vote_preview
+[self|pass|fail|close] and the scoreboard's Test self-kick entry do the same.
+The vote panel has a kick/result icon, yes/no badges and the actual bound keys.
+Distinct yes/no sounds accompany ballots; passed/failed sounds accompany results.
+Counts briefly highlight when updated, and results pulse once. The existing vote
+sound/animation options control this feedback.
 HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
 
 Voting

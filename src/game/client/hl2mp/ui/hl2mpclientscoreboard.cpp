@@ -89,6 +89,7 @@ void CHL2MPClientScoreBoardDialog::OnPlayerContext( int itemID )
         vgui::MenuItem *item = new CPlayerAction( m_Context, HL2MPText( labels[i] ), commands[i], this, i == 1 || i == 2 );
         int id = m_Context->AddMenuItem( item );
         if ( i == 1 || i == 2 ) m_Context->SetMenuItemChecked( id, ( flags & ( i == 1 ? HL2MP_MUTE_CHAT : HL2MP_MUTE_VOICE ) ) != 0 );
+        if(i==5 && index==engine->GetLocalPlayer() && ConVarRef("developer").GetInt()>0) { item->SetText(HL2MPText("#HL2MP_VoteTestSelf")); item->SetEnabled(true);continue; }
         item->SetEnabled( i == 0 ? p.friendsID != 0 : i == 6 ? false : index != engine->GetLocalPlayer() && ( i != 4 || flags != 0 ) && ( i != 5 || !p.fakeplayer ) );
     }
     int x, y; input()->GetCursorPos( x, y ); m_Context->SetPos( x, y ); m_Context->SetVisible( true ); m_Context->MoveToFront();

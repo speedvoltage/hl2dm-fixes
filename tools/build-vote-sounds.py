@@ -9,6 +9,8 @@ root.mkdir(parents=True, exist_ok=True)
 for name, notes in {
     'vote_start': [(660, .10), (880, .14)],
     'vote_cast': [(740, .07)],
+    'vote_yes': [(740, .055), (930, .075)],
+    'vote_no': [(490, .055), (370, .075)],
     'vote_pass': [(660, .10), (880, .10), (1100, .20)],
     'vote_fail': [(440, .14), (330, .22)],
 }.items():
