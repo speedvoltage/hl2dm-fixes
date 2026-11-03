@@ -251,6 +251,8 @@ private:
         else if ( !Q_strcmp( m_Context.mode, "casual" ) ) mode = "CASUAL";
         else if ( !Q_strcmp( m_Context.mode, "custom" ) ) mode = "PRIVATE MATCH";
         else if ( !Q_strcmp( m_Context.mode, "community" ) ) mode = "COMMUNITY SERVER";
+        else if ( !Q_strcmp( m_Context.mode, "listen" ) ) mode = "LISTEN SERVER  /  DEATHMATCH";
+        else if ( !Q_strcmp( m_Context.mode, "listen_team" ) ) mode = "LISTEN SERVER  /  TEAM DEATHMATCH";
         m_Mode->SetText( mode );
         wchar_t server[256]; V_UTF8ToUnicode( m_Context.server, server, sizeof( server ) ); m_Server->SetText( server );
     }

@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "hl2mp_host.h"
+#include "hl2mp_loading.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_coordinator.h"
 #include "filesystem.h"
@@ -181,7 +182,10 @@ void CHostServer::Start()
     ConVarRef( "hl2mp_bot_quota_mode" ).SetValue( "normal" ); ConVarRef( "hl2mp_bot_auto_vacate" ).SetValue( 0 );
     ConVarRef( "hl2mp_bot_difficulty" ).SetValue( m_Drop[DIFFICULTY]->GetActiveItem() ); ConVarRef( "hl2mp_bot_quota" ).SetValue( bots );
     // Only the validated map token and bounded integer enter the engine command buffer.
-    char command[160]; Q_snprintf( command, sizeof( command ), "disconnect\nmaxplayers %d\nmap %s\n", slots, map );
+    // Like the engine's Create Server flow, enable real progress before loading
+    // the local map. Otherwise GameUI leaves the main menu up during startup.
+    HL2MPLoading_SetContext( map, m_Drop[MODE]->GetActiveItem() == 1 ? "listen_team" : "listen", name );
+    char command[160]; Q_snprintf( command, sizeof( command ), "disconnect\nmaxplayers %d\nprogress_enable\nmap %s\n", slots, map );
     Close(); engine->ClientCmd_Unrestricted( command );
 }
 void CHostServer::OnCommand( const char *command )
