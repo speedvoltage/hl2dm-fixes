@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "c_playerresource.h"
 #include "hl2mp_community.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_menucontrols.h"
@@ -297,7 +298,7 @@ void CServerControls::RefreshPlayers()
     for ( int i = 1; i <= engine->GetMaxClients(); ++i )
     {
         player_info_t info; if ( i == engine->GetLocalPlayer() || !engine->GetPlayerInfo( i, &info ) || info.ishltv ) continue;
-        Choice( m_Drop[PLAYER], info.name, info.userID ); if ( info.userID == selected ) chosen = row; ++row;
+        Choice( m_Drop[PLAYER], g_PR ? g_PR->GetPlayerName( i ) : info.name, info.userID ); if ( info.userID == selected ) chosen = row; ++row;
     }
     if ( row ) m_Drop[PLAYER]->SilentActivateItemByRow( chosen >= 0 ? chosen : 0 );
 }

@@ -794,6 +794,8 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	if ( pHL2Player == NULL )
 		return;
 
+	pHL2Player->UpdateDisplayName();
+
 	const char *pCurrentModel = modelinfo->GetModelName( pPlayer->GetModel() );
 	const char *szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( pPlayer->edict() ), "cl_playermodel" );
 

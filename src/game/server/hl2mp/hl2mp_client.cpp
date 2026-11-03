@@ -41,6 +41,7 @@ extern bool			g_fGameOver;
 
 void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 {
+	pPlayer->UpdateDisplayName( false );
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 	if ( gpGlobals->eLoadType == MapLoad_Background )

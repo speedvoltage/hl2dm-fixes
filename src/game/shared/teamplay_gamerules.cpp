@@ -269,6 +269,7 @@ void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	// recound stuff
 	RecountTeams(); */
 
+#ifndef HL2MP // HL2MP applies its server-validated display name in ClientSettingsChanged.
 	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
 
 	const char *pszOldName = pPlayer->GetPlayerName();
@@ -288,6 +289,7 @@ void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		
 		pPlayer->SetPlayerName( pszName );
 	}
+#endif
 
 	// NVNT see if this user is still or has began using a haptic device
 	const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );

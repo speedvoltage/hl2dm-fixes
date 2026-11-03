@@ -44,6 +44,9 @@ protected:
 	CNetworkArray( uint32, m_iAccountID, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_bValid, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iUserID, MAX_PLAYERS_ARRAY_SAFE );
+#ifdef HL2MP
+	char m_szPlayerNames[MAX_PLAYERS_ARRAY_SAFE][MAX_PLAYER_NAME_LENGTH];
+#endif
 		
 	int	m_nUpdateCounter;
 };

@@ -14,6 +14,10 @@
 
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
+#ifdef HL2MP
+	// Fixed buffers are marked dirty explicitly when a name changes.
+	SendPropArray( SendPropString( SENDINFO_NAME( m_szPlayerNames[0], m_szPlayerNames[0] ) ), m_szPlayerNames ),
+#endif
 //	SendPropArray( SendPropString( SENDINFO(m_szName[0]) ), SENDARRAYINFO(m_szName) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iPing), SendPropInt( SENDINFO_ARRAY(m_iPing), 10, SPROP_UNSIGNED ) ),
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
@@ -67,6 +71,9 @@ void CPlayerResource::Spawn( void )
 
 void CPlayerResource::Init( int iIndex )
 {
+#ifdef HL2MP
+	m_szPlayerNames[iIndex][0] = '\0';
+#endif
 	m_iPing.Set( iIndex, 0 );
 	m_iScore.Set( iIndex, 0 );
 	m_iDeaths.Set( iIndex, 0 );
@@ -126,6 +133,13 @@ void CPlayerResource::UpdatePlayerData( void )
 //-----------------------------------------------------------------------------
 void CPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer )
 {
+#ifdef HL2MP
+	if ( Q_strcmp( m_szPlayerNames[iIndex], pPlayer->GetPlayerName() ) )
+	{
+		Q_strncpy( m_szPlayerNames[iIndex], pPlayer->GetPlayerName(), sizeof( m_szPlayerNames[iIndex] ) );
+		NetworkStateChanged();
+	}
+#endif
 	m_iScore.Set( iIndex, pPlayer->FragCount() );
 	m_iDeaths.Set( iIndex, pPlayer->DeathCount() );
 	m_bConnected.Set( iIndex, 1 );
@@ -161,6 +175,13 @@ void CPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CPlayerResource::UpdateDisconnectedPlayer( int iIndex )
 {
+#ifdef HL2MP
+	if ( m_szPlayerNames[iIndex][0] )
+	{
+		m_szPlayerNames[iIndex][0] = '\0';
+		NetworkStateChanged();
+	}
+#endif
 	m_bConnected.Set( iIndex, 0 );
 	m_iAccountID.Set( iIndex, 0 );
 	m_bValid.Set( iIndex, 0 );

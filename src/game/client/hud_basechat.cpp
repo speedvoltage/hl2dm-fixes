@@ -1844,6 +1844,9 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 
 		// find the player's name in the unicode string, in case there is no color markup
 		const char *pName = UTIL_GetFilteredPlayerName( iPlayerIndex, sPlayerInfo.name );
+#ifdef HL2MP
+		if ( g_PR && iPlayerIndex > 0 ) pName = g_PR->GetPlayerName( iPlayerIndex );
+#endif
 
 		if ( pName )
 		{

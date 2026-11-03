@@ -67,6 +67,9 @@ protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS_ARRAY_SAFE];
+#ifdef HL2MP
+	char m_szPlayerNames[MAX_PLAYERS_ARRAY_SAFE][MAX_PLAYER_NAME_LENGTH];
+#endif
 	int		m_iPing[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iScore[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iDeaths[MAX_PLAYERS_ARRAY_SAFE];

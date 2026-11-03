@@ -67,7 +67,7 @@ static const SettingDef s_Settings[] = {
     { MOUSE, CHOICE, "Mouse filtering", "m_filter", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { MOUSE, CHOICE, "Mouse acceleration", "m_customaccel", "DISABLED=0|ENABLED=3", 0, 0, 0 },
     { MOUSE, SLIDER, "Zoom sensitivity", "zoom_sensitivity_ratio", "", 0.1f, 3, 0.01f },
-    { MULTIPLAYER, TEXT, "Player name", "name", "", 0, 0, 0 },
+    { MULTIPLAYER, TEXT, "In-game name", "cl_player_name", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Player model", "cl_playermodel", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Starting weapon", "cl_defaultweapon", "GRAVITY GUN=weapon_physcannon|PISTOL=weapon_pistol|SMG=weapon_smg1|FRAG GRENADE=weapon_frag|CROWBAR=weapon_crowbar|STUNSTICK=weapon_stunstick", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Server downloads", "cl_downloadfilter", "ALL FILES=all|EXCLUDE SOUNDS=nosounds|MAPS ONLY=mapsonly|NONE=none", 0, 0, 0 },
@@ -100,9 +100,10 @@ static const BindingDef s_Bindings[] = {
     { "Developer console", "toggleconsole", "`" }, { "Change team", "changeteam", "F2" }
 };
 
-static bool SameValue( const char *a, const char *b )
+static bool SameValue( const char *a, const char *b, bool numeric = true )
 {
     if ( !Q_strcmp( a, b ) ) return true;
+    if ( !numeric ) return false;
     char *ae, *be; double av = strtod( a, &ae ), bv = strtod( b, &be );
     return ae != a && be != b && !*ae && !*be && fabs( av - bv ) < 0.00001;
 }
@@ -133,7 +134,7 @@ public:
         }
         else if ( def.kind == TEXT )
         {
-            m_Text = new vgui::TextEntry( this, "Value" ); m_Text->SetMaximumCharCount( 63 ); m_Text->SetText( value.draft.String() ); m_Text->SetEnabled( value.available );
+            m_Text = new vgui::TextEntry( this, "Value" ); m_Text->SetMaximumCharCount( MAX_PLAYER_NAME_LENGTH - 1 ); m_Text->SetText( value.draft.String() ); m_Text->SetEnabled( value.available );
         }
         else
         {
@@ -433,7 +434,7 @@ void CHL2MPOptions::ReadRows() { FOR_EACH_VEC( m_Rows, i ) m_Settings[m_Rows[i]-
 bool CHL2MPOptions::Dirty()
 {
     if ( IsVisible() ) ReadRows();
-    for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i ) if ( !SameValue( m_Settings[i].original.String(), m_Settings[i].draft.String() ) ) return true;
+    for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i ) if ( !SameValue( m_Settings[i].original.String(), m_Settings[i].draft.String(), s_Settings[i].kind != TEXT ) ) return true;
     for ( int i = 0; i < BUTTON_CODE_LAST; ++i ) if ( m_BindingOriginal[i] != m_BindingDraft[i] ) return true;
     return false;
 }
@@ -503,7 +504,7 @@ void CHL2MPOptions::PerformLayout()
     m_PreviewTitle->SetFont( m_Font ); m_PreviewTitle->SetFgColor( Color( 238, 231, 213, 255 ) ); m_PreviewTitle->SetBounds( margin, int( 198 * s ) + previewH, previewW, int( 28 * s ) );
     m_PreviewBody->SetFont( m_SmallFont ); m_PreviewBody->SetFgColor( Color( 161, 178, 184, 255 ) ); m_PreviewBody->SetBounds( margin, int( 228 * s ) + previewH, previewW, int( 30 * s ) );
     m_Hint->SetFont( m_SmallFont ); m_Hint->SetFgColor( Color( 161, 178, 184, 255 ) ); m_Hint->SetBounds( listX + 8, h - int( 120 * s ), listW - 16, int( 40 * s ) );
-    m_Hint->SetText( m_Page == DISPLAY ? "Display changes have a 15-second confirmation. Gamma is controlled by the desktop in windowed mode." : m_Page == ADVANCED ? "Lighting and texture changes may take a moment. Some settings take effect on the next map." : m_Page == BINDINGS ? "Select a key to rebind it. Esc cancels; Backspace clears. Changes are saved with Apply." : m_Page == MULTIPLAYER ? "Server rules may limit your field of view, model and starting weapon." : "Changes remain pending until you select Apply. Reset Page restores this page's defaults." );
+    m_Hint->SetText( m_Page == DISPLAY ? "Display changes have a 15-second confirmation. Gamma is controlled by the desktop in windowed mode." : m_Page == ADVANCED ? "Lighting and texture changes may take a moment. Some settings take effect on the next map." : m_Page == BINDINGS ? "Select a key to rebind it. Esc cancels; Backspace clears. Changes are saved with Apply." : m_Page == MULTIPLAYER ? "Leave the in-game name empty to use your Steam name. Repeated name changes may take a few seconds." : "Changes remain pending until you select Apply. Reset Page restores this page's defaults." );
     const int footerY = h - int( 61 * s ), buttonW = int( 165 * s );
     CHL2MPSettingsButton *footer[] = { m_Reset, m_Discard, m_Apply };
     for ( int i = 0; i < 3; ++i ) { footer[i]->SetFont( m_SmallFont ); footer[i]->SetBounds( w - margin - ( 3 - i ) * buttonW, footerY, buttonW - int( 8 * s ), int( 38 * s ) ); }
@@ -563,7 +564,7 @@ void CHL2MPOptions::Commit()
 {
     for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i )
     {
-        if ( !s_Settings[i].cvar[0] || !m_Settings[i].available || SameValue( m_Settings[i].original.String(), m_Settings[i].draft.String() ) ) continue;
+        if ( !s_Settings[i].cvar[0] || !m_Settings[i].available || SameValue( m_Settings[i].original.String(), m_Settings[i].draft.String(), s_Settings[i].kind != TEXT ) ) continue;
         ConVarRef var( s_Settings[i].cvar, true ); if ( var.IsValid() ) var.SetValue( m_Settings[i].draft.String() );
     }
     for ( int i = 1; i < BUTTON_CODE_LAST; ++i ) if ( m_BindingOriginal[i] != m_BindingDraft[i] )

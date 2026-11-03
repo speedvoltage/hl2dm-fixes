@@ -119,6 +119,7 @@ public:
 	void SetReady( bool bReady );
 
 	void CheckChatText( char *p, int bufsize );
+	void UpdateDisplayName( bool announce = true );
 
 	void State_Transition( HL2MPPlayerState newState );
 	void State_Enter( HL2MPPlayerState newState );
@@ -157,6 +158,8 @@ private:
 	CNetworkVar( int, m_iPlayerSoundType );
 
 	float m_flNextModelChangeTime;
+	float m_flNextNameChangeTime;
+	bool m_bPendingNameChange;
 	float m_flNextTeamChangeTime;
 	bool m_bGivingDefaultItems;
 

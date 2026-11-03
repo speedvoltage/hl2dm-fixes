@@ -85,6 +85,7 @@ ConVar hl2_sprintspeed( "hl2_sprintspeed", "320", FCVAR_REPLICATED );
 
 static ConVar cl_playermodel( "cl_playermodel", "none", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_SERVER_CAN_EXECUTE, "Default Player Model");
 static ConVar cl_defaultweapon( "cl_defaultweapon", "weapon_physcannon", FCVAR_USERINFO | FCVAR_ARCHIVE, "Default Spawn Weapon");
+static ConVar cl_player_name( "cl_player_name", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Custom in-game name. Leave empty to use your Steam name." );
 
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage);
 

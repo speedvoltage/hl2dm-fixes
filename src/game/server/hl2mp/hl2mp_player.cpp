@@ -135,6 +135,8 @@ const char *g_ppszRandomCombineModels[] =
 
 CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 {
+	m_flNextNameChangeTime = 0;
+	m_bPendingNameChange = false;
 	m_angEyeAngles.Init();
 
 	m_iLastWeaponFireUsercmd = 0;
@@ -628,8 +630,83 @@ bool CHL2MP_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelinde
 	return bRet;
 }
 
+// Display names belong to the game DLL. The engine still owns the Steam name
+// and userinfo identity; do not rewrite its private client/stringtable data.
+void CHL2MP_Player::UpdateDisplayName( bool announce )
+{
+	if ( IsFakeClient() ) return;
+	char baseName[MAX_PLAYER_NAME_LENGTH];
+	const char *requested = engine->GetClientConVarValue( entindex(), "cl_player_name" );
+	Q_strncpy( baseName, requested ? requested : "", sizeof( baseName ) );
+
+	// Treat names as text, remove chat controls and engine-reserved characters,
+	// and repair a UTF-8 sequence if the byte limit cut it in half.
+	for ( int attempt = 0; attempt < 2; ++attempt )
+	{
+		Q_UnicodeRepair( baseName );
+		int out = 0;
+		for ( int i = 0; baseName[i]; ++i )
+		{
+			unsigned char ch = baseName[i];
+			if ( ch < 32 || ch == 127 || ch == '%' || ch == '~' || ch == '"' ) continue;
+			if ( out == 0 && ( ch == ' ' || ch == '#' ) ) continue;
+			baseName[out++] = ch;
+		}
+		while ( out > 0 && baseName[out - 1] == ' ' ) --out;
+		baseName[out] = '\0';
+		if ( baseName[0] ) break;
+		const char *steamName = engine->GetClientConVarValue( entindex(), "name" );
+		Q_strncpy( baseName, attempt == 0 && steamName && steamName[0] ? steamName : "Player", sizeof( baseName ) );
+	}
+
+	char displayName[MAX_PLAYER_NAME_LENGTH];
+	for ( int suffix = 0; suffix <= MAX_PLAYERS; ++suffix )
+	{
+		if ( suffix == 0 ) Q_strncpy( displayName, baseName, sizeof( displayName ) );
+		else Q_snprintf( displayName, sizeof( displayName ), "(%d)%s", suffix, baseName );
+		Q_UnicodeRepair( displayName );
+		bool duplicate = false;
+		for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+		{
+			CBasePlayer *other = UTIL_PlayerByIndex( i );
+			if ( other && other != this && other->IsConnected() && !Q_stricmp( other->GetPlayerName(), displayName ) )
+			{
+				duplicate = true;
+				break;
+			}
+		}
+		if ( !duplicate ) break;
+	}
+
+	m_bPendingNameChange = false;
+	if ( !Q_strcmp( GetPlayerName(), displayName ) ) return;
+	if ( announce && gpGlobals->curtime < m_flNextNameChangeTime )
+	{
+		m_bPendingNameChange = true;
+		return;
+	}
+	char oldName[MAX_PLAYER_NAME_LENGTH];
+	Q_strncpy( oldName, GetPlayerName(), sizeof( oldName ) );
+	SetPlayerName( displayName );
+	if ( announce && oldName[0] )
+	{
+		ConVarRef cooldown( "sv_namechange_cooldown_seconds", true );
+		m_flNextNameChangeTime = gpGlobals->curtime + ( cooldown.IsValid() ? MAX( 1.0f, cooldown.GetFloat() ) : 20.0f );
+		IGameEvent *event = gameeventmanager->CreateEvent( "player_changename" );
+		if ( event )
+		{
+			event->SetInt( "userid", GetUserID() );
+			event->SetString( "oldname", oldName );
+			event->SetString( "newname", displayName );
+			gameeventmanager->FireEvent( event );
+		}
+	}
+}
+
 void CHL2MP_Player::PreThink( void )
 {
+	if ( m_bPendingNameChange && gpGlobals->curtime >= m_flNextNameChangeTime )
+		UpdateDisplayName();
 	QAngle vOldAngles = GetLocalAngles();
 	QAngle vTempAngles = GetLocalAngles();
 

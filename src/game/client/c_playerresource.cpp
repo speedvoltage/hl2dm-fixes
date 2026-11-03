@@ -19,6 +19,9 @@
 const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
+#ifdef HL2MP
+	RecvPropArray( RecvPropString( RECVINFO( m_szPlayerNames[0] ) ), m_szPlayerNames ),
+#endif
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iScore), RecvPropInt( RECVINFO(m_iScore[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),
@@ -56,6 +59,9 @@ IGameResources * GameResources( void ) { return g_PR; }
 //-----------------------------------------------------------------------------
 C_PlayerResource::C_PlayerResource()
 {
+#ifdef HL2MP
+	memset( m_szPlayerNames, 0, sizeof( m_szPlayerNames ) );
+#endif
 	memset( m_iPing, 0, sizeof( m_iPing ) );
 //	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
 	memset( m_iScore, 0, sizeof( m_iScore ) );
@@ -116,6 +122,10 @@ void C_PlayerResource::UpdatePlayerName( int slot )
 	player_info_t sPlayerInfo;
 	if ( IsConnected( slot ) && engine->GetPlayerInfo( slot, &sPlayerInfo ) )
 	{
+#ifdef HL2MP
+		if ( m_szPlayerNames[slot][0] )
+			Q_strncpy( sPlayerInfo.name, m_szPlayerNames[slot], sizeof( sPlayerInfo.name ) );
+#endif
 		m_szName[slot] = AllocPooledString( UTIL_GetFilteredPlayerName( slot, sPlayerInfo.name ) );
 	}
 	else 
