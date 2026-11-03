@@ -1,0 +1,13 @@
+whitelist
+{
+    // Enforced by sv_pure 1 and 2. Community exceptions belong in
+    // cfg/pure_server_whitelist.txt (sv_pure 1 only).
+    materials\...   check_crc
+    models\...      check_crc
+    sound\...       check_crc
+    scripts\...     check_crc
+
+    // Player sprays are intentional user content.
+    materials\vgui\logos\...  any
+    materials\temp\...        any
+}

@@ -135,6 +135,7 @@ const char *g_ppszRandomCombineModels[] =
 
 CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 {
+	m_bIntegrityVerified = false;
 	m_flNextNameChangeTime = 0;
 	m_bPendingNameChange = false;
 	m_angEyeAngles.Init();
@@ -345,10 +346,10 @@ void CHL2MP_Player::PickDefaultSpawnTeam( void )
 //-----------------------------------------------------------------------------
 void CHL2MP_Player::Spawn(void)
 {
-	if ( gpGlobals->eLoadType == MapLoad_Background )
+	if ( gpGlobals->eLoadType == MapLoad_Background || !IsIntegrityVerified() )
 	{
-		// Source needs a local player for the camera/PVS, but the menu must not
-		// run the gameplay spawn, equip weapons, or create player physics.
+		// Background cameras and clients awaiting integrity admission must not
+		// run gameplay spawn, equip weapons, or create player physics.
 		Precache();
 		SetModel( "models/combine_soldier.mdl" );
 		SharedSpawn();
@@ -1074,6 +1075,7 @@ bool CHL2MP_Player::BumpWeapon( CBaseCombatWeapon *pWeapon )
 
 void CHL2MP_Player::ChangeTeam( int iTeam )
 {
+	if ( !IsIntegrityVerified() ) { BaseClass::ChangeTeam( TEAM_SPECTATOR ); return; }
 	if ( HL2MPMatchServerEnabled() ) iTeam = HL2MPMatchServerTeam( this );
 /*	if ( GetNextTeamChangeTime() >= gpGlobals->curtime )
 	{
@@ -1192,6 +1194,7 @@ bool CHL2MP_Player::HandleCommand_JoinTeam( int team )
 
 bool CHL2MP_Player::ClientCommand( const CCommand &args )
 {
+	if ( !IsIntegrityVerified() ) return true;
 	if ( HL2MPMatchServerEnabled() && ( FStrEq( args[0], "jointeam" ) || FStrEq( args[0], "spectate" ) ) )
 		return true;
 	if ( FStrEq( args[0], "spectate" ) )

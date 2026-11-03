@@ -6,6 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "hl2mp_gamerules.h"
+#include "hl2mp_integrity.h"
 #include "viewport_panel_names.h"
 #include "gameeventdefs.h"
 #include <KeyValues.h>
@@ -1048,6 +1049,13 @@ CAmmoDef *GetAmmoDef()
 
 void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 {
+	CHL2MP_Player *sender = ToHL2MPPlayer( CBaseEntity::Instance( entity ) );
+	if ( message && !Q_strcmp( message->GetName(), "HL2MPIntegrity" ) )
+	{
+		HL2MPIntegrity_Reply( sender, message );
+		return;
+	}
+	if ( !sender || !sender->IsIntegrityVerified() ) return;
 	if ( message && !Q_strcmp( message->GetName(), "HL2MPChat" ) )
 	{
 		CBasePlayer *player = ToBasePlayer( CBaseEntity::Instance( entity ) );

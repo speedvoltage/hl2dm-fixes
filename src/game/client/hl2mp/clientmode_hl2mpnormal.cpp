@@ -8,6 +8,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "clientmode_hl2mpnormal.h"
+#include "hl2mp_integrity.h"
 #include "vgui_int.h"
 #include "hud.h"
 #include <vgui/IInput.h>
@@ -160,6 +161,7 @@ void ClientModeHL2MPNormal::Init()
 	BaseClass::Init();
 	HL2MPMainMenu_Create();
 	HL2MPCommunity_Init();
+	HL2MPIntegrity_Init();
 
 	// Load up the combine control panel scheme
 	g_hVGuiCombineScheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/CombinePanelScheme.res", "CombineScheme" );

@@ -120,6 +120,8 @@ public:
 
 	void CheckChatText( char *p, int bufsize );
 	void UpdateDisplayName( bool announce = true );
+	bool m_bIntegrityVerified;
+	bool IsIntegrityVerified() const { return m_bIntegrityVerified || IsFakeClient() || IsHLTV() || gpGlobals->eLoadType == MapLoad_Background; }
 
 	void State_Transition( HL2MPPlayerState newState );
 	void State_Enter( HL2MPPlayerState newState );

@@ -173,6 +173,10 @@ extern vgui::IInputInternal *g_InputInternal;
 #include "sixense/in_sixense.h"
 #endif
 
+#ifdef HL2MP
+#include "hl2mp_integrity.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -933,14 +937,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	if ( (filesystem = (IFileSystem *)appSystemFactory(FILESYSTEM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
 #ifdef HL2MP
-	// The engine chooses pure-file tracking from gameinfo before loading us.
-	// Refuse a single-player configuration instead of joining with tracking off.
-	char gameInfoPath[MAX_PATH];
-	Q_snprintf( gameInfoPath, sizeof( gameInfoPath ), "%s/gameinfo.txt", engine->GetGameDirectory() );
-	KeyValuesAD gameInfo( "GameInfo" );
-	if ( !gameInfo->LoadFromFile( filesystem, gameInfoPath ) || Q_stricmp( gameInfo->GetString( "type" ), "multiplayer_only" ) )
+	char integrityReason[256];
+	if ( !HL2MPIntegrity_Check( integrityReason, sizeof( integrityReason ) ) )
 	{
-		Error( "HL2DM Matchmaking requires type multiplayer_only in gameinfo.txt.\nRestore that setting and restart the game. Multiplayer pure-file checks cannot be disabled.\n" );
+		Error( "HL2DM Matchmaking cannot start safely.\n%s\n", integrityReason );
 		return false;
 	}
 #endif

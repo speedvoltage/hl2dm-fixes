@@ -25,6 +25,8 @@ $Project "Client (HL2MP)"
 	{
 		$Folder "Matchmaking"
 		{
+			$File "hl2mp\hl2mp_integrity.cpp"
+			$File "$SRCDIR\game\shared\hl2mp\hl2mp_integrity.h"
 			$File "hl2mp\ui\hl2mp_coordinator.cpp"
 			$File "hl2mp\ui\hl2mp_coordinator.h"
 			$File "hl2mp\ui\hl2mp_mainmenu.cpp"

@@ -33,6 +33,8 @@ $Project "Server (HL2MP)"
 
 		$File	"ai_relationship.cpp"
 		$File	"hl2mp\hl2mp_match_server.cpp"
+		$File	"hl2mp\hl2mp_integrity.cpp"
+		$File	"$SRCDIR\game\shared\hl2mp\hl2mp_integrity.h"
 		$File	"hl2mp\hl2mp_match_server.h"
 		$File	"hl2mp\hl2mp_community.cpp"
 		$File	"hl2mp\hl2mp_community.h"

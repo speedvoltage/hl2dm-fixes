@@ -15,6 +15,7 @@
 
 #include "cbase.h"
 #include "hl2mp_player.h"
+#include "hl2mp_integrity.h"
 #include "hl2mp_match_server.h"
 #include "hl2mp_gamerules.h"
 #include "gamerules.h"
@@ -42,7 +43,6 @@ extern bool			g_fGameOver;
 void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 {
 	pPlayer->UpdateDisplayName( false );
-	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 	if ( gpGlobals->eLoadType == MapLoad_Background )
 	{
@@ -121,7 +121,9 @@ void ClientActive( edict_t *pEdict, bool bLoadGame )
 	Assert( !bLoadGame );
 
 	CHL2MP_Player *pPlayer = ToHL2MPPlayer( CBaseEntity::Instance( pEdict ) );
-	FinishClientPutInServer( pPlayer );
+	pPlayer->InitialSpawn();
+	if ( HL2MPIntegrity_Begin( pPlayer ) ) FinishClientPutInServer( pPlayer );
+	else pPlayer->Spawn();
 }
 
 

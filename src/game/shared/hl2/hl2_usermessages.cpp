@@ -60,5 +60,6 @@ void RegisterUserMessages( void )
 	usermessages->Register( "DamageHit", 16 );
 	usermessages->Register( "CommunityState", -1 );
 	usermessages->Register( "CommunityMap", -1 );
+	usermessages->Register( "PureChallenge", 9 );
 #endif
 }
