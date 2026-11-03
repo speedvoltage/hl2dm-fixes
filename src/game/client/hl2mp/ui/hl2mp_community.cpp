@@ -76,7 +76,8 @@ class CServerControls : public vgui::EditablePanel
 public:
     CServerControls( vgui::Panel *parent );
     ~CServerControls() { if ( IsVisible() ) engine->ClientCmd_Unrestricted( "gameui_allowescape" ); if ( m_Pending ) m_Pending->deleteThis(); if ( s_Panel == this ) s_Panel = NULL; }
-    void Open();
+    void Open( bool fromHotkey = false );
+    void Toggle() { if ( IsVisible() ) Close( true ); else { engine->ClientCmd_Unrestricted( "gameui_activate" ); Open( true ); } }
     void Receive( const ServerState &state );
     void Map( int generation, const char *map );
     void PerformLayout() OVERRIDE;
@@ -90,13 +91,13 @@ private:
     {
         if ( message->GetPtr( "panel" ) == m_Bright ) cl_bright_player_models.SetValue( message->GetInt( "state" ) != 0 );
     }
-    void Close();
+    void Close( bool resume = false );
     void RefreshPlayers();
     void Request( const char *action );
     KeyValues *Message( const char *action );
     void Confirm( const char *action, const char *text, KeyValues *message );
     enum { MODE, MAP_NOW, MAP_NEXT, TEAM, PLAYER, DURATION, DROPDOWNS };
-    enum { CHANGE, NEXT, PAUSE, RESTART, APPLY, JOIN, SPECTATE, KICK, BAN, CLOSE, BUTTONS };
+    enum { CHANGE, NEXT, PAUSE, RESTART, APPLY, JOIN, SPECTATE, KICK, BAN, CLOSE, RESUME, BUTTONS };
     vgui::Label *m_Title, *m_Access, *m_Info, *m_Status, *m_Sections[3], *m_Captions[9];
     CCommunityConfirmation *m_Confirm;
     CHL2MPDropdown *m_Drop[DROPDOWNS];
@@ -106,7 +107,7 @@ private:
     vgui::HFont m_TitleFont, m_BodyFont, m_SmallFont;
     ServerState m_State;
     KeyValues *m_Pending;
-    bool m_Received, m_MapsDone;
+    bool m_Received, m_MapsDone, m_FromHotkey;
     double m_NextPoll;
     int m_Width, m_Height;
     float m_Scale;
@@ -131,7 +132,7 @@ static void SelectMap( CHL2MPDropdown *drop, const char *map )
 }
 
 CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "CommunityServerControls" ),
-    m_Pending( NULL ), m_Received( false ), m_MapsDone( false ), m_NextPoll( 0 ), m_Width( 0 ), m_Height( 0 ), m_Scale( 1 )
+    m_Pending( NULL ), m_Received( false ), m_MapsDone( false ), m_FromHotkey( false ), m_NextPoll( 0 ), m_Width( 0 ), m_Height( 0 ), m_Scale( 1 )
 {
     s_Panel = this; memset( &m_State, 0, sizeof( m_State ) );
     SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true );
@@ -148,8 +149,8 @@ CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "Co
     Choice( m_Drop[DURATION], "5 MINUTES", 5 ); Choice( m_Drop[DURATION], "15 MINUTES", 15 ); Choice( m_Drop[DURATION], "30 MINUTES", 30 );
     Choice( m_Drop[DURATION], "1 HOUR", 60 ); Choice( m_Drop[DURATION], "4 HOURS", 240 ); Choice( m_Drop[DURATION], "1 DAY", 1440 );
     Choice( m_Drop[DURATION], "1 WEEK", 10080 ); Choice( m_Drop[DURATION], "30 DAYS", 43200 ); Choice( m_Drop[DURATION], "PERMANENT", 0 ); Choice( m_Drop[DURATION], "CUSTOM", -1 );
-    const char *texts[] = { "CHANGE MAP / MODE", "SET NEXT MAP", "PAUSE", "RESTART ROUND", "APPLY RULES", "JOIN / AUTO-ASSIGN", "SPECTATE", "KICK", "BAN", "<  BACK" };
-    const char *commands[] = { "changelevel", "nextmap", "pause", "restart", "settings", "join", "spectate", "kick", "ban", "close" };
+    const char *texts[] = { "CHANGE MAP / MODE", "SET NEXT MAP", "PAUSE", "RESTART ROUND", "APPLY RULES", "JOIN / AUTO-ASSIGN", "SPECTATE", "KICK", "BAN", "<  BACK", "RESUME GAME" };
+    const char *commands[] = { "changelevel", "nextmap", "pause", "restart", "settings", "join", "spectate", "kick", "ban", "close", "resume" };
     for ( int i = 0; i < BUTTONS; ++i ) { m_Button[i] = new CHL2MPSettingsButton( this, texts[i], commands[i] ); m_Button[i]->ServerStyle( i == APPLY ); }
     m_Time = new vgui::TextEntry( this, "Time" ); m_Frags = new vgui::TextEntry( this, "Frags" );
     m_Time->SetAllowNumericInputOnly( true ); m_Frags->SetAllowNumericInputOnly( true ); m_Time->SetMaximumCharCount( 4 ); m_Frags->SetMaximumCharCount( 4 );
@@ -215,6 +216,7 @@ void CServerControls::PerformLayout()
     place( m_Captions[8], 816, 506, 180, 30 ); place( m_BanMinutes, 1000, 504, 164, 32 );
     place( m_Button[KICK], 816, 550, 164, 38 ); place( m_Button[BAN], 994, 550, 170, 38 );
     place( m_Status, 0, 622, 1180, 30 ); place( m_Button[CLOSE], 0, 669, 160, 36 );
+    place( m_Button[RESUME], 960, 669, 220, 36 );
     m_Confirm->Layout( w, h, s, m_TitleFont, m_BodyFont );
     for ( int i = 0; i < GetChildCount(); ++i ) if ( dynamic_cast<vgui::Label *>( GetChild( i ) ) ) GetChild( i )->InvalidateLayout( true );
 }
@@ -235,9 +237,10 @@ KeyValues *CServerControls::Message( const char *action )
     KeyValues *message = new KeyValues( "HL2MPCommunity" ); message->SetString( "action", action ); message->SetInt( "generation", m_State.generation ); return message;
 }
 void CServerControls::Request( const char *action ) { engine->ServerCmdKeyValues( Message( action ) ); m_NextPoll = Plat_FloatTime() + 2; }
-void CServerControls::Open()
+void CServerControls::Open( bool fromHotkey )
 {
     if ( !HL2MPCommunity_Available() ) return;
+    m_FromHotkey = fromHotkey;
     engine->ClientCmd_Unrestricted( "gameui_preventescape" );
     m_Confirm->ReleaseModal(); m_Confirm->SetVisible( false );
     if ( m_Pending ) { m_Pending->deleteThis(); m_Pending = NULL; }
@@ -248,13 +251,14 @@ void CServerControls::Open()
     m_Drop[TEAM]->SilentActivateItemByRow( 0 ); m_Bright->SetSelected( cl_bright_player_models.GetBool() );
     m_Status->SetText( "Requesting server settings..." ); SetVisible( true ); MoveToFront(); RequestFocus(); InvalidateLayout( true, true ); Request( "open" );
 }
-void CServerControls::Close()
+void CServerControls::Close( bool resume )
 {
     engine->ClientCmd_Unrestricted( "gameui_allowescape" );
     m_Confirm->ReleaseModal(); m_Confirm->SetVisible( false );
     if ( m_Pending ) { m_Pending->deleteThis(); m_Pending = NULL; }
     for ( int i = 0; i < DROPDOWNS; ++i ) m_Drop[i]->HideMenu();
     SetVisible( false ); PostMessage( GetParent(), new KeyValues( "Command", "command", "community_closed" ) );
+    if ( resume && engine->IsInGame() ) engine->ClientCmd_Unrestricted( "gameui_hide" );
 }
 void CServerControls::Receive( const ServerState &state )
 {
@@ -320,22 +324,24 @@ void CServerControls::OnThink()
     for ( int i = 0; i < DROPDOWNS; ++i ) m_Drop[i]->SetEnabled( i == TEAM ? m_Received && !m_Pending : admin );
     m_Button[JOIN]->SetEnabled( m_Received && !m_Pending ); m_Button[SPECTATE]->SetEnabled( m_Received && !m_Pending ); m_Bright->SetEnabled( !m_Pending );
     m_Status->SetVisible( !m_Pending ); m_Button[CLOSE]->SetVisible( !m_Pending );
+    m_Button[RESUME]->SetVisible( !m_Pending );
     m_Confirm->SetVisible( m_Pending != NULL );
 }
 void CServerControls::OnKeyCodeTyped( vgui::KeyCode code )
 {
     const char *binding = engine->Key_BindingForKey( ButtonCode_t( code ) );
-    if ( binding && !Q_strcmp( binding, "community_menu" ) ) { Close(); return; }
+    if ( binding && !Q_strcmp( binding, "community_menu" ) ) { Close( true ); return; }
     if ( code == KEY_ESCAPE )
     {
         for ( int i = 0; i < DROPDOWNS; ++i ) if ( m_Drop[i]->IsDropdownVisible() ) { m_Drop[i]->HideMenu(); return; }
-        if ( m_Pending ) OnCommand( "cancel" ); else Close(); return;
+        if ( m_Pending ) OnCommand( "cancel" ); else Close( m_FromHotkey ); return;
     }
     BaseClass::OnKeyCodeTyped( code );
 }
 void CServerControls::OnCommand( const char *command )
 {
     if ( !Q_strcmp( command, "close" ) ) { Close(); return; }
+    if ( !Q_strcmp( command, "resume" ) ) { Close( true ); return; }
     if ( !Q_strcmp( command, "cancel" ) ) { if ( m_Pending ) m_Pending->deleteThis(); m_Pending = NULL; m_Confirm->ReleaseModal(); m_Confirm->SetVisible( false ); m_Button[CLOSE]->RequestFocus(); return; }
     if ( !Q_strcmp( command, "confirm" ) )
     {
@@ -394,3 +400,4 @@ void MapMessage( bf_read &reader )
 void HL2MPCommunity_Init() { usermessages->HookMessage( "CommunityState", StateMessage ); usermessages->HookMessage( "CommunityMap", MapMessage ); }
 vgui::Panel *HL2MPCommunity_Create( vgui::Panel *parent ) { return new CServerControls( parent ); }
 void HL2MPCommunity_Open( vgui::Panel *panel ) { static_cast<CServerControls *>( panel )->Open(); }
+void HL2MPCommunity_Toggle( vgui::Panel *panel ) { static_cast<CServerControls *>( panel )->Toggle(); }

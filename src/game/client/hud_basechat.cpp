@@ -1642,6 +1642,17 @@ This is a very long string that I am going to attempt to paste into the cs hud c
 			GameRules()->ModifySentChat( ansi, ARRAYSIZE(ansi) );
 		}
 
+#ifdef HL2MP
+		// Chat is data, not a command buffer. Quotes, semicolons and newlines
+		// must never turn a typed message into local or server commands.
+		if ( m_nMessageMode == MM_SAY || m_nMessageMode == MM_SAY_TEAM )
+		{
+			KeyValues *message = new KeyValues( "HL2MPChat" );
+			message->SetString( "text", ansi );
+			message->SetBool( "team", m_nMessageMode == MM_SAY_TEAM );
+			engine->ServerCmdKeyValues( message );
+		}
+#else
 		char szbuf[144];	// more than 128
 		const char* pszCmd = NULL;
 		switch( m_nMessageMode )
@@ -1653,6 +1664,7 @@ This is a very long string that I am going to attempt to paste into the cs hud c
 		Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", pszCmd, ansi );
 
 		engine->ClientCmd_Unrestricted(szbuf);
+#endif
 	}
 	
 	m_pChatInput->ClearEntry();

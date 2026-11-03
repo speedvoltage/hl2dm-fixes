@@ -932,6 +932,18 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		return false;
 	if ( (filesystem = (IFileSystem *)appSystemFactory(FILESYSTEM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
+#ifdef HL2MP
+	// The engine chooses pure-file tracking from gameinfo before loading us.
+	// Refuse a single-player configuration instead of joining with tracking off.
+	char gameInfoPath[MAX_PATH];
+	Q_snprintf( gameInfoPath, sizeof( gameInfoPath ), "%s/gameinfo.txt", engine->GetGameDirectory() );
+	KeyValuesAD gameInfo( "GameInfo" );
+	if ( !gameInfo->LoadFromFile( filesystem, gameInfoPath ) || Q_stricmp( gameInfo->GetString( "type" ), "multiplayer_only" ) )
+	{
+		Error( "HL2DM Matchmaking requires type multiplayer_only in gameinfo.txt.\nRestore that setting and restart the game. Multiplayer pure-file checks cannot be disabled.\n" );
+		return false;
+	}
+#endif
 	if ( (random = (IUniformRandomStream *)appSystemFactory(VENGINE_CLIENT_RANDOM_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
 	if ( (gameuifuncs = (IGameUIFuncs * )appSystemFactory( VENGINE_GAMEUIFUNCS_VERSION, NULL )) == NULL )

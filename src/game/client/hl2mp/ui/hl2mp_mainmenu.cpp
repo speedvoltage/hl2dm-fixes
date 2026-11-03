@@ -619,6 +619,7 @@ void CHL2MPMainMenu::OnCommand( const char *command )
     else if ( !Q_strcmp( command, "OpenOptionsDialog" ) ) { HL2MPOptions_Open( m_Options ); OnTick(); }
     else if ( !Q_strcmp( command, "options_closed" ) ) { OnTick(); m_Buttons[OPTIONS]->RequestFocus(); }
     else if ( !Q_strcmp( command, "community" ) ) { HL2MPCommunity_Open( m_Community ); OnTick(); }
+    else if ( !Q_strcmp( command, "community_toggle" ) ) { HL2MPCommunity_Toggle( m_Community ); OnTick(); }
     else if ( !Q_strcmp( command, "community_closed" ) ) { OnTick(); m_Buttons[COMMUNITY]->RequestFocus(); }
     else if ( !Q_strcmp( command, "host" ) ) { HL2MPHost_Open( m_Host ); OnTick(); }
     else if ( !Q_strcmp( command, "host_closed" ) ) { OnTick(); m_Buttons[HOST]->RequestFocus(); }
@@ -704,11 +705,10 @@ CON_COMMAND_F( mm_menu_status, "Show menu and background state.", FCVAR_CLIENTDL
         channel ? channel->GetAddress() : "none", channel && channel->IsLoopback() );
 }
 
-CON_COMMAND_F( community_menu, "Open community server controls.", FCVAR_CLIENTDLL )
+CON_COMMAND_F( community_menu, "Toggle community server controls and resume the game.", FCVAR_CLIENTDLL )
 {
     if ( s_Menu && HL2MPCommunity_Available() )
     {
-        engine->ClientCmd_Unrestricted( "gameui_activate" );
-        s_Menu->OnCommand( "community" );
+        s_Menu->OnCommand( "community_toggle" );
     }
 }

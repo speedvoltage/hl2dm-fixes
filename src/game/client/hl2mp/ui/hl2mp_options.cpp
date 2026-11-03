@@ -53,6 +53,7 @@ static const SettingDef s_Settings[] = {
     { AUDIO, CHOICE, "Voice chat", "voice_enable", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { AUDIO, SLIDER, "Incoming voice volume", "voice_scale", "%", 0, 1, 0.01f },
     { AUDIO, CHOICE, "Closed captions", "closecaption", "DISABLED=0|ENABLED=1", 0, 0, 0 },
+    { GAME, SLIDER, "Field of view", "fov_desired", "", 70, 110, 1 },
     { GAME, CHOICE, "Developer console", "con_enable", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { GAME, CHOICE, "Crosshair", "crosshair", "HIDDEN=0|VISIBLE=1", 0, 0, 0 },
     { GAME, CHOICE, "Fast weapon switching", "hud_fastswitch", "DISABLED=0|ENABLED=1", 0, 0, 0 },
@@ -68,7 +69,6 @@ static const SettingDef s_Settings[] = {
     { MOUSE, SLIDER, "Zoom sensitivity", "zoom_sensitivity_ratio", "", 0.1f, 3, 0.01f },
     { MULTIPLAYER, TEXT, "Player name", "name", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Player model", "cl_playermodel", "", 0, 0, 0 },
-    { MULTIPLAYER, SLIDER, "Field of view", "fov_desired", "", 75, 90, 1 },
     { MULTIPLAYER, CHOICE, "Starting weapon", "cl_defaultweapon", "GRAVITY GUN=weapon_physcannon|PISTOL=weapon_pistol|SMG=weapon_smg1|FRAG GRENADE=weapon_frag|CROWBAR=weapon_crowbar|STUNSTICK=weapon_stunstick", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Server downloads", "cl_downloadfilter", "ALL FILES=all|EXCLUDE SOUNDS=nosounds|MAPS ONLY=mapsonly|NONE=none", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "Upload my spray", "cl_allowupload", "NO=0|YES=1", 0, 0, 0 },
@@ -397,6 +397,7 @@ CHL2MPOptions::CHL2MPOptions( vgui::Panel *parent ) : BaseClass( parent, "Option
 }
 CHL2MPOptions::~CHL2MPOptions()
 {
+    if ( IsVisible() ) engine->ClientCmd_Unrestricted( "gameui_allowescape" );
     if ( m_DisplayDeadline ) RevertDisplay();
     if ( vgui::input()->GetAppModalSurface() == m_Overlay->GetVPanel() ) vgui::input()->ReleaseAppModalSurface();
     vgui::ivgui()->RemoveTickSignal( GetVPanel() ); if ( s_Options == this ) s_Options = NULL;
@@ -419,7 +420,10 @@ void CHL2MPOptions::ReadCurrent()
 }
 void CHL2MPOptions::Open()
 {
-    if ( IsVisible() ) return; ReadCurrent(); SetVisible( true ); MoveToFront(); BuildRows(); InvalidateLayout( true ); m_Back->RequestFocus();
+    if ( IsVisible() ) return;
+    // GameUI handles Escape independently of VGUI's modal key capture.
+    engine->ClientCmd_Unrestricted( "gameui_preventescape" );
+    ReadCurrent(); SetVisible( true ); MoveToFront(); BuildRows(); InvalidateLayout( true ); m_Back->RequestFocus();
 }
 void CHL2MPOptions::CloseDropdowns()
 {
@@ -535,6 +539,7 @@ void CHL2MPOptions::Confirm( int type )
 }
 void CHL2MPOptions::Close()
 {
+    engine->ClientCmd_Unrestricted( "gameui_allowescape" );
     CloseDropdowns(); SetVisible( false ); GetParent()->OnCommand( "options_closed" );
 }
 void CHL2MPOptions::Apply()

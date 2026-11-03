@@ -107,7 +107,7 @@ void ClientKill( edict_t *pEdict, const Vector &vecForce, bool bExplode = false 
 	pPlayer->CommitSuicide( vecForce, bExplode );
 }
 
-char * CheckChatText( CBasePlayer *pPlayer, char *text )
+char * CheckChatText( CBasePlayer *pPlayer, char *text, bool stripQuotes = true )
 {
 	char *p = text;
 
@@ -118,7 +118,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 	int length = Q_strlen( text );
 
 	// remove quotes (leading & trailing) if present
-	if (*p == '"')
+	if ( stripQuotes && length >= 2 && *p == '"' && p[length - 1] == '"' )
 	{
 		p++;
 		length -=2;
@@ -153,7 +153,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 
 	// cut off after 127 chars
 	if ( length > 127 )
-		text[127] = 0;
+		p[127] = 0;
 
 	GameRules()->CheckChatText( pPlayer, p );
 
@@ -166,7 +166,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 // or as
 // blah blah blah
 //
-void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
+static void Host_SayInternal( edict_t *pEdict, const CCommand &args, bool teamonly, const char *rawText )
 {
 	CBasePlayer *client;
 	int		j;
@@ -182,7 +182,12 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	if ( args.ArgC() == 0 )
 		return;
 
-	if ( !stricmp( pcmd, cpSay) || !stricmp( pcmd, cpSayTeam ) )
+	if ( rawText )
+	{
+		Q_strncpy( szTemp, rawText, sizeof( szTemp ) );
+		p = szTemp;
+	}
+	else if ( !stricmp( pcmd, cpSay) || !stricmp( pcmd, cpSayTeam ) )
 	{
 		if ( args.ArgC() >= 2 )
 		{
@@ -215,7 +220,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		Assert( pPlayer );
 
 		// make sure the text has valid content
-		p = CheckChatText( pPlayer, p );
+		p = CheckChatText( pPlayer, p, rawText == NULL );
 	}
 
 	if ( !p )
@@ -231,7 +236,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 											// chat text is capped to 127 in CheckChatText above
 
 		// make sure the text has valid content
-		p = CheckChatText( pPlayer, p );
+		p = CheckChatText( pPlayer, p, false );
 
 		if ( !p )
 			return;
@@ -385,6 +390,20 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	}
 }
 
+
+// Reuse the normal chat filtering, team routing and mute rules without parsing
+// player text as console syntax. The caller must enforce the chat rate limit.
+void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
+{
+	Host_SayInternal( pEdict, args, teamonly, NULL );
+}
+
+void Host_SayText( edict_t *pEdict, const char *text, bool teamonly )
+{
+	const char *argv[] = { teamonly ? "say_team" : "say" };
+	CCommand args( ARRAYSIZE( argv ), argv );
+	Host_SayInternal( pEdict, args, teamonly, text );
+}
 
 void ClientPrecache( void )
 {

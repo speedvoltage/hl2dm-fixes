@@ -35,6 +35,7 @@
 	#include "voice_gamemgr.h"
 	#include "hl2mp_gameinterface.h"
 	#include "hl2mp_cvars.h"
+	#include "client.h"
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 
@@ -1045,6 +1046,16 @@ CAmmoDef *GetAmmoDef()
 
 void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 {
+	if ( message && !Q_strcmp( message->GetName(), "HL2MPChat" ) )
+	{
+		CBasePlayer *player = ToBasePlayer( CBaseEntity::Instance( entity ) );
+		if ( player && player->IsNetClient() && player->CanPlayerTalk() )
+		{
+			Host_SayText( entity, message->GetString( "text" ), message->GetBool( "team" ) );
+			player->NotePlayerTalked();
+		}
+		return;
+	}
 	if ( message && !Q_strcmp( message->GetName(), "HL2MPCommunity" ) )
 	{
 		HL2MPCommunityRequest( ToBasePlayer( CBaseEntity::Instance( entity ) ), message );

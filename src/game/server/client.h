@@ -25,7 +25,8 @@ void ClientPrecache( void );
 // Game specific precaches
 void ClientGamePrecache( void );
 const char *GetGameDescription( void );
-void Host_Say( edict_t *pEdict, bool teamonly );
+void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly );
+void Host_SayText( edict_t *pEdict, const char *text, bool teamonly );
 
 enum eAllowPointServerCommand {
 	eAllowNever,
