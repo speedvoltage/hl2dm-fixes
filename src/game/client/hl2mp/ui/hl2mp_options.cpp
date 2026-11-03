@@ -30,7 +30,7 @@ static const SettingDef s_Settings[] = {
     { DISPLAY, WINDOW_MODE, "Display mode", "", "FULLSCREEN=0|WINDOWED=1", 0, 0, 0 },
     { DISPLAY, SLIDER, "Display gamma", "mat_monitorgamma", "", 1.6f, 2.6f, 0.01f },
     { DISPLAY, CHOICE, "Frame rate limit", "fps_max", "60 FPS=60|120 FPS=120|144 FPS=144|165 FPS=165|240 FPS=240|300 FPS=300|UNLIMITED=0", 0, 0, 0 },
-    { DISPLAY, CHOICE, "Menu camera motion", "mm_menu_motion", "DISABLED=0|ENABLED=1", 0, 0, 0 },
+    { DISPLAY, CHOICE, "Menu animations", "mm_menu_motion", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { ADVANCED, CHOICE, "Vertical sync", "mat_vsync", "DISABLED=0|ENABLED=1", 0, 0, 0 },
     { ADVANCED, CHOICE, "Anti-aliasing", "mat_antialias", "NONE=0|2x MSAA=2|4x MSAA=4|8x MSAA=8", 0, 0, 0 },
     { ADVANCED, CHOICE, "Texture detail", "mat_picmip", "LOW=2|MEDIUM=1|HIGH=0|VERY HIGH=-1", 0, 0, 0 },
