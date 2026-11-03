@@ -32,10 +32,11 @@ class CVotePanel : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CVotePanel, vgui::EditablePanel );
 public:
-    CVotePanel() : BaseClass( g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 )
+    CVotePanel() : BaseClass( g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 ), m_Preview( false ), m_PreviousModal( NULL )
     {
         MakePopup( false ); SetZPos( 250 ); SetVisible( false ); SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false ); SetCursor( vgui::dc_arrow );
         m_Font = m_Title = vgui::INVALID_FONT;
+        m_Close = new CHL2MPSettingsButton( this, "X", "close_preview" ); m_Close->ServerStyle(); m_Close->SetVisible( false );
         m_Body = new vgui::Label( this, "VoteQuestion", "" ); m_Body->SetWrap( true ); m_Body->SetContentAlignment( vgui::Label::a_northwest ); m_Body->SetMouseInputEnabled( false );
         for ( int i = 0; i < MAX_MAPS; ++i ) { m_Maps[i] = new CHL2MPSettingsButton( this, "", VarArgs( "map_%d", i ) ); m_Maps[i]->ServerStyle(); m_Maps[i]->SetMouseInputEnabled( true ); }
         vgui::ivgui()->AddTickSignal( GetVPanel(), 50 );
@@ -43,6 +44,11 @@ public:
     void OnTick() OVERRIDE
     {
         const double now = Plat_FloatTime();
+        if ( m_Preview )
+        {
+            if ( now >= m_PreviewState.deadline ) m_PreviewState.deadline = now + KICK_SECONDS;
+            SetVisible( true ); MoveToFront(); InvalidateLayout( true ); return;
+        }
         if ( !cl_vote_bindings_initialized.GetBool() && now > 5 )
         {
             const char *commands[] = { "vote_yes", "vote_no" }; const ButtonCode_t keys[] = { KEY_F1, KEY_F2 };
@@ -54,17 +60,17 @@ public:
             }
             cl_vote_bindings_initialized.SetValue( 1 );
         }
-        if ( !engine->IsInGame() || engine->IsLevelMainMenuBackground() ) { if ( s_State.phase ) HL2MPVoteUI_Reset(); SetVisible( false ); return; }
+        if ( !engine->IsInGame() || engine->IsLevelMainMenuBackground() ) { if ( State().phase ) HL2MPVoteUI_Reset(); SetVisible( false ); return; }
         if ( now >= m_NextPoll ) { Send( "status" ); m_NextPoll = now + 3; }
-        bool map = s_State.phase >= MAP_WAIT;
-        SetVisible( s_State.phase != NONE && s_State.phase != MAP_WAIT && ( map || !HL2MPHudCustomEnabled() || HL2MPHudStyle( HUD_VOTE ).visible ) && !enginevgui->IsGameUIVisible() && !engine->IsDrawingLoadingImage() );
+        bool map = State().phase >= MAP_WAIT;
+        SetVisible( State().phase != NONE && State().phase != MAP_WAIT && !enginevgui->IsGameUIVisible() && !engine->IsDrawingLoadingImage() );
         SetMouseInputEnabled( map && IsVisible() );
-        if ( s_State.phase != m_LastPhase )
+        if ( State().phase != m_LastPhase )
         {
-            m_LastPhase = s_State.phase; m_Started = now;
-            if ( s_State.phase == KICK || s_State.phase == MAP_BALLOT ) Sound( "hl2mp/vote_start.wav" );
-            else if ( s_State.phase == KICK_PASSED || s_State.phase == MAP_RESULT ) Sound( "hl2mp/vote_pass.wav" );
-            else if ( s_State.phase == KICK_FAILED ) Sound( "hl2mp/vote_fail.wav" );
+            m_LastPhase = State().phase; m_Started = now;
+            if ( State().phase == KICK || State().phase == MAP_BALLOT ) Sound( "hl2mp/vote_start.wav" );
+            else if ( State().phase == KICK_PASSED || State().phase == MAP_RESULT ) Sound( "hl2mp/vote_pass.wav" );
+            else if ( State().phase == KICK_FAILED ) Sound( "hl2mp/vote_fail.wav" );
         }
         if ( !IsVisible() ) return;
         if ( map ) { gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false ); MoveToFront(); }
@@ -73,61 +79,92 @@ public:
     void PerformLayout() OVERRIDE
     {
         int sw, sh; vgui::surface()->GetScreenSize( sw, sh ); float scale = MIN( sw / 1280.0f, sh / 720.0f );
-        const bool map = s_State.phase >= MAP_WAIT;
+        const bool map = State().phase >= MAP_WAIT;
         int x, y, w, h;
         if ( map ) { w = int( sw * .76f ); h = MIN( sh - 24, int( 530 * scale ) ); x = ( sw - w ) / 2; y = ( sh - h ) / 2; }
         else { HL2MPHudBounds( HUD_VOTE, sw, sh, x, y, w, h ); w = MAX( int( 320 * scale ), w ); h = MAX( int( 210 * scale ), h ); x = MIN( x, sw - w ); y = MIN( y, sh - h ); }
+        if ( m_Preview ) { x = ( sw - w ) / 2; y = ( sh - h ) / 2; }
         SetBounds( x, y, w, h );
+        m_Close->SetVisible( m_Preview ); m_Close->SetBounds( w - 34, 6, 28, 28 );
         float textScale = map ? 1.0f : HL2MPHudStyle( HUD_VOTE ).textScale;
         const int fontTall = MAX( 11, int( 17 * scale * textScale ) );
         m_FontTall = fontTall; m_Font = HL2MPHudFont( HUD_VOTE, fontTall ); m_Title = HL2MPHudFont( HUD_VOTE, int( fontTall * 1.3f ), true );
-        SetAlpha( cl_vote_animations.GetBool() ? int( 255 * clamp( ( Plat_FloatTime() - m_Started ) / .18, 0.0, 1.0 ) ) : 255 );
+        SetAlpha( !m_Preview && cl_vote_animations.GetBool() ? int( 255 * clamp( ( Plat_FloatTime() - m_Started ) / .18, 0.0, 1.0 ) ) : 255 );
         m_Body->SetFont( m_Title ); m_Body->SetFgColor( Color( 238, 238, 232, 255 ) );
         m_Body->SetBounds( int( 18 * scale ), int( 50 * scale ), w - int( 36 * scale ), map ? int( 35 * scale ) : h / 3 );
-        m_Body->SetText( map ? HL2MPText( s_State.phase == MAP_RESULT ? "#HL2MP_VoteNextMap" : "#HL2MP_VoteChooseMap" ) : HL2MPFormat( "Kick player: %s?", s_State.target ) );
+        m_Body->SetText( map ? HL2MPText( State().phase == MAP_RESULT ? "#HL2MP_VoteNextMap" : "#HL2MP_VoteChooseMap" ) : HL2MPFormat( "Kick player: %s?", State().target ) );
         m_Body->GetTextImage()->SetSize( m_Body->GetWide(), m_Body->GetTall() ); m_Body->GetTextImage()->RecalculateNewLinePositions();
         for ( int i = 0; i < MAX_MAPS; ++i )
         {
-            m_Maps[i]->SetVisible( map && i < s_State.mapCount ); if ( !m_Maps[i]->IsVisible() ) continue;
+            m_Maps[i]->SetVisible( map && i < State().mapCount ); if ( !m_Maps[i]->IsVisible() ) continue;
             m_Maps[i]->SetBounds( int( 18 * scale ), int( ( 98 + i * 66 ) * scale ), w - int( 36 * scale ), int( 56 * scale ) );
-            m_Maps[i]->SetFont( m_Font ); m_Maps[i]->SetText( HL2MPFormat( "%s   /   %d votes", s_State.maps[i], s_State.counts[i] ) );
-            m_Maps[i]->Active( s_State.phase == MAP_RESULT ? s_State.winner == i : s_State.choice == i );
-            m_Maps[i]->SetEnabled( s_State.phase == MAP_RESULT || ( s_State.phase == MAP_BALLOT && s_State.canVote ) );
+            m_Maps[i]->SetFont( m_Font ); m_Maps[i]->SetText( HL2MPFormat( "%s   /   %d votes", State().maps[i], State().counts[i] ) );
+            m_Maps[i]->Active( State().phase == MAP_RESULT ? State().winner == i : State().choice == i );
+            m_Maps[i]->SetEnabled( State().phase == MAP_RESULT || ( State().phase == MAP_BALLOT && State().canVote ) );
         }
     }
     void Text( vgui::HFont font, const char *text, int x, int y, Color color )
     { vgui::surface()->DrawSetTextFont( font ); vgui::surface()->DrawSetTextColor( color ); vgui::surface()->DrawSetTextPos( x, y ); const wchar_t *wide = HL2MPWideText( text ); vgui::surface()->DrawPrintText( wide, V_wcslen( wide ) ); }
     void PaintBackground() OVERRIDE
     {
-        Color bg = s_State.phase >= MAP_WAIT ? Color( 25, 26, 27, 240 ) : HL2MPHudStyle( HUD_VOTE ).background;
+        Color bg = State().phase >= MAP_WAIT ? Color( 25, 26, 27, 240 ) : HL2MPHudStyle( HUD_VOTE ).background;
         HL2MPServerTheme::Rounded( 0, 0, GetWide(), GetTall(), bg );
-        const bool map = s_State.phase >= MAP_WAIT; const float scale = GetTall() / ( map ? 530.0f : 240.0f );
-        int pad = MAX( 10, int( 18 * scale ) ), seconds = MAX( 0, int( ceil( s_State.deadline - Plat_FloatTime() ) ) );
+        const bool map = State().phase >= MAP_WAIT; const float scale = GetTall() / ( map ? 530.0f : 240.0f );
+        int pad = MAX( 10, int( 18 * scale ) ), seconds = MAX( 0, int( ceil( State().deadline - Plat_FloatTime() ) ) );
         const Color orange = HL2MPHudStyle( HUD_VOTE ).foreground, white( 231, 231, 228, 255 ), green( 118, 204, 113, 255 ), red( 240, 92, 85, 255 );
-        Text( m_Font, map ? HL2MPText( "#HL2MP_VoteMapTitle" ) : HL2MPFormat( "Vote by: %s", s_State.caller ), pad, pad, orange );
+        Text( m_Font, map ? HL2MPText( "#HL2MP_VoteMapTitle" ) : HL2MPFormat( "Vote by: %s", State().caller ), pad, pad, orange );
         const int foot = GetTall() - pad - m_FontTall;
         if ( map )
-            Text( m_Font, s_State.phase == MAP_RESULT ? ( s_State.winner < 0 ? HL2MPFormat( "No votes. Following the mapcycle in %d seconds.", seconds ) : HL2MPFormat( "Changing map in %d seconds.", seconds ) ) : HL2MPFormat( "Select a map. %d seconds remaining.", seconds ), pad, foot, white );
+            Text( m_Font, State().phase == MAP_RESULT ? ( State().winner < 0 ? HL2MPFormat( "No votes. Following the mapcycle in %d seconds.", seconds ) : HL2MPFormat( "Changing map in %d seconds.", seconds ) ) : HL2MPFormat( "Select a map. %d seconds remaining.", seconds ), pad, foot, white );
         else
         {
             int row = GetTall() * 55 / 100;
-            Text( m_Title, HL2MPFormat( "YES  %d", s_State.yes ), pad, row, green ); Text( m_Title, HL2MPFormat( "NO  %d", s_State.no ), GetWide() / 2, row, red );
-            const char *status = s_State.phase == KICK_PASSED ? "#HL2MP_VotePassed" : s_State.phase == KICK_FAILED ? "#HL2MP_VoteFailed" : s_State.choice == 0 ? "#HL2MP_VoteYouYes" : s_State.choice == 1 ? "#HL2MP_VoteYouNo" : !s_State.canVote ? "#HL2MP_VoteWatching" : NULL;
+            Text( m_Title, HL2MPFormat( "YES  %d", State().yes ), pad, row, green ); Text( m_Title, HL2MPFormat( "NO  %d", State().no ), GetWide() / 2, row, red );
+            const char *status = State().phase == KICK_PASSED ? "#HL2MP_VotePassed" : State().phase == KICK_FAILED ? "#HL2MP_VoteFailed" : State().choice == 0 ? "#HL2MP_VoteYouYes" : State().choice == 1 ? "#HL2MP_VoteYouNo" : !State().canVote ? "#HL2MP_VoteWatching" : NULL;
             if ( status ) Text( m_Font, status, pad, foot, white );
             else Text( m_Font, HL2MPFormat( "%s: YES    %s: NO", Key( "vote_yes" ), Key( "vote_no" ) ), pad, foot, white );
-            if ( s_State.phase == KICK ) Text( m_Font, HL2MPFormat( "%d needed / %ds", RequiredYes( s_State.eligible ), seconds ), pad, row + int( m_FontTall * 1.6f ), white );
+            if ( State().phase == KICK ) Text( m_Font, HL2MPFormat( "%d needed / %ds", RequiredYes( State().eligible ), seconds ), pad, row + int( m_FontTall * 1.6f ), white );
         }
-        const float duration = s_State.phase == KICK ? KICK_SECONDS : s_State.phase == MAP_BALLOT ? MAP_SECONDS : RESULT_SECONDS;
-        float progress = clamp( float( ( s_State.deadline - Plat_FloatTime() ) / duration ), 0.0f, 1.0f );
+        const float duration = State().phase == KICK ? KICK_SECONDS : State().phase == MAP_BALLOT ? MAP_SECONDS : RESULT_SECONDS;
+        float progress = clamp( float( ( State().deadline - Plat_FloatTime() ) / duration ), 0.0f, 1.0f );
         vgui::surface()->DrawSetColor( orange ); vgui::surface()->DrawFilledRect( pad, GetTall() - 4, pad + int( ( GetWide() - pad * 2 ) * progress ), GetTall() - 2 );
     }
     void OnCommand( const char *command ) OVERRIDE
     {
-        if ( !Q_strncmp( command, "map_", 4 ) && s_State.phase == MAP_BALLOT && s_State.canVote )
-        { int choice = atoi( command + 4 ); if ( choice >= 0 && choice < s_State.mapCount && s_State.choice != choice ) { Send( "cast", choice ); Sound( "hl2mp/vote_cast.wav" ); } return; }
+        if ( m_Preview ) { ClosePreview(); return; }
+        if ( !Q_strncmp( command, "map_", 4 ) && State().phase == MAP_BALLOT && State().canVote )
+        { int choice = atoi( command + 4 ); if ( choice >= 0 && choice < State().mapCount && State().choice != choice ) { Send( "cast", choice ); Sound( "hl2mp/vote_cast.wav" ); } return; }
         BaseClass::OnCommand( command );
     }
+    const VoteState &State() const { return m_Preview ? m_PreviewState : s_State; }
+    bool IsPreview() const { return m_Preview; }
+    void Preview()
+    {
+        if ( m_Preview ) { ClosePreview(); return; }
+        memset( &m_PreviewState, 0, sizeof( m_PreviewState ) ); m_PreviewState.phase = KICK; m_PreviewState.eligible = 6; m_PreviewState.yes = 2; m_PreviewState.no = 1;
+        m_PreviewState.canVote = true; m_PreviewState.choice = -1; m_PreviewState.deadline = Plat_FloatTime() + KICK_SECONDS;
+        Q_strncpy( m_PreviewState.caller, HL2MPText( "#HL2MP_HudVotePreview" ), sizeof( m_PreviewState.caller ) ); Q_strncpy( m_PreviewState.target, HL2MPText( "#HL2MP_VoteExamplePlayer" ), sizeof( m_PreviewState.target ) );
+        m_PreviousModal = vgui::input()->GetAppModalSurface(); m_Preview = true; SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) ); SetZPos( 900 ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true );
+        SetVisible( true ); InvalidateLayout( true ); MoveToFront(); RequestFocus(); vgui::input()->SetAppModalSurface( GetVPanel() );
+    }
+    void ClosePreview()
+    {
+        if ( !m_Preview ) return; m_Preview = false; SetZPos( 250 ); SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false ); SetVisible( false );
+        if ( vgui::input()->GetAppModalSurface() == GetVPanel() ) { if ( m_PreviousModal ) { vgui::input()->SetAppModalSurface( m_PreviousModal ); vgui::ipanel()->RequestFocus( m_PreviousModal ); } else vgui::input()->ReleaseAppModalSurface(); }
+        m_PreviousModal = NULL; SetParent( g_pClientMode->GetViewport() );
+    }
+    void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE
+    {
+        if ( !m_Preview ) { BaseClass::OnKeyCodeTyped( code ); return; }
+        if ( code == KEY_ESCAPE || code == KEY_ENTER ) ClosePreview();
+        else if ( m_PreviewState.choice < 0 )
+        {
+            const char *binding = engine->Key_BindingForKey( (ButtonCode_t)code );
+            if ( binding && ( !Q_strcmp( binding, "vote_yes" ) || !Q_strcmp( binding, "vote_no" ) ) ) { m_PreviewState.choice = !Q_strcmp( binding, "vote_no" ); if ( m_PreviewState.choice ) ++m_PreviewState.no; else ++m_PreviewState.yes; }
+        }
+    }
 private:
+    bool m_Preview; VoteState m_PreviewState; vgui::VPANEL m_PreviousModal; CHL2MPSettingsButton *m_Close;
     int m_LastPhase; double m_Started, m_NextPoll; int m_FontTall; vgui::HFont m_Font, m_Title; vgui::Label *m_Body; CHL2MPSettingsButton *m_Maps[MAX_MAPS];
 };
 vgui::DHANDLE<CVotePanel> s_Panel;
@@ -150,11 +187,13 @@ void MapMessage( bf_read &r )
 }
 void Cast( int choice )
 {
-    if ( s_State.phase != KICK || !s_State.canVote || s_State.choice >= 0 ) return;
+    if ( ( s_Panel && s_Panel->IsPreview() ) || s_State.phase != KICK || !s_State.canVote || s_State.choice >= 0 ) return;
     Send( "cast", choice ); Sound( "hl2mp/vote_cast.wav" );
 }
 }
 void HL2MPVoteUI_Init() { usermessages->HookMessage( "HL2MPVote", StateMessage ); usermessages->HookMessage( "HL2MPVoteMap", MapMessage ); if ( !s_Panel ) s_Panel = new CVotePanel; }
+void HL2MPVoteUI_Preview() { if ( s_Panel ) s_Panel->Preview(); }
+void HL2MPVoteUI_ClosePreview() { if ( s_Panel ) s_Panel->ClosePreview(); }
 void HL2MPVoteUI_Reset() { memset( &s_State, 0, sizeof( s_State ) ); }
 void HL2MPVoteUI_CallKick( int userid ) { Send( "kick", userid ); }
 bool HL2MPVoteUI_IsMapVote() { return s_State.phase == MAP_BALLOT || s_State.phase == MAP_RESULT; }

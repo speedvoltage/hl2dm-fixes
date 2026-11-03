@@ -19,6 +19,8 @@
 #include "vgui_controls/PanelListPanel.h"
 #include "vgui_controls/CheckButton.h"
 #include "vgui_controls/Label.h"
+#include "vgui_controls/TextEntry.h"
+#include "hl2mp_vote.h"
 #include "tier0/memdbgon.h"
 
 static ConVar cl_custom_hud( "cl_custom_hud", "0", FCVAR_ARCHIVE, "Opt in to the customizable HUD. Disabled uses the original game HUD.", true, 0, true, 1 );
@@ -30,6 +32,8 @@ struct Layout { HL2MPHudElementStyle parts[HUD_PARTS]; int crossShape, crossGap,
 bool s_Loaded = false;
 struct Font { vgui::HFont handle; int face, pixels; bool bold; };
 CUtlVector<Font> s_Fonts;
+const char *s_FontFaces[] = { "Tahoma", "Arial", "Consolas", "Verdana", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New" };
+bool CanHide( int part ) { return part != HUD_CROSSHAIR && part != HUD_CHAT && part != HUD_VOTE; }
 void Defaults( int preset )
 {
     const float bounds[HUD_PARTS][4] = {
@@ -68,7 +72,7 @@ bool ReadLayout( const char *path )
     {
         KeyValues *k = root->FindKey( s_Names[i] ); if ( !k ) continue; HL2MPHudElementStyle &p = s_Layout.parts[i];
         p.x = Number( k, "x", p.x, 0, 1 ); p.y = Number( k, "y", p.y, 0, 1 ); p.w = Number( k, "width", p.w, .02f, 1 ); p.h = Number( k, "height", p.h, .02f, 1 ); p.textScale = Number( k, "text_scale", 1, .5f, 2 );
-        p.visible = k->GetBool( "visible", p.visible ); p.labels = k->GetBool( "labels", p.labels ); p.numbers = k->GetBool( "numbers", p.numbers ); p.bars = k->GetBool( "bars", p.bars ); p.font = clamp( k->GetInt( "font" ), 0, 2 );
+        p.visible = !CanHide( i ) || k->GetBool( "visible", p.visible ); p.labels = k->GetBool( "labels", p.labels ); p.numbers = k->GetBool( "numbers", p.numbers ); p.bars = k->GetBool( "bars", p.bars ); p.font = clamp( k->GetInt( "font" ), 0, ARRAYSIZE( s_FontFaces ) - 1 );
         for ( int c = 0; c < 4; ++c ) { p.foreground[c] = int( Number( k, VarArgs( "fg%d", c ), p.foreground[c], 0, 255 ) ); p.background[c] = int( Number( k, VarArgs( "bg%d", c ), p.background[c], 0, 255 ) ); }
     }
     s_Layout.crossShape = clamp( root->GetInt( "crosshair_shape" ), 0, 3 ); s_Layout.crossGap = clamp( root->GetInt( "crosshair_gap", 4 ), 0, 24 );
@@ -78,6 +82,8 @@ bool ReadLayout( const char *path )
 }
 bool SaveLayout( const char *path )
 {
+    // Callers can pass VarArgs(); serialization below also uses its rotating buffers.
+    char savePath[MAX_PATH]; Q_strncpy( savePath, path, sizeof( savePath ) );
     KeyValues *root = new KeyValues( "HUDLayout" ); root->SetInt( "version", 1 );
     for ( int i = 0; i < HUD_PARTS; ++i )
     {
@@ -88,7 +94,7 @@ bool SaveLayout( const char *path )
     }
     root->SetInt( "crosshair_shape", s_Layout.crossShape ); root->SetInt( "crosshair_gap", s_Layout.crossGap ); root->SetInt( "crosshair_length", s_Layout.crossLength ); root->SetInt( "crosshair_thickness", s_Layout.crossThickness );
     root->SetBool( "crosshair_outline", s_Layout.crossOutline ); root->SetBool( "crosshair_dot", s_Layout.crossDot ); root->SetBool( "low_health_warning", s_Layout.lowHealth );
-    bool saved = root->SaveToFile( filesystem, path, "MOD" ); root->deleteThis(); return saved;
+    bool saved = root->SaveToFile( filesystem, savePath, "MOD" ); root->deleteThis(); return saved;
 }
 void Load() { if ( s_Loaded ) return; Defaults( 0 ); ReadLayout( "cfg/hud_layout.res" ); s_Loaded = true; }
 void Rect( int x, int y, int w, int h, Color color ) { vgui::surface()->DrawSetColor( color ); vgui::surface()->DrawFilledRect( x, y, x + w, y + h ); }
@@ -189,6 +195,7 @@ public:
 DECLARE_HUDELEMENT( CCustomHud );
 
 class CHudEditor;
+class CColorPicker;
 class CEditorCanvas : public vgui::Panel
 {
     DECLARE_CLASS_SIMPLE( CEditorCanvas, vgui::Panel );
@@ -214,18 +221,19 @@ class CHudEditor : public vgui::EditablePanel
     DECLARE_CLASS_SIMPLE( CHudEditor, vgui::EditablePanel );
 public:
     CHudEditor();
-    void Open(); void Close( bool apply ); void BuildRows(); void Select( int part );
+    void Open(); void Close( bool apply ); void BuildRows(); void Select( int part ); void Edited(); void ChoosePreset( int preset );
     void SetProperty( int id, int value ); int Property( int id );
     void OnCommand( const char *command ) OVERRIDE;
     void PerformLayout() OVERRIDE; void PaintBackground() OVERRIDE;
-    void OnKeyCodeTyped( vgui::KeyCode key ) OVERRIDE { if ( key == KEY_ESCAPE ) { for ( int i = 0; i < 3; ++i ) if ( combos[i]->IsDropdownVisible() ) { combos[i]->HideMenu(); return; } Close( false ); } else BaseClass::OnKeyCodeTyped( key ); }
+    void OnKeyCodeTyped( vgui::KeyCode key ) OVERRIDE { if ( key == KEY_ESCAPE ) { for ( int i = 0; i < 3; ++i ) if ( combos[i]->IsDropdownVisible() ) { combos[i]->HideMenu(); return; } if ( saveSlot->IsDropdownVisible() ) { saveSlot->HideMenu(); return; } Close( false ); } else BaseClass::OnKeyCodeTyped( key ); }
     void OnThink() OVERRIDE;
     MESSAGE_FUNC_PTR( ComboChanged, "TextChanged", panel );
     MESSAGE_FUNC_PARAMS( PropertyChanged, "Property", data ) { SetProperty( data->GetInt( "id" ), data->GetInt( "value" ) ); }
-    int selected; CEditorCanvas *canvas; vgui::HFont font; bool reading;
+    int selected, section; CEditorCanvas *canvas; vgui::HFont font; bool reading;
 private:
-    Layout before; bool beforeEnabled, fromGame; double openedAt; int width, height; CHL2MPDropdown *combos[3];
-    CHL2MPSettingsButton *buttons[7]; vgui::PanelListPanel *rows; vgui::Label *title, *hint, *status;
+    Layout before; bool beforeEnabled, fromGame; double openedAt; int width, height; CHL2MPDropdown *combos[3], *saveSlot;
+    CHL2MPSettingsButton *buttons[7], *tabs[2], *align[2]; CColorPicker *picker;
+    vgui::PanelListPanel *rows; vgui::Label *title, *hint, *status;
 };
 vgui::DHANDLE<CHudEditor> s_Editor;
 class CHudFontRefresh : public CAutoGameSystemPerFrame
@@ -240,14 +248,105 @@ public:
         refreshAt = 0;
         // GameUI resets dynamic font glyphs after its video-mode scheme reload.
         // Rebind existing handles after that reload has settled.
-        const char *faces[] = { "Tahoma", "Arial", "Consolas" };
-        FOR_EACH_VEC( s_Fonts, i ) { const Font &f = s_Fonts[i]; vgui::surface()->SetFontGlyphSet( f.handle, faces[f.face], f.pixels, f.bold ? 700 : 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS | vgui::ISurface::FONTFLAG_DROPSHADOW ); }
+        FOR_EACH_VEC( s_Fonts, i ) { const Font &f = s_Fonts[i]; vgui::surface()->SetFontGlyphSet( f.handle, s_FontFaces[f.face], f.pixels, f.bold ? 700 : 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS | vgui::ISurface::FONTFLAG_DROPSHADOW ); }
         if ( s_Editor ) s_Editor->InvalidateLayout( true );
     }
 private:
     int width, height; double refreshAt;
 } s_FontRefresh;
 const char *properties[] = { "#HL2MP_HudX", "#HL2MP_HudY", "#HL2MP_HudWidth", "#HL2MP_HudHeight", "#HL2MP_HudTextSize", "#HL2MP_HudRed", "#HL2MP_HudGreen", "#HL2MP_HudBlue", "#HL2MP_HudOpacity", "#HL2MP_HudBgRed", "#HL2MP_HudBgGreen", "#HL2MP_HudBgBlue", "#HL2MP_HudBgOpacity", "#HL2MP_HudVisible", "#HL2MP_HudLabels", "#HL2MP_HudNumbers", "#HL2MP_HudBars", "#HL2MP_HudFont", "#HL2MP_HudShape", "#HL2MP_HudGap", "#HL2MP_HudLength", "#HL2MP_HudThickness", "#HL2MP_HudOutline", "#HL2MP_HudDot", "#HL2MP_HudLowHealth" };
+class CColorPicker : public vgui::EditablePanel
+{
+    DECLARE_CLASS_SIMPLE( CColorPicker, vgui::EditablePanel );
+public:
+    CColorPicker( CHudEditor *parent ) : BaseClass( parent, "HudColorPicker" ), owner( parent ), target( NULL ), drag( 0 ), writing( false )
+    {
+        SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetZPos( 1000 );
+        hex = new vgui::TextEntry( this, "HexColor" ); hex->SetMaximumCharCount( 7 ); hex->AddActionSignalTarget( this );
+        done = new CHL2MPSettingsButton( this, "#HL2MP_HudColorDone", "done" ); done->ServerStyle( true );
+        cancel = new CHL2MPSettingsButton( this, "#HL2MP_Cancel", "cancel" ); cancel->ServerStyle();
+    }
+    void Open( Color *color )
+    {
+        target = color; original = *color; ReadColor(); SetVisible( true ); InvalidateLayout( true ); MoveToFront(); RequestFocus();
+        vgui::input()->SetAppModalSurface( GetVPanel() );
+    }
+    void Close( bool accept )
+    {
+        if ( !IsVisible() ) return;
+        if ( !accept && target ) *target = original;
+        if ( accept ) owner->Edited();
+        drag = 0; if ( vgui::input()->GetMouseCapture() == GetVPanel() ) vgui::input()->SetMouseCapture( NULL );
+        SetVisible( false ); target = NULL; vgui::input()->SetAppModalSurface( owner->GetVPanel() ); owner->RequestFocus(); owner->canvas->Repaint();
+    }
+    void PerformLayout() OVERRIDE
+    {
+        int sw, sh; vgui::surface()->GetScreenSize( sw, sh ); int w = MIN( 440, sw - 32 ), h = MIN( 440, sh - 32 ); SetBounds( ( sw - w ) / 2, ( sh - h ) / 2, w, h );
+        field = MIN( w - 92, h - 184 );
+        hex->SetBounds( 20, h - 96, w - 40, 30 ); hex->SetFont( owner->font ); hex->SetBgColor( Color( 42, 42, 42, 255 ) ); hex->SetFgColor( Color( 240, 240, 235, 255 ) );
+        done->SetBounds( 20, h - 52, ( w - 52 ) / 2, 32 ); cancel->SetBounds( 32 + ( w - 52 ) / 2, h - 52, ( w - 52 ) / 2, 32 ); done->SetFont( owner->font ); cancel->SetFont( owner->font );
+    }
+    void ReadColor()
+    {
+        Vector rgb( target->r() / 255.f, target->g() / 255.f, target->b() / 255.f ); RGBtoHSV( rgb, hsv ); UpdateHex();
+    }
+    void UpdateHex() { writing = true; hex->SetText( VarArgs( "#%02X%02X%02X", target->r(), target->g(), target->b() ) ); writing = false; Repaint(); }
+    static Color RGB( const Vector &hsv ) { Vector rgb; HSVtoRGB( hsv, rgb ); return Color( int( rgb.x * 255 + .5f ), int( rgb.y * 255 + .5f ), int( rgb.z * 255 + .5f ), 255 ); }
+    void PaintBackground() OVERRIDE
+    {
+        HL2MPServerTheme::Rounded( 0, 0, GetWide(), GetTall(), Color( 31, 32, 34, 255 ), 6 );
+        const wchar_t *title = HL2MPWideText( "#HL2MP_HudColorPicker" );
+        vgui::surface()->DrawSetTextFont( owner->font ); vgui::surface()->DrawSetTextColor( Color( 240, 160, 70, 255 ) ); vgui::surface()->DrawSetTextPos( 20, 14 ); vgui::surface()->DrawPrintText( title, V_wcslen( title ) );
+        if ( !target ) return;
+        for ( int y = 0; y < 32; ++y ) for ( int x = 0; x < 32; ++x ) Rect( 20 + x * field / 32, 48 + y * field / 32, ( x + 1 ) * field / 32 - x * field / 32, ( y + 1 ) * field / 32 - y * field / 32, RGB( Vector( hsv.x, x / 31.f, 1 - y / 31.f ) ) );
+        for ( int y = 0; y < field; ++y ) Rect( 36 + field, 48 + y, 24, 1, RGB( Vector( y * 360.f / field, 1, 1 ) ) );
+        int sx = 20 + int( hsv.y * ( field - 1 ) ), sy = 48 + int( ( 1 - hsv.z ) * ( field - 1 ) );
+        vgui::surface()->DrawSetColor( Color( 0, 0, 0, 255 ) ); vgui::surface()->DrawOutlinedCircle( sx, sy, 5, 16 );
+        vgui::surface()->DrawSetColor( Color( 255, 255, 255, 255 ) ); vgui::surface()->DrawOutlinedCircle( sx, sy, 4, 16 );
+        Rect( 32 + field, 48 + int( hsv.x / 360 * ( field - 1 ) ), 32, 2, Color( 255, 255, 255, 255 ) );
+        const int count = 12, step = ( GetWide() - 40 ) / count;
+        for ( int i = 0; i < count; ++i ) Rect( 20 + i * step, GetTall() - 132, step - 3, 24, Swatch( i ) );
+    }
+    static Color Swatch( int i )
+    {
+        const Color colors[] = { Color(255,183,67,255), Color(255,255,255,255), Color(0,0,0,255), Color(128,128,128,255), Color(240,80,70,255), Color(255,130,30,255), Color(255,225,75,255), Color(110,210,100,255), Color(70,215,210,255), Color(85,155,245,255), Color(165,115,230,255), Color(235,115,185,255) }; return colors[clamp( i, 0, 11 )];
+    }
+    void OnMousePressed( vgui::MouseCode code ) OVERRIDE
+    {
+        if ( code != MOUSE_LEFT || !target ) return; int x, y; vgui::input()->GetCursorPos( x, y ); ScreenToLocal( x, y );
+        if ( y >= GetTall() - 132 && y < GetTall() - 108 && x >= 20 && x < GetWide() - 20 ) { Color c = Swatch( ( x - 20 ) / MAX( 1, ( GetWide() - 40 ) / 12 ) ); c[3] = target->a(); *target = c; ReadColor(); return; }
+        if ( y < 48 || y >= 48 + field ) return;
+        drag = x >= 20 && x < 20 + field ? 1 : x >= 36 + field && x < 60 + field ? 2 : 0;
+        if ( drag ) { vgui::input()->SetMouseCapture( GetVPanel() ); OnCursorMoved( x, y ); }
+    }
+    void OnCursorMoved( int x, int y ) OVERRIDE
+    {
+        if ( !drag || !target ) return;
+        if ( drag == 1 ) { hsv.y = clamp( ( x - 20.f ) / ( field - 1 ), 0.f, 1.f ); hsv.z = 1 - clamp( ( y - 48.f ) / ( field - 1 ), 0.f, 1.f ); }
+        else hsv.x = clamp( ( y - 48.f ) / ( field - 1 ), 0.f, .9999f ) * 360;
+        Color c = RGB( hsv ); c[3] = target->a(); *target = c; UpdateHex(); owner->canvas->Repaint();
+    }
+    void OnMouseReleased( vgui::MouseCode ) OVERRIDE { drag = 0; if ( vgui::input()->GetMouseCapture() == GetVPanel() ) vgui::input()->SetMouseCapture( NULL ); }
+    void OnMouseCaptureLost() OVERRIDE { drag = 0; }
+    void OnCommand( const char *command ) OVERRIDE { Close( !Q_strcmp( command, "done" ) ); }
+    void OnKeyCodeTyped( vgui::KeyCode code ) OVERRIDE { if ( code == KEY_ESCAPE ) Close( false ); else if ( code == KEY_ENTER ) Close( true ); else BaseClass::OnKeyCodeTyped( code ); }
+    MESSAGE_FUNC( HexChanged, "TextChanged" )
+    {
+        if ( writing || !target ) return; char text[16]; hex->GetText( text, sizeof( text ) ); const char *p = text[0] == '#' ? text + 1 : text; if ( Q_strlen( p ) != 6 ) return;
+        int value = 0; for ( int i = 0; i < 6; ++i ) { char c = p[i]; int n = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : c >= 'A' && c <= 'F' ? c - 'A' + 10 : -1; if ( n < 0 ) return; value = value * 16 + n; }
+        *target = Color( value >> 16, ( value >> 8 ) & 255, value & 255, target->a() ); Vector rgb( target->r()/255.f, target->g()/255.f, target->b()/255.f ); RGBtoHSV( rgb, hsv ); Repaint(); owner->canvas->Repaint();
+    }
+private:
+    CHudEditor *owner; Color *target, original; Vector hsv; int field, drag; bool writing; vgui::TextEntry *hex; CHL2MPSettingsButton *done, *cancel;
+};
+class CColorRow : public CHL2MPSettingsButton
+{
+    DECLARE_CLASS_SIMPLE( CColorRow, CHL2MPSettingsButton );
+public:
+    CColorRow( vgui::Panel *parent, bool background ) : BaseClass( parent, background ? "#HL2MP_HudBackgroundColor" : "#HL2MP_HudTextColor", background ? "color_bg" : "color_fg" ), bg( background ) { ServerStyle(); AddActionSignalTarget( s_Editor.Get() ); }
+    void Paint() OVERRIDE { BaseClass::Paint(); const HL2MPHudElementStyle &style = HL2MPHudStyle( s_Editor->selected ); Color c = bg ? style.background : style.foreground; c[3] = 255; Rect( GetWide() - 38, GetTall()/2 - 10, 24, 20, c ); }
+private: bool bg;
+};
 CEditorRow::CEditorRow( vgui::Panel *parent, int property, const char *label, int low, int high, int value ) : BaseClass( parent, "PropertyRow" ), id( property ), slider( NULL ), choice( NULL )
 {
     name = new vgui::Label( this, "Name", label ); name->SetWrap( true ); name->SetContentAlignment( vgui::Label::a_west ); name->SetMouseInputEnabled( false );
@@ -255,7 +354,7 @@ CEditorRow::CEditorRow( vgui::Panel *parent, int property, const char *label, in
     if ( ( id >= 13 && id <= 18 ) || id >= 22 )
     {
         choice = new CHL2MPDropdown( this, "Choice" ); choice->ServerStyle();
-        if ( id == 17 ) { choice->AddItem( "Tahoma", NULL ); choice->AddItem( "Arial", NULL ); choice->AddItem( "Consolas", NULL ); }
+        if ( id == 17 ) { for ( int i = 0; i < ARRAYSIZE( s_FontFaces ); ++i ) choice->AddItem( s_FontFaces[i], NULL ); }
         else if ( id == 18 ) { const char *shapes[] = { "#HL2MP_HudShapeCross", "#HL2MP_HudShapeT", "#HL2MP_HudShapeCircle", "#HL2MP_HudShapeDot" }; for ( int i = 0; i < 4; ++i ) choice->AddItem( shapes[i], NULL ); }
         else { choice->AddItem( "#GameUI_No", NULL ); choice->AddItem( "#GameUI_Yes", NULL ); }
         choice->ActivateItemByRow( value ); choice->AddActionSignalTarget( this ); number->SetVisible( false );
@@ -291,6 +390,12 @@ void CEditorCanvas::FocusSelection()
 void CEditorCanvas::Paint()
 {
     Rect( 0, 0, GetWide(), GetTall(), Color( 14, 19, 21, 180 ) );
+    if ( !cl_custom_hud.GetBool() )
+    {
+        CenterText( HUD_HEALTH, "#HL2MP_HudDefault", 0, GetTall() / 2 - 32, GetWide(), 22, Color( 240, 180, 90, 255 ), true );
+        CenterText( HUD_HEALTH, "#HL2MP_HudChooseLayout", 0, GetTall() / 2 + 6, GetWide(), MAX( 11, MIN( 15, GetWide() / 32 ) ), Color( 205, 205, 200, 255 ) );
+        return;
+    }
     int vw, vh; View( vw, vh );
     vgui::surface()->DrawSetColor( Color( 140, 155, 160, 25 ) );
     for ( int i = 1; i < 10; ++i ) { vgui::surface()->DrawLine( i * vw / 10 - panX, 0, i * vw / 10 - panX, GetTall() ); vgui::surface()->DrawLine( 0, i * vh / 10 - panY, GetWide(), i * vh / 10 - panY ); }
@@ -320,7 +425,7 @@ void CEditorCanvas::OnCursorMoved( int x, int y )
 {
     int vw, vh; View( vw, vh );
     if ( panning ) { panX = startPanX + startX - x; panY = startPanY + startY - y; View( vw, vh ); Repaint(); return; }
-    if ( !dragging ) return; HL2MPHudElementStyle &p = s_Layout.parts[owner->selected];
+    if ( !dragging ) return; owner->Edited(); HL2MPHudElementStyle &p = s_Layout.parts[owner->selected];
     float dx = float( x - startX ) / MAX( 1, vw ), dy = float( y - startY ) / MAX( 1, vh );
     if ( resize )
     {
@@ -335,30 +440,39 @@ void CEditorCanvas::OnMouseReleased( vgui::MouseCode code )
     if ( code == MOUSE_RIGHT && panning ) { panning = false; vgui::input()->SetMouseCapture( NULL ); }
     if ( code == MOUSE_LEFT && dragging ) { dragging = false; vgui::input()->SetMouseCapture( NULL ); owner->BuildRows(); }
 }
-CHudEditor::CHudEditor() : BaseClass( NULL, "HUDEditor" ), selected( 0 ), reading( false ), width( 0 ), height( 0 )
+CHudEditor::CHudEditor() : BaseClass( NULL, "HUDEditor" ), selected( 0 ), section( 0 ), reading( false ), width( 0 ), height( 0 )
 {
     SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) ); MakePopup( false ); SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetZPos( 500 );
     font = vgui::surface()->CreateFont(); title = new vgui::Label( this, "Title", "#HL2MP_HudEditor" ); hint = new vgui::Label( this, "Hint", "#HL2MP_HudDragHint" ); hint->SetWrap( true ); status = new vgui::Label( this, "Status", "" );
     canvas = new CEditorCanvas( this );
     for ( int i = 0; i < 3; ++i ) { combos[i] = new CHL2MPDropdown( this, i == 0 ? "Element" : i == 1 ? "Preset" : "PreviewZoom" ); combos[i]->AddActionSignalTarget( this ); combos[i]->ServerStyle(); }
     for ( int i = 0; i < HUD_PARTS; ++i ) combos[0]->AddItem( s_Labels[i], NULL );
-    combos[1]->AddItem( "#HL2MP_HudClassic", NULL ); combos[1]->AddItem( "#HL2MP_HudCompact", NULL ); combos[1]->AddItem( "#HL2MP_HudMinimal", NULL );
+    combos[1]->AddItem( "#HL2MP_HudDefault", NULL ); combos[1]->AddItem( "#HL2MP_HudClassic", NULL ); combos[1]->AddItem( "#HL2MP_HudCompact", NULL ); combos[1]->AddItem( "#HL2MP_HudMinimal", NULL );
+    combos[1]->AddItem( "#HL2MP_HudWorkingLayout", NULL );
     for ( int i = 1; i <= 5; ++i ) combos[1]->AddItem( HL2MPFormat( "Custom slot %d", i ), NULL );
+    saveSlot = new CHL2MPDropdown( this, "SaveSlot" ); saveSlot->ServerStyle(); for ( int i = 1; i <= 5; ++i ) saveSlot->AddItem( HL2MPFormat( "Custom slot %d", i ), NULL ); saveSlot->ActivateItemByRow( 0 );
+    tabs[0] = new CHL2MPSettingsButton( this, "#HL2MP_HudLayoutTab", "layout" ); tabs[1] = new CHL2MPSettingsButton( this, "#HL2MP_HudAppearanceTab", "appearance" );
+    align[0] = new CHL2MPSettingsButton( this, "#HL2MP_HudCenterX", "center_x" ); align[1] = new CHL2MPSettingsButton( this, "#HL2MP_HudCenterY", "center_y" );
+    for ( int i = 0; i < 2; ++i ) { tabs[i]->ServerStyle(); align[i]->ServerStyle(); }
+    picker = new CColorPicker( this );
     combos[0]->ActivateItemByRow( 0 ); combos[1]->ActivateItemByRow( 0 );
     combos[2]->AddItem( "#HL2MP_HudPreviewFit", NULL ); combos[2]->AddItem( "#HL2MP_HudPreview100", NULL ); combos[2]->AddItem( "#HL2MP_HudPreview200", NULL ); combos[2]->ActivateItemByRow( 0 );
-    const char *names[] = { "#HL2MP_HudLoad", "#HL2MP_HudSave", "#HL2MP_HudResetElement", "#HL2MP_HudResetAll", "#HL2MP_HudEnable", "#HL2MP_UI_33bf9eeb20a9", "#HL2MP_Cancel" };
-    const char *commands[] = { "load", "save", "reset_element", "reset_all", "enable", "apply", "cancel" };
+    const char *names[] = { "#HL2MP_HudLoad", "#HL2MP_HudSave", "#HL2MP_HudResetElement", "#HL2MP_HudResetAll", "#HL2MP_HudVotePreview", "#HL2MP_UI_33bf9eeb20a9", "#HL2MP_Cancel" };
+    const char *commands[] = { "load", "save", "reset_element", "reset_all", "vote_preview", "apply", "cancel" };
     for ( int i = 0; i < 7; ++i ) { buttons[i] = new CHL2MPSettingsButton( this, names[i], commands[i] ); buttons[i]->ServerStyle( i == 5 ); }
     rows = new vgui::PanelListPanel( this, "Properties" ); rows->SetFirstColumnWidth( 0 ); rows->SetVerticalBufferPixels( 2 ); HL2MPStyleScrollBar( rows->GetScrollbar() );
 }
 void CHudEditor::Open()
 {
     if ( IsVisible() ) { Close( false ); return; } Load(); before = s_Layout; beforeEnabled = cl_custom_hud.GetBool(); fromGame = !enginevgui->IsGameUIVisible();
+    reading = true; combos[1]->ActivateItemByRow( cl_custom_hud.GetBool() ? 4 : 0 ); reading = false;
     openedAt = Plat_FloatTime();
     engine->ClientCmd_Unrestricted( "gameui_activate;gameui_preventescape" ); SetVisible( true ); MoveToFront(); RequestFocus(); BuildRows(); InvalidateLayout( true ); vgui::input()->SetAppModalSurface( GetVPanel() );
 }
 void CHudEditor::Close( bool apply )
 {
+    HL2MPVoteUI_ClosePreview();
+    picker->Close( false ); saveSlot->HideMenu();
     if ( apply && !SaveLayout( "cfg/hud_layout.res" ) ) { status->SetText( "#HL2MP_HudSaveFailed" ); return; }
     if ( !apply ) { s_Layout = before; cl_custom_hud.SetValue( beforeEnabled ); }
     for ( int i = 0; i < 3; ++i ) combos[i]->HideMenu();
@@ -371,7 +485,11 @@ void CHudEditor::Close( bool apply )
 void CHudEditor::OnThink()
 {
     if ( !IsVisible() ) return; int sw, sh; vgui::surface()->GetScreenSize( sw, sh ); if ( sw != width || sh != height ) InvalidateLayout( true );
-    buttons[4]->Active( cl_custom_hud.GetBool() ); if ( !enginevgui->IsGameUIVisible() && Plat_FloatTime() - openedAt > .5 ) Close( false );
+    const bool custom = cl_custom_hud.GetBool();
+    rows->SetVisible( custom ); canvas->SetMouseInputEnabled( custom ); combos[0]->SetEnabled( custom ); saveSlot->SetEnabled( custom );
+    for ( int i = 0; i < 2; ++i ) { tabs[i]->Active( section == i ); tabs[i]->SetVisible( custom ); align[i]->SetEnabled( custom ); align[i]->SetVisible( custom && section == 0 ); }
+    buttons[0]->SetVisible( false ); buttons[1]->SetEnabled( custom ); buttons[2]->SetEnabled( custom );
+    hint->SetText( custom ? "#HL2MP_HudDragHint" : "#HL2MP_HudDefaultHint" ); if ( !enginevgui->IsGameUIVisible() && Plat_FloatTime() - openedAt > .5 ) Close( false );
 }
 void CHudEditor::PerformLayout()
 {
@@ -382,13 +500,15 @@ void CHudEditor::PerformLayout()
     combos[2]->SetBounds( margin + leftW / 2, margin, leftW / 2, int( 32 * s ) );
     combos[0]->SetBounds( width - side - margin, int( 65 * s ), side, int( 38 * s ) ); combos[1]->SetBounds( margin, int( 65 * s ), leftW / 2, int( 38 * s ) );
     for ( int i = 0; i < 3; ++i ) combos[i]->Style( font, s );
-    buttons[0]->SetBounds( margin + leftW / 2 + 8, int( 65 * s ), leftW / 4 - 8, int( 38 * s ) ); buttons[1]->SetBounds( margin + leftW * 3 / 4 + 4, int( 65 * s ), leftW / 4 - 4, int( 38 * s ) );
+    saveSlot->SetBounds( margin + leftW / 2 + 8, int( 65 * s ), leftW / 4 - 8, int( 38 * s ) ); saveSlot->Style( font, s );
+    buttons[1]->SetBounds( margin + leftW * 3 / 4 + 4, int( 65 * s ), leftW / 4 - 4, int( 38 * s ) );
+    for ( int i = 0; i < 2; ++i ) { tabs[i]->SetBounds( width - side - margin + i * ( side / 2 + 3 ), top, side / 2 - 3, int( 32 * s ) ); tabs[i]->SetFont( font ); align[i]->SetBounds( width - side - margin + i * ( side / 2 + 3 ), top + int( 40 * s ), side / 2 - 3, int( 36 * s ) ); align[i]->SetFont( font ); }
     int ch = MIN( int( leftW * float( height ) / width ), height - top - int( 130 * s ) ); int cw = int( ch * float( width ) / height );
     canvas->SetBounds( margin + ( leftW - cw ) / 2, top + int( 12 * s ), cw, ch );
     hint->SetBounds( margin, top + ch + int( 24 * s ), leftW, int( 48 * s ) ); hint->SetFont( font ); hint->SetFgColor( Color( 180, 185, 185, 255 ) );
     hint->GetTextImage()->SetSize( hint->GetWide(), hint->GetTall() ); hint->GetTextImage()->RecalculateNewLinePositions();
-    status->SetBounds( margin, top + ch + int( 74 * s ), leftW, int( 25 * s ) ); status->SetFont( font );
-    rows->SetBounds( width - side - margin, top, side, height - top - int( 80 * s ) );
+    status->SetBounds( margin + int( 130 * s ), margin, leftW / 2 - int( 130 * s ), int( 32 * s ) ); status->SetFont( font ); status->SetFgColor( Color( 130, 215, 130, 255 ) );
+    int rowsTop = top + int( ( section == 0 ? 84 : 42 ) * s ); rows->SetBounds( width - side - margin, rowsTop, side, height - rowsTop - int( 80 * s ) );
     for ( int i = 0; i < rows->GetItemCount(); ++i ) { vgui::Panel *row = rows->GetItemPanel( rows->GetItemIDFromRow( i ) ); if ( row ) { row->SetTall( int( 62 * s ) ); row->InvalidateLayout( true ); } }
     for ( int i = 0; i < 7; ++i ) buttons[i]->SetFont( font );
     int by = height - int( 58 * s ), bw = ( width - margin * 6 ) / 5;
@@ -398,54 +518,88 @@ void CHudEditor::PaintBackground() { Rect( 0, 0, GetWide(), GetTall(), Color( 20
 void CHudEditor::Select( int part ) { selected = clamp( part, 0, HUD_PARTS - 1 ); reading = true; combos[0]->ActivateItemByRow( selected ); reading = false; BuildRows(); }
 void CHudEditor::ComboChanged( vgui::Panel *panel )
 {
-    if ( reading ) return;
+    if ( reading || !IsVisible() ) return;
     if ( panel == combos[0] ) { selected = clamp( combos[0]->GetActiveItem(), 0, HUD_PARTS - 1 ); BuildRows(); if ( !canvas->dragging ) canvas->FocusSelection(); }
+    else if ( panel == combos[1] ) { if ( combos[1]->GetActiveItem() != 4 || !cl_custom_hud.GetBool() ) ChoosePreset( combos[1]->GetActiveItem() ); }
     else if ( panel == combos[2] ) canvas->SetZoom( combos[2]->GetActiveItem() );
 }
 int CHudEditor::Property( int id )
 {
     const HL2MPHudElementStyle &p = s_Layout.parts[selected];
     if ( id == 0 ) return int( p.x * 100 ); if ( id == 1 ) return int( p.y * 100 ); if ( id == 2 ) return int( p.w * 100 ); if ( id == 3 ) return int( p.h * 100 ); if ( id == 4 ) return int( p.textScale * 100 );
+    if ( id == 8 || id == 12 ) return int( ( id == 8 ? p.foreground.a() : p.background.a() ) * 100.f / 255 + .5f );
     if ( id < 9 ) return p.foreground[id - 5]; if ( id < 13 ) return p.background[id - 9];
     switch ( id ) { case 13:return p.visible; case 14:return p.labels; case 15:return p.numbers; case 16:return p.bars; case 17:return p.font; case 18:return s_Layout.crossShape; case 19:return s_Layout.crossGap; case 20:return s_Layout.crossLength; case 21:return s_Layout.crossThickness; case 22:return s_Layout.crossOutline; case 23:return s_Layout.crossDot; case 24:return s_Layout.lowHealth; } return 0;
 }
 void CHudEditor::SetProperty( int id, int v )
 {
-    HL2MPHudElementStyle &p = s_Layout.parts[selected];
+    if ( Property( id ) == v || !cl_custom_hud.GetBool() ) return;
+    Edited(); HL2MPHudElementStyle &p = s_Layout.parts[selected];
     if ( id == 0 ) p.x = v / 100.0f; else if ( id == 1 ) p.y = v / 100.0f; else if ( id == 2 ) p.w = v / 100.0f; else if ( id == 3 ) p.h = v / 100.0f; else if ( id == 4 ) p.textScale = v / 100.0f;
+    else if ( id == 8 || id == 12 ) { if ( id == 8 ) p.foreground[3] = int( v * 2.55f + .5f ); else p.background[3] = int( v * 2.55f + .5f ); }
     else if ( id < 9 ) p.foreground[id - 5] = v; else if ( id < 13 ) p.background[id - 9] = v;
-    else switch ( id ) { case 13:p.visible = v != 0;break; case 14:p.labels = v != 0;break; case 15:p.numbers = v != 0;break; case 16:p.bars = v != 0;break; case 17:p.font = v;break; case 18:s_Layout.crossShape = v;break; case 19:s_Layout.crossGap = v;break; case 20:s_Layout.crossLength = v;break; case 21:s_Layout.crossThickness = v;break; case 22:s_Layout.crossOutline = v != 0;break; case 23:s_Layout.crossDot = v != 0;break; case 24:s_Layout.lowHealth = v != 0;break; }
+    else switch ( id ) { case 13:p.visible = !CanHide( selected ) || v != 0;break; case 14:p.labels = v != 0;break; case 15:p.numbers = v != 0;break; case 16:p.bars = v != 0;break; case 17:p.font = v;break; case 18:s_Layout.crossShape = v;break; case 19:s_Layout.crossGap = v;break; case 20:s_Layout.crossLength = v;break; case 21:s_Layout.crossThickness = v;break; case 22:s_Layout.crossOutline = v != 0;break; case 23:s_Layout.crossDot = v != 0;break; case 24:s_Layout.lowHealth = v != 0;break; }
     canvas->Repaint();
 }
 void CHudEditor::BuildRows()
 {
     reading = true; rows->DeleteAllItems();
-    for ( int i = 0; i < ARRAYSIZE( properties ); ++i )
+    if ( section == 1 )
     {
+        CColorRow *fg = new CColorRow( rows, false ); fg->SetFont( font ); fg->SetTall( 62 ); rows->AddItem( NULL, fg );
+        if ( selected != HUD_CROSSHAIR ) { CColorRow *bg = new CColorRow( rows, true ); bg->SetFont( font ); bg->SetTall( 62 ); rows->AddItem( NULL, bg ); }
+    }
+    const int layout[] = { 0, 1, 2, 3 };
+    const int appearance[] = { 4, 17, 8, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24 };
+    const int *list = section ? appearance : layout; const int count = section ? ARRAYSIZE( appearance ) : ARRAYSIZE( layout );
+    for ( int n = 0; n < count; ++n )
+    {
+        int i = list[n];
         if ( i >= 18 && i <= 23 && selected != HUD_CROSSHAIR ) continue;
         if ( i == 24 && selected != HUD_HEALTH ) continue;
+        if ( i == 13 && !CanHide( selected ) ) continue;
         if ( selected >= HUD_CROSSHAIR && i >= 14 && i <= 16 && !( selected == HUD_MATCH && i == 14 ) ) continue;
-        if ( selected == HUD_CROSSHAIR && ( ( i >= 9 && i <= 12 ) || i == 17 ) ) continue;
+        if ( selected == HUD_CROSSHAIR && ( i == 12 || i == 17 || i == 2 || i == 3 ) ) continue;
         int low = i == 2 || i == 3 ? 2 : i == 4 ? 50 : i == 20 || i == 21 ? 1 : 0;
-        int high = i < 4 ? 100 : i == 4 ? 200 : i < 13 ? 255 : i < 17 ? 1 : i == 17 ? 2 : i == 18 ? 3 : i == 19 ? 24 : i == 20 ? 32 : i == 21 ? 8 : 1;
+        int high = i < 4 || i == 8 || i == 12 ? 100 : i == 4 ? 200 : i < 13 ? 255 : i < 17 ? 1 : i == 17 ? ARRAYSIZE( s_FontFaces ) - 1 : i == 18 ? 3 : i == 19 ? 24 : i == 20 ? 32 : i == 21 ? 8 : 1;
         CEditorRow *row = new CEditorRow( rows, i, properties[i], low, high, Property( i ) ); row->SetTall( 62 ); rows->AddItem( NULL, row );
     }
     reading = false; InvalidateLayout( true );
 }
+void CHudEditor::Edited()
+{
+    cl_custom_hud.SetValue( 1 ); if ( combos[1]->GetActiveItem() != 4 ) { reading = true; combos[1]->ActivateItemByRow( 4 ); reading = false; }
+}
+void CHudEditor::ChoosePreset( int preset )
+{
+    if ( preset == 0 ) cl_custom_hud.SetValue( 0 );
+    else if ( preset <= 3 ) { Defaults( preset - 1 ); cl_custom_hud.SetValue( 1 ); }
+    else if ( preset >= 5 )
+    {
+        if ( !ReadLayout( VarArgs( "cfg/hud_profile_%d.res", clamp( preset - 4, 1, 5 ) ) ) ) { status->SetText( "#HL2MP_HudSlotEmpty" ); reading = true; combos[1]->ActivateItemByRow( cl_custom_hud.GetBool() ? 4 : 0 ); reading = false; return; }
+        cl_custom_hud.SetValue( 1 );
+    }
+    else cl_custom_hud.SetValue( 1 );
+    status->SetText( "" ); BuildRows(); canvas->FocusSelection(); canvas->Repaint();
+}
+
 void CHudEditor::OnCommand( const char *command )
 {
     if ( !Q_strcmp( command, "apply" ) ) { Close( true ); return; }
     if ( !Q_strcmp( command, "cancel" ) ) { Close( false ); return; }
-    if ( !Q_strcmp( command, "enable" ) ) { cl_custom_hud.SetValue( !cl_custom_hud.GetBool() ); return; }
-    if ( !Q_strcmp( command, "reset_all" ) ) Defaults( 0 );
-    else if ( !Q_strcmp( command, "reset_element" ) ) { Layout old = s_Layout; Defaults( 0 ); Layout fresh = s_Layout; s_Layout = old; s_Layout.parts[selected] = fresh.parts[selected]; if ( selected == HUD_CROSSHAIR ) { s_Layout.crossShape = fresh.crossShape; s_Layout.crossGap = fresh.crossGap; s_Layout.crossLength = fresh.crossLength; s_Layout.crossThickness = fresh.crossThickness; s_Layout.crossOutline = fresh.crossOutline; s_Layout.crossDot = fresh.crossDot; } if ( selected == HUD_HEALTH ) s_Layout.lowHealth = fresh.lowHealth; }
-    else if ( !Q_strcmp( command, "load" ) )
+    if ( !Q_strcmp( command, "layout" ) || !Q_strcmp( command, "appearance" ) ) { section = !Q_strcmp( command, "appearance" ); BuildRows(); return; }
+    if ( !Q_strcmp( command, "color_fg" ) || !Q_strcmp( command, "color_bg" ) ) { picker->Open( !Q_strcmp( command, "color_bg" ) ? &s_Layout.parts[selected].background : &s_Layout.parts[selected].foreground ); return; }
+    if ( !Q_strcmp( command, "vote_preview" ) ) { HL2MPVoteUI_Preview(); return; }
+    if ( !Q_strcmp( command, "center_x" ) || !Q_strcmp( command, "center_y" ) )
     {
-        int preset = combos[1]->GetActiveItem(); if ( preset < 3 ) Defaults( preset );
-        else if ( !ReadLayout( VarArgs( "cfg/hud_profile_%d.res", clamp( preset - 2, 1, 5 ) ) ) ) status->SetText( "#HL2MP_HudSlotEmpty" );
+        Edited(); HL2MPHudElementStyle &p = s_Layout.parts[selected];
+        if ( !Q_strcmp( command, "center_x" ) ) p.x = selected == HUD_CROSSHAIR ? .5f : ( 1 - p.w ) / 2;
+        else p.y = selected == HUD_CROSSHAIR ? .5f : ( 1 - p.h ) / 2;
+        canvas->FocusSelection(); BuildRows(); return;
     }
-    else if ( !Q_strcmp( command, "save" ) )
-    { int preset = combos[1]->GetActiveItem(); if ( preset < 3 ) status->SetText( "#HL2MP_HudPickSlot" ); else status->SetText( SaveLayout( VarArgs( "cfg/hud_profile_%d.res", clamp( preset - 2, 1, 5 ) ) ) ? "#HL2MP_HudSaved" : "#HL2MP_HudSaveFailed" ); }
+    if ( !Q_strcmp( command, "reset_all" ) ) { Defaults( 0 ); reading = true; combos[1]->ActivateItemByRow( 0 ); reading = false; ChoosePreset( 0 ); return; }
+    else if ( !Q_strcmp( command, "reset_element" ) ) { Edited(); Layout old = s_Layout; Defaults( 0 ); Layout fresh = s_Layout; s_Layout = old; s_Layout.parts[selected] = fresh.parts[selected]; if ( selected == HUD_CROSSHAIR ) { s_Layout.crossShape = fresh.crossShape; s_Layout.crossGap = fresh.crossGap; s_Layout.crossLength = fresh.crossLength; s_Layout.crossThickness = fresh.crossThickness; s_Layout.crossOutline = fresh.crossOutline; s_Layout.crossDot = fresh.crossDot; } if ( selected == HUD_HEALTH ) s_Layout.lowHealth = fresh.lowHealth; }
+    else if ( !Q_strcmp( command, "save" ) ) status->SetText( SaveLayout( VarArgs( "cfg/hud_profile_%d.res", clamp( saveSlot->GetActiveItem() + 1, 1, 5 ) ) ) ? "#HL2MP_HudSaved" : "#HL2MP_HudSaveFailed" );
     else { BaseClass::OnCommand( command ); return; }
     BuildRows();
 }
@@ -460,19 +614,19 @@ vgui::HFont HL2MPHudFont( int part, int pixels, bool bold )
 {
     int face = HL2MPHudStyle( part ).font; pixels = clamp( pixels, 8, 96 );
     FOR_EACH_VEC( s_Fonts, i ) if ( s_Fonts[i].face == face && s_Fonts[i].pixels == pixels && s_Fonts[i].bold == bold ) return s_Fonts[i].handle;
-    Font f = { vgui::surface()->CreateFont(), face, pixels, bold }; const char *names[] = { "Tahoma", "Arial", "Consolas" };
-    vgui::surface()->SetFontGlyphSet( f.handle, names[face], pixels, bold ? 700 : 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS | vgui::ISurface::FONTFLAG_DROPSHADOW ); s_Fonts.AddToTail( f ); return f.handle;
+    Font f = { vgui::surface()->CreateFont(), face, pixels, bold };
+    vgui::surface()->SetFontGlyphSet( f.handle, s_FontFaces[face], pixels, bold ? 700 : 400, 0, 0, vgui::ISurface::FONTFLAG_ANTIALIAS | vgui::ISurface::FONTFLAG_DROPSHADOW ); s_Fonts.AddToTail( f ); return f.handle;
 }
 bool HL2MPHudCustomEnabled() { return cl_custom_hud.GetBool(); }
 bool HL2MPHudReplaces( const char *name )
 {
     if ( !HL2MPHudCustomEnabled() ) return false;
-    const char *names[] = { "CHudHealth", "CHudBattery", "CHudAmmo", "CHudSecondaryAmmo", "CHudSuitPower", "CHudServerInfo", "CHUDQuickInfo" };
+    const char *names[] = { "CHudHealth", "CHudBattery", "CHudAmmo", "CHudSecondaryAmmo", "CHudSuitPower", "CHudServerInfo" };
     for ( int i = 0; i < ARRAYSIZE( names ); ++i ) if ( !Q_strcmp( name, names[i] ) ) return true; return false;
 }
 bool HL2MPHudDrawCrosshair( int centerX, int centerY )
 {
-    if ( !HL2MPHudCustomEnabled() ) return false; const HL2MPHudElementStyle &p = HL2MPHudStyle( HUD_CROSSHAIR ); if ( !p.visible ) return true;
+    if ( !HL2MPHudCustomEnabled() ) return false; const HL2MPHudElementStyle &p = HL2MPHudStyle( HUD_CROSSHAIR );
     int sw, sh; vgui::surface()->GetScreenSize( sw, sh );
     Crosshair( centerX + int( ( p.x - .5f ) * sw ), centerY + int( ( p.y - .5f ) * sh ), MIN( sw / 1280.0f, sh / 720.0f ) * p.textScale ); return true;
 }

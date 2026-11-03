@@ -1,14 +1,22 @@
 HUD editor
-The original game HUD is the default. Enable Custom HUD in the editor to opt in.
+The original game HUD is selected with the Default preset. Choosing Classic,
+Compact or Minimal enables customization. There is no separate enable button.
 Open Options > HUD Editor, or bind hud_editor in Keyboard / Mouse.
-Drag elements and their corner handles; the right-hand controls set position,
-size, text size, font, foreground/background colors and opacity. Relevant
-elements also offer labels, values, bars and crosshair controls.
-Classic, Compact and Minimal are built-in layouts. Five custom slots are saved
-locally. Apply writes cfg/hud_layout.res; Cancel restores the opening layout.
+Drag elements and their corner handles. Layout has position, size and one-click
+horizontal/vertical centering. Appearance has a color picker (hue, saturation,
+brightness, palette swatches and hex input), opacity and eight font choices.
+Relevant elements also offer labels, values, bars and crosshair controls.
+Chat, votes and crosshair have no visibility switches in the HUD editor; old
+layouts cannot hide them. Crosshair enable and HUD Quick Info are in Game options.
+Five custom slots are saved locally with the separate slot selector. Picking a
+preset previews it immediately. Apply writes cfg/hud_layout.res; Cancel restores
+the opening layout and HUD selection. Saved slots remain saved after Cancel.
 User layouts and presets are excluded from release packages.
 Preview zoom offers Fit, 100% and 200%; right-drag pans the zoomed view.
 Killfeed samples use the in-game death-notice renderer and weapon/skull icons.
+Vote Preview opens the real vote panel with isolated sample names and counts.
+Yes/No keys simulate a local choice; no request or ballot is sent to the server.
+Close it with Escape or X to keep editing.
 HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
 
 Voting

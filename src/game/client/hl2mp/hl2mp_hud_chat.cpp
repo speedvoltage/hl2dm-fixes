@@ -181,7 +181,7 @@ void CHudChat::OnTick( void )
 	if ( custom && GetChatHistory() )
 	{
 		GetChatHistory()->SetBgColor( HL2MPHudStyle( HUD_CHAT ).background );
-		GetChatHistory()->SetAlpha( HL2MPHudStyle( HUD_CHAT ).visible || active ? 255 : 0 );
+        GetChatHistory()->SetAlpha( 255 );
 	}
 }
 

@@ -16,6 +16,9 @@
 #include "vgui/ISurface.h"
 #include "../hud_crosshair.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
+#ifdef HL2MP
+#include "hl2mp/ui/hl2mp_hud_customization.h"
+#endif
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -265,6 +268,13 @@ void CHUDQuickInfo::Paint()
 
 	int		xCenter	= (int)fX;
 	int		yCenter = (int)fY - m_icon_lb->Height() / 2;
+#ifdef HL2MP
+	if ( HL2MPHudCustomEnabled() )
+	{
+		xCenter += int( ( HL2MPHudStyle( HUD_CROSSHAIR ).x - .5f ) * ScreenWidth() );
+		yCenter += int( ( HL2MPHudStyle( HUD_CROSSHAIR ).y - .5f ) * ScreenHeight() );
+	}
+#endif
 
 	float	scalar  = 138.0f/255.0f;
 	
@@ -322,7 +332,10 @@ void CHUDQuickInfo::Paint()
 
 	Color clrNormal = gHUD.m_clrNormal;
 	clrNormal[3] = 255 * scalar;
-	m_icon_c->DrawSelf( xCenter, yCenter, clrNormal );
+#ifdef HL2MP
+	if ( !HL2MPHudCustomEnabled() )
+#endif
+		m_icon_c->DrawSelf( xCenter, yCenter, clrNormal );
 
 	if( IsX360() )
 	{
