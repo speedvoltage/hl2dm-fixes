@@ -7,13 +7,14 @@ struct HL2MPHudElementStyle
 {
     float x, y, w, h, textScale;
     Color foreground, background;
-    bool visible, labels, bars, numbers;
+    bool visible, labels, bars, numbers, fitContent;
     int font;
 };
 const HL2MPHudElementStyle &HL2MPHudStyle( int part );
-void HL2MPHudBounds( int part, int screenW, int screenH, int &x, int &y, int &w, int &h );
+void HL2MPHudBounds( int part, int screenW, int screenH, int &x, int &y, int &w, int &h, bool preview = false );
 vgui::HFont HL2MPHudFont( int part, int pixels, bool bold = false );
 bool HL2MPHudCustomEnabled();
+bool HL2MPHudCustomCrosshairEnabled();
 bool HL2MPHudReplaces( const char *element );
 void HL2MPHudCustomization_Init();
 void HL2MPHudEditor_Open();

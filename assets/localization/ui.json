@@ -5705,6 +5705,24 @@
       "contexts": [
         "Vote result"
       ]
+    },
+    "HL2MP_HudCrosshairOnly": {
+      "english": "Crosshair only",
+      "contexts": [
+        "HUD customization"
+      ]
+    },
+    "HL2MP_HudFitContent": {
+      "english": "Fit panel to contents",
+      "contexts": [
+        "HUD customization"
+      ]
+    },
+    "HL2MP_HudCrosshairOnlyHint": {
+      "english": "Custom crosshair. Original game HUD.",
+      "contexts": [
+        "HUD customization"
+      ]
     }
   },
   "languages": {
@@ -6659,7 +6677,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "علامة التصويب فقط",
+      "HL2MP_HudFitContent": "ملاءمة اللوحة للمحتوى",
+      "HL2MP_HudCrosshairOnlyHint": "علامة تصويب مخصصة. واجهة اللعبة الأصلية."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7612,7 +7633,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Somente mira",
+      "HL2MP_HudFitContent": "Ajustar painel ao conteúdo",
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8565,7 +8589,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Само мерник",
+      "HL2MP_HudFitContent": "Размер на панела според съдържанието",
+      "HL2MP_HudCrosshairOnlyHint": "Персонализиран мерник. Оригинален интерфейс на играта."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9518,7 +9545,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Pouze zaměřovač",
+      "HL2MP_HudFitContent": "Přizpůsobit panel obsahu",
+      "HL2MP_HudCrosshairOnlyHint": "Vlastní zaměřovač. Původní HUD hry."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10471,7 +10501,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Kun sigtekorn",
+      "HL2MP_HudFitContent": "Tilpas panel til indhold",
+      "HL2MP_HudCrosshairOnlyHint": "Tilpasset sigtekorn. Spillets oprindelige HUD."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11424,7 +11457,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Alleen dradenkruis",
+      "HL2MP_HudFitContent": "Paneel aan inhoud aanpassen",
+      "HL2MP_HudCrosshairOnlyHint": "Aangepast dradenkruis. Oorspronkelijke spel-HUD."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12377,7 +12413,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Vain tähtäin",
+      "HL2MP_HudFitContent": "Sovita paneeli sisältöön",
+      "HL2MP_HudCrosshairOnlyHint": "Mukautettu tähtäin. Pelin alkuperäinen HUD."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13330,7 +13369,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Réticule uniquement",
+      "HL2MP_HudFitContent": "Adapter le cadre au contenu",
+      "HL2MP_HudCrosshairOnlyHint": "Réticule personnalisé. HUD original du jeu."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14283,7 +14325,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Nur Fadenkreuz",
+      "HL2MP_HudFitContent": "Rahmen an Inhalt anpassen",
+      "HL2MP_HudCrosshairOnlyHint": "Eigenes Fadenkreuz. Originales Spiel-HUD."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15236,7 +15281,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Μόνο σταυρόνημα",
+      "HL2MP_HudFitContent": "Προσαρμογή πλαισίου στο περιεχόμενο",
+      "HL2MP_HudCrosshairOnlyHint": "Προσαρμοσμένο σταυρόνημα. Αρχικό HUD του παιχνιδιού."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16189,7 +16237,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Csak célkereszt",
+      "HL2MP_HudFitContent": "Panel igazítása a tartalomhoz",
+      "HL2MP_HudCrosshairOnlyHint": "Egyéni célkereszt. A játék eredeti HUD-ja."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17142,7 +17193,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Hanya bidikan",
+      "HL2MP_HudFitContent": "Sesuaikan panel dengan isi",
+      "HL2MP_HudCrosshairOnlyHint": "Bidikan kustom. HUD asli game."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18095,7 +18149,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Solo mirino",
+      "HL2MP_HudFitContent": "Adatta il riquadro al contenuto",
+      "HL2MP_HudCrosshairOnlyHint": "Mirino personalizzato. HUD originale del gioco."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19048,7 +19105,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "クロスヘアのみ",
+      "HL2MP_HudFitContent": "パネルを内容に合わせる",
+      "HL2MP_HudCrosshairOnlyHint": "カスタムクロスヘア。HUDはゲーム標準のまま。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20001,7 +20061,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "조준점만",
+      "HL2MP_HudFitContent": "내용에 맞게 패널 크기 조절",
+      "HL2MP_HudCrosshairOnlyHint": "사용자 지정 조준점. 게임 기본 HUD 유지."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -20954,7 +21017,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Solo mira",
+      "HL2MP_HudFitContent": "Ajustar panel al contenido",
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -21907,7 +21973,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Retikel sahaja",
+      "HL2MP_HudFitContent": "Sesuaikan panel dengan kandungan",
+      "HL2MP_HudCrosshairOnlyHint": "Retikel tersuai. HUD asal permainan."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -22860,7 +22929,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Kun siktekors",
+      "HL2MP_HudFitContent": "Tilpass panel til innhold",
+      "HL2MP_HudCrosshairOnlyHint": "Tilpasset siktekors. Spillets opprinnelige HUD."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -23813,7 +23885,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Tylko celownik",
+      "HL2MP_HudFitContent": "Dopasuj panel do zawartości",
+      "HL2MP_HudCrosshairOnlyHint": "Własny celownik. Oryginalny HUD gry."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -24766,7 +24841,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Apenas mira",
+      "HL2MP_HudFitContent": "Ajustar painel ao conteúdo",
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -25719,7 +25797,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Doar ținta",
+      "HL2MP_HudFitContent": "Potrivește panoul cu conținutul",
+      "HL2MP_HudCrosshairOnlyHint": "Țintă personalizată. HUD-ul original al jocului."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -26672,7 +26753,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Только прицел",
+      "HL2MP_HudFitContent": "Размер панели по содержимому",
+      "HL2MP_HudCrosshairOnlyHint": "Свой прицел. Исходный интерфейс игры."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -27625,7 +27709,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "仅自定义准星",
+      "HL2MP_HudFitContent": "面板适应内容",
+      "HL2MP_HudCrosshairOnlyHint": "自定义准星，保留游戏原版HUD。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -28578,7 +28665,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Solo mira",
+      "HL2MP_HudFitContent": "Ajustar panel al contenido",
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -29531,7 +29621,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Endast hårkors",
+      "HL2MP_HudFitContent": "Anpassa panelen till innehållet",
+      "HL2MP_HudCrosshairOnlyHint": "Anpassat hårkors. Spelets ursprungliga HUD."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -30484,7 +30577,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "僅自訂準星",
+      "HL2MP_HudFitContent": "面板配合內容大小",
+      "HL2MP_HudCrosshairOnlyHint": "自訂準星，保留遊戲原版HUD。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -31437,7 +31533,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "ปรับแต่งเฉพาะเป้าเล็ง",
+      "HL2MP_HudFitContent": "ปรับกรอบให้พอดีกับเนื้อหา",
+      "HL2MP_HudCrosshairOnlyHint": "เป้าเล็งแบบกำหนดเอง ใช้ HUD ดั้งเดิมของเกม"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -32390,7 +32489,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Yalnızca nişangâh",
+      "HL2MP_HudFitContent": "Paneli içeriğe sığdır",
+      "HL2MP_HudCrosshairOnlyHint": "Özel nişangâh. Oyunun özgün HUD arayüzü."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -33343,7 +33445,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Лише приціл",
+      "HL2MP_HudFitContent": "Розмір панелі за вмістом",
+      "HL2MP_HudCrosshairOnlyHint": "Власний приціл. Оригінальний інтерфейс гри."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -34296,7 +34401,10 @@
       "HL2MP_VoteChooseHint": "Choose Yes or No with the keys shown.",
       "HL2MP_VoteRemoveResult": "Vote passed to remove {0}.",
       "HL2MP_VoteStayResult": "{0} stays in the game.",
-      "HL2MP_VoteComplete": "Voting finished."
+      "HL2MP_VoteComplete": "Voting finished.",
+      "HL2MP_HudCrosshairOnly": "Chỉ tâm ngắm",
+      "HL2MP_HudFitContent": "Vừa khung với nội dung",
+      "HL2MP_HudCrosshairOnlyHint": "Tâm ngắm tùy chỉnh. HUD gốc của trò chơi."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

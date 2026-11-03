@@ -269,7 +269,7 @@ void CHUDQuickInfo::Paint()
 	int		xCenter	= (int)fX;
 	int		yCenter = (int)fY - m_icon_lb->Height() / 2;
 #ifdef HL2MP
-	if ( HL2MPHudCustomEnabled() )
+	if ( HL2MPHudCustomCrosshairEnabled() )
 	{
 		xCenter += int( ( HL2MPHudStyle( HUD_CROSSHAIR ).x - .5f ) * ScreenWidth() );
 		yCenter += int( ( HL2MPHudStyle( HUD_CROSSHAIR ).y - .5f ) * ScreenHeight() );
@@ -333,7 +333,7 @@ void CHUDQuickInfo::Paint()
 	Color clrNormal = gHUD.m_clrNormal;
 	clrNormal[3] = 255 * scalar;
 #ifdef HL2MP
-	if ( !HL2MPHudCustomEnabled() )
+	if ( !HL2MPHudCustomCrosshairEnabled() )
 #endif
 		m_icon_c->DrawSelf( xCenter, yCenter, clrNormal );
 

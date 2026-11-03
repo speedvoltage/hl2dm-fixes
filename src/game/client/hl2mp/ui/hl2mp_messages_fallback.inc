@@ -974,4 +974,7 @@ static const Message s_Messages[] = {
     { "HL2MP_VoteRemoveResult", "Vote passed to remove {0}.", "Vote passed to remove %s." },
     { "HL2MP_VoteStayResult", "{0} stays in the game.", "%s stays in the game." },
     { "HL2MP_VoteComplete", "Voting finished.", NULL },
+    { "HL2MP_HudCrosshairOnly", "Crosshair only", NULL },
+    { "HL2MP_HudFitContent", "Fit panel to contents", NULL },
+    { "HL2MP_HudCrosshairOnlyHint", "Custom crosshair. Original game HUD.", NULL },
 };
