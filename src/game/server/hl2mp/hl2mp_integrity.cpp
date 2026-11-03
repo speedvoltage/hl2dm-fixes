@@ -21,7 +21,7 @@ void Reject( CHL2MP_Player *player, const char *reason )
 {
     // Reason strings are fixed server-owned text, never client input.
     char command[256];
-    Q_snprintf( command, sizeof( command ), "kickid %d \"%s\"\n", player->GetUserID(), reason );
+    Q_snprintf( command, sizeof( command ), "kickid %d %s\n", player->GetUserID(), reason );
     engine->ServerCommand( command );
     Msg( "Multiplayer integrity: rejected userid %d (%s)\n", player->GetUserID(), reason );
 }
@@ -44,7 +44,7 @@ public:
             if ( !player || !player->IsConnected() ) { slot = Admission(); continue; }
             if ( Plat_FloatTime() >= slot.deadline )
             {
-                Reject( player, "Multiplayer integrity verification timed out. Update the mod and restart." );
+                Reject( player, "#HL2MP_IntegrityTimeout" );
                 slot = Admission();
             }
             else if ( !slot.sent )
@@ -81,7 +81,7 @@ void HL2MPIntegrity_Reply( CHL2MP_Player *player, KeyValues *message )
     slot = Admission();
     if ( message->GetInt( "protocol" ) != HL2MP_INTEGRITY_PROTOCOL || !message->GetBool( "ready" ) )
     {
-        Reject( player, "Multiplayer integrity failed. Restore gameinfo.txt, verify the mod files and restart." );
+        Reject( player, "#HL2MP_IntegrityFailed" );
         return;
     }
     // This handshake enforces use of the checking client, not remote attestation:

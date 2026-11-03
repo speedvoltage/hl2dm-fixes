@@ -1,4 +1,5 @@
 #include "cbase.h"
+#include "hl2mp_messages.h"
 #include "cdll_client_int.h"
 #include "c_baseplayer.h"
 #include "inetchannelinfo.h"
@@ -542,7 +543,7 @@ void CHL2MPCoordinator::ReadLastMatch( KeyValues *last )
 	if ( finished && ranked && last->FindKey( "rating" ) )
 		Q_snprintf( m_ResultDetails, sizeof( m_ResultDetails ), "Rating: %d (%+d). Ready for another match.", last->GetInt( "rating" ), last->GetInt( "rating_change" ) );
 	else if ( !finished )
-		Q_snprintf( m_ResultDetails, sizeof( m_ResultDetails ), "%s. %s", last->GetString( "reason", "The match ended" ), ranked ? "Your rating is unchanged." : "" );
+		HL2MPMessageText( HL2MPMatchReasonToken( last->GetString( "reason", "" ) ), m_ResultDetails, sizeof( m_ResultDetails ) );
 	else Q_strncpy( m_ResultDetails, !Q_strcmp( mode, "casual" ) ? "No ranking. Play another round whenever you like." : "Match complete. Ready for another match.", sizeof( m_ResultDetails ) );
 }
 

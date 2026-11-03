@@ -43,3 +43,4 @@ protoc binary
 ccache binary
 
 *_english.txt binary
+game/mod_hl2mp/resource/hl2mp_messages_*.txt binary

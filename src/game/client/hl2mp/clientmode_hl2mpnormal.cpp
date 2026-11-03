@@ -25,6 +25,7 @@
 #include "clienteffectprecachesystem.h"
 #include "hl2mp_mainmenu.h"
 #include "hl2mp_loading.h"
+#include "hl2mp_messages.h"
 #include "hl2mp_community.h"
 #include "view_shared.h"
 
@@ -159,6 +160,7 @@ ClientModeHL2MPNormal::~ClientModeHL2MPNormal()
 void ClientModeHL2MPNormal::Init()
 {
 	BaseClass::Init();
+	HL2MPMessages_Init();
 	HL2MPMainMenu_Create();
 	HL2MPCommunity_Init();
 	HL2MPIntegrity_Init();

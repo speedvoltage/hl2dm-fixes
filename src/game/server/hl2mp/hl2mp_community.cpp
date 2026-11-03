@@ -219,7 +219,7 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
             // Only server-derived numeric identities reach the engine command buffer.
             engine->ServerCommand( UTIL_VarArgs( "banid %d STEAM_0:%u:%u\nwriteid\n", minutes, id->GetAccountID() & 1, id->GetAccountID() >> 1 ) );
         }
-        engine->ServerCommand( UTIL_VarArgs( "kickid %d Removed_by_server_admin\n", userID ) );
+        engine->ServerCommand( UTIL_VarArgs( "kickid %d #HL2MP_AdminRemoved\n", userID ) );
         State( player, !Q_strcmp( action, "ban" ) ? "Player banned." : "Player kicked." ); return;
     }
     State( player, "Unknown server action." );

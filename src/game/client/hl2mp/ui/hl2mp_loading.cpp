@@ -1,5 +1,7 @@
 #include "cbase.h"
 #include "hl2mp_loading.h"
+#include "hl2mp_messages.h"
+#include "vgui/ILocalize.h"
 #include "GameUI/IGameUI.h"
 #include "GameEventListener.h"
 #include "filesystem.h"
@@ -13,6 +15,34 @@
 
 namespace
 {
+vgui::VPANEL ChildNamed( vgui::VPANEL parent, const char *name )
+{
+    for ( int i = 0; i < vgui::ipanel()->GetChildCount( parent ); ++i )
+    {
+        vgui::VPANEL child = vgui::ipanel()->GetChild( parent, i );
+        if ( !Q_stricmp( vgui::ipanel()->GetName( child ), name ) ) return child;
+    }
+    return 0;
+}
+
+vgui::VPANEL ErrorDialog()
+{
+    for ( int i = 0; i < vgui::surface()->GetPopupCount(); ++i )
+    {
+        vgui::VPANEL popup = vgui::surface()->GetPopup( i );
+        if ( !vgui::ipanel()->IsVisible( popup ) || Q_stricmp( vgui::ipanel()->GetName( popup ), "LoadingDialog" ) ) continue;
+        vgui::VPANEL progress = ChildNamed( popup, "Progress" ), info = ChildNamed( popup, "InfoLabel" );
+        if ( progress && info && !vgui::ipanel()->IsVisible( progress ) && vgui::ipanel()->IsVisible( info ) ) return popup;
+    }
+    return 0;
+}
+
+void SetPanelText( vgui::VPANEL panel, const char *token )
+{
+    KeyValuesAD message( "SetText" ); message->SetString( "text", token );
+    vgui::ipanel()->SendMessage( panel, message, 0 );
+}
+
 struct LoadingContext
 {
     char map[128], mode[32], server[256];
@@ -61,7 +91,7 @@ class CHL2MPLoading : public vgui::EditablePanel, public CGameEventListener
     DECLARE_CLASS_SIMPLE( CHL2MPLoading, vgui::EditablePanel );
 public:
     explicit CHL2MPLoading( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPLoading" ), m_GameUI( gameUI ),
-        m_Texture( -1 ), m_MapIndex( -1 ), m_FontWidth( 0 ), m_FontHeight( 0 ), m_TipIndex( 0 ), m_Active( false )
+        m_Texture( -1 ), m_MapIndex( -1 ), m_FontWidth( 0 ), m_FontHeight( 0 ), m_TipIndex( 0 ), m_Active( false ), m_ErrorDialog( 0 )
     {
         memset( &m_Context, 0, sizeof( m_Context ) );
         SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
@@ -175,6 +205,11 @@ public:
             surface->DrawTexturedSubRect( 0, 0, w, h, ( 1 - sx ) / 2, ( 1 - sy ) / 2, ( 1 + sx ) / 2, ( 1 + sy ) / 2 );
         }
         surface->DrawSetColor( Color( 5, 10, 14, 255 ) );
+        if ( ErrorDialog() )
+        {
+            surface->DrawSetColor( Color( 0, 0, 0, 145 ) ); surface->DrawFilledRect( 0, 0, w, h );
+            return;
+        }
         surface->DrawFilledRectFade( 0, 0, w, int( 200 * s ), 200, 0, false );
         surface->DrawFilledRectFade( 0, 0, w, h, 90, 0, true );
         const int deck = h - MAX( 190, int( 238 * s ) );
@@ -188,6 +223,38 @@ public:
         BaseClass::OnThink();
         int w, h; vgui::surface()->GetScreenSize( w, h );
         if ( w != GetWide() || h != GetTall() ) InvalidateLayout( true, true );
+        const vgui::VPANEL error = ErrorDialog();
+        for ( int i = 0; i < GetChildCount(); ++i ) GetChild( i )->SetVisible( !error );
+        if ( error && error != m_ErrorDialog )
+        {
+            // Keep native error data/actions intact; only arrange the controls.
+            // Generic errors size themselves to their wrapped message first.
+            int width, height; vgui::ipanel()->GetSize( error, width, height );
+            width = MIN( width, w - 40 ); height = MIN( h - 40, MAX( 236, height + 22 ) );
+            vgui::ipanel()->SetSize( error, width, height );
+            vgui::ipanel()->SetPos( error, ( w - width ) / 2, ( h - height ) / 2 );
+            vgui::VPANEL info = ChildNamed( error, "InfoLabel" ), button = ChildNamed( error, "CancelButton" );
+            vgui::ipanel()->SetPos( info, 28, 78 ); vgui::ipanel()->SetSize( info, width - 56, height - 142 );
+            if ( button )
+            {
+                KeyValuesAD label( "GetText" );
+                vgui::ipanel()->RequestInfo( button, label );
+                const wchar_t *login = g_pVGuiLocalize->Find( "#GameUI_RefreshLogin_Login" );
+                const bool signIn = login && !wcscmp( label->GetWString( "text", L"" ), login );
+                SetPanelText( button, signIn ? "#HL2MP_SignIn" : "#HL2MP_OK" );
+                vgui::ipanel()->SetPos( button, width - 168, height - 64 );
+                vgui::ipanel()->SetSize( button, 140, 36 );
+            }
+            // Older servers sent identifiers instead of readable reasons.
+            // Never use this short native text query to replace arbitrary long
+            // errors: preserve their complete engine-owned text and support URLs.
+            KeyValuesAD label( "GetText" );
+            vgui::ipanel()->RequestInfo( info, label );
+            char text[1024]; V_UnicodeToUTF8( label->GetWString( "text", L"" ), text, sizeof( text ) );
+            if ( Q_stristr( text, "Matchmaking_" ) ) SetPanelText( info, HL2MPMatchReasonToken( text ) );
+            else if ( Q_stristr( text, "Removed_by_server_admin" ) ) SetPanelText( info, "#HL2MP_AdminRemoved" );
+        }
+        m_ErrorDialog = error;
     }
 private:
     vgui::Label *Label( const char *name, const char *text )
@@ -261,6 +328,7 @@ private:
     char m_PreviousMap[128];
     int m_Texture, m_MapIndex, m_FontWidth, m_FontHeight, m_TipIndex;
     bool m_Active;
+    vgui::VPANEL m_ErrorDialog;
     vgui::Label *m_Logo, *m_Tag, *m_Mode, *m_Map, *m_Description, *m_Server, *m_TipHeading, *m_Tip;
 };
 CHL2MPLoading *s_Loading = NULL;

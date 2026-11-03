@@ -4,6 +4,7 @@
 #include "hl2mp_community.h"
 #include "hl2mp_host.h"
 #include "hl2mp_loading.h"
+#include "hl2mp_dialogs.h"
 #include "hl2mp_party.h"
 #include "hl2mp_coordinator.h"
 #include "hl2mp_menucontrols.h"
@@ -53,6 +54,7 @@ public:
 		m_Hover( 0 ), m_LastThink( Plat_FloatTime() ), m_Scale( 1 ), m_Selected( false ), m_Compact( false ), m_Texture( -1 ), m_ModeIndex( 0 )
 	{
 		SetContentAlignment( vgui::Label::a_west );
+		if ( style == NAVIGATION ) SetAllCaps( true );
 		SetButtonBorderEnabled( false );
 		DrawFocusBox( false );
 	}
@@ -275,7 +277,8 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     m_CardFont = vgui::surface()->CreateFont(); m_BodyFont = vgui::surface()->CreateFont(); m_SectionFont = vgui::surface()->CreateFont(); m_DetailFont = vgui::surface()->CreateFont();
     m_Background = vgui::surface()->CreateNewTextureID(); vgui::surface()->DrawSetTextureFile( m_Background, "vgui/matchmaking/dm_lockdown", true, false );
     m_Title = new vgui::Label( this, "Title", "deathmatch" ); m_Subtitle = new vgui::Label( this, "Subtitle", "HALF+LIFE'" );
-    m_Tag = new vgui::Label( this, "Tag", "M A T C H M A K I N G" ); m_PlayHeading = new vgui::Label( this, "PlayHeading", "PLAY" );
+    m_Tag = new vgui::Label( this, "Tag", "M A T C H M A K I N G" ); m_PlayHeading = new vgui::Label( this, "PlayHeading", "#HL2MP_Play" );
+    m_PlayHeading->SetAllCaps( true );
     m_ModeDescription = new vgui::Label( this, "ModeDescription", "" ); m_PartyHeading = new vgui::Label( this, "PartyHeading", "YOUR PARTY" );
     m_Status = new vgui::Label( this, "PartyStatus", "" ); m_QueueStatus = new vgui::Label( this, "QueueStatus", "" );
     m_ResultHeading = new vgui::Label( this, "ResultHeading", "" ); m_ResultDetails = new vgui::Label( this, "ResultDetails", "" );
@@ -302,7 +305,7 @@ CHL2MPMainMenu::CHL2MPMainMenu( IGameUI *gameUI ) : BaseClass( NULL, "HL2MPMainM
     KeyValues *listSettings = new KeyValues( "ListSettings" ); listSettings->SetInt( "autohide_scrollbar", 1 );
     m_PartyList->ApplySettings( listSettings ); m_FriendsList->ApplySettings( listSettings ); listSettings->deleteThis();
     m_PartyList->SetVerticalBufferPixels( 0 ); m_FriendsList->SetVerticalBufferPixels( 2 );
-    const char *texts[BUTTON_COUNT] = { "PLAY", "RESUME GAME", "CREATE SERVER", "SERVER BROWSER", "OPTIONS", "SERVER CONTROLS", "DISCONNECT", "QUIT", "<  BACK",
+    const char *texts[BUTTON_COUNT] = { "#HL2MP_Play", "RESUME GAME", "CREATE SERVER", "SERVER BROWSER", "OPTIONS", "SERVER CONTROLS", "DISCONNECT", "#HL2MP_Quit", "<  BACK",
         "1v1 DUEL", "2v2", "3v3", "4v4", "5v5", "CASUAL", "CUSTOM", "FIND MATCH", "CREATE PARTY", "INVITE", "LEAVE", "READY TO PLAY", "ACCEPT MATCH", "CANCEL", "BROWSE SERVERS" };
     const char *commands[BUTTON_COUNT] = { "play", "ResumeGame", "host", "OpenServerBrowser", "OpenOptionsDialog", "community", "disconnect", "Quit", "back",
         "mode_duel", "mode_team", "mode_team3", "mode_team4", "mode_team5", "mode_casual", "mode_custom", "find_match", "party_create", "party_invite", "party_leave", "party_ready", "match_accept", "queue_cancel", "OpenServerBrowser" };
@@ -602,7 +605,8 @@ void CHL2MPMainMenu::OnTick()
 
 void CHL2MPMainMenu::OnCommand( const char *command )
 {
-    if ( !Q_strcmp( command, "play" ) ) SetPlayPage( true );
+    if ( !Q_strcmp( command, "Quit" ) ) HL2MPDialogs_ShowQuit( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() );
+    else if ( !Q_strcmp( command, "play" ) ) SetPlayPage( true );
     else if ( !Q_strcmp( command, "back" ) ) SetPlayPage( false );
     else if ( !Q_strcmp( command, "disconnect" ) )
     {
@@ -651,6 +655,7 @@ void CHL2MPMainMenu::OnCommand( const char *command )
 void CHL2MPMainMenu::OnThink()
 {
     BaseClass::OnThink();
+    HL2MPDialogs_Update( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() );
     // GameUI's native menu is itself a popup, so our override must remain a
     // popup for keyboard focus. Keep the console above it when a menu click
     // raises this fullscreen panel; otherwise only console child widgets show.
@@ -690,6 +695,7 @@ void HL2MPMainMenu_Create()
 
 void HL2MPMainMenu_Destroy()
 {
+	HL2MPDialogs_Destroy();
 	HL2MPLoading_Destroy();
 	delete s_Menu; s_Menu = NULL;
 }

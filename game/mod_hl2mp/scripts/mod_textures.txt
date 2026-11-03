@@ -124,11 +124,11 @@
 		}
 		"d_skull"
 		{
-				"file"		"sprites/640hud1"
-				"x"			"192"
-				"y"			"224"
-				"width"		"32"
-				"height"	"16"
+				"file"		"vgui/hud/death_skull"
+				"x"			"0"
+				"y"			"0"
+				"width"		"64"
+				"height"	"64"
 		}
 		"d_tracktrain"
 		{

@@ -26,11 +26,12 @@ bool SafeText( const char *text, int minimum, int maximum, bool url = false )
 	return true;
 }
 
-void Kick( CBasePlayer *player )
+void Kick( CBasePlayer *player, const char *reason = "#HL2MP_MatchEnded" )
 {
 	if ( !player ) return;
 	char command[128];
-	Q_snprintf( command, sizeof( command ), "kickid %d Matchmaking_reservation_ended\n", player->GetUserID() );
+	// Fixed localization tokens only: the receiving client selects its language.
+	Q_snprintf( command, sizeof( command ), "kickid %d %s\n", player->GetUserID(), reason );
 	engine->ServerCommand( command );
 }
 
@@ -196,7 +197,7 @@ void CMatchServer::Join( CBasePlayer *player, KeyValues *message )
 		Q_strcmp( m_State, "active" ) || !SafeText( grant, 32, 120 ) ||
 		( connection.verified && RosterIndex( player ) < 0 ) )
 	{
-		Kick( player );
+		Kick( player, "#HL2MP_ReservationInvalid" );
 		return;
 	}
 	Q_strncpy( connection.grant, grant, sizeof( connection.grant ) );
@@ -356,7 +357,7 @@ void CMatchServer::Response( HTTPRequestCompleted_t *result, bool failed )
 		if ( operation == AUTHORIZE && result->m_eStatusCode == 403 )
 		{
 			CBasePlayer *player = ToBasePlayer( m_Authorizing.Get() );
-			if ( player ) { Client( player ).grant[0] = 0; Kick( player ); }
+			if ( player ) { Client( player ).grant[0] = 0; Kick( player, "#HL2MP_ReservationInvalid" ); }
 		}
 		if ( root ) root->deleteThis();
 		return;
@@ -475,8 +476,8 @@ void CMatchServer::FrameUpdatePostEntityThink()
 		if ( !player ) continue;
 		Connection &connection = Client( player );
 		const int index = RosterIndex( player );
-		if ( connection.admitted && ( index < 0 || !connection.verified ) ) { connection.admitted = false; Kick( player ); }
-		if ( connection.verified && index < 0 ) Kick( player );
+		if ( connection.admitted && ( index < 0 || !connection.verified ) ) { connection.admitted = false; Kick( player, connection.verified ? "#HL2MP_ReservationRequired" : "#HL2MP_AuthFailed" ); }
+		if ( connection.verified && index < 0 ) Kick( player, "#HL2MP_ReservationRequired" );
 		if ( connection.admitted && index >= 0 )
 		{
 			++present;
@@ -485,7 +486,7 @@ void CMatchServer::FrameUpdatePostEntityThink()
 			m_Roster[index].frags = player->FragCount();
 			m_Roster[index].deaths = player->DeathCount();
 		}
-		else if ( now - connection.arrived > 45 ) Kick( player );
+		else if ( now - connection.arrived > 45 ) Kick( player, "#HL2MP_JoinTimeout" );
 	}
 	if ( !Q_strcmp( m_State, "active" ) && !m_ResultPending && !m_Abort[0] )
 	{
