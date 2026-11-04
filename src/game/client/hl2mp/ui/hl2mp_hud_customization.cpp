@@ -78,6 +78,13 @@ struct Font { vgui::HFont handle; int face, pixels; bool bold; };
 CUtlVector<Font> s_Fonts;
 const char *s_FontFaces[] = { "Tahoma", "Arial", "Consolas", "Verdana", "Trebuchet MS", "Georgia", "Times New Roman", "Courier New" };
 bool CanHide( int part ) { return part != HUD_CROSSHAIR && part != HUD_CHAT && part != HUD_VOTE; }
+void ConstrainVoteStyle( HL2MPHudElementStyle &p )
+{
+    int sw,sh,w,h; vgui::surface()->GetScreenSize(sw,sh);
+    HL2MPHudEditing::VotePanelSize(sw,sh,p.w,p.h,w,h);
+    p.w=float(w)/sw; p.h=float(h)/sh;
+    p.x=clamp(p.x,0.f,1-p.w); p.y=clamp(p.y,0.f,1-p.h);
+}
 void Defaults( int preset )
 {
     memset( s_Layout.overrides, 0, sizeof(s_Layout.overrides) );
@@ -726,6 +733,7 @@ void CEditorCanvas::OnMousePressed( vgui::MouseCode code )
         int x, y, w, h; HL2MPHudBounds( i, vw, vh, x, y, w, h, !owner->liveView ); x -= panX; y -= panY;
         if ( startX < x || startY < y || startX > x + w || startY > y + h ) continue;
         owner->Select( i ); original = s_Layout.parts[i]; if ( original.fitContent ) { original.w = float(w) / vw; original.h = float(h) / vh; } originalCross=CrosshairFor(s_EditWeapon); resize = startX >= x + w - 12 && startY >= y + h - 12;
+        if ( i == HUD_VOTE ) ConstrainVoteStyle( original );
         dragging = true; vgui::input()->SetMouseCapture( GetVPanel() ); return;
     }
 }
@@ -742,7 +750,7 @@ void CEditorCanvas::OnCursorMoved( int x, int y )
         else { p.w = clamp( original.w + dx, .025f, MAX( .025f, 1.0f - p.x ) ); p.h = clamp( original.h + dy, .025f, MAX( .025f, 1.0f - p.y ) ); }
     }
     else { p.x = clamp( original.x + dx, 0.0f, owner->selected == HUD_CROSSHAIR ? 1.0f : 1.0f - original.w ); p.y = clamp( original.y + dy, 0.0f, owner->selected == HUD_CROSSHAIR ? 1.0f : 1.0f - original.h ); }
-    Snap(p,vw,vh); Repaint();
+    Snap(p,vw,vh); if ( owner->selected == HUD_VOTE ) ConstrainVoteStyle( p ); Repaint();
 }
 void CEditorCanvas::OnMouseReleased( vgui::MouseCode code )
 {
@@ -974,6 +982,11 @@ void CHudEditor::ComboChanged( vgui::Panel *panel )
 int CHudEditor::Property( int id )
 {
     const HL2MPHudElementStyle &p = s_Layout.parts[selected];
+    if ( selected == HUD_VOTE && (id == 2 || id == 3) )
+    {
+        int sw,sh,w,h; vgui::surface()->GetScreenSize(sw,sh); HL2MPHudEditing::VotePanelSize(sw,sh,p.w,p.h,w,h);
+        return int(100.f*(id==2?float(w)/sw:float(h)/sh)+.5f);
+    }
     if(id==27)return p.fitContent; if(id==25)return s_EditWeapon; if(id==26)return s_EditWeapon&&s_Layout.overrides[s_EditWeapon-1];
     if(selected==HUD_CROSSHAIR) { CrosshairConfig c=CrosshairFor(s_EditWeapon); switch(id) { case 4:return int(c.scale*100); case 8:return int(c.color.a()*100.f/255+.5f); case 18:return c.shape;case 19:return c.gap;case 20:return c.length;case 21:return c.thickness;case 22:return c.outline;case 23:return c.dot; } }
     if ( id == 0 ) return int( p.x * 100 ); if ( id == 1 ) return int( p.y * 100 ); if ( id == 2 ) return int( p.w * 100 ); if ( id == 3 ) return int( p.h * 100 ); if ( id == 4 ) return int( p.textScale * 100 );
@@ -996,6 +1009,7 @@ void CHudEditor::SetProperty( int id, int v )
     else if ( id == 8 || id == 12 ) { if ( id == 8 ) p.foreground[3] = int( v * 2.55f + .5f ); else p.background[3] = int( v * 2.55f + .5f ); }
     else if ( id < 9 ) p.foreground[id - 5] = v; else if ( id < 13 ) p.background[id - 9] = v;
     else switch ( id ) { case 13:p.visible = !CanHide( selected ) || v != 0;break; case 14:p.labels = v != 0;break; case 15:p.numbers = v != 0;break; case 16:p.bars = v != 0;break; case 17:p.font = v;break; case 18:s_Layout.crossShape = v;break; case 19:s_Layout.crossGap = v;break; case 20:s_Layout.crossLength = v;break; case 21:s_Layout.crossThickness = v;break; case 22:s_Layout.crossOutline = v != 0;break; case 23:s_Layout.crossDot = v != 0;break; case 24:s_Layout.lowHealth = v != 0;break; }
+    if ( selected == HUD_VOTE && id < 4 ) ConstrainVoteStyle( p );
     Checkpoint(id); canvas->Repaint();
 }
 void CHudEditor::BuildRows()
@@ -1029,6 +1043,12 @@ void CHudEditor::BuildRows()
         if ( selected == HUD_CROSSHAIR && ( i == 12 || i == 17 || i == 2 || i == 3 ) ) continue;
         int low = i == 2 || i == 3 ? 2 : i == 4 ? 50 : i == 20 || i == 21 ? 1 : 0;
         int high = i < 4 || i == 8 || i == 12 ? 100 : i == 4 ? 200 : i < 13 ? 255 : i < 17 ? 1 : i == 17 ? ARRAYSIZE( s_FontFaces ) - 1 : i == 18 ? 3 : i == 19 ? 24 : i == 20 ? 32 : i == 21 ? 8 : 1;
+        if ( selected == HUD_VOTE && (i == 2 || i == 3) )
+        {
+            int sw,sh,w,h; vgui::surface()->GetScreenSize(sw,sh); HL2MPHudEditing::VotePanelSize(sw,sh,0,0,w,h);
+            low=int(100.f*(i==2?float(w)/sw:float(h)/sh)+.5f);
+            high=int(100.f*(i==2?float(sw-16)/sw:float(sh-16)/sh)+.5f);
+        }
         CEditorRow *row = new CEditorRow( rows, i, properties[i], low, high, Property( i ) ); row->SetTall( 62 ); rows->AddItem( NULL, row );
     }
     reading = false; InvalidateLayout( true );
@@ -1124,6 +1144,13 @@ void HL2MPHudBounds( int part, int sw, int sh, int &x, int &y, int &w, int &h, b
 {
     const HL2MPHudElementStyle &p = HL2MPHudStyle( part ); w = clamp( int( p.w * sw ), 8, sw ); h = clamp( int( p.h * sh ), 8, sh );
     if ( part <= HUD_ALTAMMO && p.fitContent ) { StatMetrics m = MeasureStat( part, MIN( sw / 1280.f, sh / 720.f ), preview ); w = clamp( m.width, 8, sw ); h = clamp( m.height, 8, sh ); }
+    if ( part == HUD_VOTE )
+    {
+        int screenW,screenH,voteW,voteH; vgui::surface()->GetScreenSize(screenW,screenH);
+        HL2MPHudEditing::VotePanelSize(screenW,screenH,p.w,p.h,voteW,voteH);
+        // Grid zoom scales the actual screen bounds, including their minimum.
+        w=int(double(voteW)*sw/screenW+.5); h=int(double(voteH)*sh/screenH+.5);
+    }
     x = clamp( int( p.x * sw ) - ( part == HUD_CROSSHAIR ? w / 2 : 0 ), 0, sw - w ); y = clamp( int( p.y * sh ) - ( part == HUD_CROSSHAIR ? h / 2 : 0 ), 0, sh - h );
 }
 vgui::HFont HL2MPHudFont( int part, int pixels, bool bold )

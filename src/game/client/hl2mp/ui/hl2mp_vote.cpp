@@ -28,6 +28,7 @@ void Send( const char *action, int value = -1 )
 }
 void Sound( const char *name ) { if ( cl_vote_sounds.GetBool() ) vgui::surface()->PlaySound( name ); }
 const char *Key( const char *command ) { const char *k = engine->Key_LookupBinding( command ); return k && *k ? HL2MPKeyName( k ) : HL2MPText( "#HL2MP_UI_d16f3e00e8e4" ); }
+int VoteTileSize( int height, float scale ) { return MAX(36,MIN(int(56*scale),int(height*.21f))); }
 class CVotePanel : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CVotePanel, vgui::EditablePanel );
@@ -108,7 +109,7 @@ public:
         const bool map = State().phase >= MAP_WAIT;
         int x, y, w, h;
         if ( map ) { w = int( sw * .76f ); h = MIN( sh - 24, int( 530 * scale ) ); x = ( sw - w ) / 2; y = ( sh - h ) / 2; }
-        else { HL2MPHudBounds( HUD_VOTE, sw, sh, x, y, w, h ); w = MIN(sw-16,MAX(320,MAX( int( 400 * scale ), w ))); h = MIN(sh-16,MAX(210,MAX( int( 240 * scale ), h ))); x = MIN( x, sw - w ); y = MIN( y, sh - h ); }
+        else HL2MPHudBounds( HUD_VOTE, sw, sh, x, y, w, h );
         if ( m_Preview ) { x = ( sw - w ) / 2; y = ( sh - h ) / 2; }
         int contentH=h; if(m_Preview) { h=MIN(sh-16,h+48); y=(sh-h)/2; } m_ContentH=contentH;
         SetBounds( x, y, w, h );
@@ -119,7 +120,7 @@ public:
         m_FontTall = fontTall; m_Font = HL2MPHudFont( HUD_VOTE, fontTall ); m_Title = HL2MPHudFont( HUD_VOTE, int( fontTall * 1.3f ), true );
         SetAlpha( !m_Preview && !m_EditorSample && cl_vote_animations.GetBool() ? int( 255 * clamp( ( Plat_FloatTime() - m_Started ) / .18, 0.0, 1.0 ) ) : 255 );
         m_Body->SetFont( m_Title ); m_Body->SetFgColor( Color( 238, 238, 232, 255 ) );
-        const int pad=MAX(10,int(16*scale)), header=map?int(40*scale):MAX(36,int(contentH*.21f)), tile=MAX(44,int(contentH*.29f));
+        const int pad=MAX(10,int(16*scale)), header=map?int(40*scale):MAX(36,int(contentH*.21f)), tile=VoteTileSize(contentH,scale);
         m_Header->SetBounds(map?pad:header+4,4,w-(map?pad:header+4)-(m_Preview?38:pad),header-8);m_Header->SetFont(m_Font);
         m_Header->SetFgColor(State().phase==KICK_PASSED?Color(118,204,113,255):State().phase==KICK_FAILED?Color(240,92,85,255):Color(215,217,214,255));
         m_Header->SetText(map?HL2MPText("#HL2MP_VoteMapTitle"):State().phase==KICK_PASSED?HL2MPText("#HL2MP_VotePassed"):State().phase==KICK_FAILED?HL2MPText("#HL2MP_VoteFailed"):HL2MPFormat("Vote by: %s",State().caller));
@@ -172,7 +173,7 @@ public:
         {
             bool result=State().phase==KICK_PASSED||State().phase==KICK_FAILED;
             if(result) Mark(pad,8,header-16,State().phase==KICK_PASSED,State().phase==KICK_PASSED?green:red); else KickIcon(pad,8,header-16,white);
-            int tile=MAX(44,int(m_ContentH*.29f)),countW=MAX(34,int(38*scale)),x=GetWide()-pad-tile-countW;
+            int tile=VoteTileSize(m_ContentH,scale),countW=MAX(34,int(38*scale)),x=GetWide()-pad-tile-countW;
             for(int i=0;i<2;++i)
             {
                 int y=header+pad+i*(tile+MAX(6,pad/2));Color c=i?red:green;
