@@ -58,8 +58,9 @@ extern CBaseEntity	 *g_pLastRebelSpawn;
 #endif
 
 
-ConVar sv_hitmarkers( "sv_hitmarkers", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow clients to display damage numbers when hitting enemy players." );
-ConVar sv_bright_models( "sv_bright_models", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow bright player models and the associated remote footstep preferences on community servers." );
+ConVar sv_hitmarkers( "sv_hitmarkers", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow clients to display damage numbers when hitting enemy players." );
+ConVar sv_hitsounds("sv_hitsounds", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow personal hit sounds for server-confirmed enemy damage.");
+ConVar sv_bright_models( "sv_bright_models", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow bright player models and the associated remote footstep preferences on community servers." );
 ConVar sv_bright_models_dm_color( "sv_bright_models_dm_color", "0 255 0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright player color in deathmatch, as R G B (0-255)." );
 ConVar sv_bright_models_rebels_color( "sv_bright_models_rebels_color", "255 0 0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright Rebel color in team deathmatch, as R G B (0-255)." );
 ConVar sv_bright_models_combine_color( "sv_bright_models_combine_color", "50 150 255", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright Combine color in team deathmatch, as R G B (0-255)." );

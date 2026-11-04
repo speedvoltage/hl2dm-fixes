@@ -73,6 +73,7 @@ private:
 	vgui::Label *m_pServerName;
 	vgui::Menu *m_Context;
 	int m_ContextUser, m_ContextIndex;
+	int m_ExtraMask=-1;
 	// rounded corners
 	Color m_bgColor;
 	Color					 m_borderColor;

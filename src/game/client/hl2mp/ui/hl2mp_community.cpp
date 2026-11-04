@@ -29,7 +29,7 @@ CServerControls *s_Panel = NULL;
 struct ServerState
 {
     int generation, minutes, frags;
-    bool enabled, admin, paused, teamplay, friendly, stay, respawn;
+    bool enabled, admin, paused, teamplay, friendly, stay, respawn, brightAllowed, hitmarkers, hitsounds;
     Color bright[3];
     char map[64], next[64], status[80];
 };
@@ -147,7 +147,16 @@ public:
 private:
     MESSAGE_FUNC_PARAMS( OnCheckChanged, "CheckButtonChecked", message )
     {
-        if ( message->GetPtr( "panel" ) == m_Bright ) cl_bright_player_models.SetValue( message->GetInt( "state" ) != 0 );
+        if (!m_Received || !m_State.admin || m_Pending) return;
+        vgui::CheckButton *checks[] = {m_Bright,m_Hitmarkers,m_Hitsounds};
+        const bool values[] = {m_State.brightAllowed,m_State.hitmarkers,m_State.hitsounds};
+        for (int i=0;i<3;++i) if(message->GetPtr("panel") == checks[i])
+        {
+            const bool value=message->GetInt("state")!=0;
+            if(value==values[i])return;
+            KeyValues *request=Message("visual_rule");request->SetInt("rule",i);request->SetInt("enabled",value);
+            engine->ServerCmdKeyValues(request);m_NextPoll=Plat_FloatTime()+0.5;return;
+        }
     }
     void Close( bool resume = false );
     void RefreshPlayers();
@@ -163,7 +172,7 @@ private:
     CHL2MPDropdown *m_Drop[DROPDOWNS];
     CHL2MPSettingsButton *m_Button[BUTTONS];
     vgui::TextEntry *m_Time, *m_Frags, *m_BanMinutes;
-    vgui::CheckButton *m_Friendly, *m_Stay, *m_Respawn, *m_Bright;
+    vgui::CheckButton *m_Friendly, *m_Stay, *m_Respawn, *m_Bright, *m_Hitmarkers, *m_Hitsounds;
     vgui::HFont m_TitleFont, m_BodyFont, m_SmallFont;
     ServerState m_State;
     KeyValues *m_Pending;
@@ -221,7 +230,10 @@ CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "Co
     m_Friendly = new CHL2MPCheckButton( this, "Friendly", "#HL2MP_UI_d5134a5bdfcc" );
     m_Stay = new CHL2MPCheckButton( this, "Stay", "#HL2MP_UI_18d384fbe9ba" );
     m_Respawn = new CHL2MPCheckButton( this, "Respawn", "#HL2MP_UI_d8205bf54d70" );
-    m_Bright = new CHL2MPCheckButton( this, "Bright", "#HL2MP_UI_319a60acdb89" );
+    m_Bright = new CHL2MPCheckButton(this,"Bright","#HL2MP_AllowBrightModels");
+    m_Hitmarkers = new CHL2MPCheckButton(this,"Hitmarkers","#HL2MP_AllowHitmarkers");
+    m_Hitsounds = new CHL2MPCheckButton(this,"Hitsounds","#HL2MP_AllowHitSounds");
+    m_Hitmarkers->AddActionSignalTarget(this);m_Hitsounds->AddActionSignalTarget(this);
     m_Bright->AddActionSignalTarget( this );
 }
 
@@ -269,12 +281,12 @@ void CServerControls::PerformLayout()
     place( m_Button[NEXT], 16, 468, 348, 38 ); place( m_Button[PAUSE], 16, 550, 164, 38 ); place( m_Button[RESTART], 194, 550, 170, 38 );
     place( m_Captions[3], 416, 182, 348, 24 ); place( m_Time, 416, 210, 348, 34 );
     place( m_Captions[4], 416, 262, 348, 24 ); place( m_Frags, 416, 290, 348, 34 );
-    place( m_Friendly, 416, 350, 348, 36 ); place( m_Stay, 416, 400, 348, 36 ); place( m_Respawn, 416, 450, 348, 36 );
+    place(m_Friendly,416,326,348,30);place(m_Stay,416,356,348,30);place(m_Respawn,416,386,348,30);
+    place(m_Bright,416,416,348,30);place(m_Hitmarkers,416,446,348,30);place(m_Hitsounds,416,476,348,30);
     place( m_Button[APPLY], 416, 550, 348, 38 );
-    place( m_ColorsOpen,416,500,348,34 );
+    place( m_ColorsOpen,416,512,348,30 );
     place( m_Captions[5], 816, 182, 348, 24 ); place( m_Drop[TEAM], 816, 210, 348, 34 );
     place( m_Button[JOIN], 816, 258, 210, 38 ); place( m_Button[SPECTATE], 1038, 258, 126, 38 );
-    place( m_Bright, 816, 318, 348, 36 );
     place( m_Captions[6], 816, 362, 348, 24 ); place( m_Drop[PLAYER], 816, 390, 348, 34 );
     place( m_Captions[7], 816, 432, 348, 24 ); place( m_Drop[DURATION], 816, 460, 348, 34 );
     place( m_Captions[8], 816, 506, 180, 30 ); place( m_BanMinutes, 1000, 504, 164, 32 );
@@ -313,7 +325,7 @@ void CServerControls::Open( bool fromHotkey )
     m_Drop[DURATION]->SilentActivateItemByRow( 2 ); m_Drop[TEAM]->DeleteAllItems();
     Choice( m_Drop[TEAM], "#HL2MP_UI_3cced94f86b9", 0 );
     if ( HL2MPRules()->IsTeamplay() ) { Choice( m_Drop[TEAM], "#HL2MP_UI_46f29c2f51a0", TEAM_COMBINE ); Choice( m_Drop[TEAM], "#HL2MP_UI_f185ee05cab6", TEAM_REBELS ); }
-    m_Drop[TEAM]->SilentActivateItemByRow( 0 ); m_Bright->SetSelected( cl_bright_player_models.GetBool() );
+    m_Drop[TEAM]->SilentActivateItemByRow( 0 );
     m_Status->SetText( "#HL2MP_UI_a4999ebc061c" ); SetVisible( true ); MoveToFront(); RequestFocus(); InvalidateLayout( true, true ); Request( "open" );
 }
 void CServerControls::Close( bool resume )
@@ -332,6 +344,7 @@ void CServerControls::Receive( const ServerState &state )
     if ( m_Received && m_State.generation != state.generation ) { Close(); return; }
     const bool modeChanged = !m_Received || m_State.teamplay != state.teamplay;
     m_State = state;
+    m_Bright->SetSelected(state.brightAllowed);m_Hitmarkers->SetSelected(state.hitmarkers);m_Hitsounds->SetSelected(state.hitsounds);
     if(modeChanged)
     {
         m_Drop[TEAM]->DeleteAllItems();Choice(m_Drop[TEAM],"#HL2MP_UI_3cced94f86b9",0);
@@ -397,7 +410,7 @@ void CServerControls::OnThink()
     m_Time->SetEnabled( admin ); m_Frags->SetEnabled( admin ); m_Friendly->SetEnabled( admin ); m_Stay->SetEnabled( admin ); m_Respawn->SetEnabled( admin );
     m_BanMinutes->SetEnabled( admin && Value( m_Drop[DURATION] ) == -1 );
     for ( int i = 0; i < DROPDOWNS; ++i ) m_Drop[i]->SetEnabled( i == TEAM ? m_Received && !m_Pending : admin );
-    m_Button[JOIN]->SetEnabled( m_Received && !m_Pending ); m_Button[SPECTATE]->SetEnabled( m_Received && !m_Pending ); m_Bright->SetEnabled( !m_Pending );
+    m_Button[JOIN]->SetEnabled( m_Received && !m_Pending ); m_Button[SPECTATE]->SetEnabled( m_Received && !m_Pending ); m_Bright->SetEnabled(admin);m_Hitmarkers->SetEnabled(admin);m_Hitsounds->SetEnabled(admin);
     m_Status->SetVisible( !m_Pending ); m_Button[CLOSE]->SetVisible( !m_Pending );
     m_Button[RESUME]->SetVisible( !m_Pending );
     m_Confirm->SetVisible( m_Pending != NULL );
@@ -476,6 +489,7 @@ void StateMessage( bf_read &reader )
     ServerState state = {}; state.generation = reader.ReadLong(); state.enabled = reader.ReadByte() != 0; state.admin = reader.ReadByte() != 0;
     state.paused = reader.ReadByte() != 0; state.teamplay = reader.ReadByte() != 0; state.minutes = reader.ReadShort(); state.frags = reader.ReadShort();
     state.friendly = reader.ReadByte() != 0; state.stay = reader.ReadByte() != 0; state.respawn = reader.ReadByte() != 0;
+    state.brightAllowed=reader.ReadByte()!=0;state.hitmarkers=reader.ReadByte()!=0;state.hitsounds=reader.ReadByte()!=0;
     for(int i=0;i<3;++i) { const int r=reader.ReadByte(),g=reader.ReadByte(),b=reader.ReadByte();state.bright[i]=Color(r,g,b,255); }
     reader.ReadString( state.map, sizeof( state.map ) ); reader.ReadString( state.next, sizeof( state.next ) ); reader.ReadString( state.status, sizeof( state.status ) );
     if ( !reader.IsOverflowed() && s_Panel ) s_Panel->Receive( state );

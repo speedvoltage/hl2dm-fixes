@@ -19,6 +19,7 @@ class CHL2MP_Player;
 #include "hl2mp_player_shared.h"
 #include "hl2mp_gamerules.h"
 #include "utldict.h"
+#include "hl2mp_combat_stats.h"
 
 //=============================================================================
 // >> HL2MP_Player
@@ -66,6 +67,10 @@ public:
 	virtual bool BecomeRagdollOnClient( const Vector &force );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual int OnTakeDamage( const CTakeDamageInfo &inputInfo );
+	void TraceAttack(const CTakeDamageInfo &info, const Vector &direction, trace_t *trace, CDmgAccumulator *accumulator = NULL) OVERRIDE;
+	HL2MPCombatStats m_CombatStats;
+	bool m_TrackingBullets = false;
+	double m_LastHitSound = -1;
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 	virtual void FireBullets ( const FireBulletsInfo_t &info );
 	virtual void OnMyWeaponFired( CBaseCombatWeapon* weapon );

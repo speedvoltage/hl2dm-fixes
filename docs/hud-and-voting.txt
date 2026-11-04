@@ -45,6 +45,8 @@ input. One animated preview shows the draft font and color together. Apply saves
 Discard restores the previous settings. The circled information button explains
 the server restriction and works with mouse hover or keyboard focus.
 cl_hitmarkers controls the local preference. sv_hitmarkers remains authoritative.
+Both default to 0. The default damage-number font is TF2 Build (5).
+Changing defaults does not overwrite existing saved preferences.
 Turning hitmarkers off hides the font/color controls without resetting their
 pending values. Turning them on again restores those drafts. Apply includes the
 hidden values; leaving Options uses the usual save/discard confirmation.
@@ -68,11 +70,30 @@ sv_bright_models_dm_color "0 255 0"
 sv_bright_models_rebels_color "255 0 0"
 sv_bright_models_combine_color "50 150 255"
 Only clients opting into bright models on community servers use these colors.
-sv_bright_models 0 disables bright models on the server; the default is 1.
+sv_bright_models 0 disables bright models on the server; the default is 0.
+The local cl_bright_player_models preference also defaults to 0.
+Server Rules has admin-only checkboxes for bright models, hitmarkers and hit
+sounds. These change sv_bright_models, sv_hitmarkers and sv_hitsounds immediately,
+without changing any player's personal preference. Console changes are reflected
+in the controls on the next status update.
 This also disables the teammate/enemy footstep overrides tied to bright models.
+Audio options explain the requirement beside disabled teammate/enemy selectors:
+enable bright models in Game options and obtain permission from the server.
 Matchmaking continues to disallow bright models regardless of this cvar.
 Create Server bots now leave their initial observer state and spawn in DM.
 Maps still need navigation meshes for bots to navigate normally.
+
+Hit sounds
+Options > Audio offers enable, sound selection, volume and an audition button.
+There are 16 original synthesized sounds; tools/generate-hit-sounds.py reproduces
+the included mono PCM files. Audition uses the pending sound and volume without
+saving them or requiring server permission. Apply/Discard handles these drafts.
+cl_hitsounds and sv_hitsounds both default to 0. cl_hitsound selects 0-15;
+cl_hitsound_volume defaults to 0.5. The server sends confirmation only to the
+attacker after actual enemy health/armor damage. Friendly fire, self-damage and
+world damage give no feedback. All weapon damage types qualify; feedback does
+not depend on sv_hitmarkers. Events within 35ms are coalesced for shotgun pellets
+and multi-victim explosions. Server restrictions use the same red warning UI.
 
 Voting
 F1 / F2 default to Yes / No. Existing unrelated bindings are preserved; both
@@ -100,6 +121,19 @@ Actions include Steam profile, separate chat/voice mutes, mute both and kick vot
 Red speaker/chat icons show local mute state; menu checks show which channel is
 muted. Mutes are session-local, cleared on disconnect and never written to disk.
 Reporting is disabled until the mod receives its own Steam AppID.
+Game options can independently show K/D, accuracy, headshot accuracy, total damage
+and DEAD status. cl_scoreboard_kdr, cl_scoreboard_accuracy,
+cl_scoreboard_headshots, cl_scoreboard_damage and cl_scoreboard_dead default to 0.
+Columns are added only when enabled; the panel expands to fit them.
+The server owns the statistics and distributes them through the player resource.
+Accuracy is enemy bullet/pellet hits divided by bullets/pellets fired; each
+shotgun pellet counts separately. Headshot accuracy is head hits divided by all
+enemy bullet/pellet hits. Projectiles and melee do not enter either percentage.
+K/D uses enemy kills divided by deaths (a zero death count uses denominator 1).
+Damage includes actual enemy health and armor lost, capped to exclude overkill.
+These counters reset with the round, on a new map, or when a player reconnects.
+They are tracked even when columns or hit feedback are disabled. DEAD uses the
+server's alive state, and spectators are not marked dead.
 
 Validation
 tools/test-vote-rules.cpp exercises the production majority, initial ballot,

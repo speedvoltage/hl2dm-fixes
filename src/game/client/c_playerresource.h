@@ -58,6 +58,13 @@ public : // IGameResources interface
 
 	virtual int		GetUserID( int index );
 
+#ifdef HL2MP
+	int GetCombatShots(int index) { return index > 0 && index < MAX_PLAYERS_ARRAY_SAFE && IsConnected(index) ? m_iCombatShots[index] : 0; }
+	int GetCombatHits(int index) { return index > 0 && index < MAX_PLAYERS_ARRAY_SAFE && IsConnected(index) ? m_iCombatHits[index] : 0; }
+	int GetCombatHeadHits(int index) { return index > 0 && index < MAX_PLAYERS_ARRAY_SAFE && IsConnected(index) ? m_iCombatHeadHits[index] : 0; }
+	int GetCombatDamage(int index) { return index > 0 && index < MAX_PLAYERS_ARRAY_SAFE && IsConnected(index) ? m_iCombatDamage[index] : 0; }
+	int GetCombatKills(int index) { return index > 0 && index < MAX_PLAYERS_ARRAY_SAFE && IsConnected(index) ? m_iCombatKills[index] : 0; }
+#endif
 	uint32 GetAccountID( int iIndex );
 	bool IsValid( int iIndex );
 
@@ -68,6 +75,11 @@ protected:
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS_ARRAY_SAFE];
 #ifdef HL2MP
+	int m_iCombatShots[MAX_PLAYERS_ARRAY_SAFE];
+	int m_iCombatHits[MAX_PLAYERS_ARRAY_SAFE];
+	int m_iCombatHeadHits[MAX_PLAYERS_ARRAY_SAFE];
+	int m_iCombatDamage[MAX_PLAYERS_ARRAY_SAFE];
+	int m_iCombatKills[MAX_PLAYERS_ARRAY_SAFE];
 	char m_szPlayerNames[MAX_PLAYERS_ARRAY_SAFE][MAX_PLAYER_NAME_LENGTH];
 #endif
 	int		m_iPing[MAX_PLAYERS_ARRAY_SAFE];

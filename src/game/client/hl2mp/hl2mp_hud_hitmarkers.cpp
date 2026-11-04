@@ -4,6 +4,8 @@
 #include "iclientmode.h"
 #include "view.h"
 #include "hl2mp_hitmarker_style.h"
+#include "hl2mp_hitsounds.h"
+#include "engine/IEngineSound.h"
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
 #include "tier1/utlstring.h"
@@ -15,8 +17,17 @@
 
 #include "tier0/memdbgon.h"
 
-static ConVar cl_hitmarkers( "cl_hitmarkers", "1", FCVAR_ARCHIVE, "Show damage numbers when hitting enemy players, if allowed by the server." );
-extern ConVar sv_hitmarkers;
+static ConVar cl_hitmarkers( "cl_hitmarkers", "0", FCVAR_ARCHIVE, "Show damage numbers when hitting enemy players, if allowed by the server." );
+extern ConVar sv_hitmarkers, sv_hitsounds;
+static ConVar cl_hitsounds("cl_hitsounds","0",FCVAR_ARCHIVE,"Play server-confirmed enemy hit sounds when permitted.");
+static ConVar cl_hitsound("cl_hitsound","0",FCVAR_ARCHIVE,"Hit sound selection (0-15).",true,0,true,HL2MP_HIT_SOUND_COUNT-1);
+static ConVar cl_hitsound_volume("cl_hitsound_volume","0.5",FCVAR_ARCHIVE,"Hit sound volume.",true,0,true,1);
+void HL2MPPlayHitSound(int sound,float volume)
+{
+    char path[80];Q_snprintf(path,sizeof(path),"ui/hitsounds/hit_%02d.wav",clamp(sound,0,HL2MP_HIT_SOUND_COUNT-1));
+    enginesound->PrecacheSound(path,true);
+    enginesound->EmitAmbientSound(path,clamp(volume,0.f,1.f));
+}
 
 bool HL2MPHitmarkerRegisterFont(const char *face,const char *path)
 {
@@ -37,7 +48,7 @@ bool HL2MPHitmarkerRegisterFont(const char *face,const char *path)
     return false;
 #endif
 }
-ConVar cl_hitmarker_font("cl_hitmarker_font","0",FCVAR_ARCHIVE,"Damage number font: 0 classic, 1 GorDIN, 2 GorDIN Bold, 3 Tahoma, 4 TF2, 5 TF2 Build, 6 TF2 Secondary, 7 TF2 Professor.",true,0,true,HL2MP_HITMARKER_FONTS-1);
+ConVar cl_hitmarker_font("cl_hitmarker_font","5",FCVAR_ARCHIVE,"Damage number font: 0 classic, 1 GorDIN, 2 GorDIN Bold, 3 Tahoma, 4 TF2, 5 TF2 Build, 6 TF2 Secondary, 7 TF2 Professor.",true,0,true,HL2MP_HITMARKER_FONTS-1);
 ConVar cl_hitmarker_color("cl_hitmarker_color","255 0 0",FCVAR_ARCHIVE,"Damage number color as red green blue (0-255).");
 
 class CHudHitMarkers : public CHudElement, public vgui::Panel
@@ -54,6 +65,7 @@ public:
 	void ApplySchemeSettings( vgui::IScheme *pScheme ) OVERRIDE;
 	void Paint() OVERRIDE;
 	void MsgFunc_DamageHit( bf_read &msg );
+	void MsgFunc_HitSound(bf_read &msg);
 
 private:
 	struct DamageNumber_t
@@ -71,6 +83,7 @@ private:
 
 DECLARE_HUDELEMENT( CHudHitMarkers );
 DECLARE_HUD_MESSAGE( CHudHitMarkers, DamageHit );
+DECLARE_HUD_MESSAGE(CHudHitMarkers, HitSound);
 
 CHudHitMarkers::CHudHitMarkers( const char *pElementName ) :
 	CHudElement( pElementName ), BaseClass( NULL, "HudHitMarkers" ), m_hFont( 0 )
@@ -84,6 +97,7 @@ CHudHitMarkers::CHudHitMarkers( const char *pElementName ) :
 void CHudHitMarkers::Init()
 {
 	HOOK_HUD_MESSAGE( CHudHitMarkers, DamageHit );
+	HOOK_HUD_MESSAGE(CHudHitMarkers, HitSound);
 }
 
 void CHudHitMarkers::VidInit()
@@ -129,6 +143,15 @@ void CHudHitMarkers::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	m_FontChoice = cl_hitmarker_font.GetInt();
 	m_hFont=HL2MPGetHitmarkerFont(m_FontChoice,MAX(12,YRES(14)));
+}
+
+void CHudHitMarkers::MsgFunc_HitSound(bf_read &msg)
+{
+    if (!msg.IsOverflowed() && engine->IsInGame() && sv_hitsounds.GetBool() && cl_hitsounds.GetBool())
+    {
+        DevMsg(2,"Server-confirmed hit sound: %d\n",cl_hitsound.GetInt());
+        HL2MPPlayHitSound(cl_hitsound.GetInt(),cl_hitsound_volume.GetFloat());
+    }
 }
 
 void CHudHitMarkers::MsgFunc_DamageHit( bf_read &msg )

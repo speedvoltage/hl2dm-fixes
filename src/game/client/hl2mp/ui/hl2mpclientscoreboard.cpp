@@ -30,7 +30,23 @@
 #include <vgui_controls/ScrollBar.h>
 #include <vgui_controls/SectionedListPanel.h>
 
+#include "hl2mp_combat_stats.h"
 using namespace vgui;
+static ConVar cl_scoreboard_kdr("cl_scoreboard_kdr","0",FCVAR_ARCHIVE,"Show kill/death ratio on the scoreboard.");
+static ConVar cl_scoreboard_accuracy("cl_scoreboard_accuracy","0",FCVAR_ARCHIVE,"Show enemy bullet/pellet hits divided by shots fired.");
+static ConVar cl_scoreboard_headshots("cl_scoreboard_headshots","0",FCVAR_ARCHIVE,"Show head hits divided by all enemy bullet/pellet hits.");
+static ConVar cl_scoreboard_damage("cl_scoreboard_damage","0",FCVAR_ARCHIVE,"Show effective enemy damage this round (health plus armor, excluding overkill).");
+static ConVar cl_scoreboard_dead("cl_scoreboard_dead","0",FCVAR_ARCHIVE,"Show DEAD beside dead players.");
+struct ExtraColumn { const char *name,*label;ConVar *setting;int width; };
+static ExtraColumn s_ExtraColumns[] = {
+    {"kdr","#HL2MP_ScoreKDR",&cl_scoreboard_kdr,52},
+    {"accuracy","#HL2MP_ScoreAccuracy",&cl_scoreboard_accuracy,64},
+    {"headshots","#HL2MP_ScoreHeadAccuracy",&cl_scoreboard_headshots,64},
+    {"damage","#HL2MP_ScoreDamage",&cl_scoreboard_damage,76},
+    {"state","#HL2MP_ScoreState",&cl_scoreboard_dead,62}
+};
+static int ExtraMask() { int mask=0;for(int i=0;i<ARRAYSIZE(s_ExtraColumns);++i)if(s_ExtraColumns[i].setting->GetBool())mask|=1<<i;return mask; }
+
 static CHL2MPClientScoreBoardDialog *s_Scoreboard = NULL;
 class CPlayerAction : public MenuItem
 {
@@ -230,6 +246,10 @@ CHL2MPClientScoreBoardDialog::~CHL2MPClientScoreBoardDialog()
 
 void CHL2MPClientScoreBoardDialog::Update()
 {
+    if(m_ExtraMask!=ExtraMask())
+    {
+        m_Context->SetVisible(false);m_pPlayerList->RemoveAll();m_pPlayerList->RemoveAllSections();InitScoreboardSections();
+    }
 	BaseClass::Update();
 	if ( IsMouseInputEnabled() ) for ( int i = 0; i < m_pPlayerList->GetChildCount(); ++i ) m_pPlayerList->GetChild( i )->SetMouseInputEnabled( true );
 	UpdateMatchInfo();
@@ -554,9 +574,9 @@ void CHL2MPClientScoreBoardDialog::PerformLayout()
 	int workspaceX, workspaceY, workspaceWide, workspaceTall;
 	surface()->GetWorkspaceBounds( workspaceX, workspaceY, workspaceWide, workspaceTall );
 
-	const int targetWide = (int)( workspaceWide * 0.66f );
+	const int targetWide = (int)( workspaceWide * (ExtraMask() ? 0.92f : 0.66f) );
 	const int minimumWide = MIN( (int)( workspaceWide * 0.90f ), scheme()->GetProportionalScaledValueEx( GetScheme(), 460 ) );
-	const int maximumWide = MIN( (int)( workspaceWide * 0.70f ), (int)( workspaceTall * 1.50f ) );
+	const int maximumWide = ExtraMask() ? int(workspaceWide*0.96f) : MIN(int(workspaceWide*0.70f),int(workspaceTall*1.50f));
 	const int panelWide = MIN( MAX( targetWide, minimumWide ), maximumWide );
 
 	const int horizontalPadding = scheme()->GetProportionalScaledValueEx( GetScheme(), 12 );
@@ -595,6 +615,7 @@ void CHL2MPClientScoreBoardDialog::PerformLayout()
 //-----------------------------------------------------------------------------
 void CHL2MPClientScoreBoardDialog::InitScoreboardSections()
 {
+	m_ExtraMask=ExtraMask();
 	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
 	m_pPlayerList->SetBorder(NULL);
 	m_pPlayerList->ClearSelection();
@@ -722,6 +743,8 @@ void CHL2MPClientScoreBoardDialog::AddHeader()
 	m_pPlayerList->AddColumnToSection( SCORESECTION_HEADER, "timepad", L" ", 0, 0 );
 	m_pPlayerList->AddColumnToSection( SCORESECTION_HEADER, "frags", "#PlayerScore", SectionedListPanel::COLUMN_BRIGHT | SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_SCORE_WIDTH ) );
 	m_pPlayerList->AddColumnToSection( SCORESECTION_HEADER, "deaths", "#PlayerDeath", SectionedListPanel::COLUMN_BRIGHT | SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_DEATH_WIDTH ) );
+    for(int i=0;i<ARRAYSIZE(s_ExtraColumns);++i) if(s_ExtraColumns[i].setting->GetBool())
+        m_pPlayerList->AddColumnToSection(SCORESECTION_HEADER,s_ExtraColumns[i].name,s_ExtraColumns[i].label,SectionedListPanel::COLUMN_BRIGHT|SectionedListPanel::COLUMN_CENTER,0);
 	m_pPlayerList->AddColumnToSection( SCORESECTION_HEADER, "ping", "#PlayerPing", SectionedListPanel::COLUMN_BRIGHT | SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH ) );
 }
 
@@ -753,6 +776,8 @@ void CHL2MPClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
 	m_pPlayerList->AddColumnToSection( sectionID, "mute", "", 0, scheme()->GetProportionalScaledValueEx(GetScheme(),48) );
 	m_pPlayerList->AddColumnToSection( sectionID, "frags", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_SCORE_WIDTH ) );
 	m_pPlayerList->AddColumnToSection( sectionID, "deaths", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_DEATH_WIDTH ) );
+    for(int i=0;i<ARRAYSIZE(s_ExtraColumns);++i) if(s_ExtraColumns[i].setting->GetBool())
+        m_pPlayerList->AddColumnToSection(sectionID,s_ExtraColumns[i].name,"",SectionedListPanel::COLUMN_CENTER,0);
 	m_pPlayerList->AddColumnToSection( sectionID, "ping", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH ) );
 
 	IGameResources *resources = GameResources();
@@ -795,6 +820,12 @@ bool CHL2MPClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues
 	kv->SetString("name", g_PR->GetPlayerName(playerIndex) );
 	kv->SetInt("deaths", g_PR->GetDeaths( playerIndex ));
 	kv->SetInt("frags", g_PR->GetPlayerScore( playerIndex ));
+    char text[40];
+    Q_snprintf(text,sizeof(text),"%.2f",float(g_PR->GetCombatKills(playerIndex))/MAX(1,g_PR->GetDeaths(playerIndex)));kv->SetString("kdr",text);
+    Q_snprintf(text,sizeof(text),"%.1f%%",HL2MPCombatStats::Percentage(g_PR->GetCombatHits(playerIndex),g_PR->GetCombatShots(playerIndex)));kv->SetString("accuracy",text);
+    Q_snprintf(text,sizeof(text),"%.1f%%",HL2MPCombatStats::Percentage(g_PR->GetCombatHeadHits(playerIndex),g_PR->GetCombatHits(playerIndex)));kv->SetString("headshots",text);
+    kv->SetInt("damage",g_PR->GetCombatDamage(playerIndex));
+    kv->SetString("state",!g_PR->IsAlive(playerIndex) && g_PR->GetTeam(playerIndex)!=TEAM_SPECTATOR ? HL2MPText("#HL2MP_ScoreDead") : "");
 
 	if (g_PR->GetPing( playerIndex ) < 1)
 	{
@@ -976,7 +1007,14 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 	ScrollBar *scrollBar = m_pPlayerList->GetScrollBar();
 	const int scrollWide = scrollBar && scrollBar->IsVisible() ? scrollBar->GetWide() : 0;
 	const int columnAreaWide = MAX( 0, listWide - 10 - scrollWide );
-	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 132 ), columnAreaWide - avatarWide - muteWide - scoreWide - deathWide - pingWide );
+    int extras=0,extraWidths[ARRAYSIZE(s_ExtraColumns)]={};
+    for(int i=0;i<ARRAYSIZE(s_ExtraColumns);++i) if(s_ExtraColumns[i].setting->GetBool())
+    {
+        int textWide,textTall;surface()->GetTextSize(m_pPlayerList->GetHeaderFont(),HL2MPWideText(s_ExtraColumns[i].label),textWide,textTall);
+        extraWidths[i]=MAX(scheme()->GetProportionalScaledValueEx(GetScheme(),s_ExtraColumns[i].width),textWide+12);extras+=extraWidths[i];
+        m_pPlayerList->SetColumnWidthBySection(SCORESECTION_HEADER,s_ExtraColumns[i].name,extraWidths[i]);
+    }
+	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 132 ), columnAreaWide - avatarWide - muteWide - scoreWide - deathWide - pingWide - extras );
 	int timeTextWide, timeTextTall;
 	surface()->GetTextSize( m_pPlayerList->GetHeaderFont(), L"00:00:00", timeTextWide, timeTextTall );
 	const wchar_t *timeText = m_pPlayerList->GetColumnTextBySection( SCORESECTION_HEADER, 1 );
@@ -1017,6 +1055,8 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "frags", scoreWide );
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "deaths", deathWide );
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "ping", pingWide );
+        for(int e=0;e<ARRAYSIZE(s_ExtraColumns);++e)if(s_ExtraColumns[e].setting->GetBool())
+            m_pPlayerList->SetColumnWidthBySection(sectionID,s_ExtraColumns[e].name,extraWidths[e]);
 	}
 
 	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "name", columnAreaWide-muteWide );

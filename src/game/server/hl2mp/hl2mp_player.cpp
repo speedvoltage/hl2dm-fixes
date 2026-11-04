@@ -36,6 +36,7 @@ CBaseEntity	 *g_pLastCombineSpawn = NULL;
 CBaseEntity	 *g_pLastRebelSpawn = NULL;
 extern CBaseEntity				*g_pLastSpawn;
 extern ConVar sv_hitmarkers;
+extern ConVar sv_hitsounds;
 
 ConVar hl2mp_spawn_frag_fallback_radius( "hl2mp_spawn_frag_fallback_radius", "48", FCVAR_NONE, "If no spawns are available, kill players with this radius to allow new players to spawn." );
 
@@ -773,7 +774,11 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 	}
 
+	const bool tracking = IsAlive() && !g_fGameOver;
+	if (tracking) m_CombatStats.Fired(MAX(0,modinfo.m_iShots));
+	m_TrackingBullets = tracking;
 	BaseClass::FireBullets( modinfo );
+	m_TrackingBullets = false;
 
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->FinishLagCompensation( this );
@@ -1548,6 +1553,17 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 	StopZooming();
 }
 
+void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &direction, trace_t *trace, CDmgAccumulator *accumulator)
+{
+	CHL2MP_Player *attacker = ToHL2MPPlayer(info.GetAttacker());
+	if (attacker && attacker != this && attacker->m_TrackingBullets && (info.GetDamageType() & DMG_BULLET) &&
+		IsAlive() && m_takedamage == DAMAGE_YES && !(GetFlags() & FL_GODMODE) && info.GetDamage() > 0 &&
+		HL2MPRules() && HL2MPRules()->FPlayerCanTakeDamage(this,attacker,info) &&
+		(!HL2MPRules()->IsTeamplay() || attacker->GetTeamNumber() != GetTeamNumber()))
+		attacker->m_CombatStats.Hit(trace->hitgroup == HITGROUP_HEAD);
+	BaseClass::TraceAttack(info,direction,trace,accumulator);
+}
+
 int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	//return here if the player is in the respawn grace period vs. slams.
@@ -1562,7 +1578,7 @@ int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	const int nOldArmor = ArmorValue();
 	const Vector vecDamageOrigin = EyePosition();
 	CHandle<CBasePlayer> hAttacker;
-	if ( sv_hitmarkers.GetBool() && HL2MPRules() )
+	if ( HL2MPRules() )
 	{
 		hAttacker = HL2MPRules()->GetDeathScorer( inputInfo.GetAttacker(), inputInfo.GetInflictor(), this );
 		if ( !hAttacker && inputInfo.GetInflictor() )
@@ -1570,18 +1586,33 @@ int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	const int nResult = BaseClass::OnTakeDamage( inputInfo );
-	const bool bTookDamage = ( nResult > 0 && GetHealth() < nOldHealth ) || ArmorValue() < nOldArmor;
-	if ( bTookDamage && sv_hitmarkers.GetBool() && hAttacker && hAttacker != this &&
-		!hAttacker->IsFakeClient() && inputInfo.GetDamage() >= 1.0f &&
-		( !HL2MPRules()->IsTeamplay() || hAttacker->GetTeamNumber() != GetTeamNumber() ) )
+	const int healthDamage = MAX(0,nOldHealth - MAX(0,GetHealth()));
+	const int armorDamage = MAX(0,nOldArmor - MAX(0,ArmorValue()));
+	const bool enemyDamage = !g_fGameOver && nOldHealth > 0 && healthDamage + armorDamage > 0 &&
+		hAttacker && hAttacker != this && HL2MPRules() &&
+		(!HL2MPRules()->IsTeamplay() || hAttacker->GetTeamNumber() != GetTeamNumber());
+	if (enemyDamage)
 	{
-		CSingleUserRecipientFilter filter( hAttacker.Get() );
-		UserMessageBegin( filter, "DamageHit" );
-			WRITE_LONG( (int)inputInfo.GetDamage() );
-			WRITE_FLOAT( vecDamageOrigin.x );
-			WRITE_FLOAT( vecDamageOrigin.y );
-			WRITE_FLOAT( vecDamageOrigin.z );
-		MessageEnd();
+		CHL2MP_Player *attacker = ToHL2MPPlayer(hAttacker.Get());
+		if (attacker) attacker->m_CombatStats.Damaged(healthDamage + armorDamage,GetHealth() <= 0);
+		if (!hAttacker->IsFakeClient())
+		{
+			CSingleUserRecipientFilter filter(hAttacker.Get());
+			if (sv_hitmarkers.GetBool())
+			{
+				UserMessageBegin(filter,"DamageHit");
+				WRITE_LONG(healthDamage + armorDamage);
+				WRITE_FLOAT(vecDamageOrigin.x); WRITE_FLOAT(vecDamageOrigin.y); WRITE_FLOAT(vecDamageOrigin.z);
+				MessageEnd();
+			}
+			// Coalesce pellets/multiple blast victims; never ask the client to confirm a hit.
+			const double now = Plat_FloatTime();
+			if (sv_hitsounds.GetBool() && attacker && now - attacker->m_LastHitSound >= 0.035)
+			{
+				attacker->m_LastHitSound = now;
+				UserMessageBegin(filter,"HitSound"); MessageEnd();
+			}
+		}
 	}
 
 	return nResult;
@@ -1790,6 +1821,8 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 
 void CHL2MP_Player::Reset()
 {	
+	m_CombatStats = HL2MPCombatStats();
+	m_LastHitSound = -1;
 	ResetDeathCount();
 	ResetFragCount();
 }
