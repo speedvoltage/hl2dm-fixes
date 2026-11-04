@@ -202,8 +202,10 @@ void CHudChat::OnTick( void )
 	}
 	if ( custom && GetChatHistory() )
 	{
-		GetChatHistory()->SetBgColor( HL2MPHudStyle( HUD_CHAT ).background );
-        GetChatHistory()->SetAlpha( 255 );
+		// Open chat uses the stock history inset and its fade animation. The
+		// custom background is for passive HUD messages, not the input window.
+		if ( !active ) GetChatHistory()->SetBgColor( HL2MPHudStyle( HUD_CHAT ).background );
+		GetChatHistory()->SetAlpha( 255 );
 	}
 	const bool editing = HL2MPHudEditor_IsLive();
 	if ( editing && !m_bEditorSampleActive )
@@ -513,7 +515,8 @@ void CHudChat::UpdateLayout( void )
 		if ( !editorOpen ) SaveWindowCvars();
 		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_CHAT );
 		GetChatHistory()->SetFont( HL2MPHudFont( HUD_CHAT, MAX( 10, int( 16 * screenTall / 720.0f * style.textScale ) ) ) );
-		GetChatHistory()->SetBgColor( style.background ); GetChatHistory()->SetFgColor( style.foreground );
+		if ( GetMessageMode() == MM_NONE ) GetChatHistory()->SetBgColor( style.background );
+		GetChatHistory()->SetFgColor( style.foreground );
 		GetChatHistory()->SetAlpha( style.visible || GetMessageMode() != MM_NONE ? 255 : 0 );
 	}
 	else if ( !custom )
