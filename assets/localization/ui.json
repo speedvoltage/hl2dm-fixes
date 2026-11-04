@@ -5839,9 +5839,9 @@
       ]
     },
     "HL2MP_BrightModelsHint": {
-      "english": "Community servers only: evenly lit super Combine soldiers. Rebels are red, Combine are blue; free-for-all players are white.",
+      "english": "Community servers only: evenly lit super Combine soldiers. Default colors are green in deathmatch, red for Rebels and blue for Combine. The server can change these colors.",
       "contexts": [
-        "Spray, footsteps and bright player model options."
+        "Damage number options and community server colors/mode controls."
       ]
     },
     "HL2MP_Spray": {
@@ -5878,6 +5878,54 @@
       "english": "Could not import this image. Check its format and size, and that the mod folder is writable.",
       "contexts": [
         "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_Hitmarkers": {
+      "english": "Hitmarkers (damage numbers)",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_HitmarkerHint": {
+      "english": "Damage numbers appear only if the server allows hitmarkers.",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_HitmarkerFont": {
+      "english": "Damage number font",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_HitmarkerColor": {
+      "english": "Damage number color",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_HitmarkerPreview": {
+      "english": "Live preview",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_BrightColors": {
+      "english": "Bright player colors",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_ModeChangeConfirm": {
+      "english": "Change the game mode and restart this round? Scores and the timer will reset, players will respawn, and teams will be balanced when enabling team deathmatch. The map stays loaded.",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
+      ]
+    },
+    "HL2MP_ModeChanged": {
+      "english": "Game mode changed. The round has restarted.",
+      "contexts": [
+        "Damage number options and community server colors/mode controls."
       ]
     }
   },
@@ -6855,14 +6903,22 @@
       "HL2MP_FootstepsMaterial": "المواد السطحية",
       "HL2MP_FootstepsHint": "تتطلب تجاوزات زملاء الفريق والأعداء نماذج مشرقة (علامة تبويب اللعبة) وتعمل فقط على خوادم المجتمع.",
       "HL2MP_BrightModelsOption": "نماذج اللاعبين اللامعة",
-      "HL2MP_BrightModelsHint": "خوادم المجتمع فقط: جنود الجمع الفائقون ذوو الإضاءة المتساوية. المتمردون باللون الأحمر، والجمع باللون الأزرق؛ اللاعبون المجانيون هم من البيض.",
+      "HL2MP_BrightModelsHint": "لخوادم المجتمع فقط: جنود نخبة Combine بإضاءة متساوية. الألوان الافتراضية: الأخضر في قتال الموت، والأحمر للمتمردين، والأزرق لـ Combine. يمكن للخادم تغيير هذه الألوان.",
       "HL2MP_Spray": "صورة الرش",
       "HL2MP_SprayImport": "استيراد الصورة",
       "HL2MP_SprayFormats": "اختر صورة يصل حجمها إلى 16 ميجابايت. تم ضبطها على 256 × 256. انضم مرة أخرى إلى الخادم بعد تغيير الرذاذ الخاص بك.",
       "HL2MP_SprayFiles": "ملفات الصور",
       "HL2MP_SprayImported": "مستورد. قم بتطبيق التغييرات، ثم أعد الانضمام إلى الخادم لاستخدام هذا الرذاذ.",
       "HL2MP_SprayImportFailed": "لا يمكن استيراد هذه الصورة. تحقق من تنسيقه وحجمه وأن مجلد التعديل قابل للكتابة.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "مؤشرات الإصابة (أرقام الضرر)",
+      "HL2MP_HitmarkerHint": "تظهر أرقام الضرر فقط إذا سمح الخادم بمؤشرات الإصابة.",
+      "HL2MP_HitmarkerFont": "خط أرقام الضرر",
+      "HL2MP_HitmarkerColor": "لون أرقام الضرر",
+      "HL2MP_HitmarkerPreview": "معاينة مباشرة",
+      "HL2MP_BrightColors": "ألوان نماذج اللاعبين الساطعة",
+      "HL2MP_ModeChangeConfirm": "هل تريد تغيير نمط اللعب وإعادة بدء الجولة؟ ستُصفّر النتائج والمؤقت، وسيعود اللاعبون للظهور، وستتوازن الفرق عند تفعيل قتال الموت الجماعي. ستبقى الخريطة محمّلة.",
+      "HL2MP_ModeChanged": "تم تغيير نمط اللعب. أُعيد بدء الجولة."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7837,14 +7893,22 @@
       "HL2MP_FootstepsMaterial": "Material de superfície",
       "HL2MP_FootstepsHint": "As substituições de companheiros de equipe e inimigos exigem modelos brilhantes (guia Jogo) e funcionam apenas em servidores da comunidade.",
       "HL2MP_BrightModelsOption": "Modelos de jogadores brilhantes",
-      "HL2MP_BrightModelsHint": "Apenas servidores comunitários: super soldados Combine iluminados uniformemente. Os rebeldes são vermelhos, os Combine são azuis; jogadores livres para todos são brancos.",
+      "HL2MP_BrightModelsHint": "Apenas servidores da comunidade: soldados de elite Combine iluminados uniformemente. Cores padrão: verde em mata-mata, vermelho para Rebeldes e azul para Combine. O servidor pode alterá-las.",
       "HL2MP_Spray": "Imagem em spray",
       "HL2MP_SprayImport": "Importar imagem",
       "HL2MP_SprayFormats": "Escolha uma imagem de até 16 MB. Ajustado em 256 × 256. Volte ao servidor após trocar seu spray.",
       "HL2MP_SprayFiles": "Arquivos de imagem",
       "HL2MP_SprayImported": "Importado. Aplique as alterações e entre novamente no servidor para usar este spray.",
       "HL2MP_SprayImportFailed": "Não foi possível importar esta imagem. Verifique seu formato e tamanho e se a pasta mod é gravável.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicadores de acerto (dano)",
+      "HL2MP_HitmarkerHint": "Os números de dano só aparecem se o servidor permitir indicadores de acerto.",
+      "HL2MP_HitmarkerFont": "Fonte dos números de dano",
+      "HL2MP_HitmarkerColor": "Cor dos números de dano",
+      "HL2MP_HitmarkerPreview": "Prévia ao vivo",
+      "HL2MP_BrightColors": "Cores dos jogadores iluminados",
+      "HL2MP_ModeChangeConfirm": "Mudar o modo e reiniciar a rodada? As pontuações e o tempo serão zerados, os jogadores reaparecerão e as equipes serão equilibradas ao ativar mata-mata em equipe. O mapa continua carregado.",
+      "HL2MP_ModeChanged": "Modo de jogo alterado. A rodada foi reiniciada."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8819,14 +8883,22 @@
       "HL2MP_FootstepsMaterial": "Материал на повърхността",
       "HL2MP_FootstepsHint": "Замените на съотборници и врагове изискват ярки модели (раздел Игра) и работят само на сървъри на общността.",
       "HL2MP_BrightModelsOption": "Ярки модели играчи",
-      "HL2MP_BrightModelsHint": "Само сървъри на общността: равномерно осветени суперкомбинирани войници. Бунтовниците са червени, Комбинацията е синя; безплатните за всички играчи са бели.",
+      "HL2MP_BrightModelsHint": "Само сървъри на общността: равномерно осветени елитни войници на Combine. Стандартни цветове: зелено в deathmatch, червено за Бунтовниците и синьо за Combine. Сървърът може да ги променя.",
       "HL2MP_Spray": "Изображение със спрей",
       "HL2MP_SprayImport": "Импортиране на изображение",
       "HL2MP_SprayFormats": "Изберете изображение до 16 MB. Fitted to 256 × 256. Rejoin the server after changing your spray.",
       "HL2MP_SprayFiles": "Файлове с изображения",
       "HL2MP_SprayImported": "Внесен. Apply changes, then rejoin the server to use this spray.",
       "HL2MP_SprayImportFailed": "Това изображение не можа да се импортира. Проверете неговия формат и размер и дали модната папка може да се записва.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Индикатори за попадение (щети)",
+      "HL2MP_HitmarkerHint": "Числата за щети се показват само ако сървърът разрешава индикатори за попадение.",
+      "HL2MP_HitmarkerFont": "Шрифт на числата за щети",
+      "HL2MP_HitmarkerColor": "Цвят на числата за щети",
+      "HL2MP_HitmarkerPreview": "Преглед на живо",
+      "HL2MP_BrightColors": "Цветове на ярките модели",
+      "HL2MP_ModeChangeConfirm": "Да се смени ли режимът и да се рестартира рундът? Точките и времето ще се нулират, играчите ще се преродят, а отборите ще се балансират при включване на отборен deathmatch. Картата остава заредена.",
+      "HL2MP_ModeChanged": "Режимът е сменен. Рундът е рестартиран."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9801,14 +9873,22 @@
       "HL2MP_FootstepsMaterial": "Povrchový materiál",
       "HL2MP_FootstepsHint": "Přepisy spoluhráčů a nepřátel vyžadují jasné modely (záložka Hra) a fungují pouze na komunitních serverech.",
       "HL2MP_BrightModelsOption": "Jasné modely přehrávačů",
-      "HL2MP_BrightModelsHint": "Pouze komunitní servery: rovnoměrně osvětlené superkombinované vojáky. Rebelové jsou červení, Combine jsou modří; free-for-all hráči jsou bílí.",
+      "HL2MP_BrightModelsHint": "Pouze komunitní servery: rovnoměrně osvětlení elitní vojáci Combine. Výchozí barvy: zelená v deathmatchi, červená pro Rebely a modrá pro Combine. Server je může změnit.",
       "HL2MP_Spray": "Obraz ve spreji",
       "HL2MP_SprayImport": "Importujte obrázek",
       "HL2MP_SprayFormats": "Vyberte snímek do velikosti 16 MB. Přizpůsobeno pro 256 × 256. Po výměně spreje se znovu připojte k serveru.",
       "HL2MP_SprayFiles": "Soubory obrázků",
       "HL2MP_SprayImported": "Importováno. Aplikujte změny a poté se znovu připojte k serveru, abyste mohli tento sprej používat.",
       "HL2MP_SprayImportFailed": "Tento obrázek nelze importovat. Zkontrolujte jeho formát a velikost a zda je složka mod zapisovatelná.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Ukazatele zásahů (poškození)",
+      "HL2MP_HitmarkerHint": "Čísla poškození se zobrazují pouze tehdy, pokud server povoluje ukazatele zásahů.",
+      "HL2MP_HitmarkerFont": "Písmo čísel poškození",
+      "HL2MP_HitmarkerColor": "Barva čísel poškození",
+      "HL2MP_HitmarkerPreview": "Živý náhled",
+      "HL2MP_BrightColors": "Barvy jasných modelů hráčů",
+      "HL2MP_ModeChangeConfirm": "Změnit režim a restartovat kolo? Skóre a čas se vynulují, hráči se znovu objeví a týmy se vyrovnají při zapnutí týmového deathmatche. Mapa zůstane načtená.",
+      "HL2MP_ModeChanged": "Herní režim změněn. Kolo bylo restartováno."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10783,14 +10863,22 @@
       "HL2MP_FootstepsMaterial": "Overflademateriale",
       "HL2MP_FootstepsHint": "Tilsidesættelser af holdkammerater og fjender kræver lyse modeller (fanen Spil) og virker kun på fællesskabsservere.",
       "HL2MP_BrightModelsOption": "Lyse afspillermodeller",
-      "HL2MP_BrightModelsHint": "Kun fællesskabsservere: jævnt oplyste super Combine-soldater. Rebeller er røde, Combine er blå; gratis-for-alle-spillere er hvide.",
+      "HL2MP_BrightModelsHint": "Kun fællesskabsservere: jævnt belyste Combine-elitesoldater. Standardfarver: grøn i deathmatch, rød for rebeller og blå for Combine. Serveren kan ændre farverne.",
       "HL2MP_Spray": "Spraybillede",
       "HL2MP_SprayImport": "Importer billede",
       "HL2MP_SprayFormats": "Vælg et billede på op til 16 MB. Monteret til 256 × 256. Tilslut serveren igen efter at have skiftet din spray.",
       "HL2MP_SprayFiles": "Billedfiler",
       "HL2MP_SprayImported": "Importeret. Anvend ændringer, og tilslut derefter serveren igen for at bruge denne spray.",
       "HL2MP_SprayImportFailed": "Kunne ikke importere dette billede. Tjek dens format og størrelse, og at mod-mappen er skrivbar.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Træfmarkører (skadetal)",
+      "HL2MP_HitmarkerHint": "Skadetal vises kun, hvis serveren tillader træfmarkører.",
+      "HL2MP_HitmarkerFont": "Skrifttype for skadetal",
+      "HL2MP_HitmarkerColor": "Farve på skadetal",
+      "HL2MP_HitmarkerPreview": "Liveforhåndsvisning",
+      "HL2MP_BrightColors": "Farver på lyse spillermodeller",
+      "HL2MP_ModeChangeConfirm": "Skift spiltype og genstart runden? Point og tid nulstilles, spillere genopstår, og holdene balanceres, når hold-deathmatch aktiveres. Banen forbliver indlæst.",
+      "HL2MP_ModeChanged": "Spiltypen er ændret. Runden er genstartet."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11765,14 +11853,22 @@
       "HL2MP_FootstepsMaterial": "Oppervlaktemateriaal",
       "HL2MP_FootstepsHint": "Overrides van teamgenoten en vijanden vereisen heldere modellen (tabblad Game) en werken alleen op communityservers.",
       "HL2MP_BrightModelsOption": "Heldere spelermodellen",
-      "HL2MP_BrightModelsHint": "Alleen communityservers: gelijkmatig verlichte supercombineersoldaten. Rebellen zijn rood, Combine zijn blauw; free-for-all-spelers zijn wit.",
+      "HL2MP_BrightModelsHint": "Alleen communityservers: gelijkmatig verlichte Combine-elitesoldaten. Standaardkleuren: groen in deathmatch, rood voor Rebellen en blauw voor Combine. De server kan deze kleuren wijzigen.",
       "HL2MP_Spray": "Spuitafbeelding",
       "HL2MP_SprayImport": "Afbeelding importeren",
       "HL2MP_SprayFormats": "Kies een afbeelding van maximaal 16 MB. Aangepast op 256 × 256. Sluit u opnieuw aan bij de server nadat u uw spray hebt gewijzigd.",
       "HL2MP_SprayFiles": "Beeldbestanden",
       "HL2MP_SprayImported": "Geïmporteerd. Pas de wijzigingen toe en sluit u vervolgens opnieuw aan bij de server om deze spray te gebruiken.",
       "HL2MP_SprayImportFailed": "Kan deze afbeelding niet importeren. Controleer het formaat en de grootte, en of de mod-map beschrijfbaar is.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Treffermarkeringen (schade)",
+      "HL2MP_HitmarkerHint": "Schadegetallen verschijnen alleen als de server treffermarkeringen toestaat.",
+      "HL2MP_HitmarkerFont": "Lettertype van schadegetallen",
+      "HL2MP_HitmarkerColor": "Kleur van schadegetallen",
+      "HL2MP_HitmarkerPreview": "Livevoorbeeld",
+      "HL2MP_BrightColors": "Kleuren van heldere spelers",
+      "HL2MP_ModeChangeConfirm": "Spelmodus wijzigen en de ronde herstarten? Scores en tijd worden gereset, spelers verschijnen opnieuw en teams worden gebalanceerd bij het inschakelen van team-deathmatch. De map blijft geladen.",
+      "HL2MP_ModeChanged": "Spelmodus gewijzigd. De ronde is opnieuw gestart."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12747,14 +12843,22 @@
       "HL2MP_FootstepsMaterial": "Pintamateriaali",
       "HL2MP_FootstepsHint": "Joukkuetoverin ja vihollisen ohitukset vaativat kirkkaita malleja (Peli-välilehti) ja toimivat vain yhteisön palvelimilla.",
       "HL2MP_BrightModelsOption": "Kirkkaat soitinmallit",
-      "HL2MP_BrightModelsHint": "Vain yhteisön palvelimet: tasaisesti valaistu superyhdistyssotilaat. Kapinalliset ovat punaisia, Combine ovat sinisiä; Ilmaiset pelaajat ovat valkoisia.",
+      "HL2MP_BrightModelsHint": "Vain yhteisöpalvelimilla: tasaisesti valaistut Combine-eliittisotilaat. Oletusvärit: vihreä deathmatchissa, punainen kapinallisilla ja sininen Combinella. Palvelin voi muuttaa värejä.",
       "HL2MP_Spray": "Ruiskukuva",
       "HL2MP_SprayImport": "Tuo kuva",
       "HL2MP_SprayFormats": "Valitse kuva, jonka koko on enintään 16 megatavua. Asennettu kokoon 256 × 256. Liity takaisin palvelimeen vaihtamisen jälkeen.",
       "HL2MP_SprayFiles": "Kuvatiedostot",
       "HL2MP_SprayImported": "Tuotu. Ota muutokset käyttöön ja liity sitten uudelleen palvelimeen käyttääksesi tätä spraytä.",
       "HL2MP_SprayImportFailed": "Tätä kuvaa ei voitu tuoda. Tarkista sen muoto ja koko ja että mod-kansio on kirjoitettava.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Osumailmaisimet (vahinkoluvut)",
+      "HL2MP_HitmarkerHint": "Vahinkoluvut näkyvät vain, jos palvelin sallii osumailmaisimet.",
+      "HL2MP_HitmarkerFont": "Vahinkolukujen fontti",
+      "HL2MP_HitmarkerColor": "Vahinkolukujen väri",
+      "HL2MP_HitmarkerPreview": "Reaaliaikainen esikatselu",
+      "HL2MP_BrightColors": "Kirkkaiden pelaajamallien värit",
+      "HL2MP_ModeChangeConfirm": "Vaihda pelitilaa ja aloita kierros uudelleen? Pisteet ja aika nollataan, pelaajat syntyvät uudelleen ja joukkueet tasataan, kun joukkue-deathmatch otetaan käyttöön. Karttaa ei ladata uudelleen.",
+      "HL2MP_ModeChanged": "Pelitila vaihdettu. Kierros alkoi uudelleen."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13729,14 +13833,22 @@
       "HL2MP_FootstepsMaterial": "Matériau de surface",
       "HL2MP_FootstepsHint": "Les remplacements de coéquipiers et d'ennemis nécessitent des modèles brillants (onglet Jeu) et ne fonctionnent que sur les serveurs communautaires.",
       "HL2MP_BrightModelsOption": "Modèles de lecteurs lumineux",
-      "HL2MP_BrightModelsHint": "Serveurs communautaires uniquement : super soldats du Combine éclairés uniformément. Les rebelles sont rouges, les Combines sont bleus ; les joueurs chacun pour soi sont blancs.",
+      "HL2MP_BrightModelsHint": "Serveurs communautaires uniquement : soldats d’élite du Cartel éclairés uniformément. Couleurs par défaut : vert en combat à mort, rouge pour les Rebelles et bleu pour le Cartel. Le serveur peut les modifier.",
       "HL2MP_Spray": "Image pulvérisée",
       "HL2MP_SprayImport": "Importer une image",
       "HL2MP_SprayFormats": "Choisissez une image jusqu'à 16 Mo. Ajusté en 256×256. Rejoignez le serveur après avoir changé votre spray.",
       "HL2MP_SprayFiles": "Fichiers images",
       "HL2MP_SprayImported": "Importé. Appliquez les modifications, puis rejoignez le serveur pour utiliser ce spray.",
       "HL2MP_SprayImportFailed": "Impossible d'importer cette image. Vérifiez son format et sa taille, et que le dossier mod est accessible en écriture.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicateurs de dégâts",
+      "HL2MP_HitmarkerHint": "Les dégâts s’affichent uniquement si le serveur autorise les indicateurs de dégâts.",
+      "HL2MP_HitmarkerFont": "Police des dégâts",
+      "HL2MP_HitmarkerColor": "Couleur des dégâts",
+      "HL2MP_HitmarkerPreview": "Aperçu en direct",
+      "HL2MP_BrightColors": "Couleurs des joueurs lumineux",
+      "HL2MP_ModeChangeConfirm": "Changer de mode et recommencer la manche ? Les scores et le chronomètre seront réinitialisés, les joueurs réapparaîtront et les équipes seront équilibrées en combat à mort par équipe. La carte reste chargée.",
+      "HL2MP_ModeChanged": "Mode de jeu modifié. La manche a recommencé."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14711,14 +14823,22 @@
       "HL2MP_FootstepsMaterial": "Oberflächenmaterial",
       "HL2MP_FootstepsHint": "Teamkameraden- und Feind-Overrides erfordern helle Modelle (Registerkarte „Spiel“) und funktionieren nur auf Community-Servern.",
       "HL2MP_BrightModelsOption": "Helle Spielermodelle",
-      "HL2MP_BrightModelsHint": "Nur Community-Server: gleichmäßig beleuchtete Super-Combine-Soldaten. Rebellen sind rot, Combine sind blau; Free-for-All-Spieler sind weiß.",
+      "HL2MP_BrightModelsHint": "Nur Communityserver: gleichmäßig beleuchtete Combine-Elitesoldaten. Standardfarben: Grün im Deathmatch, Rot für Rebellen und Blau für Combine. Der Server kann diese Farben ändern.",
       "HL2MP_Spray": "Sprühbild",
       "HL2MP_SprayImport": "Bild importieren",
       "HL2MP_SprayFormats": "Wählen Sie ein Bild mit bis zu 16 MB. Auf 256 × 256 angepasst. Treten Sie dem Server wieder bei, nachdem Sie Ihr Spray gewechselt haben.",
       "HL2MP_SprayFiles": "Bilddateien",
       "HL2MP_SprayImported": "Importiert. Wenden Sie die Änderungen an und treten Sie dann erneut dem Server bei, um dieses Spray zu verwenden.",
       "HL2MP_SprayImportFailed": "Dieses Bild konnte nicht importiert werden. Überprüfen Sie Format und Größe und stellen Sie sicher, dass der Mod-Ordner beschreibbar ist.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Trefferanzeigen (Schadenszahlen)",
+      "HL2MP_HitmarkerHint": "Schadenszahlen erscheinen nur, wenn der Server Trefferanzeigen erlaubt.",
+      "HL2MP_HitmarkerFont": "Schriftart der Schadenszahlen",
+      "HL2MP_HitmarkerColor": "Farbe der Schadenszahlen",
+      "HL2MP_HitmarkerPreview": "Live-Vorschau",
+      "HL2MP_BrightColors": "Farben heller Spielermodelle",
+      "HL2MP_ModeChangeConfirm": "Spielmodus ändern und Runde neu starten? Punkte und Zeit werden zurückgesetzt, Spieler erscheinen neu und die Teams werden beim Aktivieren von Team-Deathmatch ausgeglichen. Die Karte bleibt geladen.",
+      "HL2MP_ModeChanged": "Spielmodus geändert. Die Runde wurde neu gestartet."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15693,14 +15813,22 @@
       "HL2MP_FootstepsMaterial": "Υλικό επιφάνειας",
       "HL2MP_FootstepsHint": "Οι παρακάμψεις συμπαίκτη και εχθρού απαιτούν φωτεινά μοντέλα (καρτέλα παιχνιδιού) και λειτουργούν μόνο σε διακομιστές κοινότητας.",
       "HL2MP_BrightModelsOption": "Φωτεινά μοντέλα αναπαραγωγής",
-      "HL2MP_BrightModelsHint": "Μόνο διακομιστές κοινότητας: ομοιόμορφα φωτισμένα super Combine στρατιώτες. Οι επαναστάτες είναι κόκκινοι, το Combine είναι μπλε. Οι παίκτες ελεύθεροι για όλους είναι λευκοί.",
+      "HL2MP_BrightModelsHint": "Μόνο σε διακομιστές κοινότητας: επίλεκτοι στρατιώτες Combine με ομοιόμορφο φωτισμό. Προεπιλογές: πράσινο στο deathmatch, κόκκινο για Επαναστάτες και μπλε για Combine. Ο διακομιστής μπορεί να αλλάξει τα χρώματα.",
       "HL2MP_Spray": "Εικόνα ψεκασμού",
       "HL2MP_SprayImport": "Εισαγωγή εικόνας",
       "HL2MP_SprayFormats": "Επιλέξτε μια εικόνα έως 16 MB. Τοποθετείται σε 256 × 256. Συνδεθείτε ξανά στο διακομιστή αφού αλλάξετε το σπρέι σας.",
       "HL2MP_SprayFiles": "Αρχεία εικόνας",
       "HL2MP_SprayImported": "Εισαγόμενο. Εφαρμόστε τις αλλαγές και, στη συνέχεια, συνδεθείτε ξανά στον διακομιστή για να χρησιμοποιήσετε αυτό το σπρέι.",
       "HL2MP_SprayImportFailed": "Δεν ήταν δυνατή η εισαγωγή αυτής της εικόνας. Ελέγξτε τη μορφή και το μέγεθός του και ότι ο φάκελος mod είναι εγγράψιμος.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Ενδείξεις χτυπημάτων (ζημιά)",
+      "HL2MP_HitmarkerHint": "Οι αριθμοί ζημιάς εμφανίζονται μόνο αν ο διακομιστής επιτρέπει ενδείξεις χτυπημάτων.",
+      "HL2MP_HitmarkerFont": "Γραμματοσειρά αριθμών ζημιάς",
+      "HL2MP_HitmarkerColor": "Χρώμα αριθμών ζημιάς",
+      "HL2MP_HitmarkerPreview": "Ζωντανή προεπισκόπηση",
+      "HL2MP_BrightColors": "Χρώματα φωτεινών παικτών",
+      "HL2MP_ModeChangeConfirm": "Αλλαγή λειτουργίας και επανεκκίνηση του γύρου; Οι βαθμολογίες και ο χρόνος θα μηδενιστούν, οι παίκτες θα επανεμφανιστούν και οι ομάδες θα εξισορροπηθούν με την ενεργοποίηση του ομαδικού deathmatch. Ο χάρτης παραμένει φορτωμένος.",
+      "HL2MP_ModeChanged": "Η λειτουργία παιχνιδιού άλλαξε. Ο γύρος επανεκκινήθηκε."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16675,14 +16803,22 @@
       "HL2MP_FootstepsMaterial": "Felületi anyag",
       "HL2MP_FootstepsHint": "A csapattárs és az ellenség felülírásai fényes modelleket igényelnek (Játék lap), és csak közösségi szervereken működnek.",
       "HL2MP_BrightModelsOption": "Fényes lejátszómodellek",
-      "HL2MP_BrightModelsHint": "Csak közösségi szerverek: egyenletesen megvilágított szuperkombinációs katonák. A lázadók vörösek, a Combine kékek; A mindenki számára ingyenes játékosok fehérek.",
+      "HL2MP_BrightModelsHint": "Csak közösségi szervereken: egyenletesen megvilágított Combine elitkatonák. Alapszínek: zöld deathmatchben, piros a Lázadóknak és kék a Combine-nak. A szerver módosíthatja ezeket.",
       "HL2MP_Spray": "Spray kép",
       "HL2MP_SprayImport": "Kép importálása",
       "HL2MP_SprayFormats": "Válasszon legfeljebb 16 MB-os képet. 256 × 256-ra szerelve. A spray cseréje után csatlakozzon újra a szerverhez.",
       "HL2MP_SprayFiles": "Képfájlok",
       "HL2MP_SprayImported": "Importált. Alkalmazza a módosításokat, majd csatlakozzon újra a szerverhez a spray használatához.",
       "HL2MP_SprayImportFailed": "Nem sikerült importálni ezt a képet. Ellenőrizze a formátumát és méretét, valamint azt, hogy a mod mappa írható-e.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Találatjelzők (sebzésszámok)",
+      "HL2MP_HitmarkerHint": "A sebzésszámok csak akkor jelennek meg, ha a szerver engedélyezi a találatjelzőket.",
+      "HL2MP_HitmarkerFont": "Sebzésszámok betűtípusa",
+      "HL2MP_HitmarkerColor": "Sebzésszámok színe",
+      "HL2MP_HitmarkerPreview": "Élő előnézet",
+      "HL2MP_BrightColors": "Világos játékosmodellek színei",
+      "HL2MP_ModeChangeConfirm": "Játékmódváltás és a kör újraindítása? A pontszámok és az idő nullázódnak, a játékosok újraélednek, és a csapatok kiegyenlítődnek a csapatos deathmatch bekapcsolásakor. A pálya betöltve marad.",
+      "HL2MP_ModeChanged": "A játékmód megváltozott. A kör újraindult."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17657,14 +17793,22 @@
       "HL2MP_FootstepsMaterial": "Bahan permukaan",
       "HL2MP_FootstepsHint": "Penggantian rekan satu tim dan musuh memerlukan model yang cerah (tab Game) dan hanya berfungsi di server komunitas.",
       "HL2MP_BrightModelsOption": "Model pemain yang cerdas",
-      "HL2MP_BrightModelsHint": "Khusus server komunitas: tentara Gabungan super dengan penerangan merata. Pemberontak berwarna merah, Gabungan berwarna biru; pemain gratis untuk semua berkulit putih.",
+      "HL2MP_BrightModelsHint": "Khusus server komunitas: prajurit elite Combine dengan pencahayaan merata. Warna bawaan: hijau dalam deathmatch, merah untuk Pemberontak dan biru untuk Combine. Server dapat mengubah warna ini.",
       "HL2MP_Spray": "Semprotkan gambar",
       "HL2MP_SprayImport": "Impor gambar",
       "HL2MP_SprayFormats": "Pilih gambar hingga 16 MB. Dipasang pada 256 × 256. Bergabunglah kembali dengan server setelah mengganti semprotan Anda.",
       "HL2MP_SprayFiles": "File gambar",
       "HL2MP_SprayImported": "Diimpor. Terapkan perubahan, lalu bergabung kembali dengan server untuk menggunakan semprotan ini.",
       "HL2MP_SprayImportFailed": "Tidak dapat mengimpor gambar ini. Periksa format dan ukurannya, dan apakah folder mod dapat ditulis.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Penanda hit (angka kerusakan)",
+      "HL2MP_HitmarkerHint": "Angka kerusakan hanya muncul jika server mengizinkan penanda hit.",
+      "HL2MP_HitmarkerFont": "Font angka kerusakan",
+      "HL2MP_HitmarkerColor": "Warna angka kerusakan",
+      "HL2MP_HitmarkerPreview": "Pratinjau langsung",
+      "HL2MP_BrightColors": "Warna model pemain terang",
+      "HL2MP_ModeChangeConfirm": "Ubah mode dan mulai ulang ronde? Skor dan waktu akan direset, pemain akan muncul kembali, dan tim akan diseimbangkan saat deathmatch tim diaktifkan. Peta tetap dimuat.",
+      "HL2MP_ModeChanged": "Mode permainan diubah. Ronde telah dimulai ulang."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18639,14 +18783,22 @@
       "HL2MP_FootstepsMaterial": "Materiale della superficie",
       "HL2MP_FootstepsHint": "Gli override dei compagni di squadra e dei nemici richiedono modelli luminosi (scheda Gioco) e funzionano solo sui server della comunità.",
       "HL2MP_BrightModelsOption": "Modelli di lettori brillanti",
-      "HL2MP_BrightModelsHint": "Solo server della community: super Combina soldati illuminati in modo uniforme. I ribelli sono rossi, i Combine sono blu; i giocatori tutti contro tutti sono bianchi.",
+      "HL2MP_BrightModelsHint": "Solo server della comunità: soldati d’élite Combine illuminati uniformemente. Colori predefiniti: verde in deathmatch, rosso per i Ribelli e blu per i Combine. Il server può modificarli.",
       "HL2MP_Spray": "Immagine spruzzata",
       "HL2MP_SprayImport": "Importa immagine",
       "HL2MP_SprayFormats": "Scegli un'immagine fino a 16 MB. Adattato a 256 × 256. Rientra nel server dopo aver cambiato lo spray.",
       "HL2MP_SprayFiles": "File di immagine",
       "HL2MP_SprayImported": "Importato. Applica le modifiche, quindi riconnettiti al server per utilizzare questo spray.",
       "HL2MP_SprayImportFailed": "Impossibile importare questa immagine. Controllane il formato e le dimensioni e che la cartella mod sia scrivibile.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicatori di colpo (danni)",
+      "HL2MP_HitmarkerHint": "I danni vengono mostrati solo se il server consente gli indicatori di colpo.",
+      "HL2MP_HitmarkerFont": "Carattere dei numeri dei danni",
+      "HL2MP_HitmarkerColor": "Colore dei numeri dei danni",
+      "HL2MP_HitmarkerPreview": "Anteprima dal vivo",
+      "HL2MP_BrightColors": "Colori dei giocatori luminosi",
+      "HL2MP_ModeChangeConfirm": "Cambiare modalità e riavviare il round? Punteggi e timer verranno azzerati, i giocatori rinasceranno e le squadre verranno bilanciate attivando il deathmatch a squadre. La mappa resta caricata.",
+      "HL2MP_ModeChanged": "Modalità di gioco cambiata. Il round è stato riavviato."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19621,14 +19773,22 @@
       "HL2MP_FootstepsMaterial": "表面素材",
       "HL2MP_FootstepsHint": "チームメイトと敵のオーバーライドにはブライト モデル ([ゲーム] タブ) が必要で、コミュニティ サーバーでのみ機能します。",
       "HL2MP_BrightModelsOption": "ブライトプレーヤーモデル",
-      "HL2MP_BrightModelsHint": "コミュニティサーバーのみ: 均等に照明されたスーパーコンバイン兵士。反乱軍は赤、結合は青です。フリーフォーオールプレイヤーは白です。",
+      "HL2MP_BrightModelsHint": "コミュニティサーバー限定：均一に照らされたコンバイン精鋭兵モデルを使用します。既定の色はデスマッチで緑、レジスタンスが赤、コンバインが青です。サーバー側で変更できます。",
       "HL2MP_Spray": "スプレーイメージ",
       "HL2MP_SprayImport": "画像のインポート",
       "HL2MP_SprayFormats": "16 MB までの画像を選択してください。 256 × 256 に適合。スプレーを交換した後、サーバーに再接続します。",
       "HL2MP_SprayFiles": "画像ファイル",
       "HL2MP_SprayImported": "輸入品です。変更を適用し、サーバーに再接続してこのスプレーを使用します。",
       "HL2MP_SprayImportFailed": "この画像をインポートできませんでした。形式とサイズ、および mod フォルダーが書き込み可能であることを確認してください。",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "ヒットマーカー（ダメージ数値）",
+      "HL2MP_HitmarkerHint": "ダメージ数値は、サーバーがヒットマーカーを許可している場合にのみ表示されます。",
+      "HL2MP_HitmarkerFont": "ダメージ数値のフォント",
+      "HL2MP_HitmarkerColor": "ダメージ数値の色",
+      "HL2MP_HitmarkerPreview": "ライブプレビュー",
+      "HL2MP_BrightColors": "明るいプレイヤーモデルの色",
+      "HL2MP_ModeChangeConfirm": "ゲームモードを変更してラウンドを再開しますか？スコアとタイマーがリセットされ、プレイヤーがリスポーンします。チームデスマッチを有効にするとチーム人数が均等化されます。マップは読み込まれたままです。",
+      "HL2MP_ModeChanged": "ゲームモードが変更されました。ラウンドを再開しました。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20603,14 +20763,22 @@
       "HL2MP_FootstepsMaterial": "표면재질",
       "HL2MP_FootstepsHint": "팀원 및 적 무시에는 밝은 모델(게임 탭)이 필요하며 커뮤니티 서버에서만 작동합니다.",
       "HL2MP_BrightModelsOption": "브라이트 플레이어 모델",
-      "HL2MP_BrightModelsHint": "커뮤니티 서버만 해당: 균일하게 조명이 켜진 슈퍼 콤바인 병사. 반란군은 빨간색, 콤바인은 파란색입니다. 자유 경기 선수는 백인입니다.",
+      "HL2MP_BrightModelsHint": "커뮤니티 서버 전용: 균일하게 밝은 콤바인 정예병 모델을 사용합니다. 기본 색상은 데스매치에서 초록색, 반군은 빨간색, 콤바인은 파란색입니다. 서버에서 색상을 변경할 수 있습니다.",
       "HL2MP_Spray": "스프레이 이미지",
       "HL2MP_SprayImport": "이미지 가져오기",
       "HL2MP_SprayFormats": "최대 16MB의 이미지를 선택하세요. 256×256으로 맞춰졌습니다. 스프레이를 교체한 후 서버에 다시 접속하세요.",
       "HL2MP_SprayFiles": "이미지 파일",
       "HL2MP_SprayImported": "가져왔습니다. 변경 사항을 적용한 다음 서버에 다시 참여하여 이 스프레이를 사용하세요.",
       "HL2MP_SprayImportFailed": "이 이미지를 가져올 수 없습니다. 형식과 크기를 확인하고 mod 폴더에 쓰기가 가능한지 확인하세요.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "명중 표시 (피해량 숫자)",
+      "HL2MP_HitmarkerHint": "서버에서 명중 표시를 허용한 경우에만 피해량 숫자가 표시됩니다.",
+      "HL2MP_HitmarkerFont": "피해량 숫자 글꼴",
+      "HL2MP_HitmarkerColor": "피해량 숫자 색상",
+      "HL2MP_HitmarkerPreview": "실시간 미리 보기",
+      "HL2MP_BrightColors": "밝은 플레이어 모델 색상",
+      "HL2MP_ModeChangeConfirm": "게임 모드를 변경하고 라운드를 다시 시작할까요? 점수와 시간이 초기화되고 플레이어가 부활하며 팀 데스매치를 활성화하면 팀 인원이 균등하게 배정됩니다. 맵은 로드된 상태로 유지됩니다.",
+      "HL2MP_ModeChanged": "게임 모드가 변경되었습니다. 라운드를 다시 시작했습니다."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -21585,14 +21753,22 @@
       "HL2MP_FootstepsMaterial": "Material de la superficie",
       "HL2MP_FootstepsHint": "Las anulaciones de compañeros de equipo y enemigos requieren modelos brillantes (pestaña Juego) y solo funcionan en servidores comunitarios.",
       "HL2MP_BrightModelsOption": "Modelos de reproductores brillantes",
-      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: súper soldados Combine iluminados uniformemente. Los rebeldes son rojos, los combinados son azules; Los jugadores de todos contra todos son blancos.",
+      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: soldados de élite de la Alianza con iluminación uniforme. Colores predeterminados: verde en combate a muerte, rojo para Rebeldes y azul para la Alianza. El servidor puede cambiarlos.",
       "HL2MP_Spray": "Imagen pulverizada",
       "HL2MP_SprayImport": "Importar imagen",
       "HL2MP_SprayFormats": "Elija una imagen de hasta 16 MB. Ajustado a 256 × 256. Vuelva a unirse al servidor después de cambiar su spray.",
       "HL2MP_SprayFiles": "Archivos de imagen",
       "HL2MP_SprayImported": "Importado. Aplique los cambios y luego vuelva a unirse al servidor para usar este spray.",
       "HL2MP_SprayImportFailed": "No se pudo importar esta imagen. Verifique su formato y tamaño, y que se pueda escribir en la carpeta mod.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicadores de impacto (daño)",
+      "HL2MP_HitmarkerHint": "El daño solo se muestra si el servidor permite los indicadores de impacto.",
+      "HL2MP_HitmarkerFont": "Fuente de los números de daño",
+      "HL2MP_HitmarkerColor": "Color de los números de daño",
+      "HL2MP_HitmarkerPreview": "Vista previa en directo",
+      "HL2MP_BrightColors": "Colores de jugadores brillantes",
+      "HL2MP_ModeChangeConfirm": "¿Cambiar de modo y reiniciar la ronda? Se reiniciarán las puntuaciones y el tiempo, los jugadores reaparecerán y se equilibrarán los equipos al activar el combate a muerte por equipos. El mapa seguirá cargado.",
+      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -22567,14 +22743,22 @@
       "HL2MP_FootstepsMaterial": "Bahan permukaan",
       "HL2MP_FootstepsHint": "Penggantian rakan sepasukan dan musuh memerlukan model terang (tab Permainan) dan hanya berfungsi pada pelayan komuniti.",
       "HL2MP_BrightModelsOption": "Model pemain yang terang",
-      "HL2MP_BrightModelsHint": "Pelayan komuniti sahaja: askar Combine super menyala sekata. Pemberontak merah, Gabungkan biru; pemain percuma untuk semua adalah berkulit putih.",
+      "HL2MP_BrightModelsHint": "Pelayan komuniti sahaja: askar elit Combine dengan pencahayaan sekata. Warna lalai: hijau dalam deathmatch, merah untuk Pemberontak dan biru untuk Combine. Pelayan boleh mengubah warna ini.",
       "HL2MP_Spray": "Sembur imej",
       "HL2MP_SprayImport": "Import imej",
       "HL2MP_SprayFormats": "Pilih imej sehingga 16 MB. Dipasang pada 256 × 256. Sertai semula pelayan selepas menukar semburan anda.",
       "HL2MP_SprayFiles": "Fail imej",
       "HL2MP_SprayImported": "Diimport. Gunakan perubahan, kemudian sertai semula pelayan untuk menggunakan semburan ini.",
       "HL2MP_SprayImportFailed": "Tidak dapat mengimport imej ini. Semak format dan saiznya, dan bahawa folder mod boleh ditulis.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Penanda kena (angka kerosakan)",
+      "HL2MP_HitmarkerHint": "Angka kerosakan hanya muncul jika pelayan membenarkan penanda kena.",
+      "HL2MP_HitmarkerFont": "Fon angka kerosakan",
+      "HL2MP_HitmarkerColor": "Warna angka kerosakan",
+      "HL2MP_HitmarkerPreview": "Pratonton langsung",
+      "HL2MP_BrightColors": "Warna model pemain terang",
+      "HL2MP_ModeChangeConfirm": "Tukar mod dan mulakan semula pusingan? Skor dan masa akan ditetapkan semula, pemain akan muncul semula, dan pasukan akan diseimbangkan apabila deathmatch berpasukan diaktifkan. Peta kekal dimuatkan.",
+      "HL2MP_ModeChanged": "Mod permainan ditukar. Pusingan dimulakan semula."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -23549,14 +23733,22 @@
       "HL2MP_FootstepsMaterial": "Overflatemateriale",
       "HL2MP_FootstepsHint": "Overstyring av lagkamerater og fiender krever lyse modeller (Spill-fanen) og fungerer kun på fellesskapsservere.",
       "HL2MP_BrightModelsOption": "Lyse spillermodeller",
-      "HL2MP_BrightModelsHint": "Bare fellesskapsservere: jevnt opplyste superkombinasjonssoldater. Opprørere er røde, Combine er blå; gratis-for-alle-spillere er hvite.",
+      "HL2MP_BrightModelsHint": "Kun fellesskapsservere: jevnt belyste Combine-elitesoldater. Standardfarger: grønn i deathmatch, rød for opprørere og blå for Combine. Serveren kan endre fargene.",
       "HL2MP_Spray": "Spraybilde",
       "HL2MP_SprayImport": "Importer bilde",
       "HL2MP_SprayFormats": "Velg et bilde på opptil 16 MB. Tilpasset til 256 × 256. Bli med serveren igjen etter å ha byttet spray.",
       "HL2MP_SprayFiles": "Bildefiler",
       "HL2MP_SprayImported": "Importert. Bruk endringer, og bli med på serveren igjen for å bruke denne sprayen.",
       "HL2MP_SprayImportFailed": "Kunne ikke importere dette bildet. Sjekk formatet og størrelsen, og at mod-mappen er skrivbar.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Treffmarkører (skadetall)",
+      "HL2MP_HitmarkerHint": "Skadetall vises bare hvis serveren tillater treffmarkører.",
+      "HL2MP_HitmarkerFont": "Skrifttype for skadetall",
+      "HL2MP_HitmarkerColor": "Farge på skadetall",
+      "HL2MP_HitmarkerPreview": "Direkte forhåndsvisning",
+      "HL2MP_BrightColors": "Farger på lyse spillermodeller",
+      "HL2MP_ModeChangeConfirm": "Endre spillmodus og starte runden på nytt? Poeng og tid nullstilles, spillere gjenoppstår, og lagene balanseres når lag-deathmatch aktiveres. Kartet forblir lastet.",
+      "HL2MP_ModeChanged": "Spillmodus endret. Runden er startet på nytt."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -24531,14 +24723,22 @@
       "HL2MP_FootstepsMaterial": "Materiał powierzchni",
       "HL2MP_FootstepsHint": "Nadpisania członków drużyny i wrogów wymagają jasnych modeli (zakładka Gra) i działają tylko na serwerach społeczności.",
       "HL2MP_BrightModelsOption": "Jasne modele odtwarzaczy",
-      "HL2MP_BrightModelsHint": "Tylko serwery społecznościowe: równomiernie oświetleni żołnierze superkombinatu. Rebelianci są czerwoni, Kombinat jest niebieski; gracze niezależni dla wszystkich są biali.",
+      "HL2MP_BrightModelsHint": "Tylko serwery społeczności: równomiernie oświetleni elitarni żołnierze Kombinatu. Domyślne kolory: zielony w deathmatchu, czerwony dla Rebeliantów i niebieski dla Kombinatu. Serwer może je zmieniać.",
       "HL2MP_Spray": "Obraz sprayu",
       "HL2MP_SprayImport": "Importuj obraz",
       "HL2MP_SprayFormats": "Wybierz obraz o rozmiarze do 16 MB. Dopasowany do 256 × 256. Dołącz ponownie do serwera po zmianie sprayu.",
       "HL2MP_SprayFiles": "Pliki obrazów",
       "HL2MP_SprayImported": "Zaimportowano. Zastosuj zmiany, a następnie ponownie dołącz do serwera, aby użyć tego sprayu.",
       "HL2MP_SprayImportFailed": "Nie można zaimportować tego obrazu. Sprawdź jego format i rozmiar oraz czy folder mod umożliwia zapis.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Znaczniki trafień (obrażenia)",
+      "HL2MP_HitmarkerHint": "Liczby obrażeń pojawiają się tylko wtedy, gdy serwer zezwala na znaczniki trafień.",
+      "HL2MP_HitmarkerFont": "Czcionka liczb obrażeń",
+      "HL2MP_HitmarkerColor": "Kolor liczb obrażeń",
+      "HL2MP_HitmarkerPreview": "Podgląd na żywo",
+      "HL2MP_BrightColors": "Kolory jasnych modeli graczy",
+      "HL2MP_ModeChangeConfirm": "Zmienić tryb i rozpocząć rundę od nowa? Wyniki i czas zostaną wyzerowane, gracze się odrodzą, a drużyny zostaną wyrównane przy włączaniu drużynowego deathmatchu. Mapa pozostaje wczytana.",
+      "HL2MP_ModeChanged": "Zmieniono tryb gry. Runda rozpoczęła się od nowa."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -25513,14 +25713,22 @@
       "HL2MP_FootstepsMaterial": "Material de superfície",
       "HL2MP_FootstepsHint": "As substituições de companheiros de equipe e inimigos exigem modelos brilhantes (guia Jogo) e funcionam apenas em servidores da comunidade.",
       "HL2MP_BrightModelsOption": "Modelos de jogadores brilhantes",
-      "HL2MP_BrightModelsHint": "Apenas servidores comunitários: super soldados Combine iluminados uniformemente. Os rebeldes são vermelhos, os Combine são azuis; jogadores livres para todos são brancos.",
+      "HL2MP_BrightModelsHint": "Apenas servidores comunitários: soldados de elite Combine iluminados uniformemente. Cores predefinidas: verde em deathmatch, vermelho para Rebeldes e azul para Combine. O servidor pode alterá-las.",
       "HL2MP_Spray": "Imagem em spray",
       "HL2MP_SprayImport": "Importar imagem",
       "HL2MP_SprayFormats": "Escolha uma imagem de até 16 MB. Ajustado em 256 × 256. Volte ao servidor após trocar seu spray.",
       "HL2MP_SprayFiles": "Arquivos de imagem",
       "HL2MP_SprayImported": "Importado. Aplique as alterações e entre novamente no servidor para usar este spray.",
       "HL2MP_SprayImportFailed": "Não foi possível importar esta imagem. Verifique seu formato e tamanho e se a pasta mod é gravável.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicadores de acerto (dano)",
+      "HL2MP_HitmarkerHint": "Os números de dano só aparecem se o servidor permitir indicadores de acerto.",
+      "HL2MP_HitmarkerFont": "Tipo de letra dos danos",
+      "HL2MP_HitmarkerColor": "Cor dos números de dano",
+      "HL2MP_HitmarkerPreview": "Pré-visualização em direto",
+      "HL2MP_BrightColors": "Cores dos jogadores iluminados",
+      "HL2MP_ModeChangeConfirm": "Alterar o modo e reiniciar a ronda? As pontuações e o tempo serão repostos, os jogadores reaparecerão e as equipas serão equilibradas ao ativar deathmatch por equipas. O mapa continua carregado.",
+      "HL2MP_ModeChanged": "Modo de jogo alterado. A ronda foi reiniciada."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -26495,14 +26703,22 @@
       "HL2MP_FootstepsMaterial": "Material de suprafață",
       "HL2MP_FootstepsHint": "Anulările coechipierilor și inamicului necesită modele luminoase (fila Joc) și funcționează numai pe serverele comunității.",
       "HL2MP_BrightModelsOption": "Modele de playere luminoase",
-      "HL2MP_BrightModelsHint": "Numai servere comunitare: soldați super Combine iluminați uniform. Rebelii sunt roșii, Combinați sunt albaștri; jucătorii liberi pentru toți sunt albi.",
+      "HL2MP_BrightModelsHint": "Doar servere comunitare: soldați de elită Combine iluminați uniform. Culori implicite: verde în deathmatch, roșu pentru Rebeli și albastru pentru Combine. Serverul le poate modifica.",
       "HL2MP_Spray": "Imagine pulverizată",
       "HL2MP_SprayImport": "Import imagine",
       "HL2MP_SprayFormats": "Alegeți o imagine de până la 16 MB. Montat la 256 × 256. Reajungeți la server după ce vă schimbați spray-ul.",
       "HL2MP_SprayFiles": "Fișiere imagine",
       "HL2MP_SprayImported": "Importat. Aplicați modificările, apoi conectați-vă din nou la server pentru a utiliza acest spray.",
       "HL2MP_SprayImportFailed": "Nu s-a putut importa această imagine. Verificați formatul și dimensiunea acestuia și dacă folderul mod poate fi scris.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicatori de lovire (daune)",
+      "HL2MP_HitmarkerHint": "Numerele daunelor apar doar dacă serverul permite indicatorii de lovire.",
+      "HL2MP_HitmarkerFont": "Fontul numerelor de daune",
+      "HL2MP_HitmarkerColor": "Culoarea numerelor de daune",
+      "HL2MP_HitmarkerPreview": "Previzualizare în timp real",
+      "HL2MP_BrightColors": "Culorile modelelor luminoase",
+      "HL2MP_ModeChangeConfirm": "Schimbi modul și repornești runda? Scorurile și timpul vor fi resetate, jucătorii vor reapărea, iar echipele vor fi echilibrate la activarea deathmatchului pe echipe. Harta rămâne încărcată.",
+      "HL2MP_ModeChanged": "Modul de joc a fost schimbat. Runda a fost repornită."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -27477,14 +27693,22 @@
       "HL2MP_FootstepsMaterial": "Материал поверхности",
       "HL2MP_FootstepsHint": "Для переопределения товарищей по команде и врагов требуются яркие модели (вкладка «Игра») и они работают только на серверах сообщества.",
       "HL2MP_BrightModelsOption": "Яркие модели игроков",
-      "HL2MP_BrightModelsHint": "Только на серверах сообщества: равномерно освещенные суперсолдаты Альянса. Повстанцы — красные, Альянс — синие; игроки, играющие бесплатно для всех, — белые.",
+      "HL2MP_BrightModelsHint": "Только серверы сообщества: равномерно освещённые элитные солдаты Альянса. Цвета по умолчанию: зелёный в бою насмерть, красный для Повстанцев и синий для Альянса. Сервер может менять эти цвета.",
       "HL2MP_Spray": "Изображение распыления",
       "HL2MP_SprayImport": "Импорт изображения",
       "HL2MP_SprayFormats": "Выберите изображение размером до 16 МБ. Подогнано под размер 256 × 256. Подключитесь к серверу после смены спрея.",
       "HL2MP_SprayFiles": "Файлы изображений",
       "HL2MP_SprayImported": "Импортировано. Примените изменения, затем снова подключитесь к серверу, чтобы использовать этот спрей.",
       "HL2MP_SprayImportFailed": "Не удалось импортировать это изображение. Проверьте его формат и размер, а также наличие возможности записи в папку мода.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Индикаторы попаданий (числа урона)",
+      "HL2MP_HitmarkerHint": "Числа урона отображаются, только если сервер разрешает индикаторы попаданий.",
+      "HL2MP_HitmarkerFont": "Шрифт чисел урона",
+      "HL2MP_HitmarkerColor": "Цвет чисел урона",
+      "HL2MP_HitmarkerPreview": "Предпросмотр",
+      "HL2MP_BrightColors": "Цвета ярких моделей игроков",
+      "HL2MP_ModeChangeConfirm": "Сменить режим и перезапустить раунд? Счёт и таймер будут сброшены, игроки возродятся, а при включении командного боя насмерть составы команд будут сбалансированы. Карта останется загруженной.",
+      "HL2MP_ModeChanged": "Режим игры изменён. Раунд перезапущен."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -28459,14 +28683,22 @@
       "HL2MP_FootstepsMaterial": "表面材质",
       "HL2MP_FootstepsHint": "队友和敌人覆盖需要明亮的模型（“游戏”选项卡）并且仅适用于社区服务器。",
       "HL2MP_BrightModelsOption": "明亮的玩家模型",
-      "HL2MP_BrightModelsHint": "仅限社区服务器：均匀照亮的超级联合士兵。叛军为红色，联合军为蓝色；自由参加的所有玩家都是白人。",
+      "HL2MP_BrightModelsHint": "仅限社区服务器：使用均匀照明的联合军精英士兵模型。默认颜色：死亡竞赛为绿色，反抗军为红色，联合军为蓝色。服务器可以更改这些颜色。",
       "HL2MP_Spray": "喷雾图像",
       "HL2MP_SprayImport": "导入图像",
       "HL2MP_SprayFormats": "选择最大 16 MB 的图像。安装至 256 × 256。更换喷雾后重新加入服务器。",
       "HL2MP_SprayFiles": "图像文件",
       "HL2MP_SprayImported": "进口。应用更改，然后重新加入服务器以使用此喷雾。",
       "HL2MP_SprayImportFailed": "无法导入该图像。检查其格式和大小，以及 mod 文件夹是否可写。",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "命中提示（伤害数字）",
+      "HL2MP_HitmarkerHint": "仅在服务器允许命中提示时显示伤害数字。",
+      "HL2MP_HitmarkerFont": "伤害数字字体",
+      "HL2MP_HitmarkerColor": "伤害数字颜色",
+      "HL2MP_HitmarkerPreview": "实时预览",
+      "HL2MP_BrightColors": "高亮玩家模型颜色",
+      "HL2MP_ModeChangeConfirm": "更改游戏模式并重新开始本回合？分数和计时器将重置，玩家将重生，启用团队死亡竞赛时将平衡队伍人数。地图保持加载状态。",
+      "HL2MP_ModeChanged": "游戏模式已更改。本回合已重新开始。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -29441,14 +29673,22 @@
       "HL2MP_FootstepsMaterial": "Material de la superficie",
       "HL2MP_FootstepsHint": "Las anulaciones de compañeros de equipo y enemigos requieren modelos brillantes (pestaña Juego) y solo funcionan en servidores comunitarios.",
       "HL2MP_BrightModelsOption": "Modelos de reproductores brillantes",
-      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: súper soldados Combine iluminados uniformemente. Los rebeldes son rojos, los combinados son azules; Los jugadores de todos contra todos son blancos.",
+      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: soldados de élite de la Alianza con iluminación uniforme. Colores predeterminados: verde en combate a muerte, rojo para Rebeldes y azul para la Alianza. El servidor puede cambiarlos.",
       "HL2MP_Spray": "Imagen pulverizada",
       "HL2MP_SprayImport": "Importar imagen",
       "HL2MP_SprayFormats": "Elija una imagen de hasta 16 MB. Ajustado a 256 × 256. Vuelva a unirse al servidor después de cambiar su spray.",
       "HL2MP_SprayFiles": "Archivos de imagen",
       "HL2MP_SprayImported": "Importado. Aplique los cambios y luego vuelva a unirse al servidor para usar este spray.",
       "HL2MP_SprayImportFailed": "No se pudo importar esta imagen. Verifique su formato y tamaño, y que se pueda escribir en la carpeta mod.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Indicadores de impacto (daño)",
+      "HL2MP_HitmarkerHint": "El daño solo se muestra si el servidor permite los indicadores de impacto.",
+      "HL2MP_HitmarkerFont": "Fuente de los números de daño",
+      "HL2MP_HitmarkerColor": "Color de los números de daño",
+      "HL2MP_HitmarkerPreview": "Vista previa en directo",
+      "HL2MP_BrightColors": "Colores de jugadores brillantes",
+      "HL2MP_ModeChangeConfirm": "¿Cambiar de modo y reiniciar la ronda? Se reiniciarán las puntuaciones y el tiempo, los jugadores reaparecerán y se equilibrarán los equipos al activar el combate a muerte por equipos. El mapa seguirá cargado.",
+      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -30423,14 +30663,22 @@
       "HL2MP_FootstepsMaterial": "Ytmaterial",
       "HL2MP_FootstepsHint": "Lagkamrater och fiendens åsidosättanden kräver ljusa modeller (fliken Spel) och fungerar bara på communityservrar.",
       "HL2MP_BrightModelsOption": "Ljusa spelarmodeller",
-      "HL2MP_BrightModelsHint": "Endast gemenskapsservrar: jämnt upplysta superkombinationssoldater. Rebeller är röda, Combine är blå; gratis-för-alla-spelare är vita.",
+      "HL2MP_BrightModelsHint": "Endast communityservrar: jämnt belysta Combine-elitsoldater. Standardfärger: grönt i deathmatch, rött för rebeller och blått för Combine. Servern kan ändra färgerna.",
       "HL2MP_Spray": "Spraybild",
       "HL2MP_SprayImport": "Importera bild",
       "HL2MP_SprayFormats": "Välj en bild upp till 16 MB. Passad till 256 × 256. Gå med i servern igen efter att du har bytt spray.",
       "HL2MP_SprayFiles": "Bildfiler",
       "HL2MP_SprayImported": "Importerad. Tillämpa ändringarna och anslut sedan till servern igen för att använda denna spray.",
       "HL2MP_SprayImportFailed": "Det gick inte att importera den här bilden. Kontrollera dess format och storlek och att mod-mappen är skrivbar.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Träffmarkörer (skadetal)",
+      "HL2MP_HitmarkerHint": "Skadetal visas endast om servern tillåter träffmarkörer.",
+      "HL2MP_HitmarkerFont": "Typsnitt för skadetal",
+      "HL2MP_HitmarkerColor": "Färg på skadetal",
+      "HL2MP_HitmarkerPreview": "Liveförhandsvisning",
+      "HL2MP_BrightColors": "Färger på ljusa spelarmodeller",
+      "HL2MP_ModeChangeConfirm": "Ändra spelläge och starta om rundan? Poäng och tid nollställs, spelare återuppstår och lagen balanseras när lag-deathmatch aktiveras. Kartan förblir laddad.",
+      "HL2MP_ModeChanged": "Spelläget har ändrats. Rundan har startats om."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -31405,14 +31653,22 @@
       "HL2MP_FootstepsMaterial": "表面材質",
       "HL2MP_FootstepsHint": "隊友和敵人覆蓋需要明亮的模型（「遊戲」標籤）並且僅適用於社群伺服器。",
       "HL2MP_BrightModelsOption": "明亮的玩家模型",
-      "HL2MP_BrightModelsHint": "僅限社群伺服器：均勻照亮的超級聯合士兵。叛軍為紅色，聯合軍為藍色；自由參加的所有玩家都是白人。",
+      "HL2MP_BrightModelsHint": "僅限社群伺服器：使用均勻照明的合成人精英士兵模型。預設顏色：死亡競賽為綠色，反抗軍為紅色，合成人為藍色。伺服器可以變更這些顏色。",
       "HL2MP_Spray": "噴霧影像",
       "HL2MP_SprayImport": "導入影像",
       "HL2MP_SprayFormats": "選擇最大 16 MB 的影像。安裝至 256 × 256。更換噴霧後重新加入伺服器。",
       "HL2MP_SprayFiles": "影像文件",
       "HL2MP_SprayImported": "進口。應用更改，然後重新加入伺服器以使用此噴霧。",
       "HL2MP_SprayImportFailed": "無法匯入該影像。檢查其格式和大小，以及 mod 資料夾是否可寫入。",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "命中提示（傷害數字）",
+      "HL2MP_HitmarkerHint": "僅在伺服器允許命中提示時顯示傷害數字。",
+      "HL2MP_HitmarkerFont": "傷害數字字型",
+      "HL2MP_HitmarkerColor": "傷害數字顏色",
+      "HL2MP_HitmarkerPreview": "即時預覽",
+      "HL2MP_BrightColors": "明亮玩家模型顏色",
+      "HL2MP_ModeChangeConfirm": "變更遊戲模式並重新開始本回合？分數和計時器將重設，玩家將重生，啟用團隊死亡競賽時將平衡隊伍人數。地圖保持載入狀態。",
+      "HL2MP_ModeChanged": "遊戲模式已變更。本回合已重新開始。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -32387,14 +32643,22 @@
       "HL2MP_FootstepsMaterial": "วัสดุพื้นผิว",
       "HL2MP_FootstepsHint": "การแทนที่เพื่อนร่วมทีมและศัตรูต้องใช้โมเดลที่สดใส (แท็บเกม) และใช้งานได้บนเซิร์ฟเวอร์ชุมชนเท่านั้น",
       "HL2MP_BrightModelsOption": "เครื่องเล่นรุ่นไบรท์",
-      "HL2MP_BrightModelsHint": "เซิร์ฟเวอร์ชุมชนเท่านั้น: ทหารรวมซุปเปอร์ที่ส่องสว่างเท่ากัน กลุ่มกบฏเป็นสีแดง กลุ่มคอมไบน์เป็นสีน้ำเงิน ผู้เล่นฟรีสำหรับทุกคนจะเป็นสีขาว",
+      "HL2MP_BrightModelsHint": "เฉพาะเซิร์ฟเวอร์ชุมชน: ทหารชั้นยอด Combine ที่มีแสงสว่างสม่ำเสมอ สีเริ่มต้นคือสีเขียวในเดธแมตช์ สีแดงสำหรับฝ่ายกบฏ และสีน้ำเงินสำหรับ Combine เซิร์ฟเวอร์สามารถเปลี่ยนสีเหล่านี้ได้",
       "HL2MP_Spray": "ภาพสเปรย์",
       "HL2MP_SprayImport": "นำเข้ารูปภาพ",
       "HL2MP_SprayFormats": "เลือกรูปภาพขนาดสูงสุด 16 MB ติดตั้งได้ขนาด 256 × 256 เข้าร่วมเซิร์ฟเวอร์อีกครั้งหลังจากเปลี่ยนสเปรย์",
       "HL2MP_SprayFiles": "ไฟล์ภาพ",
       "HL2MP_SprayImported": "นำเข้าแล้ว ใช้การเปลี่ยนแปลง จากนั้นเข้าร่วมเซิร์ฟเวอร์อีกครั้งเพื่อใช้สเปรย์นี้",
       "HL2MP_SprayImportFailed": "ไม่สามารถนำเข้ารูปภาพนี้ได้ ตรวจสอบรูปแบบและขนาด และโฟลเดอร์ mod นั้นสามารถเขียนได้",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "ตัวบอกการยิงโดน (ตัวเลขความเสียหาย)",
+      "HL2MP_HitmarkerHint": "ตัวเลขความเสียหายจะแสดงเมื่อเซิร์ฟเวอร์อนุญาตตัวบอกการยิงโดนเท่านั้น",
+      "HL2MP_HitmarkerFont": "แบบอักษรตัวเลขความเสียหาย",
+      "HL2MP_HitmarkerColor": "สีตัวเลขความเสียหาย",
+      "HL2MP_HitmarkerPreview": "ตัวอย่างแบบสด",
+      "HL2MP_BrightColors": "สีโมเดลผู้เล่นแบบสว่าง",
+      "HL2MP_ModeChangeConfirm": "เปลี่ยนโหมดและเริ่มรอบใหม่หรือไม่? คะแนนและเวลาจะถูกรีเซ็ต ผู้เล่นจะเกิดใหม่ และทีมจะถูกจัดให้สมดุลเมื่อเปิดโหมดทีมเดธแมตช์ แผนที่ยังคงโหลดอยู่",
+      "HL2MP_ModeChanged": "เปลี่ยนโหมดเกมแล้ว เริ่มรอบใหม่แล้ว"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -33369,14 +33633,22 @@
       "HL2MP_FootstepsMaterial": "Yüzey malzemesi",
       "HL2MP_FootstepsHint": "Takım arkadaşı ve düşman geçersiz kılmaları parlak modeller gerektirir (Oyun sekmesi) ve yalnızca topluluk sunucularında çalışır.",
       "HL2MP_BrightModelsOption": "Parlak oynatıcı modelleri",
-      "HL2MP_BrightModelsHint": "Yalnızca topluluk sunucuları: eşit şekilde aydınlatılmış süper Kombine askerler. Asiler kırmızı, Combinelar mavi; herkese açık oyuncular beyazdır.",
+      "HL2MP_BrightModelsHint": "Yalnızca topluluk sunucuları: eşit aydınlatılmış seçkin Combine askerleri. Varsayılan renkler: ölüm maçında yeşil, Asiler için kırmızı ve Combine için mavi. Sunucu bu renkleri değiştirebilir.",
       "HL2MP_Spray": "Sprey görüntüsü",
       "HL2MP_SprayImport": "Görüntüyü içe aktar",
       "HL2MP_SprayFormats": "16 MB'a kadar bir görüntü seçin. 256×256'ya uygundur. Spreyinizi değiştirdikten sonra tekrar sunucuya katılın.",
       "HL2MP_SprayFiles": "Görüntü dosyaları",
       "HL2MP_SprayImported": "İçe aktarıldı. Değişiklikleri uygulayın ve bu spreyi kullanmak için sunucuya yeniden katılın.",
       "HL2MP_SprayImportFailed": "Bu görüntü içe aktarılamadı. Formatını, boyutunu ve mod klasörünün yazılabilir olup olmadığını kontrol edin.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Vuruş göstergeleri (hasar sayıları)",
+      "HL2MP_HitmarkerHint": "Hasar sayıları yalnızca sunucu vuruş göstergelerine izin veriyorsa görünür.",
+      "HL2MP_HitmarkerFont": "Hasar sayılarının yazı tipi",
+      "HL2MP_HitmarkerColor": "Hasar sayılarının rengi",
+      "HL2MP_HitmarkerPreview": "Canlı önizleme",
+      "HL2MP_BrightColors": "Parlak oyuncu modeli renkleri",
+      "HL2MP_ModeChangeConfirm": "Oyun modu değiştirilip tur yeniden başlatılsın mı? Skorlar ve süre sıfırlanır, oyuncular yeniden doğar ve takım ölüm maçı etkinleştirilirken takımlar dengelenir. Harita yüklü kalır.",
+      "HL2MP_ModeChanged": "Oyun modu değiştirildi. Tur yeniden başlatıldı."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -34351,14 +34623,22 @@
       "HL2MP_FootstepsMaterial": "Матеріал поверхні",
       "HL2MP_FootstepsHint": "Перевизначення товаришів по команді та ворогів потребують яскравих моделей (вкладка «Гра») і працюють лише на серверах спільноти.",
       "HL2MP_BrightModelsOption": "Яскраві моделі гравців",
-      "HL2MP_BrightModelsHint": "Лише для серверів спільноти: рівномірно освітлені суперкомбінатні солдати. Повстанці червоні, Комбінат сині; вільні для всіх гравці білі.",
+      "HL2MP_BrightModelsHint": "Лише сервери спільноти: рівномірно освітлені елітні солдати Альянсу. Типові кольори: зелений у бою на смерть, червоний для Повстанців і синій для Альянсу. Сервер може змінювати ці кольори.",
       "HL2MP_Spray": "Розпилене зображення",
       "HL2MP_SprayImport": "Імпорт зображення",
       "HL2MP_SprayFormats": "Виберіть зображення до 16 Мб. Встановлено на 256 × 256. Знову приєднайтеся до сервера після зміни спрею.",
       "HL2MP_SprayFiles": "Файли зображень",
       "HL2MP_SprayImported": "Імпортовано. Застосуйте зміни, а потім знову приєднайтеся до сервера, щоб використовувати цей спрей.",
       "HL2MP_SprayImportFailed": "Не вдалося імпортувати це зображення. Перевірте його формат і розмір, а також чи доступна для запису папка mod.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Індикатори влучань (числа шкоди)",
+      "HL2MP_HitmarkerHint": "Числа шкоди відображаються, лише якщо сервер дозволяє індикатори влучань.",
+      "HL2MP_HitmarkerFont": "Шрифт чисел шкоди",
+      "HL2MP_HitmarkerColor": "Колір чисел шкоди",
+      "HL2MP_HitmarkerPreview": "Попередній перегляд",
+      "HL2MP_BrightColors": "Кольори яскравих моделей гравців",
+      "HL2MP_ModeChangeConfirm": "Змінити режим і перезапустити раунд? Рахунок і таймер буде скинуто, гравці відродяться, а при ввімкненні командного бою на смерть команди буде збалансовано. Мапа залишиться завантаженою.",
+      "HL2MP_ModeChanged": "Режим гри змінено. Раунд перезапущено."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -35333,14 +35613,22 @@
       "HL2MP_FootstepsMaterial": "Vật liệu bề mặt",
       "HL2MP_FootstepsHint": "Ghi đè đồng đội và kẻ thù yêu cầu mô hình sáng sủa (tab Trò chơi) và chỉ hoạt động trên máy chủ cộng đồng.",
       "HL2MP_BrightModelsOption": "Các mẫu máy nghe nhạc sáng",
-      "HL2MP_BrightModelsHint": "Chỉ dành cho máy chủ cộng đồng: các chiến binh Combine siêu sáng đồng đều. Phiến quân màu đỏ, Kết hợp màu xanh; người chơi miễn phí cho tất cả đều là người da trắng.",
+      "HL2MP_BrightModelsHint": "Chỉ dành cho máy chủ cộng đồng: lính tinh nhuệ Combine được chiếu sáng đồng đều. Màu mặc định: xanh lá trong đấu đơn, đỏ cho Quân nổi dậy và xanh dương cho Combine. Máy chủ có thể đổi các màu này.",
       "HL2MP_Spray": "Hình ảnh phun",
       "HL2MP_SprayImport": "Nhập hình ảnh",
       "HL2MP_SprayFormats": "Chọn hình ảnh có dung lượng tối đa 16 MB. Được trang bị ở kích thước 256 × 256. Tham gia lại máy chủ sau khi thay đổi kiểu phun của bạn.",
       "HL2MP_SprayFiles": "Tệp hình ảnh",
       "HL2MP_SprayImported": "Đã nhập khẩu. Áp dụng các thay đổi, sau đó tham gia lại máy chủ để sử dụng bình xịt này.",
       "HL2MP_SprayImportFailed": "Không thể nhập hình ảnh này. Kiểm tra định dạng và kích thước của nó và xem thư mục mod có thể ghi được không.",
-      "HL2MP_FootstepsCombine": "Combine"
+      "HL2MP_FootstepsCombine": "Combine",
+      "HL2MP_Hitmarkers": "Chỉ báo trúng đích (số sát thương)",
+      "HL2MP_HitmarkerHint": "Số sát thương chỉ xuất hiện nếu máy chủ cho phép chỉ báo trúng đích.",
+      "HL2MP_HitmarkerFont": "Phông chữ số sát thương",
+      "HL2MP_HitmarkerColor": "Màu số sát thương",
+      "HL2MP_HitmarkerPreview": "Xem trước trực tiếp",
+      "HL2MP_BrightColors": "Màu mô hình người chơi sáng",
+      "HL2MP_ModeChangeConfirm": "Đổi chế độ và bắt đầu lại vòng đấu? Điểm và thời gian sẽ được đặt lại, người chơi sẽ hồi sinh và các đội được cân bằng khi bật đấu đội. Bản đồ vẫn được tải sẵn.",
+      "HL2MP_ModeChanged": "Đã đổi chế độ chơi. Vòng đấu đã bắt đầu lại."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

@@ -9,6 +9,7 @@
 #include "vgui_controls/ScrollBar.h"
 #include "vgui_controls/ScrollBarSlider.h"
 #include "vgui_controls/TextImage.h"
+#include "vgui_controls/CheckButton.h"
 
 namespace HL2MPServerTheme
 {
@@ -55,6 +56,44 @@ inline void HL2MPPaintSettingRow( vgui::Panel *row, bool highlighted, float scal
 }
 
 // Shared by matchmaking and Options so native popups use the same visual language.
+class CHL2MPCheckButton : public vgui::CheckButton
+{
+    DECLARE_CLASS_SIMPLE(CHL2MPCheckButton, vgui::CheckButton);
+public:
+    CHL2MPCheckButton(vgui::Panel *parent, const char *name, const char *text) : BaseClass(parent,name,text) {}
+    void ApplySchemeSettings(vgui::IScheme *scheme) OVERRIDE
+    {
+        BaseClass::ApplySchemeSettings(scheme);
+        SetImageAtIndex(0,NULL,0); SetPaintBackgroundEnabled(false);
+        SetHighlightColor(HL2MPServerTheme::Orange());
+    }
+    void PerformLayout() OVERRIDE
+    {
+        SetImageAtIndex(0,NULL,0);
+        SetTextInset(BoxSize()+10,0);
+        BaseClass::PerformLayout();
+    }
+    void Paint() OVERRIDE
+    {
+        BaseClass::Paint();
+        const int size=BoxSize(), x=2, y=(GetTall()-size)/2;
+        vgui::surface()->DrawSetColor(Color(22,24,25,255)); vgui::surface()->DrawFilledRect(x,y,x+size,y+size);
+        vgui::surface()->DrawSetColor(IsEnabled() && HL2MPControlHighlighted(this) ? HL2MPServerTheme::Orange() : Color(140,145,145,255));
+        vgui::surface()->DrawOutlinedRect(x,y,x+size,y+size);
+        if (IsSelected())
+        {
+            vgui::surface()->DrawSetColor(IsEnabled() ? HL2MPServerTheme::Orange() : Color(110,110,110,255));
+            for (int n=0;n<MAX(2,size/9);++n)
+            {
+                vgui::surface()->DrawLine(x+size/5,y+size/2+n,x+size*2/5,y+size*3/4+n);
+                vgui::surface()->DrawLine(x+size*2/5,y+size*3/4+n,x+size*4/5,y+size/4+n);
+            }
+        }
+    }
+private:
+    int BoxSize() { return clamp(vgui::surface()->GetFontTall(GetFont()),18,30); }
+};
+
 class CHL2MPDropdown : public vgui::ComboBox
 {
     DECLARE_CLASS_SIMPLE( CHL2MPDropdown, vgui::ComboBox );

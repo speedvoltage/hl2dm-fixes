@@ -4,6 +4,9 @@
 #include "cdll_client_int.h"
 #include "hl2mp_options.h"
 #include "hl2mp_menucontrols.h"
+#include "hl2mp_colorpicker.h"
+#include "hl2mp_hitmarker_style.h"
+#include "vgui_controls/Tooltip.h"
 #include "hl2mp_playermodels.h"
 #include "hl2mp_sprays.h"
 #include "matsys_controls/mdlpanel.h"
@@ -23,12 +26,15 @@
 namespace
 {
 enum Page { DISPLAY, ADVANCED, AUDIO, GAME, MOUSE, BINDINGS, MULTIPLAYER };
-enum Kind { CHOICE, SLIDER, TEXT, RESOLUTION, WINDOW_MODE, SPRAY };
+enum Kind { CHOICE, SLIDER, TEXT, RESOLUTION, WINDOW_MODE, SPRAY, COLOR };
 struct SettingDef
 {
     Page page; Kind kind; const char *label, *cvar, *choices; float low, high, step;
 };
 static const SettingDef s_Settings[] = {
+    { GAME, CHOICE, "#HL2MP_Hitmarkers", "cl_hitmarkers", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_HitmarkerFont", "cl_hitmarker_font", "Half-Life 2=0|GorDIN=1|GorDIN Bold=2|Tahoma=3", 0, 0, 0 },
+    { GAME, COLOR, "#HL2MP_HitmarkerColor", "cl_hitmarker_color", "", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_FootstepsSelf", "cl_footsteps_self", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_FootstepsTeammates", "cl_footsteps_teammates", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_FootstepsEnemies", "cl_footsteps_enemies", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
@@ -134,6 +140,68 @@ static void AddChoice( CHL2MPDropdown *combo, const char *label, const char *val
 }
 struct Setting { CUtlString original, draft; bool available; };
 
+class CInfoButton : public vgui::Button
+{
+    DECLARE_CLASS_SIMPLE(CInfoButton,vgui::Button);
+public:
+    CInfoButton(vgui::Panel *parent) : BaseClass(parent,"HitmarkerInfo","i")
+    {
+        SetPaintBackgroundEnabled(false); SetPaintBorderEnabled(false);
+        SetContentAlignment(vgui::Label::a_center);SetTextInset(0,0);
+        GetTooltip()->SetEnabled(false);
+        m_Tip = new vgui::Label(this,"HitmarkerHint","#HL2MP_HitmarkerHint");
+        m_Tip->MakePopup(false,true);m_Tip->SetMouseInputEnabled(false);m_Tip->SetKeyBoardInputEnabled(false);
+        m_Tip->SetWrap(true);m_Tip->SetContentAlignment(vgui::Label::a_northwest);m_Tip->SetTextInset(12,10);m_Tip->SetVisible(false);
+    }
+    void SetFont(vgui::HFont font) OVERRIDE { BaseClass::SetFont(font);m_Tip->SetFont(font); }
+    void Paint() OVERRIDE
+    {
+        BaseClass::Paint(); vgui::surface()->DrawSetColor(HL2MPServerTheme::Orange());
+        vgui::surface()->DrawOutlinedCircle(GetWide()/2,GetTall()/2,MIN(GetWide(),GetTall())/2-2,32);
+    }
+    void OnThink() OVERRIDE
+    {
+        BaseClass::OnThink();
+        const bool show=vgui::ipanel()->IsFullyVisible(GetVPanel()) && HL2MPControlHighlighted(this);
+        m_Tip->SetVisible(show);if(!show)return;
+        int sw,sh;vgui::surface()->GetScreenSize(sw,sh);const int w=MIN(sw-32,MAX(280,sw/4));
+        m_Tip->SetSize(w,sh/2);m_Tip->GetTextImage()->SetSize(w-24,sh/2);m_Tip->GetTextImage()->RecalculateNewLinePositions();
+        int tw,th;m_Tip->GetTextImage()->GetContentSize(tw,th);m_Tip->SetTall(th+20);
+        int sx=0,sy=0;LocalToScreen(sx,sy);int x=clamp(sx,8,sw-w-8),y=MIN(sy+GetTall()+8,sh-th-28);m_Tip->SetPos(x,y);
+        m_Tip->SetPaintBackgroundEnabled(true);m_Tip->SetBgColor(Color(35,35,35,255));m_Tip->SetFgColor(HL2MPServerTheme::Text());m_Tip->InvalidateLayout(true);m_Tip->MoveToFront();
+    }
+    void DoClick() OVERRIDE { RequestFocus(); }
+private:
+    vgui::Label *m_Tip;
+};
+
+class CHitmarkerPreview : public vgui::Panel
+{
+    DECLARE_CLASS_SIMPLE(CHitmarkerPreview,vgui::Panel);
+public:
+    CHitmarkerPreview(vgui::Panel *parent) : BaseClass(parent,"HitmarkerPreview"), m_Font(0),m_Choice(-1),m_Height(0),m_Color(255,0,0,255)
+    { SetMouseInputEnabled(false); SetKeyBoardInputEnabled(false); }
+    void Style(int choice,int height,Color color)
+    {
+        if(!m_Font)m_Font=vgui::surface()->CreateFont();
+        if(m_Choice!=choice || m_Height!=height) { m_Choice=choice;m_Height=height;HL2MPHitmarkerFont(m_Font,choice,height); }
+        m_Color=color; Repaint();
+    }
+    void PaintBackground() OVERRIDE { HL2MPServerTheme::Rounded(0,0,GetWide(),GetTall(),Color(20,23,25,220),6); }
+    void Paint() OVERRIDE
+    {
+        if(!m_Font)return;
+        const float age=fmod(Plat_FloatTime(),.8);
+        const wchar_t *text=L"-32";int w,h;vgui::surface()->GetTextSize(m_Font,text,w,h);
+        vgui::surface()->DrawSetTextFont(m_Font);
+        vgui::surface()->DrawSetTextColor(m_Color.r(),m_Color.g(),m_Color.b(),HL2MPHitmarkerAlpha(age));
+        vgui::surface()->DrawSetTextPos((GetWide()-w)/2,GetTall()/2-int(age*m_Height*24/14));
+        vgui::surface()->DrawPrintText(text,3);
+    }
+private:
+    vgui::HFont m_Font;int m_Choice,m_Height;Color m_Color;
+};
+
 class CSettingRow : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CSettingRow, vgui::EditablePanel );
@@ -141,8 +209,14 @@ public:
     CSettingRow( vgui::Panel *parent, int index, const Setting &value ) : BaseClass( parent, "Setting" ), m_Index( index ), m_Combo( NULL ), m_Slider( NULL ), m_Text( NULL ), m_Amount( NULL ), m_Scale( 1 ), m_InitialSlider( 0 ), m_InitialValue( value.draft ), m_Highlighted( false ), m_Available( value.available )
     {
         SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label ); m_Label->SetWrap( true );
-        m_Spray = NULL;
-        if ( def.kind == SPRAY ) m_Spray = new CHL2MPSprayPicker(this, value.draft.String());
+        m_Spray = NULL; m_Color = NULL; m_Preview = NULL; m_Info = NULL; m_PreviewLabel = NULL;
+        if (!Q_strcmp(def.cvar,"cl_hitmarkers")) m_Info = new CInfoButton(this);
+        if (def.kind == COLOR)
+        {
+            m_Color = new CHL2MPColorPicker(this,"Color"); m_Color->SetRGB(value.draft.String());
+            m_Preview = new CHitmarkerPreview(this); m_PreviewLabel = Label(this,"#HL2MP_HitmarkerPreview");
+        }
+        else if ( def.kind == SPRAY ) m_Spray = new CHL2MPSprayPicker(this, value.draft.String());
         else if ( def.kind == SLIDER )
         {
             m_Slider = new CHL2MPSettingsSlider( this ); m_Slider->SetRange( int( def.low / def.step + 0.5f ), int( def.high / def.step + 0.5f ) );
@@ -210,6 +284,7 @@ public:
     void EnableChoice(bool enabled) { if (m_Combo) m_Combo->SetEnabled(m_Available && enabled); m_Label->SetAlpha(enabled ? 255 : 110); }
     CUtlString Value()
     {
+        if (m_Color) return m_Color->Value();
         if (m_Spray) return m_Spray->Value();
         if ( m_Combo )
         {
@@ -225,7 +300,9 @@ public:
     }
     void Style( float scale, vgui::HFont font, vgui::HFont small )
     {
-        m_Scale = scale; SetTall( int( (m_Spray ? 196 : 52) * scale ) ); m_Label->SetFont( font );
+        m_Scale = scale; SetTall( int( (m_Color ? 238 : m_Spray ? 196 : 52) * scale ) ); m_Label->SetFont( font );
+        if(m_Color) { m_Color->Style(small);m_PreviewLabel->SetFont(small);m_PreviewLabel->SetFgColor(HL2MPServerTheme::Muted()); }
+        if(m_Info) m_Info->SetFont(small);
         if (m_Spray) m_Spray->Style(scale, small);
         m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
@@ -236,6 +313,16 @@ public:
     void PerformLayout() OVERRIDE
     {
         BaseClass::PerformLayout(); const int w = GetWide(), h = GetTall(), valueW = int( w * .43f ), left = w - valueW - int( 12 * m_Scale );
+        if(m_Color)
+        {
+            const int pad=int(12*m_Scale), split=w/2;
+            m_Label->SetBounds(pad,0,split-pad,int(36*m_Scale));
+            m_Label->GetTextImage()->SetSize(m_Label->GetWide(),m_Label->GetTall());m_Label->GetTextImage()->RecalculateNewLinePositions();m_Label->InvalidateLayout(true);
+            m_Color->SetBounds(pad,int(40*m_Scale),split-2*pad,h-int(50*m_Scale));
+            m_PreviewLabel->SetBounds(split+pad,0,w-split-2*pad,int(36*m_Scale));
+            m_Preview->SetBounds(split+pad,int(40*m_Scale),w-split-2*pad,h-int(50*m_Scale));
+            return;
+        }
         if (m_Spray)
         {
             m_Label->SetBounds(int(8*m_Scale), 0, w-int(24*m_Scale), int(40*m_Scale));
@@ -243,6 +330,7 @@ public:
             return;
         }
         m_Label->SetBounds( int( 8 * m_Scale ), 0, left - int( 16 * m_Scale ), h );
+        if(m_Info) { const int size=int(26*m_Scale);m_Info->SetBounds(left-size-int(12*m_Scale),(h-size)/2,size,size);m_Label->SetWide(left-size-int(32*m_Scale)); }
         m_Label->GetTextImage()->SetSize( m_Label->GetWide(), h );
         m_Label->GetTextImage()->RecalculateNewLinePositions();
         m_Label->InvalidateLayout( true );
@@ -273,11 +361,13 @@ public:
     {
         HL2MPPaintSettingRow( this, m_Highlighted, m_Scale );
     }
+    void PreviewFont(int choice) { if(m_Preview)m_Preview->Style(choice,MAX(12,int(21*m_Scale)),m_Color->GetColor()); }
 private:
     int m_Index; CHL2MPDropdown *m_Combo; CHL2MPSettingsSlider *m_Slider; vgui::TextEntry *m_Text;
     vgui::Label *m_Label, *m_Amount; float m_Scale; int m_InitialSlider; CUtlString m_InitialValue;
     bool m_Highlighted, m_Available;
     CHL2MPSprayPicker *m_Spray;
+    CHL2MPColorPicker *m_Color; CHitmarkerPreview *m_Preview; CInfoButton *m_Info; vgui::Label *m_PreviewLabel;
 };
 
 class CBindingRow : public vgui::EditablePanel
@@ -708,6 +798,11 @@ void CHL2MPOptions::OnTick()
     if ( !IsVisible() ) return;
     int w, h; vgui::surface()->GetScreenSize( w, h ); if ( w != m_Width || h != m_Height ) InvalidateLayout( true );
     const bool dirty = Dirty();
+    if(m_Page == GAME)
+    {
+        int font=0; for(int i=0;i<ARRAYSIZE(s_Settings);++i) if(!Q_strcmp(s_Settings[i].cvar,"cl_hitmarker_font")) font=atoi(m_Settings[i].draft.String());
+        FOR_EACH_VEC(m_Rows,i) m_Rows[i]->PreviewFont(font);
+    }
     if (m_Page == AUDIO)
     {
         bool bright = false;

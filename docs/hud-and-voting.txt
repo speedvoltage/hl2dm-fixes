@@ -5,6 +5,8 @@ Open Options > HUD Editor, or bind hud_editor in Keyboard / Mouse.
 Drag elements and their corner handles. Layout has position, size and one-click
 horizontal/vertical centering. Appearance has a color picker (hue, saturation,
 brightness, palette swatches and hex input), opacity and eight font choices.
+The crosshair always stays centered: it has appearance controls and a size handle,
+but no position controls or dragging. Old saved crosshair offsets are ignored.
 Relevant elements also offer labels, values, bars and crosshair controls.
 Chat, votes and crosshair have no visibility switches in the HUD editor; old
 layouts cannot hide them. Crosshair enable and HUD Quick Info are in Game options.
@@ -23,6 +25,9 @@ each of the twelve weapons can override shape, color, opacity, size, gap, length
 thickness, outline and dot. Disable a weapon override to inherit shared settings.
 Version-1 layouts load unchanged; version-2 layouts/presets save the overrides.
 Killfeed samples use the in-game death-notice renderer and weapon/skull icons.
+Headshots have a separate head/impact icon. Wings indicate that the attacker was
+airborne at the time of the kill (walking movement, no ground entity, not swimming).
+Both icons can appear together. Suicides and world deaths do not get these badges.
 Vote Preview opens the real vote panel with your own name and sample counts.
 Yes/No keys simulate a local choice; no request or ballot is sent to the server.
 Restart / Pass / Fail preview both outcomes without kicking or banning anyone.
@@ -33,6 +38,29 @@ Distinct yes/no sounds accompany ballots; passed/failed sounds accompany results
 Counts briefly highlight when updated, and results pulse once. The existing vote
 sound/animation options control this feedback.
 HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
+
+Damage numbers
+Options > Game offers hitmarkers on/off, four fonts and a color palette with hex
+input. One animated preview shows the draft font and color together. Apply saves;
+Discard restores the previous settings. The circled information button explains
+the server restriction and works with mouse hover or keyboard focus.
+cl_hitmarkers controls the local preference. sv_hitmarkers remains authoritative.
+cl_hitmarker_font: 0 = Half-Life 2, 1 = GorDIN, 2 = GorDIN Bold, 3 = Tahoma.
+cl_hitmarker_color: RGB string, default "255 0 0".
+
+Community server controls
+Apply Changes beside Game mode switches DM/TDM without loading the map again.
+It restarts the round: scores and timer reset, all active players respawn, and
+entering TDM balances the teams. Spectators stay spectators. Console changes to
+mp_teamplay use the same restart; matchmaking retains its assigned mode.
+Bright player colors opens three color palettes for server admins. The replicated
+cvars can also be placed in server.cfg:
+sv_bright_models_dm_color "0 255 0"
+sv_bright_models_rebels_color "255 0 0"
+sv_bright_models_combine_color "50 150 255"
+Only clients opting into bright models on community servers use these colors.
+Create Server bots now leave their initial observer state and spawn in DM.
+Maps still need navigation meshes for bots to navigate normally.
 
 Voting
 F1 / F2 default to Yes / No. Existing unrelated bindings are preserved; both

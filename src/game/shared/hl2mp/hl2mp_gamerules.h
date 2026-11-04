@@ -128,6 +128,7 @@ public:
 	void OnNavMeshLoad( void );
 	
 #ifndef CLIENT_DLL
+	void ChangeTeamplayMode( bool enabled );
 	virtual void ClientCommandKeyValues( edict_t *entity, KeyValues *message ) OVERRIDE;
 	virtual QAngle VecWeaponRespawnAngles( CBaseCombatWeapon *pWeapon ) OVERRIDE;
 	bool FlPlayerFallDeathDoesScreenFade( CBasePlayer * ) OVERRIDE { return false; }

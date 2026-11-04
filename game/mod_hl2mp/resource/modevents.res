@@ -33,6 +33,7 @@
 		"attacker"	"short"	 	// user ID who killed
 		"weapon"	"string" 	// weapon name killed used 
 		"headshot"	"bool"
+		"airborne"	"bool"
 	}
 	
 	"teamplay_round_start"			// round restart

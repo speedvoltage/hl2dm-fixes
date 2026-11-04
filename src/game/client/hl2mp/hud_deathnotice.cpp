@@ -43,6 +43,7 @@ struct DeathNoticeItem
 	bool		bLocalPlayerKiller;
 	bool		bLocalPlayerVictim;
 	bool		bHeadshot;
+	bool        bAirborne;
 };
 
 //-----------------------------------------------------------------------------
@@ -107,6 +108,7 @@ private:
 	// Texture for skull symbol
 	CHudTexture		*m_iconD_skull;  
 	CHudTexture		*m_iconD_headshot;  
+	CHudTexture     *m_iconD_airborne;
 
 	CUtlVector<DeathNoticeItem> m_DeathNotices;
 	Vector2D m_CornerCoord[NUM_CORNER_COORD];
@@ -126,6 +128,7 @@ CHudDeathNotice::CHudDeathNotice( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_iconD_headshot = NULL;
+	m_iconD_airborne = NULL;
 	m_iconD_skull = NULL;
 
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
@@ -159,7 +162,8 @@ void CHudDeathNotice::Init( void )
 void CHudDeathNotice::VidInit( void )
 {
 	m_iconD_skull = gHUD.GetIcon( "d_skull" );
-	m_iconD_headshot = m_iconD_skull;
+	m_iconD_headshot = gHUD.GetIcon( "d_headshot" );
+	m_iconD_airborne = gHUD.GetIcon( "d_airborne" );
 	m_DeathNotices.Purge();
 }
 
@@ -343,7 +347,10 @@ void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, i
 		int iIconTall;
 		GetIconSize( icon, iIconMaxTall, iIconWide, iIconTall );
 
-		bool bDrawHeadshot = notice.bHeadshot && m_iconD_headshot && icon != m_iconD_skull;
+		bool bDrawHeadshot = notice.bHeadshot && m_iconD_headshot;
+		const bool bDrawAirborne = notice.bAirborne && m_iconD_airborne;
+		int airborneWide=0, airborneTall=0;
+		if(bDrawAirborne) GetIconSize(m_iconD_airborne,MAX(1,int(iIconMaxTall*.72f)),airborneWide,airborneTall);
 		int iHeadshotWide = 0;
 		int iHeadshotTall = 0;
 		if ( bDrawHeadshot )
@@ -352,6 +359,7 @@ void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, i
 		}
 
 		int iContentWide = iVictimWide + iIconWide + iItemSpacing;
+		if(bDrawAirborne) iContentWide += airborneWide + iItemSpacing;
 		if ( !notice.iSuicide )
 		{
 			iContentWide += iKillerWide + iItemSpacing;
@@ -412,6 +420,11 @@ void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, i
 
 		Color iconColor = GetFadedColor( m_clrIcon, flAlpha );
 		int yIcon = y + ( iLineTall - iIconTall ) / 2;
+		if(bDrawAirborne)
+		{
+			DrawIcon(m_iconD_airborne,x,y+(iLineTall-airborneTall)/2,airborneWide,airborneTall,iconColor);
+			x += airborneWide+iItemSpacing;
+		}
 		DrawIcon( icon, x, yIcon, iIconWide, iIconTall, iconColor );
 		x += iIconWide;
 
@@ -448,6 +461,7 @@ void CHudDeathNotice::DrawPreview( int x, int y, int width, int height, float sc
 		item.iconDeath = gHUD.GetIcon( weapons[i] );
 		if ( !item.iconDeath ) item.iconDeath = gHUD.GetIcon( "d_skull" );
 		item.iSuicide = i == 2; item.bLocalPlayerKiller = i == 1;
+		item.bHeadshot = i == 0; item.bAirborne = i == 1;
 		samples.AddToTail( item );
 	}
 	DrawNotices( samples, x, y, width, height, scale, custom, true );
@@ -530,6 +544,7 @@ void CHudDeathNotice::FireGameEvent( IGameEvent * event )
 	deathMsg.bLocalPlayerKiller = iLocalPlayerIndex > 0 && !deathMsg.iSuicide && killer == iLocalPlayerIndex;
 	deathMsg.bLocalPlayerVictim = iLocalPlayerIndex > 0 && victim == iLocalPlayerIndex;
 	deathMsg.bHeadshot = !deathMsg.iSuicide && event->GetBool( "headshot" );
+	deathMsg.bAirborne = !deathMsg.iSuicide && event->GetBool( "airborne" );
 
 	// Try and find the death identifier in the icon list
 	deathMsg.iconDeath = gHUD.GetIcon( fullkilledwith );

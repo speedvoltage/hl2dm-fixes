@@ -2,6 +2,7 @@
 #include "hl2mp_community.h"
 #include "hl2mp_match_server.h"
 #include "hl2mp_gamerules.h"
+#include "hl2mp_brightmodels.h"
 #include "hl2mp_player.h"
 #include "filesystem.h"
 #include "inetchannelinfo.h"
@@ -97,6 +98,7 @@ void State( CBasePlayer *player, const char *status )
     WRITE_BYTE( ConVarRef( "mp_friendlyfire" ).GetBool() );
     WRITE_BYTE( ConVarRef( "mp_weaponstay" ).GetBool() );
     WRITE_BYTE( ConVarRef( "mp_forcerespawn" ).GetBool() );
+    for (int i=0; i<3; ++i) { Color color = HL2MPBrightColor(i); WRITE_BYTE(color.r()); WRITE_BYTE(color.g()); WRITE_BYTE(color.b()); }
     WRITE_STRING( map ); WRITE_STRING( next ); WRITE_STRING( text );
     MessageEnd();
 }
@@ -174,6 +176,24 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
         State( player, "#HL2MP_UI_790b66c62d7f" ); return;
     }
     if ( !IsAdmin( player ) ) { State( player, "#HL2MP_UI_41953aaf144c" ); return; }
+    if ( !Q_strcmp(action, "teamplay") )
+    {
+        int enabled; if (!Integer(request, "teamplay", 0, 1, enabled)) return;
+        HL2MPRules()->ChangeTeamplayMode(enabled != 0);
+        State(player, "#HL2MP_ModeChanged"); return;
+    }
+    if ( !Q_strcmp(action, "bright_colors") )
+    {
+        int rgb[3][3];
+        for (int i=0; i<3; ++i) for (int c=0; c<3; ++c)
+        {
+            char key[16];Q_snprintf(key,sizeof(key),"color%d_%d",i,c);
+            if (!Integer(request, key, 0, 255, rgb[i][c])) { State(player, "#HL2MP_UI_04597937940c"); return; }
+        }
+        ConVar *vars[] = { &sv_bright_models_dm_color, &sv_bright_models_rebels_color, &sv_bright_models_combine_color };
+        for (int i=0; i<3; ++i) { char value[32];Q_snprintf(value,sizeof(value),"%d %d %d",rgb[i][0],rgb[i][1],rgb[i][2]);vars[i]->SetValue(value); }
+        State(player, "#HL2MP_UI_35cf85d0b20a"); return;
+    }
     if ( !Q_strcmp( action, "settings" ) )
     {
         int time, frags, friendly, stay, respawn;

@@ -4,6 +4,7 @@
 #include "hl2mp_community.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_menucontrols.h"
+#include "hl2mp_colorpicker.h"
 #include "usermessages.h"
 #include "ienginevgui.h"
 #include "vgui_controls/EditablePanel.h"
@@ -27,6 +28,7 @@ struct ServerState
 {
     int generation, minutes, frags;
     bool enabled, admin, paused, teamplay, friendly, stay, respawn;
+    Color bright[3];
     char map[64], next[64], status[80];
 };
 
@@ -73,6 +75,57 @@ private:
     Rect_t m_Card;
 };
 
+class CBrightColors : public vgui::EditablePanel
+{
+    DECLARE_CLASS_SIMPLE(CBrightColors,vgui::EditablePanel);
+public:
+    CBrightColors(vgui::Panel *parent) : BaseClass(parent,"BrightColors")
+    {
+        SetVisible(false);SetZPos(200);SetMouseInputEnabled(true);SetKeyBoardInputEnabled(true);
+        m_Title = new vgui::Label(this,"Title","#HL2MP_BrightColors");
+        const char *labels[]={"#HL2MP_UI_127aad574b83","#HL2MP_UI_f185ee05cab6","#HL2MP_UI_46f29c2f51a0"};
+        for(int i=0;i<3;++i) { m_Label[i]=new vgui::Label(this,"Group",labels[i]);m_Picker[i]=new CHL2MPColorPicker(this,"Picker"); }
+        m_Save=new CHL2MPSettingsButton(this,"#HL2MP_UI_8a629300668e","bright_colors");m_Save->ServerStyle(true);
+        m_Cancel=new CHL2MPSettingsButton(this,"#HL2MP_UI_ad8d698573fc","colors_cancel");m_Cancel->ServerStyle();
+    }
+    ~CBrightColors() { Hide(); }
+    void Open(const Color *colors)
+    {
+        for(int i=0;i<3;++i)m_Picker[i]->SetColor(colors[i]);
+        SetVisible(true);MoveToFront();m_Cancel->RequestFocus();vgui::input()->SetAppModalSurface(GetVPanel());
+    }
+    void Hide() { if(vgui::input()->GetAppModalSurface()==GetVPanel())vgui::input()->ReleaseAppModalSurface();SetVisible(false); }
+    Color GetColor(int i) { return m_Picker[i]->GetColor(); }
+    void Layout(int w,int h,float s,vgui::HFont title,vgui::HFont font)
+    {
+        SetBounds(0,0,w,h);m_W=int(940*s);m_H=int(420*s);m_X=(w-m_W)/2;m_Y=(h-m_H)/2;
+        const int pad=int(24*s), col=(m_W-pad*4)/3;
+        m_Title->SetBounds(m_X+pad,m_Y+pad,m_W-pad*2,int(40*s));m_Title->SetFont(title);m_Title->SetFgColor(HL2MPServerTheme::Orange());
+        for(int i=0;i<3;++i)
+        {
+            int x=m_X+pad+i*(col+pad);
+            m_Label[i]->SetBounds(x,m_Y+int(80*s),col,int(30*s));m_Label[i]->SetFont(font);m_Label[i]->SetFgColor(HL2MPServerTheme::Text());
+            m_Picker[i]->SetBounds(x,m_Y+int(116*s),col,int(220*s));m_Picker[i]->Style(font);
+        }
+        m_Save->SetFont(font);m_Cancel->SetFont(font);
+        m_Save->SetBounds(m_X+pad,m_Y+m_H-pad-int(40*s),(m_W-pad*3)/2,int(40*s));
+        m_Cancel->SetBounds(m_X+(m_W+pad)/2,m_Y+m_H-pad-int(40*s),(m_W-pad*3)/2,int(40*s));
+    }
+    void PaintBackground() OVERRIDE
+    {
+        vgui::surface()->DrawSetColor(Color(0,0,0,190));vgui::surface()->DrawFilledRect(0,0,GetWide(),GetTall());
+        HL2MPServerTheme::Rounded(m_X,m_Y,m_W,m_H,Color(42,42,42,255),6);
+    }
+    void OnCommand(const char *command) OVERRIDE { GetParent()->OnCommand(command); }
+    void OnKeyCodeTyped(vgui::KeyCode code) OVERRIDE
+    {
+        if(code==KEY_ESCAPE) OnCommand("colors_cancel"); else GetParent()->OnKeyCodeTyped(code);
+    }
+private:
+    int m_X=0,m_Y=0,m_W=0,m_H=0;
+    vgui::Label *m_Title,*m_Label[3];CHL2MPColorPicker *m_Picker[3];CHL2MPSettingsButton *m_Save,*m_Cancel;
+};
+
 class CServerControls : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CServerControls, vgui::EditablePanel );
@@ -103,6 +156,8 @@ private:
     enum { CHANGE, NEXT, PAUSE, RESTART, APPLY, JOIN, SPECTATE, KICK, BAN, CLOSE, RESUME, BUTTONS };
     vgui::Label *m_Title, *m_Access, *m_Info, *m_Status, *m_Sections[3], *m_Captions[9];
     CCommunityConfirmation *m_Confirm;
+    CBrightColors *m_Colors;
+    CHL2MPSettingsButton *m_ModeApply, *m_ColorsOpen;
     CHL2MPDropdown *m_Drop[DROPDOWNS];
     CHL2MPSettingsButton *m_Button[BUTTONS];
     vgui::TextEntry *m_Time, *m_Frags, *m_BanMinutes;
@@ -143,6 +198,9 @@ CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "Co
     m_Title = new vgui::Label( this, "Title", "#HL2MP_UI_0bff1b6f6df3" );
     m_Access = new vgui::Label( this, "Access", "" ); m_Info = new vgui::Label( this, "Info", "" );
     m_Status = new vgui::Label( this, "Status", "" ); m_Confirm = new CCommunityConfirmation( this );
+    m_Colors = new CBrightColors(this);
+    m_ModeApply = new CHL2MPSettingsButton(this,"#HL2MP_UI_33bf9eeb20a9","teamplay");m_ModeApply->ServerStyle();
+    m_ColorsOpen = new CHL2MPSettingsButton(this,"#HL2MP_BrightColors","colors_open");m_ColorsOpen->ServerStyle();
     const char *sections[] = { "#HL2MP_UI_eaa42a15398b", "#HL2MP_UI_5a4effe2cffe", "#HL2MP_UI_fd49e5bc2a30" };
     const char *captions[] = { "#HL2MP_UI_ede76ceab6f1", "#HL2MP_UI_a6e14d931afd", "#HL2MP_UI_24b274dda498", "#HL2MP_UI_a092ca8db875", "#HL2MP_UI_475bba55cc00", "#HL2MP_UI_6a275336d8c3", "#HL2MP_UI_52327f55d2ec", "#HL2MP_UI_e6862630c208", "#HL2MP_UI_5902193cc0d9" };
     for ( int i = 0; i < 3; ++i ) m_Sections[i] = new vgui::Label( this, sections[i], sections[i] );
@@ -158,10 +216,10 @@ CServerControls::CServerControls( vgui::Panel *parent ) : BaseClass( parent, "Co
     m_Time = new vgui::TextEntry( this, "Time" ); m_Frags = new vgui::TextEntry( this, "Frags" );
     m_Time->SetAllowNumericInputOnly( true ); m_Frags->SetAllowNumericInputOnly( true ); m_Time->SetMaximumCharCount( 4 ); m_Frags->SetMaximumCharCount( 4 );
     m_BanMinutes = new vgui::TextEntry( this, "BanMinutes" ); m_BanMinutes->SetAllowNumericInputOnly( true ); m_BanMinutes->SetMaximumCharCount( 6 ); m_BanMinutes->SetText( "60" );
-    m_Friendly = new vgui::CheckButton( this, "Friendly", "#HL2MP_UI_d5134a5bdfcc" );
-    m_Stay = new vgui::CheckButton( this, "Stay", "#HL2MP_UI_18d384fbe9ba" );
-    m_Respawn = new vgui::CheckButton( this, "Respawn", "#HL2MP_UI_d8205bf54d70" );
-    m_Bright = new vgui::CheckButton( this, "Bright", "#HL2MP_UI_319a60acdb89" );
+    m_Friendly = new CHL2MPCheckButton( this, "Friendly", "#HL2MP_UI_d5134a5bdfcc" );
+    m_Stay = new CHL2MPCheckButton( this, "Stay", "#HL2MP_UI_18d384fbe9ba" );
+    m_Respawn = new CHL2MPCheckButton( this, "Respawn", "#HL2MP_UI_d8205bf54d70" );
+    m_Bright = new CHL2MPCheckButton( this, "Bright", "#HL2MP_UI_319a60acdb89" );
     m_Bright->AddActionSignalTarget( this );
 }
 
@@ -202,7 +260,7 @@ void CServerControls::PerformLayout()
     auto place = [s, left]( vgui::Panel *p, int x, int y, int wide, int tall ) { p->SetBounds( left + int( x * s ), int( y * s ), int( wide * s ), int( tall * s ) ); };
     place( m_Title, 0, 30, 680, 45 ); place( m_Access, 810, 37, 370, 28 ); place( m_Info, 0, 82, 1180, 30 );
     for ( int i = 0; i < 3; ++i ) place( m_Sections[i], i * 400 + 16, 139, 348, 28 );
-    place( m_Captions[0], 16, 182, 348, 24 ); place( m_Drop[MODE], 16, 210, 348, 34 );
+    place( m_Captions[0], 16, 182, 348, 24 ); place( m_Drop[MODE], 16, 210, 188, 34 );place(m_ModeApply,212,210,152,34);
     place( m_Captions[1], 16, 262, 348, 24 ); place( m_Drop[MAP_NOW], 16, 290, 348, 34 );
     place( m_Button[CHANGE], 16, 336, 348, 38 );
     place( m_Captions[2], 16, 394, 348, 24 ); place( m_Drop[MAP_NEXT], 16, 422, 348, 34 );
@@ -211,6 +269,7 @@ void CServerControls::PerformLayout()
     place( m_Captions[4], 416, 262, 348, 24 ); place( m_Frags, 416, 290, 348, 34 );
     place( m_Friendly, 416, 350, 348, 36 ); place( m_Stay, 416, 400, 348, 36 ); place( m_Respawn, 416, 450, 348, 36 );
     place( m_Button[APPLY], 416, 550, 348, 38 );
+    place( m_ColorsOpen,416,500,348,34 );
     place( m_Captions[5], 816, 182, 348, 24 ); place( m_Drop[TEAM], 816, 210, 348, 34 );
     place( m_Button[JOIN], 816, 258, 210, 38 ); place( m_Button[SPECTATE], 1038, 258, 126, 38 );
     place( m_Bright, 816, 318, 348, 36 );
@@ -221,6 +280,7 @@ void CServerControls::PerformLayout()
     place( m_Status, 0, 622, 1180, 30 ); place( m_Button[CLOSE], 0, 669, 160, 36 );
     place( m_Button[RESUME], 960, 669, 220, 36 );
     m_Confirm->Layout( w, h, s, m_TitleFont, m_BodyFont );
+    m_Colors->Layout(w,h,s,m_TitleFont,m_BodyFont);
     for ( int i = 0; i < GetChildCount(); ++i ) if ( dynamic_cast<vgui::Label *>( GetChild( i ) ) ) GetChild( i )->InvalidateLayout( true );
 }
 
@@ -256,6 +316,7 @@ void CServerControls::Open( bool fromHotkey )
 }
 void CServerControls::Close( bool resume )
 {
+    m_Colors->Hide();
     engine->ClientCmd_Unrestricted( "gameui_allowescape" );
     m_Confirm->ReleaseModal(); m_Confirm->SetVisible( false );
     if ( m_Pending ) { m_Pending->deleteThis(); m_Pending = NULL; }
@@ -267,7 +328,14 @@ void CServerControls::Receive( const ServerState &state )
 {
     if ( !IsVisible() ) return;
     if ( m_Received && m_State.generation != state.generation ) { Close(); return; }
+    const bool modeChanged = !m_Received || m_State.teamplay != state.teamplay;
     m_State = state;
+    if(modeChanged)
+    {
+        m_Drop[TEAM]->DeleteAllItems();Choice(m_Drop[TEAM],"#HL2MP_UI_3cced94f86b9",0);
+        if(state.teamplay) { Choice(m_Drop[TEAM],"#HL2MP_UI_46f29c2f51a0",TEAM_COMBINE);Choice(m_Drop[TEAM],"#HL2MP_UI_f185ee05cab6",TEAM_REBELS); }
+        m_Drop[TEAM]->SilentActivateItemByRow(0);m_Drop[MODE]->SilentActivateItemByRow(state.teamplay?1:0);
+    }
     if ( !state.enabled ) { Close(); return; }
     if ( !m_Received || !Q_strcmp( state.status, "#HL2MP_UI_35cf85d0b20a" ) )
     {
@@ -279,7 +347,7 @@ void CServerControls::Receive( const ServerState &state )
     m_Info->SetText( HL2MPFormat( "%s  /  %s  /  NEXT: %s", state.map, state.teamplay ? HL2MPText( "#HL2MP_UI_f756ee9002fc" ) : HL2MPText( "#HL2MP_UI_127aad574b83" ), state.next[0] ? state.next : HL2MPText( "#HL2MP_UI_541e1279cdfe" ) ) );
     if ( state.status[0] ) m_Status->SetText( state.status );
     else if ( !state.admin ) m_Status->SetText( "#HL2MP_UI_f3ca27a9487d" );
-    else m_Status->SetText( state.paused ? "#HL2MP_UI_0f84a5f7ba54" : "#HL2MP_UI_54ee3d6ef407" );
+    else m_Status->SetText( state.paused ? "#HL2MP_UI_0f84a5f7ba54" : "" );
     m_Button[PAUSE]->SetText( state.paused ? "#HL2MP_UI_0747c96a23db" : "#HL2MP_UI_ca6456daeccf" );
     if ( !m_Pending && !m_Drop[PLAYER]->IsDropdownVisible() ) RefreshPlayers();
 }
@@ -320,6 +388,8 @@ void CServerControls::OnThink()
     if ( width != m_Width || height != m_Height ) InvalidateLayout( true );
     if ( Plat_FloatTime() >= m_NextPoll && !m_Pending && !m_Drop[PLAYER]->IsDropdownVisible() ) Request( m_Received && ( !m_State.admin || m_MapsDone ) ? "status" : "open" );
     const bool admin = m_Received && m_State.admin && !m_Pending;
+    m_ModeApply->SetEnabled(admin && Value(m_Drop[MODE]) != int(m_State.teamplay));m_ColorsOpen->SetEnabled(admin);
+    if(!admin && m_Colors->IsVisible())m_Colors->Hide();
     for ( int i = CHANGE; i <= APPLY; ++i ) m_Button[i]->SetEnabled( admin && ( i > NEXT || m_MapsDone ) );
     m_Button[KICK]->SetEnabled( admin && Value( m_Drop[PLAYER] ) > 0 ); m_Button[BAN]->SetEnabled( admin && Value( m_Drop[PLAYER] ) > 0 );
     m_Time->SetEnabled( admin ); m_Frags->SetEnabled( admin ); m_Friendly->SetEnabled( admin ); m_Stay->SetEnabled( admin ); m_Respawn->SetEnabled( admin );
@@ -343,6 +413,11 @@ void CServerControls::OnKeyCodeTyped( vgui::KeyCode code )
 }
 void CServerControls::OnCommand( const char *command )
 {
+    if(!Q_strcmp(command,"colors_cancel")) { m_Colors->Hide();m_ColorsOpen->RequestFocus();return; }
+    if(!Q_strcmp(command,"colors_open"))
+    {
+        if(m_Received && m_State.admin && !m_Pending) { for(int i=0;i<DROPDOWNS;++i)m_Drop[i]->HideMenu();m_Colors->Open(m_State.bright); }return;
+    }
     if ( !Q_strcmp( command, "close" ) ) { Close(); return; }
     if ( !Q_strcmp( command, "resume" ) ) { Close( true ); return; }
     if ( !Q_strcmp( command, "cancel" ) ) { if ( m_Pending ) m_Pending->deleteThis(); m_Pending = NULL; m_Confirm->ReleaseModal(); m_Confirm->SetVisible( false ); m_Button[CLOSE]->RequestFocus(); return; }
@@ -357,6 +432,15 @@ void CServerControls::OnCommand( const char *command )
     {
         m_Time->GetText( text, sizeof( text ) ); message->SetString( "time", text ); m_Frags->GetText( text, sizeof( text ) ); message->SetString( "frags", text );
         message->SetInt( "friendly", m_Friendly->IsSelected() ); message->SetInt( "stay", m_Stay->IsSelected() ); message->SetInt( "respawn", m_Respawn->IsSelected() );
+    }
+    else if(!Q_strcmp(command,"bright_colors"))
+    {
+        for(int i=0;i<3;++i) { Color c=m_Colors->GetColor(i);for(int channel=0;channel<3;++channel)message->SetInt(VarArgs("color%d_%d",i,channel),c[channel]); }
+        m_Colors->Hide();m_ColorsOpen->RequestFocus();
+    }
+    else if(!Q_strcmp(command,"teamplay"))
+    {
+        message->SetInt("teamplay",Value(m_Drop[MODE]));Confirm(command,"#HL2MP_ModeChangeConfirm",message);return;
     }
     else if ( !Q_strcmp( command, "pause" ) ) message->SetInt( "paused", !m_State.paused );
     else if ( !Q_strcmp( command, "join" ) || !Q_strcmp( command, "spectate" ) ) { message->SetString( "action", "join" ); message->SetInt( "team", !Q_strcmp( command, "spectate" ) ? TEAM_SPECTATOR : Value( m_Drop[TEAM] ) ); }
@@ -390,6 +474,7 @@ void StateMessage( bf_read &reader )
     ServerState state = {}; state.generation = reader.ReadLong(); state.enabled = reader.ReadByte() != 0; state.admin = reader.ReadByte() != 0;
     state.paused = reader.ReadByte() != 0; state.teamplay = reader.ReadByte() != 0; state.minutes = reader.ReadShort(); state.frags = reader.ReadShort();
     state.friendly = reader.ReadByte() != 0; state.stay = reader.ReadByte() != 0; state.respawn = reader.ReadByte() != 0;
+    for(int i=0;i<3;++i) { const int r=reader.ReadByte(),g=reader.ReadByte(),b=reader.ReadByte();state.bright[i]=Color(r,g,b,255); }
     reader.ReadString( state.map, sizeof( state.map ) ); reader.ReadString( state.next, sizeof( state.next ) ); reader.ReadString( state.status, sizeof( state.status ) );
     if ( !reader.IsOverflowed() && s_Panel ) s_Panel->Receive( state );
 }

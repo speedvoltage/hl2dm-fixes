@@ -2,6 +2,16 @@
 {
 	TextureData
 	{
+        "d_headshot"
+        {
+            "file" "vgui/hud/death_headshot"
+            "x" "0" "y" "0" "width" "64" "height" "64"
+        }
+        "d_airborne"
+        {
+            "file" "vgui/hud/death_airborne"
+            "x" "0" "y" "0" "width" "64" "height" "32"
+        }
 		"d_crowbar"
 		{
 				"file"		"sprites/640hud1"

@@ -81,7 +81,7 @@ CHostServer::CHostServer( vgui::Panel *parent ) : BaseClass( parent, "CreateServ
     for ( int i = 0; i < 4; ++i ) m_Drop[DIFFICULTY]->AddItem( skills[i], NULL );
     m_Drop[MODE]->SilentActivateItemByRow( 0 ); m_Drop[NETWORK]->SilentActivateItemByRow( 0 ); m_Drop[DIFFICULTY]->SilentActivateItemByRow( 1 );
     const char *checks[] = { "#HL2MP_UI_d5134a5bdfcc", "#HL2MP_UI_18d384fbe9ba", "#HL2MP_UI_d8205bf54d70", "#HL2MP_UI_a16fd61ee2e6" };
-    for ( int i = 0; i < CHECKS; ++i ) m_Check[i] = new vgui::CheckButton( this, checks[i], checks[i] );
+    for ( int i = 0; i < CHECKS; ++i ) m_Check[i] = new CHL2MPCheckButton( this, checks[i], checks[i] );
     m_Check[RESPAWN]->SetSelected( true );
     m_Back = new CHL2MPSettingsButton( this, "#HL2MP_UI_24c76252a90c", "close" ); m_Start = new CHL2MPSettingsButton( this, "#HL2MP_UI_485ffc6dcae0", "start" );
     m_Back->ServerStyle(); m_Start->ServerStyle( true );

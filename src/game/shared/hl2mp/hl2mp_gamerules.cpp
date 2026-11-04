@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "hl2mp_gamerules.h"
 #include "hl2mp_integrity.h"
+#include "hl2mp_brightmodels.h"
 #include "viewport_panel_names.h"
 #include "gameeventdefs.h"
 #include <KeyValues.h>
@@ -58,6 +59,9 @@ extern CBaseEntity	 *g_pLastRebelSpawn;
 
 
 ConVar sv_hitmarkers( "sv_hitmarkers", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow clients to display damage numbers when hitting enemy players." );
+ConVar sv_bright_models_dm_color( "sv_bright_models_dm_color", "0 255 0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright player color in deathmatch, as R G B (0-255)." );
+ConVar sv_bright_models_rebels_color( "sv_bright_models_rebels_color", "255 0 0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright Rebel color in team deathmatch, as R G B (0-255)." );
+ConVar sv_bright_models_combine_color( "sv_bright_models_combine_color", "50 150 255", FCVAR_REPLICATED | FCVAR_NOTIFY, "Bright Combine color in team deathmatch, as R G B (0-255)." );
 
 REGISTER_GAMERULES_CLASS( CHL2MPRules );
 
@@ -310,6 +314,8 @@ void CHL2MPRules::Think( void )
 	if ( gpGlobals->eLoadType == MapLoad_Background ) return;
 	
 	CGameRules::Think();
+	if ( !HL2MPMatchServerEnabled() && IsTeamplay() != teamplay.GetBool() )
+		ChangeTeamplayMode( teamplay.GetBool() );
 	if ( HL2MPMatchServerEnabled() && ( !HL2MPMatchServerPlaying() || g_fGameOver ) ) return;
 
 	if ( g_fGameOver )   // someone else quit the game already
@@ -736,7 +742,7 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		}
 		else
 		{
-			killer_weapon_name = pInflictor->GetClassname();
+			killer_weapon_name = pInflictor ? pInflictor->GetClassname() : "world";
 		}
 
 		// strip the NPC_* or weapon_* from the inflictor's classname
@@ -785,6 +791,8 @@ void CHL2MPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		event->SetInt("attacker", killer_ID );
 		event->SetString("weapon", killer_weapon_name );
 		event->SetBool( "headshot", pVictim->LastHitGroup() == HITGROUP_HEAD && ( info.GetDamageType() & DMG_BULLET ) );
+		event->SetBool( "airborne", pScorer && pScorer != pVictim && !pScorer->GetGroundEntity() &&
+			pScorer->GetMoveType() == MOVETYPE_WALK && pScorer->GetWaterLevel() < 2 );
 		event->SetInt( "priority", 7 );
 		gameeventmanager->FireEvent( event );
 	}
@@ -1091,9 +1099,40 @@ void CHL2MPRules::ClientCommandKeyValues( edict_t *entity, KeyValues *message )
 	BaseClass::ClientCommandKeyValues( entity, message );
 }
 
+void CHL2MPRules::ChangeTeamplayMode( bool enabled )
+{
+	if ( HL2MPMatchServerEnabled() || gpGlobals->eLoadType == MapLoad_Background || IsTeamplay() == enabled ) return;
+	m_bTeamPlayEnabled = enabled;
+	teamplay.SetValue( enabled );
+	engine->SetPausedForced( false );
+	int nextTeam = RandomInt( TEAM_COMBINE, TEAM_REBELS );
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	{
+		CHL2MP_Player *player = ToHL2MPPlayer( UTIL_PlayerByIndex( i ) );
+		if ( !player || !player->IsConnected() || player->IsHLTV() || !player->IsIntegrityVerified() ||
+			player->GetTeamNumber() == TEAM_SPECTATOR ) continue;
+		player->StopObserverMode();
+		player->State_Transition( STATE_ACTIVE );
+		player->ChangeTeam( enabled ? nextTeam : TEAM_UNASSIGNED );
+		// ClientSettingsChanged uses the requested model to choose a team.
+		// Keep that preference consistent with the newly balanced assignment.
+		if (enabled)
+		{
+			const char *model = STRING(player->GetModelName());
+			if (player->IsFakeClient()) engine->SetFakeClientConVarValue(player->edict(),"cl_playermodel",model);
+			else engine->ClientCommand(player->edict(),"cl_playermodel %s\n",model);
+		}
+		nextTeam = nextTeam == TEAM_COMBINE ? TEAM_REBELS : TEAM_COMBINE;
+	}
+	RestartGame();
+}
+
 void CHL2MPRules::RestartGame()
 {
 	HL2MPVoteReset();
+	g_fGameOver = false;
+	m_bChangelevelDone = false;
+	m_flIntermissionEndTime = 0;
 	// bounds check
 	if ( mp_timelimit.GetInt() < 0 )
 	{
@@ -1122,7 +1161,7 @@ void CHL2MPRules::RestartGame()
 		}
 		pPlayer->RemoveAllItems( true );
 		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
-			respawn( pPlayer, false );
+			pPlayer->Spawn(); // A round restart also bypasses the normal death-animation delay.
 		pPlayer->Reset();
 	}
 

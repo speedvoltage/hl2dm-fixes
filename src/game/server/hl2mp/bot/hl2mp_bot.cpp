@@ -255,9 +255,15 @@ CON_COMMAND_F( hl2mp_bot_add, "Add a bot.", FCVAR_GAMEDLL )
 				pszModel = g_ppszRandomCitizenModels[RandomInt( 0, ARRAYSIZE( g_ppszRandomCitizenModels ) )];
 			}
 			engine->SetFakeClientConVarValue( pBot->edict(), "cl_playermodel", pszModel );
-			engine->SetFakeClientConVarValue( pBot->edict(), "name", name );
-			pBot->HandleCommand_JoinTeam( iTeam );
-			pBot->ChangeTeam( iTeam );
+			engine->SetFakeClientConVarValue( pBot->edict(), "name", pszBotName );
+			if ( iTeam == TEAM_UNASSIGNED )
+			{
+				pBot->StopObserverMode();
+				pBot->State_Transition( STATE_ACTIVE );
+				pBot->ChangeTeam( iTeam );
+				pBot->Spawn();
+			}
+			else pBot->HandleCommand_JoinTeam( iTeam );
 
 			pBot->SetDifficulty( skill );
 

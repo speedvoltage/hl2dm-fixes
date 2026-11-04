@@ -349,7 +349,13 @@ void CHL2MPBotManager::MaintainBotQuota()
 			}
 			else
 			{
+				// Fake clients may initially enter the integrity admission spectator
+				// state. Changing the team alone leaves them hidden and non-playing.
+				const bool needsSpawn = pBot->IsObserver() || !pBot->IsAlive();
+				pBot->StopObserverMode();
+				pBot->State_Transition( STATE_ACTIVE );
 				pBot->ChangeTeam( TEAM_UNASSIGNED );
+				if ( needsSpawn ) pBot->Spawn();
 			}
 		}
 	}

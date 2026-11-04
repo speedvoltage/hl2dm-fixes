@@ -6,6 +6,7 @@
 
 #include "cbase.h"
 #include "hl2mp_community.h"
+#include "hl2mp_brightmodels.h"
 #include "istudiorender.h"
 #include "model_types.h"
 #include "materialsystem/imaterialsystem.h"
@@ -368,11 +369,8 @@ void C_HL2MP_Player::GetColorModulation( float *color )
 {
 	BaseClass::GetColorModulation(color);
 	if ( !HL2MPBrightModels_Active() || !IsAlive() ) return;
-	if ( HL2MPRules()->IsTeamplay() && GetTeamNumber() == TEAM_REBELS )
-	{ color[0]=1.f; color[1]=0.f; color[2]=0.f; }
-	else if ( HL2MPRules()->IsTeamplay() && GetTeamNumber() == TEAM_COMBINE )
-	{ color[0]=50.f/255; color[1]=150.f/255; color[2]=1.f; }
-	else { color[0]=color[1]=color[2]=1.f; }
+	const Color bright = HL2MPBrightColor( !HL2MPRules()->IsTeamplay() ? 0 : GetTeamNumber() == TEAM_REBELS ? 1 : 2 );
+	color[0] = bright.r() / 255.f; color[1] = bright.g() / 255.f; color[2] = bright.b() / 255.f;
 }
 
 int C_HL2MP_Player::DrawModel( int flags )

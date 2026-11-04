@@ -3,6 +3,7 @@
 #include "hud_macros.h"
 #include "iclientmode.h"
 #include "view.h"
+#include "hl2mp_hitmarker_style.h"
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
 
@@ -10,6 +11,8 @@
 
 static ConVar cl_hitmarkers( "cl_hitmarkers", "1", FCVAR_ARCHIVE, "Show damage numbers when hitting enemy players, if allowed by the server." );
 extern ConVar sv_hitmarkers;
+ConVar cl_hitmarker_font("cl_hitmarker_font","0",FCVAR_ARCHIVE,"Damage number font: 0 classic, 1 GorDIN, 2 GorDIN Bold, 3 Tahoma.",true,0,true,3);
+ConVar cl_hitmarker_color("cl_hitmarker_color","255 0 0",FCVAR_ARCHIVE,"Damage number color as red green blue (0-255).");
 
 class CHudHitMarkers : public CHudElement, public vgui::Panel
 {
@@ -37,6 +40,7 @@ private:
 
 	CUtlVector<DamageNumber_t> m_DamageNumbers;
 	vgui::HFont m_hFont;
+	int m_FontChoice = -1;
 };
 
 DECLARE_HUDELEMENT( CHudHitMarkers );
@@ -100,8 +104,8 @@ void CHudHitMarkers::ApplySchemeSettings( vgui::IScheme *pScheme )
 	if ( !m_hFont )
 		m_hFont = vgui::surface()->CreateFont();
 
-	vgui::surface()->SetFontGlyphSet( m_hFont, "HalfLife2", MAX( 12, YRES( 14 ) ), 700, 0, 0,
-		vgui::ISurface::FONTFLAG_ANTIALIAS | vgui::ISurface::FONTFLAG_DROPSHADOW | vgui::ISurface::FONTFLAG_CUSTOM );
+	m_FontChoice = cl_hitmarker_font.GetInt();
+	HL2MPHitmarkerFont(m_hFont,m_FontChoice,MAX(12,YRES(14)));
 }
 
 void CHudHitMarkers::MsgFunc_DamageHit( bf_read &msg )
@@ -132,6 +136,12 @@ void CHudHitMarkers::MsgFunc_DamageHit( bf_read &msg )
 
 void CHudHitMarkers::Paint()
 {
+	if (m_FontChoice != cl_hitmarker_font.GetInt())
+	{
+		m_FontChoice = cl_hitmarker_font.GetInt();
+		HL2MPHitmarkerFont(m_hFont,m_FontChoice,MAX(12,YRES(14)));
+	}
+	const Color color = HL2MPHitmarkerColor(cl_hitmarker_color.GetString());
 	vgui::surface()->DrawSetTextFont( m_hFont );
 	FOR_EACH_VEC( m_DamageNumbers, i )
 	{
@@ -156,8 +166,7 @@ void CHudHitMarkers::Paint()
 		vgui::surface()->GetTextSize( m_hFont, text, wide, tall );
 		x += YRES( number.m_flOffset ) - wide / 2;
 		y -= tall + YRES( 8 + flAge * 24 );
-		int alpha = (int)( 255.0f * RemapValClamped( flAge, 0.4f, 0.8f, 1.0f, 0.0f ) );
-		vgui::surface()->DrawSetTextColor( 255, 0, 0, alpha );
+		vgui::surface()->DrawSetTextColor( color.r(), color.g(), color.b(), HL2MPHitmarkerAlpha(flAge) );
 		vgui::surface()->DrawSetTextPos( x, y );
 		vgui::surface()->DrawPrintText( text, V_wcslen( text ) );
 	}
