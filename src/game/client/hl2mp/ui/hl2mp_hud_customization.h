@@ -2,6 +2,8 @@
 #define HL2MP_HUD_CUSTOMIZATION_H
 #include "Color.h"
 #include "vgui/VGUI.h"
+namespace vgui { class Panel; }
+void HL2MPHudChat_AttachEditorSample( vgui::Panel *owner );
 enum HL2MPHudPart { HUD_HEALTH, HUD_ARMOR, HUD_AMMO, HUD_ALTAMMO, HUD_POWER, HUD_CROSSHAIR, HUD_CHAT, HUD_KILLFEED, HUD_MATCH, HUD_VOTE, HUD_PARTS };
 struct HL2MPHudElementStyle
 {

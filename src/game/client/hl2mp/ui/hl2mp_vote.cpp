@@ -32,7 +32,7 @@ class CVotePanel : public vgui::EditablePanel
 {
     DECLARE_CLASS_SIMPLE( CVotePanel, vgui::EditablePanel );
 public:
-    CVotePanel( vgui::Panel *owner = NULL, bool previewOnly = false ) : BaseClass( owner ? owner : g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 ), m_Preview( false ), m_PreviewOnly( previewOnly ), m_PreviewGameUI(false), m_LastYes(0), m_LastNo(0), m_LastGeneration(-1), m_LastChoice(-1), m_YesFlash(0), m_NoFlash(0)
+    CVotePanel( vgui::Panel *owner = NULL, bool previewOnly = false, bool editorSample = false ) : BaseClass( owner ? owner : g_pClientMode->GetViewport(), "VotePanel" ), m_LastPhase( NONE ), m_Started( 0 ), m_NextPoll( 0 ), m_FontTall( 0 ), m_Preview( false ), m_PreviewOnly( previewOnly ), m_EditorSample( editorSample ), m_PreviewGameUI(false), m_LastYes(0), m_LastNo(0), m_LastGeneration(-1), m_LastChoice(-1), m_YesFlash(0), m_NoFlash(0)
     {
         // An editor preview must be a child of its modal owner. A sibling popup
         // can capture input while the engine paints it behind the editor.
@@ -47,6 +47,17 @@ public:
         m_Header=new vgui::Label(this,"VoteHeader",""); m_Header->SetContentAlignment(vgui::Label::a_west);m_Header->SetMouseInputEnabled(false);
         m_Body = new vgui::Label( this, "VoteQuestion", "" ); m_Body->SetWrap( true ); m_Body->SetContentAlignment( vgui::Label::a_northwest ); m_Body->SetMouseInputEnabled( false );
         for ( int i = 0; i < MAX_MAPS; ++i ) { m_Maps[i] = new CHL2MPSettingsButton( this, "", VarArgs( "map_%d", i ) ); m_Maps[i]->ServerStyle(); m_Maps[i]->SetMouseInputEnabled( true ); }
+        if ( editorSample )
+        {
+            // A passive child of the editor: never acquires focus, sends votes,
+            // changes the real vote state or plays notification sounds.
+            SetZPos( -1 ); SetMouseInputEnabled( false ); SetKeyBoardInputEnabled( false );
+            memset( &m_PreviewState, 0, sizeof(m_PreviewState) );
+            m_PreviewState.phase=KICK; m_PreviewState.eligible=6; m_PreviewState.yes=2; m_PreviewState.no=1;
+            m_PreviewState.choice=-1; m_PreviewState.canVote=true;
+            Q_strncpy(m_PreviewState.caller,HL2MPText("#HL2MP_HudVotePreview"),sizeof(m_PreviewState.caller));
+            Q_strncpy(m_PreviewState.target,HL2MPText("#HL2MP_VoteExamplePlayer"),sizeof(m_PreviewState.target));
+        }
         vgui::ivgui()->AddTickSignal( GetVPanel(), 50 );
     }
     ~CVotePanel()
@@ -57,6 +68,12 @@ public:
     void OnTick() OVERRIDE
     {
         const double now = Plat_FloatTime();
+        if ( m_EditorSample )
+        {
+            SetVisible( HL2MPHudEditor_IsLive() );
+            if ( IsVisible() ) { m_PreviewState.deadline=now+18; InvalidateLayout(true); }
+            return;
+        }
         if ( m_Preview )
         {
             if ( m_PreviewOwner && !m_PreviewOwner->IsVisible() ) { ClosePreview(); return; }
@@ -78,7 +95,7 @@ public:
         if ( !engine->IsInGame() || engine->IsLevelMainMenuBackground() ) { if ( State().phase ) HL2MPVoteUI_Reset(); SetVisible( false ); return; }
         if ( now >= m_NextPoll ) { Send( "status" ); m_NextPoll = now + 3; }
         bool map = State().phase >= MAP_WAIT;
-        SetVisible( State().phase != NONE && State().phase != MAP_WAIT && !enginevgui->IsGameUIVisible() && !engine->IsDrawingLoadingImage() );
+        SetVisible( State().phase != NONE && State().phase != MAP_WAIT && !HL2MPHudEditor_IsLive() && !enginevgui->IsGameUIVisible() && !engine->IsDrawingLoadingImage() );
         SetMouseInputEnabled( map && IsVisible() );
         Feedback();
         if ( !IsVisible() ) return;
@@ -100,7 +117,7 @@ public:
         float textScale = map ? 1.0f : HL2MPHudStyle( HUD_VOTE ).textScale;
         const int fontTall = MAX( 11, MIN(int(17*scale*textScale),int(contentH*.09f)) );
         m_FontTall = fontTall; m_Font = HL2MPHudFont( HUD_VOTE, fontTall ); m_Title = HL2MPHudFont( HUD_VOTE, int( fontTall * 1.3f ), true );
-        SetAlpha( !m_Preview && cl_vote_animations.GetBool() ? int( 255 * clamp( ( Plat_FloatTime() - m_Started ) / .18, 0.0, 1.0 ) ) : 255 );
+        SetAlpha( !m_Preview && !m_EditorSample && cl_vote_animations.GetBool() ? int( 255 * clamp( ( Plat_FloatTime() - m_Started ) / .18, 0.0, 1.0 ) ) : 255 );
         m_Body->SetFont( m_Title ); m_Body->SetFgColor( Color( 238, 238, 232, 255 ) );
         const int pad=MAX(10,int(16*scale)), header=map?int(40*scale):MAX(36,int(contentH*.21f)), tile=MAX(44,int(contentH*.29f));
         m_Header->SetBounds(map?pad:header+4,4,w-(map?pad:header+4)-(m_Preview?38:pad),header-8);m_Header->SetFont(m_Font);
@@ -202,6 +219,7 @@ public:
     }
     void OnCommand( const char *command ) OVERRIDE
     {
+        if ( m_EditorSample ) return;
         if(m_Preview)
         {
             if(!Q_strcmp(command,"preview_pass"))Result(true);else if(!Q_strcmp(command,"preview_fail"))Result(false);
@@ -211,7 +229,7 @@ public:
         { int choice = atoi( command + 4 ); if ( choice >= 0 && choice < State().mapCount && State().choice != choice ) { Send( "cast", choice ); Sound( "hl2mp/vote_cast.wav" ); } return; }
         BaseClass::OnCommand( command );
     }
-    const VoteState &State() const { return m_Preview ? m_PreviewState : s_State; }
+    const VoteState &State() const { return m_Preview || m_EditorSample ? m_PreviewState : s_State; }
     bool IsPreview() const { return m_Preview; }
     void ResetPreview()
     {
@@ -267,7 +285,7 @@ public:
     }
 private:
     bool m_PreviewGameUI; int m_ContentH,m_LastYes,m_LastNo,m_LastGeneration,m_LastChoice; double m_YesFlash,m_NoFlash; vgui::Label *m_Header; CHL2MPSettingsButton *m_Test[3];
-    bool m_Preview, m_PreviewOnly; VoteState m_PreviewState; vgui::VPanelHandle m_PreviousModal; vgui::PHandle m_PreviewOwner; CHL2MPSettingsButton *m_Close;
+    bool m_Preview, m_PreviewOnly, m_EditorSample; VoteState m_PreviewState; vgui::VPanelHandle m_PreviousModal; vgui::PHandle m_PreviewOwner; CHL2MPSettingsButton *m_Close;
     int m_LastPhase; double m_Started, m_NextPoll; int m_FontTall; vgui::HFont m_Font, m_Title; vgui::Label *m_Body; CHL2MPSettingsButton *m_Maps[MAX_MAPS];
 };
 vgui::DHANDLE<CVotePanel> s_Panel;
@@ -304,6 +322,7 @@ void HL2MPVoteUI_Preview( vgui::Panel *owner )
     s_Preview->Preview();
 }
 void HL2MPVoteUI_ClosePreview() { if ( s_Preview ) s_Preview->ClosePreview(); }
+void HL2MPVoteUI_CreateEditorSample( vgui::Panel *owner ) { new CVotePanel( owner, true, true ); }
 void HL2MPVoteUI_Reset() { memset( &s_State, 0, sizeof( s_State ) ); }
 void HL2MPVoteUI_CallKick( int userid )
 {

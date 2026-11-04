@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "hl2mp_hud_chat.h"
 #include "ui/hl2mp_hud_customization.h"
+#include "ui/hl2mp_messages.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
 #include "text_message.h"
@@ -77,12 +78,28 @@ CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 	m_iMinWindowTall = 260;
 	m_iHeaderTall = 26;
 	m_iResizeGripSize = 7;
+	m_bEditorSampleActive = m_bHistoryWasVisible = false;
+	m_iEditorSampleLines = -1;
+	m_pEditorSample = new vgui::RichText( this, "HudEditorChatSample" );
+	m_pEditorSample->SetMouseInputEnabled( false ); m_pEditorSample->SetKeyBoardInputEnabled( false );
+	m_pEditorSample->SetVerticalScrollbar( false ); m_pEditorSample->SetPaintBorderEnabled( false ); m_pEditorSample->SetVisible( false );
 }
 
 void CHudChat::CreateChatInputLine( void )
 {
 	m_pChatInput = new CHudChatInputLine( this, "ChatInputLine" );
 	m_pChatInput->SetVisible( false );
+}
+
+void CHudChat::AttachEditorSample( vgui::Panel *owner )
+{
+	m_pEditorSample->SetParent( owner ); m_pEditorSample->SetZPos( -2 );
+	m_pEditorSample->SetMouseInputEnabled( false ); m_pEditorSample->SetKeyBoardInputEnabled( false );
+}
+void HL2MPHudChat_AttachEditorSample( vgui::Panel *owner )
+{
+	CHudChat *chat = GET_HUDELEMENT( CHudChat );
+	if ( chat ) chat->AttachEditorSample( owner );
 }
 
 void CHudChat::CreateChatLines( void )
@@ -182,6 +199,39 @@ void CHudChat::OnTick( void )
 	{
 		GetChatHistory()->SetBgColor( HL2MPHudStyle( HUD_CHAT ).background );
         GetChatHistory()->SetAlpha( 255 );
+	}
+	const bool editing = HL2MPHudEditor_IsLive();
+	if ( editing && !m_bEditorSampleActive )
+	{
+		m_bHistoryWasVisible = GetChatHistory() && GetChatHistory()->IsVisible();
+		// A separate text widget keeps samples out of the actual chat history.
+		m_iEditorSampleLines = -1;
+	}
+	if ( GetChatHistory() )
+	{
+		if ( editing ) GetChatHistory()->SetVisible( false );
+		else if ( m_bEditorSampleActive ) GetChatHistory()->SetVisible( m_bHistoryWasVisible );
+	}
+	m_pEditorSample->SetVisible( editing ); m_bEditorSampleActive = editing;
+	if ( editing && GetChatHistory() )
+	{
+		SetAlpha( 255 );
+		int x=0,y=0,w,h; GetChatHistory()->GetSize(w,h); GetChatHistory()->LocalToScreen(x,y);
+		m_pEditorSample->GetParent()->ScreenToLocal(x,y); m_pEditorSample->SetBounds(x,y,w,h);
+		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_CHAT );
+		const vgui::HFont font = custom ? HL2MPHudFont( HUD_CHAT, MAX(10,int(16*screenTall/720.f*style.textScale)) ) : vgui::scheme()->GetIScheme(GetScheme())->GetFont("ChatFont",true);
+		m_pEditorSample->SetFont( font );
+		m_pEditorSample->SetBgColor( custom ? style.background : Color(0,0,0,90) );
+		m_pEditorSample->SetFgColor( custom ? style.foreground : Color(255,255,255,255) );
+		// Put the sample near the bottom of the history area, leaving room for
+		// wrapped translations and the vote panel above it in the default layout.
+		const int lines = clamp( h / MAX(1,vgui::surface()->GetFontTall(font)) - 3, 0, 20 );
+		if ( lines != m_iEditorSampleLines )
+		{
+			char sample[2048]; for ( int i=0; i<lines; ++i ) sample[i]='\n';
+			Q_strncpy(sample+lines,HL2MPText("#HL2MP_HudChatSample"),sizeof(sample)-lines);
+			m_pEditorSample->SetText(sample); m_iEditorSampleLines=lines;
+		}
 	}
 }
 

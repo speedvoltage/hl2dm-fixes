@@ -59,7 +59,7 @@ public:
 	virtual bool ShouldDraw( void );
 	virtual void Paint( void );
 	void DrawNotices( const CUtlVector<DeathNoticeItem> &notices, int x, int y, int width, int height, float scale, bool custom, bool preview );
-	void DrawPreview( int x, int y, int width, int height, float scale );
+	void DrawPreview( int x, int y, int width, int height, float scale, bool custom = true );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 
 	void SetColorForNoticePlayer( int iTeamNumber, float flAlpha );
@@ -168,7 +168,7 @@ void CHudDeathNotice::VidInit( void )
 //-----------------------------------------------------------------------------
 bool CHudDeathNotice::ShouldDraw( void )
 {
-	return ( CHudElement::ShouldDraw() && ( m_DeathNotices.Count() ) );
+	return ( CHudElement::ShouldDraw() && ( m_DeathNotices.Count() || HL2MPHudEditor_IsLive() ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -286,7 +286,8 @@ void CHudDeathNotice::Paint()
 	if ( HL2MPHudCustomEnabled() && !HL2MPHudStyle( HUD_KILLFEED ).visible ) return;
 	int x = 0, y = GetClientModeHL2MPNormal()->GetDeathMessageStartHeight(), w = GetWide(), h = GetTall() - y;
 	if ( HL2MPHudCustomEnabled() ) HL2MPHudBounds( HUD_KILLFEED, ScreenWidth(), ScreenHeight(), x, y, w, h );
-	DrawNotices( m_DeathNotices, x, y, w, h, ScreenHeight() / 720.0f, HL2MPHudCustomEnabled(), false );
+	if ( HL2MPHudEditor_IsLive() ) DrawPreview( x, y, w, h, ScreenHeight() / 720.0f, HL2MPHudCustomEnabled() );
+	else DrawNotices( m_DeathNotices, x, y, w, h, ScreenHeight() / 720.0f, HL2MPHudCustomEnabled(), false );
 }
 
 void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, int customX, int customY, int customW, int customH, float scale, bool custom, bool preview )
@@ -300,7 +301,7 @@ void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, i
 	if ( custom )
 	{
 		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_KILLFEED );
-		m_hTextFont = HL2MPHudFont( HUD_KILLFEED, MAX( preview ? 14 : 10, int( 16 * scale * style.textScale ) ) );
+		m_hTextFont = HL2MPHudFont( HUD_KILLFEED, MAX( preview && !HL2MPHudEditor_IsLive() ? 14 : 10, int( 16 * scale * style.textScale ) ) );
 		m_flLineHeight = surface()->GetFontTall( m_hTextFont ) + MAX( 4, int( 10 * scale ) ); m_clrBackground = style.background; m_clrIcon = style.foreground;
 	}
 
@@ -435,7 +436,7 @@ void CHudDeathNotice::DrawNotices( const CUtlVector<DeathNoticeItem> &notices, i
 	if ( preview ) { m_flCornerRadius = originalRadius; m_flFontIconVerticalOffset = originalOffset; CalcRoundedCorners(); }
 }
 
-void CHudDeathNotice::DrawPreview( int x, int y, int width, int height, float scale )
+void CHudDeathNotice::DrawPreview( int x, int y, int width, int height, float scale, bool custom )
 {
 	CUtlVector<DeathNoticeItem> samples;
 	const char *weapons[] = { "death_pistol", "death_smg1", "d_skull" };
@@ -449,7 +450,7 @@ void CHudDeathNotice::DrawPreview( int x, int y, int width, int height, float sc
 		item.iSuicide = i == 2; item.bLocalPlayerKiller = i == 1;
 		samples.AddToTail( item );
 	}
-	DrawNotices( samples, x, y, width, height, scale, true, true );
+	DrawNotices( samples, x, y, width, height, scale, custom, true );
 }
 
 void HL2MPHudDeathNoticePreview( int x, int y, int width, int height, float scale )

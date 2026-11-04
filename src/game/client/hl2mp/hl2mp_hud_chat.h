@@ -70,6 +70,7 @@ public:
 
 	virtual Color	GetClientColor( int clientIndex );
 	Color GetTextColorForClient( TextColor color, int clientIndex ) OVERRIDE;
+	void AttachEditorSample( vgui::Panel *owner );
 
 private:
 	enum WindowDragMode
@@ -106,6 +107,9 @@ private:
 	int m_iMinWindowTall;
 	int m_iHeaderTall;
 	int m_iResizeGripSize;
+	vgui::RichText *m_pEditorSample;
+	bool m_bEditorSampleActive, m_bHistoryWasVisible;
+	int m_iEditorSampleLines;
 };
 
 #endif	//CS_HUD_CHAT_H

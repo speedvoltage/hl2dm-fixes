@@ -40,6 +40,27 @@ const char *s_WeaponLabels[] = { "#HL2_Crowbar_Menu", "#HL2_StunBaton_Menu", "#H
 const char *s_Shapes[] = { "#HL2MP_HudShapeCross", "#HL2MP_HudShapeT", "#HL2MP_HudShapeCircle", "#HL2MP_HudShapeDot", "#HL2MP_CrossX", "#HL2MP_CrossDiamond", "#HL2MP_CrossSquare", "#HL2MP_CrossChevron", "#HL2MP_CrossDoubleChevron", "#HL2MP_CrossBrackets", "#HL2MP_CrossCorners", "#HL2MP_CrossRingDot", "#HL2MP_CrossCircleCross", "#HL2MP_CrossTriangle", "#HL2MP_CrossHorizontal", "#HL2MP_CrossStar" };
 struct CrosshairConfig { int shape, gap, length, thickness; bool outline, dot; Color color; float scale; };
 struct Layout { HL2MPHudElementStyle parts[HUD_PARTS]; int crossShape, crossGap, crossLength, crossThickness; bool crossOutline, crossDot, lowHealth; CrosshairConfig weapons[ARRAYSIZE(s_Weapons)]; bool overrides[ARRAYSIZE(s_Weapons)]; } s_Layout;
+bool SameCrosshair( const CrosshairConfig &a, const CrosshairConfig &b )
+{
+    return a.shape == b.shape && a.gap == b.gap && a.length == b.length && a.thickness == b.thickness &&
+        a.outline == b.outline && a.dot == b.dot && a.color == b.color && a.scale == b.scale;
+}
+bool SameLayout( const Layout &a, const Layout &b )
+{
+    // Compare saved values, not struct padding or unused weapon overrides.
+    for ( int i = 0; i < HUD_PARTS; ++i )
+    {
+        const HL2MPHudElementStyle &p = a.parts[i], &q = b.parts[i];
+        if ( p.x != q.x || p.y != q.y || p.w != q.w || p.h != q.h || p.textScale != q.textScale ||
+            p.foreground != q.foreground || p.background != q.background || p.visible != q.visible ||
+            p.labels != q.labels || p.bars != q.bars || p.numbers != q.numbers || p.fitContent != q.fitContent || p.font != q.font ) return false;
+    }
+    if ( a.crossShape != b.crossShape || a.crossGap != b.crossGap || a.crossLength != b.crossLength ||
+        a.crossThickness != b.crossThickness || a.crossOutline != b.crossOutline || a.crossDot != b.crossDot || a.lowHealth != b.lowHealth ) return false;
+    for ( int i = 0; i < ARRAYSIZE(s_Weapons); ++i )
+        if ( a.overrides[i] != b.overrides[i] || ( a.overrides[i] && !SameCrosshair( a.weapons[i], b.weapons[i] ) ) ) return false;
+    return true;
+}
 Layout s_DefaultLayout;
 int s_EditWeapon = 0;
 CrosshairConfig GlobalCrosshair()
@@ -300,6 +321,7 @@ class CHudEditor;
 class CColorPicker;
 class CHudHelp;
 class CHudInspector;
+class CHudClosePrompt;
 struct EditState { Layout layout; int mode; };
 class CEditorCanvas : public vgui::Panel
 {
@@ -329,6 +351,10 @@ class CHudEditor : public vgui::EditablePanel
 public:
     CHudEditor();
     void Open( bool live = false ); void Close( bool apply, bool resume = true ); void BuildRows(); void Select( int part ); void Edited(); void ChoosePreset( int preset );
+    void RequestClose( bool resume = true );
+    void CheckSession();
+    void KeepEditing() { openedAt = Plat_FloatTime(); vgui::input()->SetAppModalSurface( GetVPanel() ); RequestFocus(); if ( liveView ) engine->ClientCmd_Unrestricted( "gameui_allowescape;gameui_hide" ); }
+    bool HasChanges() const { return beforeMode != cl_custom_hud.GetInt() || !SameLayout( before, s_Layout ); }
     void SetLive( bool enabled ); void ParentControls( vgui::Panel *parent ); void LayoutLive();
     bool IsLive() { return liveView && IsVisible(); }
     void SetProperty( int id, int value ); int Property( int id );
@@ -346,6 +372,7 @@ private:
     CUtlVector<EditState> history; int historyAt, historyGroup; bool keys[4];
     CHL2MPSettingsButton *toolbar[4]; CHudHelp *help;
     CHudInspector *inspector; CHL2MPSettingsButton *viewButton, *controlsButton;
+    CHudClosePrompt *closePrompt; bool toggleHeld;
     Layout before; int beforeMode; bool fromGame; double openedAt; int width, height; CHL2MPDropdown *combos[3], *saveSlot;
     CHL2MPSettingsButton *buttons[7], *tabs[2], *align[2]; CColorPicker *picker;
     vgui::PanelListPanel *rows; vgui::Label *title, *hint, *status;
@@ -357,7 +384,7 @@ public:
     CHudFontRefresh() : CAutoGameSystemPerFrame( "HUDFonts" ), width( 0 ), height( 0 ), refreshAt( 0 ) {}
     void Update( float ) OVERRIDE
     {
-        if ( s_Editor && s_Editor->IsLive() && ( !HL2MPHudEditor_LiveAvailable() || engine->IsDrawingLoadingImage() ) ) s_Editor->Close( false, false );
+        if ( s_Editor ) s_Editor->CheckSession();
         int w, h; vgui::surface()->GetScreenSize( w, h );
         if ( w != width || h != height ) { width = w; height = h; refreshAt = Plat_FloatTime() + .75; }
         if ( !refreshAt || Plat_FloatTime() < refreshAt ) return;
@@ -512,6 +539,51 @@ public:
     }
     void PaintBackground() OVERRIDE { HL2MPServerTheme::Rounded(0,0,GetWide(),GetTall(),Color(30,31,33,255),6); }
 private: CHudEditor *owner; vgui::Label *title,*body; CHL2MPSettingsButton *close;
+};
+class CHudClosePrompt : public vgui::EditablePanel
+{
+    DECLARE_CLASS_SIMPLE( CHudClosePrompt, vgui::EditablePanel );
+public:
+    CHudClosePrompt( CHudEditor *p ) : BaseClass( p, "HudUnsavedChanges" ), owner( p ), resume( true )
+    {
+        SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetZPos( 2000 );
+        title = new vgui::Label( this, "Title", "#HL2MP_HudEditor" );
+        body = new vgui::Label( this, "Body", "#HL2MP_HudUnsavedPrompt" ); body->SetWrap( true ); body->SetContentAlignment( vgui::Label::a_northwest );
+        const char *labels[] = { "#HL2MP_HudSaveChanges", "#HL2MP_HudDiscardChanges", "#HL2MP_Cancel" };
+        const char *commands[] = { "save", "discard", "cancel" };
+        for ( int i=0; i<3; ++i ) { buttons[i] = new CHL2MPSettingsButton( this, labels[i], commands[i] ); buttons[i]->ServerStyle( i == 0 ); }
+    }
+    void Open( bool resumeGame )
+    {
+        if ( IsVisible() ) return;
+        resume = resumeGame; SetVisible( true ); InvalidateLayout( true ); MoveToFront();
+        vgui::input()->SetAppModalSurface( GetVPanel() ); buttons[2]->RequestFocus();
+    }
+    void Dismiss()
+    {
+        if ( !IsVisible() ) return;
+        SetVisible( false ); owner->KeepEditing();
+    }
+    void OnCommand( const char *command ) OVERRIDE
+    {
+        if ( !Q_strcmp( command, "save" ) ) owner->Close( true, resume );
+        else if ( !Q_strcmp( command, "discard" ) ) owner->Close( false, resume );
+        else Dismiss();
+    }
+    void OnKeyCodeTyped( vgui::KeyCode key ) OVERRIDE { if ( key == KEY_ESCAPE ) Dismiss(); else BaseClass::OnKeyCodeTyped( key ); }
+    void PerformLayout() OVERRIDE
+    {
+        int sw,sh; vgui::surface()->GetScreenSize(sw,sh); SetBounds(0,0,sw,sh);
+        w=MIN(620,sw-32); h=MIN(260,sh-32); x=(sw-w)/2; y=(sh-h)/2;
+        title->SetBounds(x+24,y+16,w-48,32); title->SetFont(owner->font); title->SetFgColor(HL2MPServerTheme::Orange());
+        body->SetBounds(x+24,y+64,w-48,h-144); body->SetFont(owner->font); body->SetFgColor(HL2MPServerTheme::Text());
+        body->GetTextImage()->SetSize(body->GetWide(),body->GetTall()); body->GetTextImage()->RecalculateNewLinePositions();
+        const int bw=(w-64)/3;
+        for(int i=0;i<3;++i) { buttons[i]->SetBounds(x+24+i*(bw+8),y+h-64,bw,44); buttons[i]->SetFont(owner->font); }
+    }
+    void PaintBackground() OVERRIDE { Rect(0,0,GetWide(),GetTall(),Color(0,0,0,155)); HL2MPServerTheme::Rounded(x,y,w,h,Color(30,31,33,255),6); }
+private:
+    CHudEditor *owner; bool resume; int x,y,w,h; vgui::Label *title,*body; CHL2MPSettingsButton *buttons[3];
 };
 class CShapePalette : public vgui::Panel
 {
@@ -683,6 +755,8 @@ CHudEditor::CHudEditor() : BaseClass( NULL, "HUDEditor" ), selected( 0 ), sectio
     SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) ); MakePopup( false ); SetVisible( false ); SetMouseInputEnabled( true ); SetKeyBoardInputEnabled( true ); SetZPos( 500 );
     font = vgui::surface()->CreateFont(); title = new vgui::Label( this, "Title", "#HL2MP_HudEditor" ); hint = new vgui::Label( this, "Hint", "#HL2MP_HudDragHint" ); hint->SetWrap( true ); status = new vgui::Label( this, "Status", "" );
     canvas = new CEditorCanvas( this );
+    HL2MPVoteUI_CreateEditorSample( this );
+    closePrompt = new CHudClosePrompt( this ); toggleHeld = true;
     inspector = new CHudInspector( this ); inspector->SetSize( 0, 0 );
     viewButton = new CHL2MPSettingsButton( this, "#HL2MP_HudLiveView", "view" ); viewButton->ServerStyle();
     controlsButton = new CHL2MPSettingsButton( this, "#HL2MP_HudHideControls", "controls" ); controlsButton->ServerStyle(); controlsButton->SetZPos( 20 ); controlsButton->SetVisible( false );
@@ -719,6 +793,8 @@ void CHudEditor::ParentControls( vgui::Panel *parent )
 }
 void CHudEditor::SetLive( bool enabled )
 {
+    closePrompt->Dismiss(); toggleHeld = true;
+    HL2MPHudChat_AttachEditorSample( this );
     HL2MPVoteUI_ClosePreview(); picker->Close( false ); if ( help->IsVisible() ) help->Close();
     for ( int i=0; i<3; ++i ) combos[i]->HideMenu(); saveSlot->HideMenu();
     canvas->dragging = canvas->panning = false;
@@ -746,14 +822,49 @@ void CHudEditor::Open( bool live )
 {
     if ( live && !HL2MPHudEditor_LiveAvailable() ) { Msg( "%s\n", HL2MPText( "#HL2MP_HudLiveUnavailable" ) ); return; }
     if ( IsVisible() && live != liveView ) { SetLive( live ); return; }
-    if ( IsVisible() ) { Close( false ); return; } Load(); before = s_Layout; beforeMode = cl_custom_hud.GetInt(); fromGame = !enginevgui->IsGameUIVisible();
+    if ( IsVisible() ) { RequestClose(); return; } Load(); before = s_Layout; beforeMode = cl_custom_hud.GetInt(); fromGame = !enginevgui->IsGameUIVisible();
     reading = true; combos[1]->ActivateItemByRow( CurrentPreset() ); reading = false;
     history.Purge(); EditState initial={s_Layout,beforeMode}; history.AddToTail(initial); historyAt=0; historyGroup=-1;
     if ( CrosshairOnly() ) { selected = HUD_CROSSHAIR; section = 1; reading = true; combos[0]->ActivateItemByRow( selected ); reading = false; }
     SetLive( live ); BuildRows();
 }
+void CHudEditor::RequestClose( bool resume )
+{
+    if ( closePrompt->IsVisible() ) return;
+    // Finish any active edit before comparing with the opening snapshot.
+    picker->Close( true ); if ( help->IsVisible() ) help->Close(); HL2MPVoteUI_ClosePreview();
+    for ( int i=0; i<3; ++i ) combos[i]->HideMenu(); saveSlot->HideMenu();
+    canvas->dragging = canvas->panning = false;
+    if ( vgui::input()->GetMouseCapture() ) vgui::input()->SetMouseCapture( NULL );
+    if ( !HasChanges() ) { Close( false, resume ); return; }
+    // A lost connection or an externally opened menu must not strand a modal
+    // dialog under the hidden game viewport or discard the player's edits.
+    if ( liveView && !HL2MPHudEditor_LiveAvailable() ) SetLive( false );
+    else if ( liveView && enginevgui->IsGameUIVisible() ) engine->ClientCmd_Unrestricted( "gameui_allowescape;gameui_hide" );
+    else if ( !liveView && !enginevgui->IsGameUIVisible() ) engine->ClientCmd_Unrestricted( "gameui_activate;gameui_preventescape" );
+    openedAt = Plat_FloatTime(); closePrompt->Open( resume );
+}
+void CHudEditor::CheckSession()
+{
+    if ( !IsVisible() ) return;
+    if ( liveView && !HL2MPHudEditor_LiveAvailable() )
+    {
+        if ( HasChanges() ) SetLive( false );
+        RequestClose( false ); return;
+    }
+    if ( Plat_FloatTime() - openedAt < .5 ) return;
+    // Escape can be handled by the engine before VGUI receives it. This check
+    // must run even when the pause menu hides the editor's viewport/OnThink.
+    if ( liveView && enginevgui->IsGameUIVisible() )
+    {
+        engine->ClientCmd_Unrestricted( "gameui_allowescape;gameui_hide" );
+        if ( closePrompt->IsVisible() ) closePrompt->Dismiss(); else RequestClose();
+    }
+    else if ( !liveView && !enginevgui->IsGameUIVisible() ) RequestClose( false );
+}
 void CHudEditor::Close( bool apply, bool resume )
 {
+    closePrompt->Dismiss();
     HL2MPVoteUI_ClosePreview();
     picker->Close( false ); if(help->IsVisible()) help->Close(); saveSlot->HideMenu();
     if ( apply && !SaveLayout( "cfg/hud_layout.res" ) ) { status->SetText( "#HL2MP_HudSaveFailed" ); if ( liveView ) title->SetText( "#HL2MP_HudSaveFailed" ); return; }
@@ -786,7 +897,6 @@ void CHudEditor::OnThink()
     inspector->SetVisible( liveView && !controlsHidden ); controlsButton->SetVisible( liveView );
     viewButton->SetEnabled( liveView || HL2MPHudEditor_LiveAvailable() );
     hint->SetVisible( liveView && !custom && !controlsHidden );
-    if ( Plat_FloatTime() - openedAt > .5 && ( liveView ? enginevgui->IsGameUIVisible() : !enginevgui->IsGameUIVisible() ) ) Close( false, false );
 }
 void CHudEditor::PerformLayout()
 {
@@ -819,7 +929,7 @@ void CHudEditor::LayoutLive()
     const float s = MAX( .65f, MIN( width / 1280.f, height / 720.f ) );
     const int w = MIN( width - 24, MAX( 280, int( 340*s ) ) ), h = MIN( height - 24, int( 550*s ) ), pad = int( 12*s );
     const int row = MAX( int(32*s), vgui::surface()->GetFontTall(font)*2+4 ), gap = MAX( 4, int( 6*s ) );
-    int ix,iy; inspector->GetPos( ix, iy ); if ( !inspector->GetWide() ) { ix = 16; iy = (height-h)/2; }
+    int ix,iy; inspector->GetPos( ix, iy ); if ( !inspector->GetWide() ) { ix = (width-w)/2; iy = (height-h)/2; }
     ix=clamp(ix,0,MAX(0,width-w)); iy=clamp(iy,0,MAX(0,height-h)); inspector->SetBounds( ix, iy, w, h );
     canvas->SetBounds( 0, 0, width, height );
     title->SetBounds( pad, 4, w-pad*2, row ); title->SetFont( font ); title->SetFgColor( HL2MPServerTheme::Orange() );
@@ -847,10 +957,10 @@ void CHudEditor::OnKeyCodeTyped( vgui::KeyCode key )
     {
         for(int i=0;i<3;++i) if(combos[i]->IsDropdownVisible()) { combos[i]->HideMenu();return; }
         if(saveSlot->IsDropdownVisible()) { saveSlot->HideMenu();return; }
-        Close(false);return;
+        RequestClose();return;
     }
     const char *binding = engine->Key_BindingForKey( (ButtonCode_t)key );
-    if ( liveView && binding && !Q_strcmp( binding, "hud_editor_live" ) ) { Close(false);return; }
+    if ( binding && !Q_strcmp( binding, liveView ? "hud_editor_live" : "hud_editor" ) ) { RequestClose();return; }
     BaseClass::OnKeyCodeTyped(key);
 }
 void CHudEditor::Select( int part ) { selected = CrosshairOnly() ? HUD_CROSSHAIR : clamp( part, 0, HUD_PARTS - 1 ); reading = true; combos[0]->ActivateItemByRow( selected ); reading = false; BuildRows(); }
@@ -932,7 +1042,7 @@ Color *CHudEditor::EditColor(bool background)
 void CHudEditor::Checkpoint(int group)
 {
     if(!history.Count())return;
-    const EditState &old=history[historyAt]; if(old.mode==cl_custom_hud.GetInt() && !memcmp(&old.layout,&s_Layout,sizeof(Layout)))return;
+    const EditState &old=history[historyAt]; if(old.mode==cl_custom_hud.GetInt() && SameLayout(old.layout,s_Layout))return;
     while(history.Count()>historyAt+1)history.Remove(history.Count()-1);
     EditState now={s_Layout,cl_custom_hud.GetInt()};
     if(group>=0 && historyGroup==group && historyAt>0) history[historyAt]=now;
@@ -951,6 +1061,14 @@ void CHudEditor::Zoom(int delta)
 }
 void CHudEditor::Shortcuts()
 {
+    bool toggleDown = false;
+    for ( int key = KEY_FIRST + 1; key <= KEY_LAST; ++key ) if ( vgui::input()->IsKeyDown( (vgui::KeyCode)key ) )
+    {
+        const char *binding = engine->Key_BindingForKey( (ButtonCode_t)key );
+        if ( binding && !Q_strcmp( binding, liveView ? "hud_editor_live" : "hud_editor" ) ) toggleDown = true;
+    }
+    const bool toggle = toggleDown && !toggleHeld; toggleHeld = toggleDown;
+    if ( toggle && vgui::input()->GetAppModalSurface() == GetVPanel() ) { RequestClose(); return; }
     bool ctrl=vgui::input()->IsKeyDown(KEY_LCONTROL)||vgui::input()->IsKeyDown(KEY_RCONTROL);
     bool down[]={ctrl&&vgui::input()->IsKeyDown(KEY_Z),ctrl&&vgui::input()->IsKeyDown(KEY_Y),vgui::input()->IsKeyDown(KEY_EQUAL)||vgui::input()->IsKeyDown(KEY_PAD_PLUS),vgui::input()->IsKeyDown(KEY_MINUS)||vgui::input()->IsKeyDown(KEY_PAD_MINUS)};
     bool active=vgui::input()->GetAppModalSurface()==GetVPanel(); for(int i=0;i<3;++i)active=active&&!combos[i]->IsDropdownVisible(); active=active&&!saveSlot->IsDropdownVisible();
@@ -982,7 +1100,7 @@ void CHudEditor::OnCommand( const char *command )
     if(!Q_strcmp(command,"undo")) { History(-1);return; } if(!Q_strcmp(command,"redo")) { History(1);return; }
     if(!Q_strcmp(command,"snap")) { snapping=!snapping;return; } if(!Q_strcmp(command,"help")) { help->Open();return; }
     if ( !Q_strcmp( command, "apply" ) ) { Close( true ); return; }
-    if ( !Q_strcmp( command, "cancel" ) ) { Close( false ); return; }
+    if ( !Q_strcmp( command, "cancel" ) ) { RequestClose(); return; }
     if ( !Q_strcmp( command, "layout" ) || !Q_strcmp( command, "appearance" ) ) { section = !Q_strcmp( command, "appearance" ); BuildRows(); return; }
     if ( !Q_strcmp( command, "color_fg" ) || !Q_strcmp( command, "color_bg" ) ) { picker->Open( !Q_strcmp( command, "color_bg" ) ); return; }
     if ( !Q_strcmp( command, "vote_preview" ) ) { HL2MPVoteUI_Preview( this ); return; }

@@ -983,4 +983,7 @@ static const Message s_Messages[] = {
     { "HL2MP_HudHideControls", "HIDE CONTROLS", NULL },
     { "HL2MP_HudShowControls", "SHOW CONTROLS", NULL },
     { "HL2MP_HudLiveUnavailable", "Live editing is only available while connected to a listen server.", NULL },
+    { "HL2MP_HudUnsavedPrompt", "You have unsaved HUD changes. Save them before closing?", NULL },
+    { "HL2MP_HudSaveChanges", "SAVE", NULL },
+    { "HL2MP_HudDiscardChanges", "DISCARD", NULL },
 };

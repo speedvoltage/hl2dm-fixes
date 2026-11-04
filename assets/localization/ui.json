@@ -5759,6 +5759,24 @@
       "contexts": [
         "Live HUD editor"
       ]
+    },
+    "HL2MP_HudUnsavedPrompt": {
+      "english": "You have unsaved HUD changes. Save them before closing?",
+      "contexts": [
+        "HUD editor unsaved changes"
+      ]
+    },
+    "HL2MP_HudSaveChanges": {
+      "english": "SAVE",
+      "contexts": [
+        "HUD editor unsaved changes"
+      ]
+    },
+    "HL2MP_HudDiscardChanges": {
+      "english": "DISCARD",
+      "contexts": [
+        "HUD editor unsaved changes"
+      ]
     }
   },
   "languages": {
@@ -6722,7 +6740,10 @@
       "HL2MP_HudGridView": "عرض الشبكة",
       "HL2MP_HudHideControls": "إخفاء الأدوات",
       "HL2MP_HudShowControls": "إظهار الأدوات",
-      "HL2MP_HudLiveUnavailable": "التحرير المباشر متاح فقط عند الاتصال بخادم يستضيفه لاعب من داخل اللعبة."
+      "HL2MP_HudLiveUnavailable": "التحرير المباشر متاح فقط عند الاتصال بخادم يستضيفه لاعب من داخل اللعبة.",
+      "HL2MP_HudUnsavedPrompt": "لديك تغييرات غير محفوظة في واجهة اللعب. هل تريد حفظها قبل الإغلاق؟",
+      "HL2MP_HudSaveChanges": "حفظ",
+      "HL2MP_HudDiscardChanges": "تجاهل"
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7684,7 +7705,10 @@
       "HL2MP_HudGridView": "GRADE",
       "HL2MP_HudHideControls": "OCULTAR CONTROLES",
       "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
-      "HL2MP_HudLiveUnavailable": "A edição ao vivo só está disponível em servidores hospedados dentro do jogo."
+      "HL2MP_HudLiveUnavailable": "A edição ao vivo só está disponível em servidores hospedados dentro do jogo.",
+      "HL2MP_HudUnsavedPrompt": "Há alterações não salvas no HUD. Deseja salvá-las antes de fechar?",
+      "HL2MP_HudSaveChanges": "SALVAR",
+      "HL2MP_HudDiscardChanges": "DESCARTAR"
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8646,7 +8670,10 @@
       "HL2MP_HudGridView": "МРЕЖА",
       "HL2MP_HudHideControls": "СКРИЙ КОНТРОЛИТЕ",
       "HL2MP_HudShowControls": "ПОКАЖИ КОНТРОЛИТЕ",
-      "HL2MP_HudLiveUnavailable": "Редактирането в играта е достъпно само в сървър, хостван от играч."
+      "HL2MP_HudLiveUnavailable": "Редактирането в играта е достъпно само в сървър, хостван от играч.",
+      "HL2MP_HudUnsavedPrompt": "Имате незапазени промени по HUD. Да се запазят ли преди затваряне?",
+      "HL2MP_HudSaveChanges": "ЗАПАЗИ",
+      "HL2MP_HudDiscardChanges": "ОТХВЪРЛИ"
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9608,7 +9635,10 @@
       "HL2MP_HudGridView": "MŘÍŽKA",
       "HL2MP_HudHideControls": "SKRÝT OVLÁDÁNÍ",
       "HL2MP_HudShowControls": "ZOBRAZIT OVLÁDÁNÍ",
-      "HL2MP_HudLiveUnavailable": "Živé úpravy jsou dostupné pouze na serveru hostovaném přímo ze hry."
+      "HL2MP_HudLiveUnavailable": "Živé úpravy jsou dostupné pouze na serveru hostovaném přímo ze hry.",
+      "HL2MP_HudUnsavedPrompt": "Máte neuložené změny HUD. Uložit je před zavřením?",
+      "HL2MP_HudSaveChanges": "ULOŽIT",
+      "HL2MP_HudDiscardChanges": "ZAHODIT"
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10570,7 +10600,10 @@
       "HL2MP_HudGridView": "GITTERVISNING",
       "HL2MP_HudHideControls": "SKJUL KONTROLLER",
       "HL2MP_HudShowControls": "VIS KONTROLLER",
-      "HL2MP_HudLiveUnavailable": "Liveredigering er kun tilgængelig på en server, der hostes fra spillet."
+      "HL2MP_HudLiveUnavailable": "Liveredigering er kun tilgængelig på en server, der hostes fra spillet.",
+      "HL2MP_HudUnsavedPrompt": "Du har ændringer i HUD, som ikke er gemt. Vil du gemme dem før lukning?",
+      "HL2MP_HudSaveChanges": "GEM",
+      "HL2MP_HudDiscardChanges": "KASSÉR"
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11532,7 +11565,10 @@
       "HL2MP_HudGridView": "RASTERWEERGAVE",
       "HL2MP_HudHideControls": "BEDIENING VERBERGEN",
       "HL2MP_HudShowControls": "BEDIENING TONEN",
-      "HL2MP_HudLiveUnavailable": "Live bewerken is alleen beschikbaar op servers die vanuit het spel worden gehost."
+      "HL2MP_HudLiveUnavailable": "Live bewerken is alleen beschikbaar op servers die vanuit het spel worden gehost.",
+      "HL2MP_HudUnsavedPrompt": "Je hebt niet-opgeslagen HUD-wijzigingen. Opslaan voordat je sluit?",
+      "HL2MP_HudSaveChanges": "OPSLAAN",
+      "HL2MP_HudDiscardChanges": "VERWERPEN"
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12494,7 +12530,10 @@
       "HL2MP_HudGridView": "RUUDUKKO",
       "HL2MP_HudHideControls": "PIILOTA SÄÄTIMET",
       "HL2MP_HudShowControls": "NÄYTÄ SÄÄTIMET",
-      "HL2MP_HudLiveUnavailable": "Muokkaus pelinäkymässä on käytettävissä vain pelaajan pelistä isännöimällä palvelimella."
+      "HL2MP_HudLiveUnavailable": "Muokkaus pelinäkymässä on käytettävissä vain pelaajan pelistä isännöimällä palvelimella.",
+      "HL2MP_HudUnsavedPrompt": "HUD-muutoksia on tallentamatta. Tallennetaanko ne ennen sulkemista?",
+      "HL2MP_HudSaveChanges": "TALLENNA",
+      "HL2MP_HudDiscardChanges": "HYLKÄÄ"
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13456,7 +13495,10 @@
       "HL2MP_HudGridView": "VUE GRILLE",
       "HL2MP_HudHideControls": "MASQUER LES OUTILS",
       "HL2MP_HudShowControls": "AFFICHER LES OUTILS",
-      "HL2MP_HudLiveUnavailable": "La modification en jeu est disponible uniquement sur un serveur hébergé depuis le jeu."
+      "HL2MP_HudLiveUnavailable": "La modification en jeu est disponible uniquement sur un serveur hébergé depuis le jeu.",
+      "HL2MP_HudUnsavedPrompt": "Des modifications du HUD ne sont pas enregistrées. Les enregistrer avant de fermer ?",
+      "HL2MP_HudSaveChanges": "ENREGISTRER",
+      "HL2MP_HudDiscardChanges": "IGNORER"
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14418,7 +14460,10 @@
       "HL2MP_HudGridView": "RASTERANSICHT",
       "HL2MP_HudHideControls": "BEDIENFELD AUSBLENDEN",
       "HL2MP_HudShowControls": "BEDIENFELD EINBLENDEN",
-      "HL2MP_HudLiveUnavailable": "Die Live-Bearbeitung ist nur auf einem aus dem Spiel heraus gehosteten Server verfügbar."
+      "HL2MP_HudLiveUnavailable": "Die Live-Bearbeitung ist nur auf einem aus dem Spiel heraus gehosteten Server verfügbar.",
+      "HL2MP_HudUnsavedPrompt": "Du hast ungespeicherte HUD-Änderungen. Vor dem Schließen speichern?",
+      "HL2MP_HudSaveChanges": "SPEICHERN",
+      "HL2MP_HudDiscardChanges": "VERWERFEN"
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15380,7 +15425,10 @@
       "HL2MP_HudGridView": "ΠΛΕΓΜΑ",
       "HL2MP_HudHideControls": "ΑΠΟΚΡΥΨΗ ΕΡΓΑΛΕΙΩΝ",
       "HL2MP_HudShowControls": "ΕΜΦΑΝΙΣΗ ΕΡΓΑΛΕΙΩΝ",
-      "HL2MP_HudLiveUnavailable": "Η ζωντανή επεξεργασία είναι διαθέσιμη μόνο σε διακομιστή που φιλοξενείται μέσα από το παιχνίδι."
+      "HL2MP_HudLiveUnavailable": "Η ζωντανή επεξεργασία είναι διαθέσιμη μόνο σε διακομιστή που φιλοξενείται μέσα από το παιχνίδι.",
+      "HL2MP_HudUnsavedPrompt": "Υπάρχουν μη αποθηκευμένες αλλαγές στο HUD. Να αποθηκευτούν πριν το κλείσιμο;",
+      "HL2MP_HudSaveChanges": "ΑΠΟΘΗΚΕΥΣΗ",
+      "HL2MP_HudDiscardChanges": "ΑΠΟΡΡΙΨΗ"
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16342,7 +16390,10 @@
       "HL2MP_HudGridView": "RÁCSNÉZET",
       "HL2MP_HudHideControls": "VEZÉRLŐK ELREJTÉSE",
       "HL2MP_HudShowControls": "VEZÉRLŐK MEGJELENÍTÉSE",
-      "HL2MP_HudLiveUnavailable": "Élő szerkesztés csak a játékból indított szerverhez kapcsolódva érhető el."
+      "HL2MP_HudLiveUnavailable": "Élő szerkesztés csak a játékból indított szerverhez kapcsolódva érhető el.",
+      "HL2MP_HudUnsavedPrompt": "Nem mentett HUD-módosításaid vannak. Mented őket bezárás előtt?",
+      "HL2MP_HudSaveChanges": "MENTÉS",
+      "HL2MP_HudDiscardChanges": "ELVETÉS"
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17304,7 +17355,10 @@
       "HL2MP_HudGridView": "TAMPILAN KISI",
       "HL2MP_HudHideControls": "SEMBUNYIKAN KONTROL",
       "HL2MP_HudShowControls": "TAMPILKAN KONTROL",
-      "HL2MP_HudLiveUnavailable": "Pengeditan langsung hanya tersedia di server yang dihosting dari dalam game."
+      "HL2MP_HudLiveUnavailable": "Pengeditan langsung hanya tersedia di server yang dihosting dari dalam game.",
+      "HL2MP_HudUnsavedPrompt": "Ada perubahan HUD yang belum disimpan. Simpan sebelum menutup?",
+      "HL2MP_HudSaveChanges": "SIMPAN",
+      "HL2MP_HudDiscardChanges": "BUANG"
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18266,7 +18320,10 @@
       "HL2MP_HudGridView": "GRIGLIA",
       "HL2MP_HudHideControls": "NASCONDI CONTROLLI",
       "HL2MP_HudShowControls": "MOSTRA CONTROLLI",
-      "HL2MP_HudLiveUnavailable": "La modifica dal vivo è disponibile solo sui server ospitati direttamente dal gioco."
+      "HL2MP_HudLiveUnavailable": "La modifica dal vivo è disponibile solo sui server ospitati direttamente dal gioco.",
+      "HL2MP_HudUnsavedPrompt": "Ci sono modifiche all’HUD non salvate. Salvarle prima di chiudere?",
+      "HL2MP_HudSaveChanges": "SALVA",
+      "HL2MP_HudDiscardChanges": "SCARTA"
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19228,7 +19285,10 @@
       "HL2MP_HudGridView": "グリッド表示",
       "HL2MP_HudHideControls": "操作パネルを隠す",
       "HL2MP_HudShowControls": "操作パネルを表示",
-      "HL2MP_HudLiveUnavailable": "ライブ編集はゲーム内からホストしたサーバーに接続している場合のみ利用できます。"
+      "HL2MP_HudLiveUnavailable": "ライブ編集はゲーム内からホストしたサーバーに接続している場合のみ利用できます。",
+      "HL2MP_HudUnsavedPrompt": "HUDに未保存の変更があります。閉じる前に保存しますか？",
+      "HL2MP_HudSaveChanges": "保存",
+      "HL2MP_HudDiscardChanges": "破棄"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20190,7 +20250,10 @@
       "HL2MP_HudGridView": "격자 보기",
       "HL2MP_HudHideControls": "도구 숨기기",
       "HL2MP_HudShowControls": "도구 표시",
-      "HL2MP_HudLiveUnavailable": "실시간 편집은 게임에서 직접 호스팅한 서버에 연결했을 때만 사용할 수 있습니다."
+      "HL2MP_HudLiveUnavailable": "실시간 편집은 게임에서 직접 호스팅한 서버에 연결했을 때만 사용할 수 있습니다.",
+      "HL2MP_HudUnsavedPrompt": "저장하지 않은 HUD 변경 사항이 있습니다. 닫기 전에 저장할까요?",
+      "HL2MP_HudSaveChanges": "저장",
+      "HL2MP_HudDiscardChanges": "버리기"
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -21152,7 +21215,10 @@
       "HL2MP_HudGridView": "CUADRÍCULA",
       "HL2MP_HudHideControls": "OCULTAR CONTROLES",
       "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
-      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego."
+      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego.",
+      "HL2MP_HudUnsavedPrompt": "Hay cambios del HUD sin guardar. ¿Quieres guardarlos antes de cerrar?",
+      "HL2MP_HudSaveChanges": "GUARDAR",
+      "HL2MP_HudDiscardChanges": "DESCARTAR"
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -22114,7 +22180,10 @@
       "HL2MP_HudGridView": "PAPARAN GRID",
       "HL2MP_HudHideControls": "SEMBUNYIKAN KAWALAN",
       "HL2MP_HudShowControls": "TUNJUKKAN KAWALAN",
-      "HL2MP_HudLiveUnavailable": "Penyuntingan langsung hanya tersedia pada pelayan yang dihoskan dari dalam permainan."
+      "HL2MP_HudLiveUnavailable": "Penyuntingan langsung hanya tersedia pada pelayan yang dihoskan dari dalam permainan.",
+      "HL2MP_HudUnsavedPrompt": "Terdapat perubahan HUD yang belum disimpan. Simpan sebelum menutup?",
+      "HL2MP_HudSaveChanges": "SIMPAN",
+      "HL2MP_HudDiscardChanges": "BUANG"
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -23076,7 +23145,10 @@
       "HL2MP_HudGridView": "RUTENETT",
       "HL2MP_HudHideControls": "SKJUL KONTROLLER",
       "HL2MP_HudShowControls": "VIS KONTROLLER",
-      "HL2MP_HudLiveUnavailable": "Direkteredigering er bare tilgjengelig på en server som er vertet fra spillet."
+      "HL2MP_HudLiveUnavailable": "Direkteredigering er bare tilgjengelig på en server som er vertet fra spillet.",
+      "HL2MP_HudUnsavedPrompt": "Du har ulagrede HUD-endringer. Vil du lagre dem før du lukker?",
+      "HL2MP_HudSaveChanges": "LAGRE",
+      "HL2MP_HudDiscardChanges": "FORKAST"
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -24038,7 +24110,10 @@
       "HL2MP_HudGridView": "WIDOK SIATKI",
       "HL2MP_HudHideControls": "UKRYJ NARZĘDZIA",
       "HL2MP_HudShowControls": "POKAŻ NARZĘDZIA",
-      "HL2MP_HudLiveUnavailable": "Edycja na żywo jest dostępna tylko na serwerze uruchomionym bezpośrednio z gry."
+      "HL2MP_HudLiveUnavailable": "Edycja na żywo jest dostępna tylko na serwerze uruchomionym bezpośrednio z gry.",
+      "HL2MP_HudUnsavedPrompt": "Masz niezapisane zmiany HUD. Zapisać je przed zamknięciem?",
+      "HL2MP_HudSaveChanges": "ZAPISZ",
+      "HL2MP_HudDiscardChanges": "ODRZUĆ"
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -25000,7 +25075,10 @@
       "HL2MP_HudGridView": "GRELHA",
       "HL2MP_HudHideControls": "OCULTAR CONTROLOS",
       "HL2MP_HudShowControls": "MOSTRAR CONTROLOS",
-      "HL2MP_HudLiveUnavailable": "A edição em jogo só está disponível em servidores alojados a partir do jogo."
+      "HL2MP_HudLiveUnavailable": "A edição em jogo só está disponível em servidores alojados a partir do jogo.",
+      "HL2MP_HudUnsavedPrompt": "Existem alterações ao HUD por guardar. Guardá-las antes de fechar?",
+      "HL2MP_HudSaveChanges": "GUARDAR",
+      "HL2MP_HudDiscardChanges": "DESCARTAR"
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -25962,7 +26040,10 @@
       "HL2MP_HudGridView": "GRILĂ",
       "HL2MP_HudHideControls": "ASCUNDE COMENZILE",
       "HL2MP_HudShowControls": "ARATĂ COMENZILE",
-      "HL2MP_HudLiveUnavailable": "Editarea live este disponibilă doar pe servere găzduite direct din joc."
+      "HL2MP_HudLiveUnavailable": "Editarea live este disponibilă doar pe servere găzduite direct din joc.",
+      "HL2MP_HudUnsavedPrompt": "Ai modificări HUD nesalvate. Le salvezi înainte de închidere?",
+      "HL2MP_HudSaveChanges": "SALVEAZĂ",
+      "HL2MP_HudDiscardChanges": "RENUNȚĂ"
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -26924,7 +27005,10 @@
       "HL2MP_HudGridView": "СЕТКА",
       "HL2MP_HudHideControls": "СКРЫТЬ ПАНЕЛЬ",
       "HL2MP_HudShowControls": "ПОКАЗАТЬ ПАНЕЛЬ",
-      "HL2MP_HudLiveUnavailable": "Редактирование в игре доступно только при подключении к серверу, запущенному из игры."
+      "HL2MP_HudLiveUnavailable": "Редактирование в игре доступно только при подключении к серверу, запущенному из игры.",
+      "HL2MP_HudUnsavedPrompt": "Есть несохранённые изменения HUD. Сохранить их перед закрытием?",
+      "HL2MP_HudSaveChanges": "СОХРАНИТЬ",
+      "HL2MP_HudDiscardChanges": "ОТБРОСИТЬ"
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -27886,7 +27970,10 @@
       "HL2MP_HudGridView": "网格视图",
       "HL2MP_HudHideControls": "隐藏控件",
       "HL2MP_HudShowControls": "显示控件",
-      "HL2MP_HudLiveUnavailable": "仅在连接到从游戏内创建的服务器时才能实时编辑。"
+      "HL2MP_HudLiveUnavailable": "仅在连接到从游戏内创建的服务器时才能实时编辑。",
+      "HL2MP_HudUnsavedPrompt": "HUD有未保存的更改。关闭前是否保存？",
+      "HL2MP_HudSaveChanges": "保存",
+      "HL2MP_HudDiscardChanges": "放弃"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -28848,7 +28935,10 @@
       "HL2MP_HudGridView": "CUADRÍCULA",
       "HL2MP_HudHideControls": "OCULTAR CONTROLES",
       "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
-      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego."
+      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego.",
+      "HL2MP_HudUnsavedPrompt": "Hay cambios del HUD sin guardar. ¿Quieres guardarlos antes de cerrar?",
+      "HL2MP_HudSaveChanges": "GUARDAR",
+      "HL2MP_HudDiscardChanges": "DESCARTAR"
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -29810,7 +29900,10 @@
       "HL2MP_HudGridView": "RUTNÄT",
       "HL2MP_HudHideControls": "DÖLJ KONTROLLER",
       "HL2MP_HudShowControls": "VISA KONTROLLER",
-      "HL2MP_HudLiveUnavailable": "Liveredigering är endast tillgänglig på servrar som startas inifrån spelet."
+      "HL2MP_HudLiveUnavailable": "Liveredigering är endast tillgänglig på servrar som startas inifrån spelet.",
+      "HL2MP_HudUnsavedPrompt": "Du har osparade HUD-ändringar. Vill du spara dem innan du stänger?",
+      "HL2MP_HudSaveChanges": "SPARA",
+      "HL2MP_HudDiscardChanges": "KASTA"
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -30772,7 +30865,10 @@
       "HL2MP_HudGridView": "格線檢視",
       "HL2MP_HudHideControls": "隱藏控制項",
       "HL2MP_HudShowControls": "顯示控制項",
-      "HL2MP_HudLiveUnavailable": "僅在連線至從遊戲內建立的伺服器時才能即時編輯。"
+      "HL2MP_HudLiveUnavailable": "僅在連線至從遊戲內建立的伺服器時才能即時編輯。",
+      "HL2MP_HudUnsavedPrompt": "HUD有尚未儲存的變更。關閉前是否儲存？",
+      "HL2MP_HudSaveChanges": "儲存",
+      "HL2MP_HudDiscardChanges": "捨棄"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -31734,7 +31830,10 @@
       "HL2MP_HudGridView": "มุมมองตาราง",
       "HL2MP_HudHideControls": "ซ่อนเครื่องมือ",
       "HL2MP_HudShowControls": "แสดงเครื่องมือ",
-      "HL2MP_HudLiveUnavailable": "การแก้ไขแบบสดใช้ได้เฉพาะเมื่อเชื่อมต่อกับเซิร์ฟเวอร์ที่โฮสต์จากในเกมเท่านั้น"
+      "HL2MP_HudLiveUnavailable": "การแก้ไขแบบสดใช้ได้เฉพาะเมื่อเชื่อมต่อกับเซิร์ฟเวอร์ที่โฮสต์จากในเกมเท่านั้น",
+      "HL2MP_HudUnsavedPrompt": "มีการเปลี่ยนแปลง HUD ที่ยังไม่ได้บันทึก ต้องการบันทึกก่อนปิดหรือไม่?",
+      "HL2MP_HudSaveChanges": "บันทึก",
+      "HL2MP_HudDiscardChanges": "ละทิ้ง"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -32696,7 +32795,10 @@
       "HL2MP_HudGridView": "IZGARA GÖRÜNÜMÜ",
       "HL2MP_HudHideControls": "KONTROLLERİ GİZLE",
       "HL2MP_HudShowControls": "KONTROLLERİ GÖSTER",
-      "HL2MP_HudLiveUnavailable": "Canlı düzenleme yalnızca oyun içinden açılan bir sunucuya bağlıyken kullanılabilir."
+      "HL2MP_HudLiveUnavailable": "Canlı düzenleme yalnızca oyun içinden açılan bir sunucuya bağlıyken kullanılabilir.",
+      "HL2MP_HudUnsavedPrompt": "Kaydedilmemiş HUD değişiklikleri var. Kapatmadan önce kaydedilsin mi?",
+      "HL2MP_HudSaveChanges": "KAYDET",
+      "HL2MP_HudDiscardChanges": "DEĞİŞİKLİKLERİ AT"
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -33658,7 +33760,10 @@
       "HL2MP_HudGridView": "СІТКА",
       "HL2MP_HudHideControls": "СХОВАТИ ПАНЕЛЬ",
       "HL2MP_HudShowControls": "ПОКАЗАТИ ПАНЕЛЬ",
-      "HL2MP_HudLiveUnavailable": "Редагування у грі доступне лише на сервері, запущеному безпосередньо з гри."
+      "HL2MP_HudLiveUnavailable": "Редагування у грі доступне лише на сервері, запущеному безпосередньо з гри.",
+      "HL2MP_HudUnsavedPrompt": "Є незбережені зміни HUD. Зберегти їх перед закриттям?",
+      "HL2MP_HudSaveChanges": "ЗБЕРЕГТИ",
+      "HL2MP_HudDiscardChanges": "ВІДКИНУТИ"
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -34620,7 +34725,10 @@
       "HL2MP_HudGridView": "XEM LƯỚI",
       "HL2MP_HudHideControls": "ẨN ĐIỀU KHIỂN",
       "HL2MP_HudShowControls": "HIỆN ĐIỀU KHIỂN",
-      "HL2MP_HudLiveUnavailable": "Chỉ có thể chỉnh sửa trực tiếp khi kết nối với máy chủ được tạo từ trong trò chơi."
+      "HL2MP_HudLiveUnavailable": "Chỉ có thể chỉnh sửa trực tiếp khi kết nối với máy chủ được tạo từ trong trò chơi.",
+      "HL2MP_HudUnsavedPrompt": "Có thay đổi HUD chưa được lưu. Lưu trước khi đóng?",
+      "HL2MP_HudSaveChanges": "LƯU",
+      "HL2MP_HudDiscardChanges": "LOẠI BỎ"
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",
