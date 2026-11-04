@@ -14,6 +14,7 @@ struct HL2MPHudElementStyle
 };
 const HL2MPHudElementStyle &HL2MPHudStyle( int part );
 void HL2MPHudBounds( int part, int screenW, int screenH, int &x, int &y, int &w, int &h, bool preview = false );
+void HL2MPHudSetChatBounds( int x, int y, int w, int h );
 vgui::HFont HL2MPHudFont( int part, int pixels, bool bold = false );
 bool HL2MPHudCustomEnabled();
 bool HL2MPHudCustomCrosshairEnabled();
@@ -23,6 +24,7 @@ void HL2MPHudEditor_Open();
 void HL2MPHudEditor_OpenLive();
 bool HL2MPHudEditor_LiveAvailable();
 bool HL2MPHudEditor_IsLive();
+bool HL2MPHudEditor_IsOpen();
 class CUserCmd;
 bool HL2MPHudEditor_FilterInput( CUserCmd *cmd );
 bool HL2MPHudDrawCrosshair( int centerX, int centerY );

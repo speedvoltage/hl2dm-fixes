@@ -29,5 +29,26 @@ int main()
     // Normalized values saved at the minimum must not shrink on reloading.
     VotePanelSize(1366,768,0,0,w,h); const int savedW=w,savedH=h;
     VotePanelSize(1366,768,float(w)/1366,float(h)/768,w,h); assert(w==savedW && h==savedH);
-    puts("HUD snapping, zoom and vote size checks passed.");
+    // Chat cvars use remaining travel, unlike the HUD editor's screen fractions.
+    // Moving/resizing either way must round-trip without drifting or snapping back.
+    for ( int sw : {640,1280,1366,1920} )
+    {
+        const int sh=sw==640?480:sw*9/16;
+        const ChatLimits limits=ChatWindowLimits(sw,sh);
+        for ( float cx : {0.f,.02795f,.5f,1.f} ) for ( float cy : {0.f,.707143f,1.f} )
+        for ( float cw : {.02f,.475f,1.f} ) for ( float ch : {.02f,.377778f,1.f} )
+        {
+            int x,y; ChatBoundsFromCvars(sw,sh,cx,cy,cw,ch,x,y,w,h);
+            assert(w>=limits.minW && h>=limits.minH && x>=limits.margin && y>=limits.margin);
+            assert(x+w<=sw-limits.margin && y+h<=sh-limits.margin);
+            int rx,ry,rw,rh;
+            ChatBoundsFromCvars(sw,sh,ChatCvarPosition(x,sw,w,limits.margin),ChatCvarPosition(y,sh,h,limits.margin),float(w)/sw,float(h)/sh,rx,ry,rw,rh);
+            assert(x==rx && y==ry && w==rw && h==rh);
+            rx=int((float(x)/sw)*sw+.5f); ry=int((float(y)/sh)*sh+.5f);
+            rw=int((float(w)/sw)*sw+.5f); rh=int((float(h)/sh)*sh+.5f);
+            ConstrainChatBounds(sw,sh,rx,ry,rw,rh);
+            assert(x==rx && y==ry && w==rw && h==rh);
+        }
+    }
+    puts("HUD snapping, zoom, vote size and chat layout checks passed.");
 }

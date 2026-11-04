@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "hl2mp_hud_chat.h"
 #include "ui/hl2mp_hud_customization.h"
+#include "ui/hl2mp_hud_editing.h"
 #include "ui/hl2mp_messages.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
@@ -66,6 +67,8 @@ CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 	m_iLastScreenTall = 0;
 	m_bLastActive = false;
 	m_bWindowBoundsInitialized = false;
+	m_bWindowCvarsInitialized = m_bCustomWindowBounds = m_bWindowEditorOpen = false;
+	memset( m_flWindowCvars, 0, sizeof(m_flWindowCvars) );
 	m_iWindowDragMode = WINDOW_DRAG_NONE;
 	m_iDragStartCursorX = 0;
 	m_iDragStartCursorY = 0;
@@ -176,9 +179,10 @@ void CHudChat::OnTick( void )
 	static HL2MPHudElementStyle previousStyle = {};
 	static bool previousCustom = false;
 	const bool custom = HL2MPHudCustomEnabled();
+	const bool editorOpen = HL2MPHudEditor_IsOpen();
 	const bool styleChanged = previousCustom != custom || memcmp( &previousStyle, &HL2MPHudStyle( HUD_CHAT ), sizeof( previousStyle ) ) != 0;
 	if ( styleChanged ) { previousStyle = HL2MPHudStyle( HUD_CHAT ); previousCustom = custom; m_bWindowBoundsInitialized = false; }
-	if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall || active != m_bLastActive || styleChanged )
+	if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall || active != m_bLastActive || styleChanged || WindowCvarsChanged() || editorOpen != m_bWindowEditorOpen )
 	{
 		if ( screenWide != m_iLastScreenWide || screenTall != m_iLastScreenTall )
 		{
@@ -188,6 +192,7 @@ void CHudChat::OnTick( void )
 		m_iLastScreenWide = screenWide;
 		m_iLastScreenTall = screenTall;
 		m_bLastActive = active;
+		m_bWindowEditorOpen = editorOpen;
 		UpdateLayout();
 	}
 
@@ -216,7 +221,10 @@ void CHudChat::OnTick( void )
 	if ( editing && GetChatHistory() )
 	{
 		SetAlpha( 255 );
-		int x=0,y=0,w,h; GetChatHistory()->GetSize(w,h); GetChatHistory()->LocalToScreen(x,y);
+		// The hidden history's cached screen position can lag behind live edits.
+		// Use its current local bounds and the chat window's current position.
+		int x,y,w,h,chatX,chatY; GetChatHistory()->GetBounds(x,y,w,h); GetPos(chatX,chatY);
+		x+=chatX; y+=chatY; GetParent()->LocalToScreen(x,y);
 		m_pEditorSample->GetParent()->ScreenToLocal(x,y); m_pEditorSample->SetBounds(x,y,w,h);
 		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_CHAT );
 		const vgui::HFont font = custom ? HL2MPHudFont( HUD_CHAT, MAX(10,int(16*screenTall/720.f*style.textScale)) ) : vgui::scheme()->GetIScheme(GetScheme())->GetFont("ChatFont",true);
@@ -473,26 +481,42 @@ void CHudChat::UpdateLayout( void )
 	const int minFilterRowTall = MAX( 18, (int)( 20 * scale ) );
 	const int filterContentTop = filterPad;
 	const int minFilterPanelTall = filterContentTop + filterPad + filterRowGap * 5 + minFilterRowTall * 6;
-	m_iWindowMargin = MAX( 12, (int)( 22 * scale ) );
-	m_iMinWindowWide = MIN( screenWide - m_iWindowMargin * 2, (int)( 440 * scale ) );
+	const HL2MPHudEditing::ChatLimits limits = HL2MPHudEditing::ChatWindowLimits( screenWide, screenTall );
+	m_iWindowMargin = limits.margin;
+	m_iMinWindowWide = limits.minW;
 	m_iHeaderTall = MAX( 22, (int)( 26 * scale ) );
 	m_iResizeGripSize = MAX( 6, (int)( 7 * scale ) );
-	m_iMinWindowTall = MIN( screenTall - m_iWindowMargin * 2, MAX( (int)( 260 * scale ), m_iHeaderTall + pad + inputTall + gap * 2 + minFilterPanelTall ) );
+	m_iMinWindowTall = limits.minH;
+
+	const bool custom = HL2MPHudCustomEnabled(), editorOpen = HL2MPHudEditor_IsOpen();
+	const bool cvarsChanged = WindowCvarsChanged();
+	RememberWindowCvars();
+	// A mode switch loads that HUD's layout. Console edits made afterwards use
+	// the legacy cvar coordinates and update the custom layout through one path.
+	if ( cvarsChanged && custom == m_bCustomWindowBounds && m_iWindowDragMode == WINDOW_DRAG_NONE )
+	{
+		RestoreWindowBounds( screenWide, screenTall, scale );
+		if ( custom ) { int x,y,w,h; GetBounds(x,y,w,h); HL2MPHudSetChatBounds(x,y,w,h); }
+	}
+	m_bCustomWindowBounds = custom;
 
 	if ( !m_bWindowBoundsInitialized )
 	{
 		RestoreWindowBounds( screenWide, screenTall, scale );
 	}
-	if ( HL2MPHudCustomEnabled() && m_iWindowDragMode == WINDOW_DRAG_NONE )
+	if ( custom && m_iWindowDragMode == WINDOW_DRAG_NONE )
 	{
 		int x, y, w, h; HL2MPHudBounds( HUD_CHAT, screenWide, screenTall, x, y, w, h );
-		if ( GetMessageMode() == MM_NONE ) SetBounds( x, y, w, h );
+		SetBounds( x, y, w, h );
+		// Editor previews remain transactional: only publish cvars after closing
+		// the editor, when Apply/Discard has chosen the final layout.
+		if ( !editorOpen ) SaveWindowCvars();
 		const HL2MPHudElementStyle &style = HL2MPHudStyle( HUD_CHAT );
 		GetChatHistory()->SetFont( HL2MPHudFont( HUD_CHAT, MAX( 10, int( 16 * screenTall / 720.0f * style.textScale ) ) ) );
 		GetChatHistory()->SetBgColor( style.background ); GetChatHistory()->SetFgColor( style.foreground );
 		GetChatHistory()->SetAlpha( style.visible || GetMessageMode() != MM_NONE ? 255 : 0 );
 	}
-	else if ( !HL2MPHudCustomEnabled() )
+	else if ( !custom )
 	{
 		GetChatHistory()->SetFont( vgui::scheme()->GetIScheme( GetScheme() )->GetFont( "ChatFont", true ) );
 		GetChatHistory()->SetFgColor( Color( 255, 255, 255, 255 ) );
@@ -556,10 +580,9 @@ void CHudChat::RestoreWindowBounds( int screenWide, int screenTall, float scale 
 
 	if ( hasSavedBounds )
 	{
-		wide = clamp( (int)( screenWide * cl_chat_window_w.GetFloat() + 0.5f ), m_iMinWindowWide, availableWide );
-		tall = clamp( (int)( screenTall * cl_chat_window_h.GetFloat() + 0.5f ), m_iMinWindowTall, availableTall );
-		x = m_iWindowMargin + (int)( ( availableWide - wide ) * clamp( cl_chat_window_x.GetFloat(), 0.0f, 1.0f ) + 0.5f );
-		y = m_iWindowMargin + (int)( ( availableTall - tall ) * clamp( cl_chat_window_y.GetFloat(), 0.0f, 1.0f ) + 0.5f );
+		HL2MPHudEditing::ChatBoundsFromCvars( screenWide, screenTall,
+			clamp(cl_chat_window_x.GetFloat(),0.f,1.f), clamp(cl_chat_window_y.GetFloat(),0.f,1.f),
+			clamp(cl_chat_window_w.GetFloat(),0.f,1.f), clamp(cl_chat_window_h.GetFloat(),0.f,1.f), x,y,wide,tall );
 	}
 
 	SetBounds( x, y, wide, tall );
@@ -568,19 +591,38 @@ void CHudChat::RestoreWindowBounds( int screenWide, int screenTall, float scale 
 
 void CHudChat::SaveWindowBounds( void )
 {
+	SaveWindowCvars();
+	if ( HL2MPHudCustomEnabled() )
+	{
+		int x,y,w,h; GetBounds(x,y,w,h); HL2MPHudSetChatBounds(x,y,w,h);
+	}
+}
+
+bool CHudChat::WindowCvarsChanged() const
+{
+	return m_bWindowCvarsInitialized && (m_flWindowCvars[0] != cl_chat_window_x.GetFloat() ||
+		m_flWindowCvars[1] != cl_chat_window_y.GetFloat() || m_flWindowCvars[2] != cl_chat_window_w.GetFloat() ||
+		m_flWindowCvars[3] != cl_chat_window_h.GetFloat());
+}
+
+void CHudChat::RememberWindowCvars( void )
+{
+	m_flWindowCvars[0]=cl_chat_window_x.GetFloat(); m_flWindowCvars[1]=cl_chat_window_y.GetFloat();
+	m_flWindowCvars[2]=cl_chat_window_w.GetFloat(); m_flWindowCvars[3]=cl_chat_window_h.GetFloat();
+	m_bWindowCvarsInitialized=true;
+}
+
+void CHudChat::SaveWindowCvars( void )
+{
 	int screenWide, screenTall;
 	vgui::surface()->GetScreenSize( screenWide, screenTall );
 	int x, y, wide, tall;
 	GetBounds( x, y, wide, tall );
-	const int availableWide = MAX( 1, screenWide - m_iWindowMargin * 2 );
-	const int availableTall = MAX( 1, screenTall - m_iWindowMargin * 2 );
-	const int moveWide = MAX( 1, availableWide - wide );
-	const int moveTall = MAX( 1, availableTall - tall );
-
-	cl_chat_window_x.SetValue( clamp( (float)( x - m_iWindowMargin ) / moveWide, 0.0f, 1.0f ) );
-	cl_chat_window_y.SetValue( clamp( (float)( y - m_iWindowMargin ) / moveTall, 0.0f, 1.0f ) );
+	cl_chat_window_x.SetValue( HL2MPHudEditing::ChatCvarPosition(x,screenWide,wide,m_iWindowMargin) );
+	cl_chat_window_y.SetValue( HL2MPHudEditing::ChatCvarPosition(y,screenTall,tall,m_iWindowMargin) );
 	cl_chat_window_w.SetValue( clamp( (float)wide / screenWide, 0.0f, 1.0f ) );
 	cl_chat_window_h.SetValue( clamp( (float)tall / screenTall, 0.0f, 1.0f ) );
+	RememberWindowCvars();
 }
 
 int CHudChat::GetWindowDragMode( int x, int y )

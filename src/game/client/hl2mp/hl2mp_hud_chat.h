@@ -87,6 +87,9 @@ private:
 	void UpdateMessageModePrompt( void );
 	void RestoreWindowBounds( int screenWide, int screenTall, float scale );
 	void SaveWindowBounds( void );
+	void SaveWindowCvars( void );
+	void RememberWindowCvars( void );
+	bool WindowCvarsChanged() const;
 	int GetWindowDragMode( int x, int y );
 	void SetWindowCursor( int dragMode );
 	void FinishWindowDrag( bool releaseCapture );
@@ -95,6 +98,8 @@ private:
 	int m_iLastScreenTall;
 	bool m_bLastActive;
 	bool m_bWindowBoundsInitialized;
+	bool m_bWindowCvarsInitialized, m_bCustomWindowBounds, m_bWindowEditorOpen;
+	float m_flWindowCvars[4];
 	int m_iWindowDragMode;
 	int m_iDragStartCursorX;
 	int m_iDragStartCursorY;
