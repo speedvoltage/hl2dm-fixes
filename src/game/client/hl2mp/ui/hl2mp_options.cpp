@@ -83,6 +83,7 @@ static const BindingDef s_Bindings[] = {
     { "#HL2MP_VoteYesBinding", "vote_yes", "F1" },
     { "#HL2MP_VoteNoBinding", "vote_no", "F2" },
     { "#HL2MP_HudEditor", "hud_editor", "" },
+    { "#HL2MP_HudLiveEditor", "hud_editor_live", "" },
     { "#HL2MP_UI_68d2943ecb14", "community_menu", "m" },
     { "#HL2MP_UI_03244d3bb2b0", "+forward", "w" }, { "#HL2MP_UI_3a1635febaec", "+back", "s" },
     { "#HL2MP_UI_6c94221edd26", "+moveleft", "a" }, { "#HL2MP_UI_8d60decd44f3", "+moveright", "d" },

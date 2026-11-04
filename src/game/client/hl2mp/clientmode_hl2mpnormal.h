@@ -37,6 +37,7 @@ public:
 	void OverrideView( CViewSetup *view ) OVERRIDE;
 	bool ShouldDrawViewModel() OVERRIDE;
 	bool ShouldDrawCrosshair() OVERRIDE;
+	bool CreateMove( float sampleTime, CUserCmd *cmd ) OVERRIDE;
 	virtual int		GetDeathMessageStartHeight( void );
 	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
 };

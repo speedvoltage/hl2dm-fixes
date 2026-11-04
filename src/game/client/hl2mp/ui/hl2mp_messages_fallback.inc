@@ -977,4 +977,10 @@ static const Message s_Messages[] = {
     { "HL2MP_HudCrosshairOnly", "Crosshair only", NULL },
     { "HL2MP_HudFitContent", "Fit panel to contents", NULL },
     { "HL2MP_HudCrosshairOnlyHint", "Custom crosshair. Original game HUD.", NULL },
+    { "HL2MP_HudLiveEditor", "Live HUD editor", NULL },
+    { "HL2MP_HudLiveView", "LIVE VIEW", NULL },
+    { "HL2MP_HudGridView", "GRID VIEW", NULL },
+    { "HL2MP_HudHideControls", "HIDE CONTROLS", NULL },
+    { "HL2MP_HudShowControls", "SHOW CONTROLS", NULL },
+    { "HL2MP_HudLiveUnavailable", "Live editing is only available while connected to a listen server.", NULL },
 };

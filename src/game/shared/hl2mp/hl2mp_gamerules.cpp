@@ -66,10 +66,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CHL2MPRules, DT_HL2MPRules )
 	#ifdef CLIENT_DLL
 		RecvPropBool( RECVINFO( m_bTeamPlayEnabled ) ),
 		RecvPropBool( RECVINFO( m_bCommunityServer ) ),
+		RecvPropBool( RECVINFO( m_bListenServer ) ),
 		RecvPropTime( RECVINFO( m_flGameStartTime ) ),
 	#else
 		SendPropBool( SENDINFO( m_bTeamPlayEnabled ) ),
 		SendPropBool( SENDINFO( m_bCommunityServer ) ),
+		SendPropBool( SENDINFO( m_bListenServer ) ),
 		SendPropTime( SENDINFO( m_flGameStartTime ) ),
 	#endif
 
@@ -194,6 +196,7 @@ char *sTeamNames[] =
 CHL2MPRules::CHL2MPRules()
 {
 	m_flGameStartTime = 0.0f;
+	m_bListenServer = false;
 #ifndef CLIENT_DLL
 	// Create the team managers
 	for ( int i = 0; i < ARRAYSIZE( sTeamNames ); i++ )
@@ -206,6 +209,7 @@ CHL2MPRules::CHL2MPRules()
 
 	m_bTeamPlayEnabled = teamplay.GetBool();
 	m_bCommunityServer = !HL2MPMatchServerEnabled() && gpGlobals->eLoadType != MapLoad_Background;
+	m_bListenServer = !engine->IsDedicatedServer() && gpGlobals->eLoadType != MapLoad_Background;
 	m_flIntermissionEndTime = 0.0f;
 
 	m_hRespawnableItemsAndWeapons.RemoveAll();

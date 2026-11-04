@@ -65,6 +65,12 @@ bool ClientModeHL2MPNormal::ShouldDrawCrosshair()
 {
 	return !engine->IsLevelMainMenuBackground() && BaseClass::ShouldDrawCrosshair();
 }
+
+bool ClientModeHL2MPNormal::CreateMove( float sampleTime, CUserCmd *cmd )
+{
+	const bool result = BaseClass::CreateMove( sampleTime, cmd );
+	return HL2MPHudEditor_FilterInput( cmd ) || result;
+}
 //-----------------------------------------------------------------------------
 // Globals
 //-----------------------------------------------------------------------------
@@ -189,6 +195,8 @@ void ClientModeHL2MPNormal::LevelInit( const char *map )
 
 int ClientModeHL2MPNormal::KeyInput( int down, ButtonCode_t keynum, const char *binding )
 {
+	// Swallow gameplay presses, but let releases clear previously held actions.
+	if ( down && HL2MPHudEditor_IsLive() ) return 0;
 	if ( HL2MPScoreboardMouseInput( down, keynum ) ) return 0;
 	return BaseClass::KeyInput( down, keynum, binding );
 }

@@ -5723,6 +5723,42 @@
       "contexts": [
         "HUD customization"
       ]
+    },
+    "HL2MP_HudLiveEditor": {
+      "english": "Live HUD editor",
+      "contexts": [
+        "Live HUD editor"
+      ]
+    },
+    "HL2MP_HudLiveView": {
+      "english": "LIVE VIEW",
+      "contexts": [
+        "Live HUD editor"
+      ]
+    },
+    "HL2MP_HudGridView": {
+      "english": "GRID VIEW",
+      "contexts": [
+        "Live HUD editor"
+      ]
+    },
+    "HL2MP_HudHideControls": {
+      "english": "HIDE CONTROLS",
+      "contexts": [
+        "Live HUD editor"
+      ]
+    },
+    "HL2MP_HudShowControls": {
+      "english": "SHOW CONTROLS",
+      "contexts": [
+        "Live HUD editor"
+      ]
+    },
+    "HL2MP_HudLiveUnavailable": {
+      "english": "Live editing is only available while connected to a listen server.",
+      "contexts": [
+        "Live HUD editor"
+      ]
     }
   },
   "languages": {
@@ -6680,7 +6716,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "علامة التصويب فقط",
       "HL2MP_HudFitContent": "ملاءمة اللوحة للمحتوى",
-      "HL2MP_HudCrosshairOnlyHint": "علامة تصويب مخصصة. واجهة اللعبة الأصلية."
+      "HL2MP_HudCrosshairOnlyHint": "علامة تصويب مخصصة. واجهة اللعبة الأصلية.",
+      "HL2MP_HudLiveEditor": "محرر واجهة اللعب المباشر",
+      "HL2MP_HudLiveView": "عرض مباشر",
+      "HL2MP_HudGridView": "عرض الشبكة",
+      "HL2MP_HudHideControls": "إخفاء الأدوات",
+      "HL2MP_HudShowControls": "إظهار الأدوات",
+      "HL2MP_HudLiveUnavailable": "التحرير المباشر متاح فقط عند الاتصال بخادم يستضيفه لاعب من داخل اللعبة."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7636,7 +7678,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Somente mira",
       "HL2MP_HudFitContent": "Ajustar painel ao conteúdo",
-      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo."
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo.",
+      "HL2MP_HudLiveEditor": "Editor de HUD ao vivo",
+      "HL2MP_HudLiveView": "VISÃO AO VIVO",
+      "HL2MP_HudGridView": "GRADE",
+      "HL2MP_HudHideControls": "OCULTAR CONTROLES",
+      "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
+      "HL2MP_HudLiveUnavailable": "A edição ao vivo só está disponível em servidores hospedados dentro do jogo."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8592,7 +8640,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Само мерник",
       "HL2MP_HudFitContent": "Размер на панела според съдържанието",
-      "HL2MP_HudCrosshairOnlyHint": "Персонализиран мерник. Оригинален интерфейс на играта."
+      "HL2MP_HudCrosshairOnlyHint": "Персонализиран мерник. Оригинален интерфейс на играта.",
+      "HL2MP_HudLiveEditor": "Редактор на HUD в играта",
+      "HL2MP_HudLiveView": "ИЗГЛЕД В ИГРАТА",
+      "HL2MP_HudGridView": "МРЕЖА",
+      "HL2MP_HudHideControls": "СКРИЙ КОНТРОЛИТЕ",
+      "HL2MP_HudShowControls": "ПОКАЖИ КОНТРОЛИТЕ",
+      "HL2MP_HudLiveUnavailable": "Редактирането в играта е достъпно само в сървър, хостван от играч."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9548,7 +9602,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Pouze zaměřovač",
       "HL2MP_HudFitContent": "Přizpůsobit panel obsahu",
-      "HL2MP_HudCrosshairOnlyHint": "Vlastní zaměřovač. Původní HUD hry."
+      "HL2MP_HudCrosshairOnlyHint": "Vlastní zaměřovač. Původní HUD hry.",
+      "HL2MP_HudLiveEditor": "Živý editor HUD",
+      "HL2MP_HudLiveView": "ŽIVÝ NÁHLED",
+      "HL2MP_HudGridView": "MŘÍŽKA",
+      "HL2MP_HudHideControls": "SKRÝT OVLÁDÁNÍ",
+      "HL2MP_HudShowControls": "ZOBRAZIT OVLÁDÁNÍ",
+      "HL2MP_HudLiveUnavailable": "Živé úpravy jsou dostupné pouze na serveru hostovaném přímo ze hry."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10504,7 +10564,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Kun sigtekorn",
       "HL2MP_HudFitContent": "Tilpas panel til indhold",
-      "HL2MP_HudCrosshairOnlyHint": "Tilpasset sigtekorn. Spillets oprindelige HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Tilpasset sigtekorn. Spillets oprindelige HUD.",
+      "HL2MP_HudLiveEditor": "HUD-editor i spillet",
+      "HL2MP_HudLiveView": "LIVEVISNING",
+      "HL2MP_HudGridView": "GITTERVISNING",
+      "HL2MP_HudHideControls": "SKJUL KONTROLLER",
+      "HL2MP_HudShowControls": "VIS KONTROLLER",
+      "HL2MP_HudLiveUnavailable": "Liveredigering er kun tilgængelig på en server, der hostes fra spillet."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11460,7 +11526,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Alleen dradenkruis",
       "HL2MP_HudFitContent": "Paneel aan inhoud aanpassen",
-      "HL2MP_HudCrosshairOnlyHint": "Aangepast dradenkruis. Oorspronkelijke spel-HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Aangepast dradenkruis. Oorspronkelijke spel-HUD.",
+      "HL2MP_HudLiveEditor": "Live HUD-editor",
+      "HL2MP_HudLiveView": "LIVEWEERGAVE",
+      "HL2MP_HudGridView": "RASTERWEERGAVE",
+      "HL2MP_HudHideControls": "BEDIENING VERBERGEN",
+      "HL2MP_HudShowControls": "BEDIENING TONEN",
+      "HL2MP_HudLiveUnavailable": "Live bewerken is alleen beschikbaar op servers die vanuit het spel worden gehost."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12416,7 +12488,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Vain tähtäin",
       "HL2MP_HudFitContent": "Sovita paneeli sisältöön",
-      "HL2MP_HudCrosshairOnlyHint": "Mukautettu tähtäin. Pelin alkuperäinen HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Mukautettu tähtäin. Pelin alkuperäinen HUD.",
+      "HL2MP_HudLiveEditor": "HUD-editori pelissä",
+      "HL2MP_HudLiveView": "PELINÄKYMÄ",
+      "HL2MP_HudGridView": "RUUDUKKO",
+      "HL2MP_HudHideControls": "PIILOTA SÄÄTIMET",
+      "HL2MP_HudShowControls": "NÄYTÄ SÄÄTIMET",
+      "HL2MP_HudLiveUnavailable": "Muokkaus pelinäkymässä on käytettävissä vain pelaajan pelistä isännöimällä palvelimella."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13372,7 +13450,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Réticule uniquement",
       "HL2MP_HudFitContent": "Adapter le cadre au contenu",
-      "HL2MP_HudCrosshairOnlyHint": "Réticule personnalisé. HUD original du jeu."
+      "HL2MP_HudCrosshairOnlyHint": "Réticule personnalisé. HUD original du jeu.",
+      "HL2MP_HudLiveEditor": "Éditeur HUD en jeu",
+      "HL2MP_HudLiveView": "VUE EN JEU",
+      "HL2MP_HudGridView": "VUE GRILLE",
+      "HL2MP_HudHideControls": "MASQUER LES OUTILS",
+      "HL2MP_HudShowControls": "AFFICHER LES OUTILS",
+      "HL2MP_HudLiveUnavailable": "La modification en jeu est disponible uniquement sur un serveur hébergé depuis le jeu."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14328,7 +14412,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Nur Fadenkreuz",
       "HL2MP_HudFitContent": "Rahmen an Inhalt anpassen",
-      "HL2MP_HudCrosshairOnlyHint": "Eigenes Fadenkreuz. Originales Spiel-HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Eigenes Fadenkreuz. Originales Spiel-HUD.",
+      "HL2MP_HudLiveEditor": "HUD-Editor im Spiel",
+      "HL2MP_HudLiveView": "LIVE-ANSICHT",
+      "HL2MP_HudGridView": "RASTERANSICHT",
+      "HL2MP_HudHideControls": "BEDIENFELD AUSBLENDEN",
+      "HL2MP_HudShowControls": "BEDIENFELD EINBLENDEN",
+      "HL2MP_HudLiveUnavailable": "Die Live-Bearbeitung ist nur auf einem aus dem Spiel heraus gehosteten Server verfügbar."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15284,7 +15374,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Μόνο σταυρόνημα",
       "HL2MP_HudFitContent": "Προσαρμογή πλαισίου στο περιεχόμενο",
-      "HL2MP_HudCrosshairOnlyHint": "Προσαρμοσμένο σταυρόνημα. Αρχικό HUD του παιχνιδιού."
+      "HL2MP_HudCrosshairOnlyHint": "Προσαρμοσμένο σταυρόνημα. Αρχικό HUD του παιχνιδιού.",
+      "HL2MP_HudLiveEditor": "Επεξεργαστής HUD στο παιχνίδι",
+      "HL2MP_HudLiveView": "ΖΩΝΤΑΝΗ ΠΡΟΒΟΛΗ",
+      "HL2MP_HudGridView": "ΠΛΕΓΜΑ",
+      "HL2MP_HudHideControls": "ΑΠΟΚΡΥΨΗ ΕΡΓΑΛΕΙΩΝ",
+      "HL2MP_HudShowControls": "ΕΜΦΑΝΙΣΗ ΕΡΓΑΛΕΙΩΝ",
+      "HL2MP_HudLiveUnavailable": "Η ζωντανή επεξεργασία είναι διαθέσιμη μόνο σε διακομιστή που φιλοξενείται μέσα από το παιχνίδι."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16240,7 +16336,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Csak célkereszt",
       "HL2MP_HudFitContent": "Panel igazítása a tartalomhoz",
-      "HL2MP_HudCrosshairOnlyHint": "Egyéni célkereszt. A játék eredeti HUD-ja."
+      "HL2MP_HudCrosshairOnlyHint": "Egyéni célkereszt. A játék eredeti HUD-ja.",
+      "HL2MP_HudLiveEditor": "HUD-szerkesztő játék közben",
+      "HL2MP_HudLiveView": "ÉLŐ NÉZET",
+      "HL2MP_HudGridView": "RÁCSNÉZET",
+      "HL2MP_HudHideControls": "VEZÉRLŐK ELREJTÉSE",
+      "HL2MP_HudShowControls": "VEZÉRLŐK MEGJELENÍTÉSE",
+      "HL2MP_HudLiveUnavailable": "Élő szerkesztés csak a játékból indított szerverhez kapcsolódva érhető el."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17196,7 +17298,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Hanya bidikan",
       "HL2MP_HudFitContent": "Sesuaikan panel dengan isi",
-      "HL2MP_HudCrosshairOnlyHint": "Bidikan kustom. HUD asli game."
+      "HL2MP_HudCrosshairOnlyHint": "Bidikan kustom. HUD asli game.",
+      "HL2MP_HudLiveEditor": "Editor HUD langsung",
+      "HL2MP_HudLiveView": "TAMPILAN LANGSUNG",
+      "HL2MP_HudGridView": "TAMPILAN KISI",
+      "HL2MP_HudHideControls": "SEMBUNYIKAN KONTROL",
+      "HL2MP_HudShowControls": "TAMPILKAN KONTROL",
+      "HL2MP_HudLiveUnavailable": "Pengeditan langsung hanya tersedia di server yang dihosting dari dalam game."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18152,7 +18260,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Solo mirino",
       "HL2MP_HudFitContent": "Adatta il riquadro al contenuto",
-      "HL2MP_HudCrosshairOnlyHint": "Mirino personalizzato. HUD originale del gioco."
+      "HL2MP_HudCrosshairOnlyHint": "Mirino personalizzato. HUD originale del gioco.",
+      "HL2MP_HudLiveEditor": "Editor HUD in gioco",
+      "HL2MP_HudLiveView": "VISTA DAL VIVO",
+      "HL2MP_HudGridView": "GRIGLIA",
+      "HL2MP_HudHideControls": "NASCONDI CONTROLLI",
+      "HL2MP_HudShowControls": "MOSTRA CONTROLLI",
+      "HL2MP_HudLiveUnavailable": "La modifica dal vivo è disponibile solo sui server ospitati direttamente dal gioco."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19108,7 +19222,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "クロスヘアのみ",
       "HL2MP_HudFitContent": "パネルを内容に合わせる",
-      "HL2MP_HudCrosshairOnlyHint": "カスタムクロスヘア。HUDはゲーム標準のまま。"
+      "HL2MP_HudCrosshairOnlyHint": "カスタムクロスヘア。HUDはゲーム標準のまま。",
+      "HL2MP_HudLiveEditor": "ゲーム内HUDエディター",
+      "HL2MP_HudLiveView": "ライブ表示",
+      "HL2MP_HudGridView": "グリッド表示",
+      "HL2MP_HudHideControls": "操作パネルを隠す",
+      "HL2MP_HudShowControls": "操作パネルを表示",
+      "HL2MP_HudLiveUnavailable": "ライブ編集はゲーム内からホストしたサーバーに接続している場合のみ利用できます。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20064,7 +20184,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "조준점만",
       "HL2MP_HudFitContent": "내용에 맞게 패널 크기 조절",
-      "HL2MP_HudCrosshairOnlyHint": "사용자 지정 조준점. 게임 기본 HUD 유지."
+      "HL2MP_HudCrosshairOnlyHint": "사용자 지정 조준점. 게임 기본 HUD 유지.",
+      "HL2MP_HudLiveEditor": "게임 내 HUD 편집기",
+      "HL2MP_HudLiveView": "실시간 보기",
+      "HL2MP_HudGridView": "격자 보기",
+      "HL2MP_HudHideControls": "도구 숨기기",
+      "HL2MP_HudShowControls": "도구 표시",
+      "HL2MP_HudLiveUnavailable": "실시간 편집은 게임에서 직접 호스팅한 서버에 연결했을 때만 사용할 수 있습니다."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -21020,7 +21146,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Solo mira",
       "HL2MP_HudFitContent": "Ajustar panel al contenido",
-      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego."
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego.",
+      "HL2MP_HudLiveEditor": "Editor de HUD en vivo",
+      "HL2MP_HudLiveView": "VISTA EN VIVO",
+      "HL2MP_HudGridView": "CUADRÍCULA",
+      "HL2MP_HudHideControls": "OCULTAR CONTROLES",
+      "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
+      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -21976,7 +22108,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Retikel sahaja",
       "HL2MP_HudFitContent": "Sesuaikan panel dengan kandungan",
-      "HL2MP_HudCrosshairOnlyHint": "Retikel tersuai. HUD asal permainan."
+      "HL2MP_HudCrosshairOnlyHint": "Retikel tersuai. HUD asal permainan.",
+      "HL2MP_HudLiveEditor": "Editor HUD langsung",
+      "HL2MP_HudLiveView": "PAPARAN LANGSUNG",
+      "HL2MP_HudGridView": "PAPARAN GRID",
+      "HL2MP_HudHideControls": "SEMBUNYIKAN KAWALAN",
+      "HL2MP_HudShowControls": "TUNJUKKAN KAWALAN",
+      "HL2MP_HudLiveUnavailable": "Penyuntingan langsung hanya tersedia pada pelayan yang dihoskan dari dalam permainan."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -22932,7 +23070,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Kun siktekors",
       "HL2MP_HudFitContent": "Tilpass panel til innhold",
-      "HL2MP_HudCrosshairOnlyHint": "Tilpasset siktekors. Spillets opprinnelige HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Tilpasset siktekors. Spillets opprinnelige HUD.",
+      "HL2MP_HudLiveEditor": "HUD-redigering i spillet",
+      "HL2MP_HudLiveView": "DIREKTEVISNING",
+      "HL2MP_HudGridView": "RUTENETT",
+      "HL2MP_HudHideControls": "SKJUL KONTROLLER",
+      "HL2MP_HudShowControls": "VIS KONTROLLER",
+      "HL2MP_HudLiveUnavailable": "Direkteredigering er bare tilgjengelig på en server som er vertet fra spillet."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -23888,7 +24032,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Tylko celownik",
       "HL2MP_HudFitContent": "Dopasuj panel do zawartości",
-      "HL2MP_HudCrosshairOnlyHint": "Własny celownik. Oryginalny HUD gry."
+      "HL2MP_HudCrosshairOnlyHint": "Własny celownik. Oryginalny HUD gry.",
+      "HL2MP_HudLiveEditor": "Edytor HUD w grze",
+      "HL2MP_HudLiveView": "WIDOK NA ŻYWO",
+      "HL2MP_HudGridView": "WIDOK SIATKI",
+      "HL2MP_HudHideControls": "UKRYJ NARZĘDZIA",
+      "HL2MP_HudShowControls": "POKAŻ NARZĘDZIA",
+      "HL2MP_HudLiveUnavailable": "Edycja na żywo jest dostępna tylko na serwerze uruchomionym bezpośrednio z gry."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -24844,7 +24994,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Apenas mira",
       "HL2MP_HudFitContent": "Ajustar painel ao conteúdo",
-      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo."
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original do jogo.",
+      "HL2MP_HudLiveEditor": "Editor de HUD em jogo",
+      "HL2MP_HudLiveView": "VISTA EM JOGO",
+      "HL2MP_HudGridView": "GRELHA",
+      "HL2MP_HudHideControls": "OCULTAR CONTROLOS",
+      "HL2MP_HudShowControls": "MOSTRAR CONTROLOS",
+      "HL2MP_HudLiveUnavailable": "A edição em jogo só está disponível em servidores alojados a partir do jogo."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -25800,7 +25956,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Doar ținta",
       "HL2MP_HudFitContent": "Potrivește panoul cu conținutul",
-      "HL2MP_HudCrosshairOnlyHint": "Țintă personalizată. HUD-ul original al jocului."
+      "HL2MP_HudCrosshairOnlyHint": "Țintă personalizată. HUD-ul original al jocului.",
+      "HL2MP_HudLiveEditor": "Editor HUD în joc",
+      "HL2MP_HudLiveView": "VIZUALIZARE LIVE",
+      "HL2MP_HudGridView": "GRILĂ",
+      "HL2MP_HudHideControls": "ASCUNDE COMENZILE",
+      "HL2MP_HudShowControls": "ARATĂ COMENZILE",
+      "HL2MP_HudLiveUnavailable": "Editarea live este disponibilă doar pe servere găzduite direct din joc."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -26756,7 +26918,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Только прицел",
       "HL2MP_HudFitContent": "Размер панели по содержимому",
-      "HL2MP_HudCrosshairOnlyHint": "Свой прицел. Исходный интерфейс игры."
+      "HL2MP_HudCrosshairOnlyHint": "Свой прицел. Исходный интерфейс игры.",
+      "HL2MP_HudLiveEditor": "Редактор HUD в игре",
+      "HL2MP_HudLiveView": "ВИД В ИГРЕ",
+      "HL2MP_HudGridView": "СЕТКА",
+      "HL2MP_HudHideControls": "СКРЫТЬ ПАНЕЛЬ",
+      "HL2MP_HudShowControls": "ПОКАЗАТЬ ПАНЕЛЬ",
+      "HL2MP_HudLiveUnavailable": "Редактирование в игре доступно только при подключении к серверу, запущенному из игры."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -27712,7 +27880,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "仅自定义准星",
       "HL2MP_HudFitContent": "面板适应内容",
-      "HL2MP_HudCrosshairOnlyHint": "自定义准星，保留游戏原版HUD。"
+      "HL2MP_HudCrosshairOnlyHint": "自定义准星，保留游戏原版HUD。",
+      "HL2MP_HudLiveEditor": "游戏内HUD编辑器",
+      "HL2MP_HudLiveView": "实时视图",
+      "HL2MP_HudGridView": "网格视图",
+      "HL2MP_HudHideControls": "隐藏控件",
+      "HL2MP_HudShowControls": "显示控件",
+      "HL2MP_HudLiveUnavailable": "仅在连接到从游戏内创建的服务器时才能实时编辑。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -28668,7 +28842,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Solo mira",
       "HL2MP_HudFitContent": "Ajustar panel al contenido",
-      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego."
+      "HL2MP_HudCrosshairOnlyHint": "Mira personalizada. HUD original del juego.",
+      "HL2MP_HudLiveEditor": "Editor de HUD en vivo",
+      "HL2MP_HudLiveView": "VISTA EN VIVO",
+      "HL2MP_HudGridView": "CUADRÍCULA",
+      "HL2MP_HudHideControls": "OCULTAR CONTROLES",
+      "HL2MP_HudShowControls": "MOSTRAR CONTROLES",
+      "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -29624,7 +29804,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Endast hårkors",
       "HL2MP_HudFitContent": "Anpassa panelen till innehållet",
-      "HL2MP_HudCrosshairOnlyHint": "Anpassat hårkors. Spelets ursprungliga HUD."
+      "HL2MP_HudCrosshairOnlyHint": "Anpassat hårkors. Spelets ursprungliga HUD.",
+      "HL2MP_HudLiveEditor": "HUD-redigerare i spelet",
+      "HL2MP_HudLiveView": "LIVEVY",
+      "HL2MP_HudGridView": "RUTNÄT",
+      "HL2MP_HudHideControls": "DÖLJ KONTROLLER",
+      "HL2MP_HudShowControls": "VISA KONTROLLER",
+      "HL2MP_HudLiveUnavailable": "Liveredigering är endast tillgänglig på servrar som startas inifrån spelet."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -30580,7 +30766,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "僅自訂準星",
       "HL2MP_HudFitContent": "面板配合內容大小",
-      "HL2MP_HudCrosshairOnlyHint": "自訂準星，保留遊戲原版HUD。"
+      "HL2MP_HudCrosshairOnlyHint": "自訂準星，保留遊戲原版HUD。",
+      "HL2MP_HudLiveEditor": "遊戲內HUD編輯器",
+      "HL2MP_HudLiveView": "即時檢視",
+      "HL2MP_HudGridView": "格線檢視",
+      "HL2MP_HudHideControls": "隱藏控制項",
+      "HL2MP_HudShowControls": "顯示控制項",
+      "HL2MP_HudLiveUnavailable": "僅在連線至從遊戲內建立的伺服器時才能即時編輯。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -31536,7 +31728,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "ปรับแต่งเฉพาะเป้าเล็ง",
       "HL2MP_HudFitContent": "ปรับกรอบให้พอดีกับเนื้อหา",
-      "HL2MP_HudCrosshairOnlyHint": "เป้าเล็งแบบกำหนดเอง ใช้ HUD ดั้งเดิมของเกม"
+      "HL2MP_HudCrosshairOnlyHint": "เป้าเล็งแบบกำหนดเอง ใช้ HUD ดั้งเดิมของเกม",
+      "HL2MP_HudLiveEditor": "ตัวแก้ไข HUD ในเกม",
+      "HL2MP_HudLiveView": "มุมมองสด",
+      "HL2MP_HudGridView": "มุมมองตาราง",
+      "HL2MP_HudHideControls": "ซ่อนเครื่องมือ",
+      "HL2MP_HudShowControls": "แสดงเครื่องมือ",
+      "HL2MP_HudLiveUnavailable": "การแก้ไขแบบสดใช้ได้เฉพาะเมื่อเชื่อมต่อกับเซิร์ฟเวอร์ที่โฮสต์จากในเกมเท่านั้น"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -32492,7 +32690,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Yalnızca nişangâh",
       "HL2MP_HudFitContent": "Paneli içeriğe sığdır",
-      "HL2MP_HudCrosshairOnlyHint": "Özel nişangâh. Oyunun özgün HUD arayüzü."
+      "HL2MP_HudCrosshairOnlyHint": "Özel nişangâh. Oyunun özgün HUD arayüzü.",
+      "HL2MP_HudLiveEditor": "Oyun içi HUD düzenleyicisi",
+      "HL2MP_HudLiveView": "CANLI GÖRÜNÜM",
+      "HL2MP_HudGridView": "IZGARA GÖRÜNÜMÜ",
+      "HL2MP_HudHideControls": "KONTROLLERİ GİZLE",
+      "HL2MP_HudShowControls": "KONTROLLERİ GÖSTER",
+      "HL2MP_HudLiveUnavailable": "Canlı düzenleme yalnızca oyun içinden açılan bir sunucuya bağlıyken kullanılabilir."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -33448,7 +33652,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Лише приціл",
       "HL2MP_HudFitContent": "Розмір панелі за вмістом",
-      "HL2MP_HudCrosshairOnlyHint": "Власний приціл. Оригінальний інтерфейс гри."
+      "HL2MP_HudCrosshairOnlyHint": "Власний приціл. Оригінальний інтерфейс гри.",
+      "HL2MP_HudLiveEditor": "Редактор HUD у грі",
+      "HL2MP_HudLiveView": "ВИГЛЯД У ГРІ",
+      "HL2MP_HudGridView": "СІТКА",
+      "HL2MP_HudHideControls": "СХОВАТИ ПАНЕЛЬ",
+      "HL2MP_HudShowControls": "ПОКАЗАТИ ПАНЕЛЬ",
+      "HL2MP_HudLiveUnavailable": "Редагування у грі доступне лише на сервері, запущеному безпосередньо з гри."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -34404,7 +34614,13 @@
       "HL2MP_VoteComplete": "Voting finished.",
       "HL2MP_HudCrosshairOnly": "Chỉ tâm ngắm",
       "HL2MP_HudFitContent": "Vừa khung với nội dung",
-      "HL2MP_HudCrosshairOnlyHint": "Tâm ngắm tùy chỉnh. HUD gốc của trò chơi."
+      "HL2MP_HudCrosshairOnlyHint": "Tâm ngắm tùy chỉnh. HUD gốc của trò chơi.",
+      "HL2MP_HudLiveEditor": "Trình sửa HUD trong game",
+      "HL2MP_HudLiveView": "XEM TRỰC TIẾP",
+      "HL2MP_HudGridView": "XEM LƯỚI",
+      "HL2MP_HudHideControls": "ẨN ĐIỀU KHIỂN",
+      "HL2MP_HudShowControls": "HIỆN ĐIỀU KHIỂN",
+      "HL2MP_HudLiveUnavailable": "Chỉ có thể chỉnh sửa trực tiếp khi kết nối với máy chủ được tạo từ trong trò chơi."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

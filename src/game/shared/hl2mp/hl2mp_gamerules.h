@@ -122,6 +122,8 @@ public:
 	void RestartGame();
 	bool IsCommunityServer() const { return m_bCommunityServer; }
 	CNetworkVar( bool, m_bCommunityServer );
+	bool IsListenServer() const { return m_bListenServer; }
+	CNetworkVar( bool, m_bListenServer );
 
 	void OnNavMeshLoad( void );
 	

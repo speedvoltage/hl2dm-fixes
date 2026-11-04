@@ -18,6 +18,11 @@ bool HL2MPHudCustomCrosshairEnabled();
 bool HL2MPHudReplaces( const char *element );
 void HL2MPHudCustomization_Init();
 void HL2MPHudEditor_Open();
+void HL2MPHudEditor_OpenLive();
+bool HL2MPHudEditor_LiveAvailable();
+bool HL2MPHudEditor_IsLive();
+class CUserCmd;
+bool HL2MPHudEditor_FilterInput( CUserCmd *cmd );
 bool HL2MPHudDrawCrosshair( int centerX, int centerY );
 void HL2MPHudDeathNoticePreview( int x, int y, int width, int height, float scale );
 #endif
