@@ -302,6 +302,7 @@ void C_HL2MP_Player::UpdateLookAt( void )
 
 void C_HL2MP_Player::ClientThink( void )
 {
+	ValidateModelIndex();
 	bool bFoundViewTarget = false;
 	
 	Vector vForward;
@@ -345,15 +346,38 @@ void C_HL2MP_Player::ClientThink( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void C_HL2MP_Player::ValidateModelIndex()
+{
+	int index = GetModelIndex();
+	if ( HL2MPBrightModels_Active() && IsAlive() )
+	{
+		const int brightIndex = modelinfo->GetModelIndex( "models/combine_super_soldier.mdl" );
+		if ( brightIndex > 0 ) index = brightIndex;
+	}
+	// Change the rendered model without replacing the server's model index.
+	// Disabling the preference and subsequent network updates restore correctly.
+	SetModelPointer( modelinfo->GetModel(index) );
+}
+
+void C_HL2MP_Player::GetColorModulation( float *color )
+{
+	BaseClass::GetColorModulation(color);
+	if ( !HL2MPBrightModels_Active() || !IsAlive() ) return;
+	if ( HL2MPRules()->IsTeamplay() && GetTeamNumber() == TEAM_REBELS )
+	{ color[0]=1.f; color[1]=0.f; color[2]=0.f; }
+	else if ( HL2MPRules()->IsTeamplay() && GetTeamNumber() == TEAM_COMBINE )
+	{ color[0]=50.f/255; color[1]=150.f/255; color[2]=1.f; }
+	else { color[0]=color[1]=color[2]=1.f; }
+}
+
 int C_HL2MP_Player::DrawModel( int flags )
 {
 	if ( !m_bReadyToDraw )
 		return 0;
 
-	extern ConVar cl_bright_player_models;
 	IMaterial *overrideMaterial = NULL; OverrideType_t overrideType;
 	modelrender->GetMaterialOverride( &overrideMaterial, &overrideType );
-	if ( cl_bright_player_models.GetBool() && HL2MPCommunity_Available() && IsAlive() &&
+	if ( HL2MPBrightModels_Active() && IsAlive() &&
 		( flags & STUDIO_RENDER ) && !( flags & ( STUDIO_SHADOWDEPTHTEXTURE | STUDIO_SSAODEPTHTEXTURE ) ) && !overrideMaterial )
 	{
 		// Keep every original material/texture and normal depth testing. Only

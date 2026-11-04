@@ -5777,6 +5777,108 @@
       "contexts": [
         "HUD editor unsaved changes"
       ]
+    },
+    "HL2MP_FootstepsSelf": {
+      "english": "Your footsteps",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsTeammates": {
+      "english": "Teammate footsteps",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsEnemies": {
+      "english": "Enemy footsteps",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsModel": {
+      "english": "Model default",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsCombine": {
+      "english": "Combine",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsPolice": {
+      "english": "Police",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsRebel": {
+      "english": "Rebel",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsMaterial": {
+      "english": "Surface material",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_FootstepsHint": {
+      "english": "Teammate and enemy overrides require bright models (Game tab) and only work on community servers.",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_BrightModelsOption": {
+      "english": "Bright player models",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_BrightModelsHint": {
+      "english": "Community servers only: evenly lit super Combine soldiers. Rebels are red, Combine are blue; free-for-all players are white.",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_Spray": {
+      "english": "Spray image",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_SprayImport": {
+      "english": "Import image",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_SprayFormats": {
+      "english": "Choose an image up to 16 MB. Fitted to 256 × 256. Rejoin the server after changing your spray.",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_SprayFiles": {
+      "english": "Image files",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_SprayImported": {
+      "english": "Imported. Apply changes, then rejoin the server to use this spray.",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
+    },
+    "HL2MP_SprayImportFailed": {
+      "english": "Could not import this image. Check its format and size, and that the mod folder is writable.",
+      "contexts": [
+        "Spray, footsteps and bright player model options."
+      ]
     }
   },
   "languages": {
@@ -6743,7 +6845,24 @@
       "HL2MP_HudLiveUnavailable": "التحرير المباشر متاح فقط عند الاتصال بخادم يستضيفه لاعب من داخل اللعبة.",
       "HL2MP_HudUnsavedPrompt": "لديك تغييرات غير محفوظة في واجهة اللعب. هل تريد حفظها قبل الإغلاق؟",
       "HL2MP_HudSaveChanges": "حفظ",
-      "HL2MP_HudDiscardChanges": "تجاهل"
+      "HL2MP_HudDiscardChanges": "تجاهل",
+      "HL2MP_FootstepsSelf": "خطواتك",
+      "HL2MP_FootstepsTeammates": "خطوات زميله في الفريق",
+      "HL2MP_FootstepsEnemies": "خطى العدو",
+      "HL2MP_FootstepsModel": "النموذج الافتراضي",
+      "HL2MP_FootstepsPolice": "الشرطة",
+      "HL2MP_FootstepsRebel": "المتمردين",
+      "HL2MP_FootstepsMaterial": "المواد السطحية",
+      "HL2MP_FootstepsHint": "تتطلب تجاوزات زملاء الفريق والأعداء نماذج مشرقة (علامة تبويب اللعبة) وتعمل فقط على خوادم المجتمع.",
+      "HL2MP_BrightModelsOption": "نماذج اللاعبين اللامعة",
+      "HL2MP_BrightModelsHint": "خوادم المجتمع فقط: جنود الجمع الفائقون ذوو الإضاءة المتساوية. المتمردون باللون الأحمر، والجمع باللون الأزرق؛ اللاعبون المجانيون هم من البيض.",
+      "HL2MP_Spray": "صورة الرش",
+      "HL2MP_SprayImport": "استيراد الصورة",
+      "HL2MP_SprayFormats": "اختر صورة يصل حجمها إلى 16 ميجابايت. تم ضبطها على 256 × 256. انضم مرة أخرى إلى الخادم بعد تغيير الرذاذ الخاص بك.",
+      "HL2MP_SprayFiles": "ملفات الصور",
+      "HL2MP_SprayImported": "مستورد. قم بتطبيق التغييرات، ثم أعد الانضمام إلى الخادم لاستخدام هذا الرذاذ.",
+      "HL2MP_SprayImportFailed": "لا يمكن استيراد هذه الصورة. تحقق من تنسيقه وحجمه وأن مجلد التعديل قابل للكتابة.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7708,7 +7827,24 @@
       "HL2MP_HudLiveUnavailable": "A edição ao vivo só está disponível em servidores hospedados dentro do jogo.",
       "HL2MP_HudUnsavedPrompt": "Há alterações não salvas no HUD. Deseja salvá-las antes de fechar?",
       "HL2MP_HudSaveChanges": "SALVAR",
-      "HL2MP_HudDiscardChanges": "DESCARTAR"
+      "HL2MP_HudDiscardChanges": "DESCARTAR",
+      "HL2MP_FootstepsSelf": "Seus passos",
+      "HL2MP_FootstepsTeammates": "Passos de companheiros de equipe",
+      "HL2MP_FootstepsEnemies": "Passos do inimigo",
+      "HL2MP_FootstepsModel": "Modelo padrão",
+      "HL2MP_FootstepsPolice": "Polícia",
+      "HL2MP_FootstepsRebel": "Rebelde",
+      "HL2MP_FootstepsMaterial": "Material de superfície",
+      "HL2MP_FootstepsHint": "As substituições de companheiros de equipe e inimigos exigem modelos brilhantes (guia Jogo) e funcionam apenas em servidores da comunidade.",
+      "HL2MP_BrightModelsOption": "Modelos de jogadores brilhantes",
+      "HL2MP_BrightModelsHint": "Apenas servidores comunitários: super soldados Combine iluminados uniformemente. Os rebeldes são vermelhos, os Combine são azuis; jogadores livres para todos são brancos.",
+      "HL2MP_Spray": "Imagem em spray",
+      "HL2MP_SprayImport": "Importar imagem",
+      "HL2MP_SprayFormats": "Escolha uma imagem de até 16 MB. Ajustado em 256 × 256. Volte ao servidor após trocar seu spray.",
+      "HL2MP_SprayFiles": "Arquivos de imagem",
+      "HL2MP_SprayImported": "Importado. Aplique as alterações e entre novamente no servidor para usar este spray.",
+      "HL2MP_SprayImportFailed": "Não foi possível importar esta imagem. Verifique seu formato e tamanho e se a pasta mod é gravável.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8673,7 +8809,24 @@
       "HL2MP_HudLiveUnavailable": "Редактирането в играта е достъпно само в сървър, хостван от играч.",
       "HL2MP_HudUnsavedPrompt": "Имате незапазени промени по HUD. Да се запазят ли преди затваряне?",
       "HL2MP_HudSaveChanges": "ЗАПАЗИ",
-      "HL2MP_HudDiscardChanges": "ОТХВЪРЛИ"
+      "HL2MP_HudDiscardChanges": "ОТХВЪРЛИ",
+      "HL2MP_FootstepsSelf": "Вашите стъпки",
+      "HL2MP_FootstepsTeammates": "Стъпки на съотборник",
+      "HL2MP_FootstepsEnemies": "Вражески стъпки",
+      "HL2MP_FootstepsModel": "Модел по подразбиране",
+      "HL2MP_FootstepsPolice": "Полиция",
+      "HL2MP_FootstepsRebel": "Бунтовник",
+      "HL2MP_FootstepsMaterial": "Материал на повърхността",
+      "HL2MP_FootstepsHint": "Замените на съотборници и врагове изискват ярки модели (раздел Игра) и работят само на сървъри на общността.",
+      "HL2MP_BrightModelsOption": "Ярки модели играчи",
+      "HL2MP_BrightModelsHint": "Само сървъри на общността: равномерно осветени суперкомбинирани войници. Бунтовниците са червени, Комбинацията е синя; безплатните за всички играчи са бели.",
+      "HL2MP_Spray": "Изображение със спрей",
+      "HL2MP_SprayImport": "Импортиране на изображение",
+      "HL2MP_SprayFormats": "Изберете изображение до 16 MB. Fitted to 256 × 256. Rejoin the server after changing your spray.",
+      "HL2MP_SprayFiles": "Файлове с изображения",
+      "HL2MP_SprayImported": "Внесен. Apply changes, then rejoin the server to use this spray.",
+      "HL2MP_SprayImportFailed": "Това изображение не можа да се импортира. Проверете неговия формат и размер и дали модната папка може да се записва.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9638,7 +9791,24 @@
       "HL2MP_HudLiveUnavailable": "Živé úpravy jsou dostupné pouze na serveru hostovaném přímo ze hry.",
       "HL2MP_HudUnsavedPrompt": "Máte neuložené změny HUD. Uložit je před zavřením?",
       "HL2MP_HudSaveChanges": "ULOŽIT",
-      "HL2MP_HudDiscardChanges": "ZAHODIT"
+      "HL2MP_HudDiscardChanges": "ZAHODIT",
+      "HL2MP_FootstepsSelf": "Vaše kroky",
+      "HL2MP_FootstepsTeammates": "Kroky spoluhráče",
+      "HL2MP_FootstepsEnemies": "Nepřátelské kroky",
+      "HL2MP_FootstepsModel": "Výchozí nastavení modelu",
+      "HL2MP_FootstepsPolice": "Policie",
+      "HL2MP_FootstepsRebel": "Rebel",
+      "HL2MP_FootstepsMaterial": "Povrchový materiál",
+      "HL2MP_FootstepsHint": "Přepisy spoluhráčů a nepřátel vyžadují jasné modely (záložka Hra) a fungují pouze na komunitních serverech.",
+      "HL2MP_BrightModelsOption": "Jasné modely přehrávačů",
+      "HL2MP_BrightModelsHint": "Pouze komunitní servery: rovnoměrně osvětlené superkombinované vojáky. Rebelové jsou červení, Combine jsou modří; free-for-all hráči jsou bílí.",
+      "HL2MP_Spray": "Obraz ve spreji",
+      "HL2MP_SprayImport": "Importujte obrázek",
+      "HL2MP_SprayFormats": "Vyberte snímek do velikosti 16 MB. Přizpůsobeno pro 256 × 256. Po výměně spreje se znovu připojte k serveru.",
+      "HL2MP_SprayFiles": "Soubory obrázků",
+      "HL2MP_SprayImported": "Importováno. Aplikujte změny a poté se znovu připojte k serveru, abyste mohli tento sprej používat.",
+      "HL2MP_SprayImportFailed": "Tento obrázek nelze importovat. Zkontrolujte jeho formát a velikost a zda je složka mod zapisovatelná.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10603,7 +10773,24 @@
       "HL2MP_HudLiveUnavailable": "Liveredigering er kun tilgængelig på en server, der hostes fra spillet.",
       "HL2MP_HudUnsavedPrompt": "Du har ændringer i HUD, som ikke er gemt. Vil du gemme dem før lukning?",
       "HL2MP_HudSaveChanges": "GEM",
-      "HL2MP_HudDiscardChanges": "KASSÉR"
+      "HL2MP_HudDiscardChanges": "KASSÉR",
+      "HL2MP_FootstepsSelf": "Dine fodspor",
+      "HL2MP_FootstepsTeammates": "Holdkammeratens fodspor",
+      "HL2MP_FootstepsEnemies": "Fjendens fodspor",
+      "HL2MP_FootstepsModel": "Modelstandard",
+      "HL2MP_FootstepsPolice": "Politi",
+      "HL2MP_FootstepsRebel": "Rebel",
+      "HL2MP_FootstepsMaterial": "Overflademateriale",
+      "HL2MP_FootstepsHint": "Tilsidesættelser af holdkammerater og fjender kræver lyse modeller (fanen Spil) og virker kun på fællesskabsservere.",
+      "HL2MP_BrightModelsOption": "Lyse afspillermodeller",
+      "HL2MP_BrightModelsHint": "Kun fællesskabsservere: jævnt oplyste super Combine-soldater. Rebeller er røde, Combine er blå; gratis-for-alle-spillere er hvide.",
+      "HL2MP_Spray": "Spraybillede",
+      "HL2MP_SprayImport": "Importer billede",
+      "HL2MP_SprayFormats": "Vælg et billede på op til 16 MB. Monteret til 256 × 256. Tilslut serveren igen efter at have skiftet din spray.",
+      "HL2MP_SprayFiles": "Billedfiler",
+      "HL2MP_SprayImported": "Importeret. Anvend ændringer, og tilslut derefter serveren igen for at bruge denne spray.",
+      "HL2MP_SprayImportFailed": "Kunne ikke importere dette billede. Tjek dens format og størrelse, og at mod-mappen er skrivbar.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11568,7 +11755,24 @@
       "HL2MP_HudLiveUnavailable": "Live bewerken is alleen beschikbaar op servers die vanuit het spel worden gehost.",
       "HL2MP_HudUnsavedPrompt": "Je hebt niet-opgeslagen HUD-wijzigingen. Opslaan voordat je sluit?",
       "HL2MP_HudSaveChanges": "OPSLAAN",
-      "HL2MP_HudDiscardChanges": "VERWERPEN"
+      "HL2MP_HudDiscardChanges": "VERWERPEN",
+      "HL2MP_FootstepsSelf": "Jouw voetstappen",
+      "HL2MP_FootstepsTeammates": "Voetstappen van teamgenoten",
+      "HL2MP_FootstepsEnemies": "Vijandelijke voetstappen",
+      "HL2MP_FootstepsModel": "Modelstandaard",
+      "HL2MP_FootstepsPolice": "Politie",
+      "HL2MP_FootstepsRebel": "Rebellen",
+      "HL2MP_FootstepsMaterial": "Oppervlaktemateriaal",
+      "HL2MP_FootstepsHint": "Overrides van teamgenoten en vijanden vereisen heldere modellen (tabblad Game) en werken alleen op communityservers.",
+      "HL2MP_BrightModelsOption": "Heldere spelermodellen",
+      "HL2MP_BrightModelsHint": "Alleen communityservers: gelijkmatig verlichte supercombineersoldaten. Rebellen zijn rood, Combine zijn blauw; free-for-all-spelers zijn wit.",
+      "HL2MP_Spray": "Spuitafbeelding",
+      "HL2MP_SprayImport": "Afbeelding importeren",
+      "HL2MP_SprayFormats": "Kies een afbeelding van maximaal 16 MB. Aangepast op 256 × 256. Sluit u opnieuw aan bij de server nadat u uw spray hebt gewijzigd.",
+      "HL2MP_SprayFiles": "Beeldbestanden",
+      "HL2MP_SprayImported": "Geïmporteerd. Pas de wijzigingen toe en sluit u vervolgens opnieuw aan bij de server om deze spray te gebruiken.",
+      "HL2MP_SprayImportFailed": "Kan deze afbeelding niet importeren. Controleer het formaat en de grootte, en of de mod-map beschrijfbaar is.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12533,7 +12737,24 @@
       "HL2MP_HudLiveUnavailable": "Muokkaus pelinäkymässä on käytettävissä vain pelaajan pelistä isännöimällä palvelimella.",
       "HL2MP_HudUnsavedPrompt": "HUD-muutoksia on tallentamatta. Tallennetaanko ne ennen sulkemista?",
       "HL2MP_HudSaveChanges": "TALLENNA",
-      "HL2MP_HudDiscardChanges": "HYLKÄÄ"
+      "HL2MP_HudDiscardChanges": "HYLKÄÄ",
+      "HL2MP_FootstepsSelf": "Sinun askeleesi",
+      "HL2MP_FootstepsTeammates": "Joukkuetoverin askeleita",
+      "HL2MP_FootstepsEnemies": "Vihollisen askeleet",
+      "HL2MP_FootstepsModel": "Mallin oletusarvo",
+      "HL2MP_FootstepsPolice": "Poliisi",
+      "HL2MP_FootstepsRebel": "Kapinallinen",
+      "HL2MP_FootstepsMaterial": "Pintamateriaali",
+      "HL2MP_FootstepsHint": "Joukkuetoverin ja vihollisen ohitukset vaativat kirkkaita malleja (Peli-välilehti) ja toimivat vain yhteisön palvelimilla.",
+      "HL2MP_BrightModelsOption": "Kirkkaat soitinmallit",
+      "HL2MP_BrightModelsHint": "Vain yhteisön palvelimet: tasaisesti valaistu superyhdistyssotilaat. Kapinalliset ovat punaisia, Combine ovat sinisiä; Ilmaiset pelaajat ovat valkoisia.",
+      "HL2MP_Spray": "Ruiskukuva",
+      "HL2MP_SprayImport": "Tuo kuva",
+      "HL2MP_SprayFormats": "Valitse kuva, jonka koko on enintään 16 megatavua. Asennettu kokoon 256 × 256. Liity takaisin palvelimeen vaihtamisen jälkeen.",
+      "HL2MP_SprayFiles": "Kuvatiedostot",
+      "HL2MP_SprayImported": "Tuotu. Ota muutokset käyttöön ja liity sitten uudelleen palvelimeen käyttääksesi tätä spraytä.",
+      "HL2MP_SprayImportFailed": "Tätä kuvaa ei voitu tuoda. Tarkista sen muoto ja koko ja että mod-kansio on kirjoitettava.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13498,7 +13719,24 @@
       "HL2MP_HudLiveUnavailable": "La modification en jeu est disponible uniquement sur un serveur hébergé depuis le jeu.",
       "HL2MP_HudUnsavedPrompt": "Des modifications du HUD ne sont pas enregistrées. Les enregistrer avant de fermer ?",
       "HL2MP_HudSaveChanges": "ENREGISTRER",
-      "HL2MP_HudDiscardChanges": "IGNORER"
+      "HL2MP_HudDiscardChanges": "IGNORER",
+      "HL2MP_FootstepsSelf": "Vos pas",
+      "HL2MP_FootstepsTeammates": "Pas d'un coéquipier",
+      "HL2MP_FootstepsEnemies": "Pas de l'ennemi",
+      "HL2MP_FootstepsModel": "Modèle par défaut",
+      "HL2MP_FootstepsPolice": "Policier",
+      "HL2MP_FootstepsRebel": "Rebelle",
+      "HL2MP_FootstepsMaterial": "Matériau de surface",
+      "HL2MP_FootstepsHint": "Les remplacements de coéquipiers et d'ennemis nécessitent des modèles brillants (onglet Jeu) et ne fonctionnent que sur les serveurs communautaires.",
+      "HL2MP_BrightModelsOption": "Modèles de lecteurs lumineux",
+      "HL2MP_BrightModelsHint": "Serveurs communautaires uniquement : super soldats du Combine éclairés uniformément. Les rebelles sont rouges, les Combines sont bleus ; les joueurs chacun pour soi sont blancs.",
+      "HL2MP_Spray": "Image pulvérisée",
+      "HL2MP_SprayImport": "Importer une image",
+      "HL2MP_SprayFormats": "Choisissez une image jusqu'à 16 Mo. Ajusté en 256×256. Rejoignez le serveur après avoir changé votre spray.",
+      "HL2MP_SprayFiles": "Fichiers images",
+      "HL2MP_SprayImported": "Importé. Appliquez les modifications, puis rejoignez le serveur pour utiliser ce spray.",
+      "HL2MP_SprayImportFailed": "Impossible d'importer cette image. Vérifiez son format et sa taille, et que le dossier mod est accessible en écriture.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14463,7 +14701,24 @@
       "HL2MP_HudLiveUnavailable": "Die Live-Bearbeitung ist nur auf einem aus dem Spiel heraus gehosteten Server verfügbar.",
       "HL2MP_HudUnsavedPrompt": "Du hast ungespeicherte HUD-Änderungen. Vor dem Schließen speichern?",
       "HL2MP_HudSaveChanges": "SPEICHERN",
-      "HL2MP_HudDiscardChanges": "VERWERFEN"
+      "HL2MP_HudDiscardChanges": "VERWERFEN",
+      "HL2MP_FootstepsSelf": "Deine Schritte",
+      "HL2MP_FootstepsTeammates": "Schritte eines Teamkollegen",
+      "HL2MP_FootstepsEnemies": "Feindliche Schritte",
+      "HL2MP_FootstepsModel": "Modellstandard",
+      "HL2MP_FootstepsPolice": "Polizei",
+      "HL2MP_FootstepsRebel": "Rebell",
+      "HL2MP_FootstepsMaterial": "Oberflächenmaterial",
+      "HL2MP_FootstepsHint": "Teamkameraden- und Feind-Overrides erfordern helle Modelle (Registerkarte „Spiel“) und funktionieren nur auf Community-Servern.",
+      "HL2MP_BrightModelsOption": "Helle Spielermodelle",
+      "HL2MP_BrightModelsHint": "Nur Community-Server: gleichmäßig beleuchtete Super-Combine-Soldaten. Rebellen sind rot, Combine sind blau; Free-for-All-Spieler sind weiß.",
+      "HL2MP_Spray": "Sprühbild",
+      "HL2MP_SprayImport": "Bild importieren",
+      "HL2MP_SprayFormats": "Wählen Sie ein Bild mit bis zu 16 MB. Auf 256 × 256 angepasst. Treten Sie dem Server wieder bei, nachdem Sie Ihr Spray gewechselt haben.",
+      "HL2MP_SprayFiles": "Bilddateien",
+      "HL2MP_SprayImported": "Importiert. Wenden Sie die Änderungen an und treten Sie dann erneut dem Server bei, um dieses Spray zu verwenden.",
+      "HL2MP_SprayImportFailed": "Dieses Bild konnte nicht importiert werden. Überprüfen Sie Format und Größe und stellen Sie sicher, dass der Mod-Ordner beschreibbar ist.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15428,7 +15683,24 @@
       "HL2MP_HudLiveUnavailable": "Η ζωντανή επεξεργασία είναι διαθέσιμη μόνο σε διακομιστή που φιλοξενείται μέσα από το παιχνίδι.",
       "HL2MP_HudUnsavedPrompt": "Υπάρχουν μη αποθηκευμένες αλλαγές στο HUD. Να αποθηκευτούν πριν το κλείσιμο;",
       "HL2MP_HudSaveChanges": "ΑΠΟΘΗΚΕΥΣΗ",
-      "HL2MP_HudDiscardChanges": "ΑΠΟΡΡΙΨΗ"
+      "HL2MP_HudDiscardChanges": "ΑΠΟΡΡΙΨΗ",
+      "HL2MP_FootstepsSelf": "Τα βήματά σου",
+      "HL2MP_FootstepsTeammates": "Βήματα συμπαίκτη",
+      "HL2MP_FootstepsEnemies": "Βήματα του εχθρού",
+      "HL2MP_FootstepsModel": "Προεπιλογή μοντέλου",
+      "HL2MP_FootstepsPolice": "Αστυνομία",
+      "HL2MP_FootstepsRebel": "Επαναστάτης",
+      "HL2MP_FootstepsMaterial": "Υλικό επιφάνειας",
+      "HL2MP_FootstepsHint": "Οι παρακάμψεις συμπαίκτη και εχθρού απαιτούν φωτεινά μοντέλα (καρτέλα παιχνιδιού) και λειτουργούν μόνο σε διακομιστές κοινότητας.",
+      "HL2MP_BrightModelsOption": "Φωτεινά μοντέλα αναπαραγωγής",
+      "HL2MP_BrightModelsHint": "Μόνο διακομιστές κοινότητας: ομοιόμορφα φωτισμένα super Combine στρατιώτες. Οι επαναστάτες είναι κόκκινοι, το Combine είναι μπλε. Οι παίκτες ελεύθεροι για όλους είναι λευκοί.",
+      "HL2MP_Spray": "Εικόνα ψεκασμού",
+      "HL2MP_SprayImport": "Εισαγωγή εικόνας",
+      "HL2MP_SprayFormats": "Επιλέξτε μια εικόνα έως 16 MB. Τοποθετείται σε 256 × 256. Συνδεθείτε ξανά στο διακομιστή αφού αλλάξετε το σπρέι σας.",
+      "HL2MP_SprayFiles": "Αρχεία εικόνας",
+      "HL2MP_SprayImported": "Εισαγόμενο. Εφαρμόστε τις αλλαγές και, στη συνέχεια, συνδεθείτε ξανά στον διακομιστή για να χρησιμοποιήσετε αυτό το σπρέι.",
+      "HL2MP_SprayImportFailed": "Δεν ήταν δυνατή η εισαγωγή αυτής της εικόνας. Ελέγξτε τη μορφή και το μέγεθός του και ότι ο φάκελος mod είναι εγγράψιμος.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16393,7 +16665,24 @@
       "HL2MP_HudLiveUnavailable": "Élő szerkesztés csak a játékból indított szerverhez kapcsolódva érhető el.",
       "HL2MP_HudUnsavedPrompt": "Nem mentett HUD-módosításaid vannak. Mented őket bezárás előtt?",
       "HL2MP_HudSaveChanges": "MENTÉS",
-      "HL2MP_HudDiscardChanges": "ELVETÉS"
+      "HL2MP_HudDiscardChanges": "ELVETÉS",
+      "HL2MP_FootstepsSelf": "Lépted",
+      "HL2MP_FootstepsTeammates": "Csapattárs léptei",
+      "HL2MP_FootstepsEnemies": "Ellenség léptei",
+      "HL2MP_FootstepsModel": "Modell alapértelmezett",
+      "HL2MP_FootstepsPolice": "Rendőrség",
+      "HL2MP_FootstepsRebel": "Lázadó",
+      "HL2MP_FootstepsMaterial": "Felületi anyag",
+      "HL2MP_FootstepsHint": "A csapattárs és az ellenség felülírásai fényes modelleket igényelnek (Játék lap), és csak közösségi szervereken működnek.",
+      "HL2MP_BrightModelsOption": "Fényes lejátszómodellek",
+      "HL2MP_BrightModelsHint": "Csak közösségi szerverek: egyenletesen megvilágított szuperkombinációs katonák. A lázadók vörösek, a Combine kékek; A mindenki számára ingyenes játékosok fehérek.",
+      "HL2MP_Spray": "Spray kép",
+      "HL2MP_SprayImport": "Kép importálása",
+      "HL2MP_SprayFormats": "Válasszon legfeljebb 16 MB-os képet. 256 × 256-ra szerelve. A spray cseréje után csatlakozzon újra a szerverhez.",
+      "HL2MP_SprayFiles": "Képfájlok",
+      "HL2MP_SprayImported": "Importált. Alkalmazza a módosításokat, majd csatlakozzon újra a szerverhez a spray használatához.",
+      "HL2MP_SprayImportFailed": "Nem sikerült importálni ezt a képet. Ellenőrizze a formátumát és méretét, valamint azt, hogy a mod mappa írható-e.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17358,7 +17647,24 @@
       "HL2MP_HudLiveUnavailable": "Pengeditan langsung hanya tersedia di server yang dihosting dari dalam game.",
       "HL2MP_HudUnsavedPrompt": "Ada perubahan HUD yang belum disimpan. Simpan sebelum menutup?",
       "HL2MP_HudSaveChanges": "SIMPAN",
-      "HL2MP_HudDiscardChanges": "BUANG"
+      "HL2MP_HudDiscardChanges": "BUANG",
+      "HL2MP_FootstepsSelf": "Langkah kakimu",
+      "HL2MP_FootstepsTeammates": "Langkah kaki rekan satu tim",
+      "HL2MP_FootstepsEnemies": "Langkah kaki musuh",
+      "HL2MP_FootstepsModel": "Model bawaan",
+      "HL2MP_FootstepsPolice": "Polisi",
+      "HL2MP_FootstepsRebel": "Pemberontak",
+      "HL2MP_FootstepsMaterial": "Bahan permukaan",
+      "HL2MP_FootstepsHint": "Penggantian rekan satu tim dan musuh memerlukan model yang cerah (tab Game) dan hanya berfungsi di server komunitas.",
+      "HL2MP_BrightModelsOption": "Model pemain yang cerdas",
+      "HL2MP_BrightModelsHint": "Khusus server komunitas: tentara Gabungan super dengan penerangan merata. Pemberontak berwarna merah, Gabungan berwarna biru; pemain gratis untuk semua berkulit putih.",
+      "HL2MP_Spray": "Semprotkan gambar",
+      "HL2MP_SprayImport": "Impor gambar",
+      "HL2MP_SprayFormats": "Pilih gambar hingga 16 MB. Dipasang pada 256 × 256. Bergabunglah kembali dengan server setelah mengganti semprotan Anda.",
+      "HL2MP_SprayFiles": "File gambar",
+      "HL2MP_SprayImported": "Diimpor. Terapkan perubahan, lalu bergabung kembali dengan server untuk menggunakan semprotan ini.",
+      "HL2MP_SprayImportFailed": "Tidak dapat mengimpor gambar ini. Periksa format dan ukurannya, dan apakah folder mod dapat ditulis.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18323,7 +18629,24 @@
       "HL2MP_HudLiveUnavailable": "La modifica dal vivo è disponibile solo sui server ospitati direttamente dal gioco.",
       "HL2MP_HudUnsavedPrompt": "Ci sono modifiche all’HUD non salvate. Salvarle prima di chiudere?",
       "HL2MP_HudSaveChanges": "SALVA",
-      "HL2MP_HudDiscardChanges": "SCARTA"
+      "HL2MP_HudDiscardChanges": "SCARTA",
+      "HL2MP_FootstepsSelf": "I tuoi passi",
+      "HL2MP_FootstepsTeammates": "Passi del compagno di squadra",
+      "HL2MP_FootstepsEnemies": "Orme nemiche",
+      "HL2MP_FootstepsModel": "Modello predefinito",
+      "HL2MP_FootstepsPolice": "Polizia",
+      "HL2MP_FootstepsRebel": "Ribelle",
+      "HL2MP_FootstepsMaterial": "Materiale della superficie",
+      "HL2MP_FootstepsHint": "Gli override dei compagni di squadra e dei nemici richiedono modelli luminosi (scheda Gioco) e funzionano solo sui server della comunità.",
+      "HL2MP_BrightModelsOption": "Modelli di lettori brillanti",
+      "HL2MP_BrightModelsHint": "Solo server della community: super Combina soldati illuminati in modo uniforme. I ribelli sono rossi, i Combine sono blu; i giocatori tutti contro tutti sono bianchi.",
+      "HL2MP_Spray": "Immagine spruzzata",
+      "HL2MP_SprayImport": "Importa immagine",
+      "HL2MP_SprayFormats": "Scegli un'immagine fino a 16 MB. Adattato a 256 × 256. Rientra nel server dopo aver cambiato lo spray.",
+      "HL2MP_SprayFiles": "File di immagine",
+      "HL2MP_SprayImported": "Importato. Applica le modifiche, quindi riconnettiti al server per utilizzare questo spray.",
+      "HL2MP_SprayImportFailed": "Impossibile importare questa immagine. Controllane il formato e le dimensioni e che la cartella mod sia scrivibile.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19288,7 +19611,24 @@
       "HL2MP_HudLiveUnavailable": "ライブ編集はゲーム内からホストしたサーバーに接続している場合のみ利用できます。",
       "HL2MP_HudUnsavedPrompt": "HUDに未保存の変更があります。閉じる前に保存しますか？",
       "HL2MP_HudSaveChanges": "保存",
-      "HL2MP_HudDiscardChanges": "破棄"
+      "HL2MP_HudDiscardChanges": "破棄",
+      "HL2MP_FootstepsSelf": "君の足音",
+      "HL2MP_FootstepsTeammates": "チームメイトの足音",
+      "HL2MP_FootstepsEnemies": "敵の足音",
+      "HL2MP_FootstepsModel": "モデルのデフォルト",
+      "HL2MP_FootstepsPolice": "警察",
+      "HL2MP_FootstepsRebel": "反逆者",
+      "HL2MP_FootstepsMaterial": "表面素材",
+      "HL2MP_FootstepsHint": "チームメイトと敵のオーバーライドにはブライト モデル ([ゲーム] タブ) が必要で、コミュニティ サーバーでのみ機能します。",
+      "HL2MP_BrightModelsOption": "ブライトプレーヤーモデル",
+      "HL2MP_BrightModelsHint": "コミュニティサーバーのみ: 均等に照明されたスーパーコンバイン兵士。反乱軍は赤、結合は青です。フリーフォーオールプレイヤーは白です。",
+      "HL2MP_Spray": "スプレーイメージ",
+      "HL2MP_SprayImport": "画像のインポート",
+      "HL2MP_SprayFormats": "16 MB までの画像を選択してください。 256 × 256 に適合。スプレーを交換した後、サーバーに再接続します。",
+      "HL2MP_SprayFiles": "画像ファイル",
+      "HL2MP_SprayImported": "輸入品です。変更を適用し、サーバーに再接続してこのスプレーを使用します。",
+      "HL2MP_SprayImportFailed": "この画像をインポートできませんでした。形式とサイズ、および mod フォルダーが書き込み可能であることを確認してください。",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20253,7 +20593,24 @@
       "HL2MP_HudLiveUnavailable": "실시간 편집은 게임에서 직접 호스팅한 서버에 연결했을 때만 사용할 수 있습니다.",
       "HL2MP_HudUnsavedPrompt": "저장하지 않은 HUD 변경 사항이 있습니다. 닫기 전에 저장할까요?",
       "HL2MP_HudSaveChanges": "저장",
-      "HL2MP_HudDiscardChanges": "버리기"
+      "HL2MP_HudDiscardChanges": "버리기",
+      "HL2MP_FootstepsSelf": "너의 발걸음",
+      "HL2MP_FootstepsTeammates": "팀원의 발자국",
+      "HL2MP_FootstepsEnemies": "적의 발자국",
+      "HL2MP_FootstepsModel": "모델 기본값",
+      "HL2MP_FootstepsPolice": "경찰",
+      "HL2MP_FootstepsRebel": "반란군",
+      "HL2MP_FootstepsMaterial": "표면재질",
+      "HL2MP_FootstepsHint": "팀원 및 적 무시에는 밝은 모델(게임 탭)이 필요하며 커뮤니티 서버에서만 작동합니다.",
+      "HL2MP_BrightModelsOption": "브라이트 플레이어 모델",
+      "HL2MP_BrightModelsHint": "커뮤니티 서버만 해당: 균일하게 조명이 켜진 슈퍼 콤바인 병사. 반란군은 빨간색, 콤바인은 파란색입니다. 자유 경기 선수는 백인입니다.",
+      "HL2MP_Spray": "스프레이 이미지",
+      "HL2MP_SprayImport": "이미지 가져오기",
+      "HL2MP_SprayFormats": "최대 16MB의 이미지를 선택하세요. 256×256으로 맞춰졌습니다. 스프레이를 교체한 후 서버에 다시 접속하세요.",
+      "HL2MP_SprayFiles": "이미지 파일",
+      "HL2MP_SprayImported": "가져왔습니다. 변경 사항을 적용한 다음 서버에 다시 참여하여 이 스프레이를 사용하세요.",
+      "HL2MP_SprayImportFailed": "이 이미지를 가져올 수 없습니다. 형식과 크기를 확인하고 mod 폴더에 쓰기가 가능한지 확인하세요.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -21218,7 +21575,24 @@
       "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego.",
       "HL2MP_HudUnsavedPrompt": "Hay cambios del HUD sin guardar. ¿Quieres guardarlos antes de cerrar?",
       "HL2MP_HudSaveChanges": "GUARDAR",
-      "HL2MP_HudDiscardChanges": "DESCARTAR"
+      "HL2MP_HudDiscardChanges": "DESCARTAR",
+      "HL2MP_FootstepsSelf": "Tus pasos",
+      "HL2MP_FootstepsTeammates": "Pasos de compañeros de equipo",
+      "HL2MP_FootstepsEnemies": "Pasos enemigos",
+      "HL2MP_FootstepsModel": "Modelo predeterminado",
+      "HL2MP_FootstepsPolice": "Policía",
+      "HL2MP_FootstepsRebel": "Rebelde",
+      "HL2MP_FootstepsMaterial": "Material de la superficie",
+      "HL2MP_FootstepsHint": "Las anulaciones de compañeros de equipo y enemigos requieren modelos brillantes (pestaña Juego) y solo funcionan en servidores comunitarios.",
+      "HL2MP_BrightModelsOption": "Modelos de reproductores brillantes",
+      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: súper soldados Combine iluminados uniformemente. Los rebeldes son rojos, los combinados son azules; Los jugadores de todos contra todos son blancos.",
+      "HL2MP_Spray": "Imagen pulverizada",
+      "HL2MP_SprayImport": "Importar imagen",
+      "HL2MP_SprayFormats": "Elija una imagen de hasta 16 MB. Ajustado a 256 × 256. Vuelva a unirse al servidor después de cambiar su spray.",
+      "HL2MP_SprayFiles": "Archivos de imagen",
+      "HL2MP_SprayImported": "Importado. Aplique los cambios y luego vuelva a unirse al servidor para usar este spray.",
+      "HL2MP_SprayImportFailed": "No se pudo importar esta imagen. Verifique su formato y tamaño, y que se pueda escribir en la carpeta mod.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -22183,7 +22557,24 @@
       "HL2MP_HudLiveUnavailable": "Penyuntingan langsung hanya tersedia pada pelayan yang dihoskan dari dalam permainan.",
       "HL2MP_HudUnsavedPrompt": "Terdapat perubahan HUD yang belum disimpan. Simpan sebelum menutup?",
       "HL2MP_HudSaveChanges": "SIMPAN",
-      "HL2MP_HudDiscardChanges": "BUANG"
+      "HL2MP_HudDiscardChanges": "BUANG",
+      "HL2MP_FootstepsSelf": "Jejak kaki awak",
+      "HL2MP_FootstepsTeammates": "Langkah rakan sepasukan",
+      "HL2MP_FootstepsEnemies": "Jejak kaki musuh",
+      "HL2MP_FootstepsModel": "Model lalai",
+      "HL2MP_FootstepsPolice": "Polis",
+      "HL2MP_FootstepsRebel": "Pemberontak",
+      "HL2MP_FootstepsMaterial": "Bahan permukaan",
+      "HL2MP_FootstepsHint": "Penggantian rakan sepasukan dan musuh memerlukan model terang (tab Permainan) dan hanya berfungsi pada pelayan komuniti.",
+      "HL2MP_BrightModelsOption": "Model pemain yang terang",
+      "HL2MP_BrightModelsHint": "Pelayan komuniti sahaja: askar Combine super menyala sekata. Pemberontak merah, Gabungkan biru; pemain percuma untuk semua adalah berkulit putih.",
+      "HL2MP_Spray": "Sembur imej",
+      "HL2MP_SprayImport": "Import imej",
+      "HL2MP_SprayFormats": "Pilih imej sehingga 16 MB. Dipasang pada 256 × 256. Sertai semula pelayan selepas menukar semburan anda.",
+      "HL2MP_SprayFiles": "Fail imej",
+      "HL2MP_SprayImported": "Diimport. Gunakan perubahan, kemudian sertai semula pelayan untuk menggunakan semburan ini.",
+      "HL2MP_SprayImportFailed": "Tidak dapat mengimport imej ini. Semak format dan saiznya, dan bahawa folder mod boleh ditulis.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -23148,7 +23539,24 @@
       "HL2MP_HudLiveUnavailable": "Direkteredigering er bare tilgjengelig på en server som er vertet fra spillet.",
       "HL2MP_HudUnsavedPrompt": "Du har ulagrede HUD-endringer. Vil du lagre dem før du lukker?",
       "HL2MP_HudSaveChanges": "LAGRE",
-      "HL2MP_HudDiscardChanges": "FORKAST"
+      "HL2MP_HudDiscardChanges": "FORKAST",
+      "HL2MP_FootstepsSelf": "Dine fotspor",
+      "HL2MP_FootstepsTeammates": "Lagkameratens fotspor",
+      "HL2MP_FootstepsEnemies": "Fiendens fotspor",
+      "HL2MP_FootstepsModel": "Modellstandard",
+      "HL2MP_FootstepsPolice": "Politi",
+      "HL2MP_FootstepsRebel": "Opprører",
+      "HL2MP_FootstepsMaterial": "Overflatemateriale",
+      "HL2MP_FootstepsHint": "Overstyring av lagkamerater og fiender krever lyse modeller (Spill-fanen) og fungerer kun på fellesskapsservere.",
+      "HL2MP_BrightModelsOption": "Lyse spillermodeller",
+      "HL2MP_BrightModelsHint": "Bare fellesskapsservere: jevnt opplyste superkombinasjonssoldater. Opprørere er røde, Combine er blå; gratis-for-alle-spillere er hvite.",
+      "HL2MP_Spray": "Spraybilde",
+      "HL2MP_SprayImport": "Importer bilde",
+      "HL2MP_SprayFormats": "Velg et bilde på opptil 16 MB. Tilpasset til 256 × 256. Bli med serveren igjen etter å ha byttet spray.",
+      "HL2MP_SprayFiles": "Bildefiler",
+      "HL2MP_SprayImported": "Importert. Bruk endringer, og bli med på serveren igjen for å bruke denne sprayen.",
+      "HL2MP_SprayImportFailed": "Kunne ikke importere dette bildet. Sjekk formatet og størrelsen, og at mod-mappen er skrivbar.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -24113,7 +24521,24 @@
       "HL2MP_HudLiveUnavailable": "Edycja na żywo jest dostępna tylko na serwerze uruchomionym bezpośrednio z gry.",
       "HL2MP_HudUnsavedPrompt": "Masz niezapisane zmiany HUD. Zapisać je przed zamknięciem?",
       "HL2MP_HudSaveChanges": "ZAPISZ",
-      "HL2MP_HudDiscardChanges": "ODRZUĆ"
+      "HL2MP_HudDiscardChanges": "ODRZUĆ",
+      "HL2MP_FootstepsSelf": "Twoje kroki",
+      "HL2MP_FootstepsTeammates": "Kroki członka drużyny",
+      "HL2MP_FootstepsEnemies": "Kroki wroga",
+      "HL2MP_FootstepsModel": "Domyślny model",
+      "HL2MP_FootstepsPolice": "Policja",
+      "HL2MP_FootstepsRebel": "Buntownik",
+      "HL2MP_FootstepsMaterial": "Materiał powierzchni",
+      "HL2MP_FootstepsHint": "Nadpisania członków drużyny i wrogów wymagają jasnych modeli (zakładka Gra) i działają tylko na serwerach społeczności.",
+      "HL2MP_BrightModelsOption": "Jasne modele odtwarzaczy",
+      "HL2MP_BrightModelsHint": "Tylko serwery społecznościowe: równomiernie oświetleni żołnierze superkombinatu. Rebelianci są czerwoni, Kombinat jest niebieski; gracze niezależni dla wszystkich są biali.",
+      "HL2MP_Spray": "Obraz sprayu",
+      "HL2MP_SprayImport": "Importuj obraz",
+      "HL2MP_SprayFormats": "Wybierz obraz o rozmiarze do 16 MB. Dopasowany do 256 × 256. Dołącz ponownie do serwera po zmianie sprayu.",
+      "HL2MP_SprayFiles": "Pliki obrazów",
+      "HL2MP_SprayImported": "Zaimportowano. Zastosuj zmiany, a następnie ponownie dołącz do serwera, aby użyć tego sprayu.",
+      "HL2MP_SprayImportFailed": "Nie można zaimportować tego obrazu. Sprawdź jego format i rozmiar oraz czy folder mod umożliwia zapis.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -25078,7 +25503,24 @@
       "HL2MP_HudLiveUnavailable": "A edição em jogo só está disponível em servidores alojados a partir do jogo.",
       "HL2MP_HudUnsavedPrompt": "Existem alterações ao HUD por guardar. Guardá-las antes de fechar?",
       "HL2MP_HudSaveChanges": "GUARDAR",
-      "HL2MP_HudDiscardChanges": "DESCARTAR"
+      "HL2MP_HudDiscardChanges": "DESCARTAR",
+      "HL2MP_FootstepsSelf": "Seus passos",
+      "HL2MP_FootstepsTeammates": "Passos de companheiros de equipe",
+      "HL2MP_FootstepsEnemies": "Passos do inimigo",
+      "HL2MP_FootstepsModel": "Modelo padrão",
+      "HL2MP_FootstepsPolice": "Polícia",
+      "HL2MP_FootstepsRebel": "Rebelde",
+      "HL2MP_FootstepsMaterial": "Material de superfície",
+      "HL2MP_FootstepsHint": "As substituições de companheiros de equipe e inimigos exigem modelos brilhantes (guia Jogo) e funcionam apenas em servidores da comunidade.",
+      "HL2MP_BrightModelsOption": "Modelos de jogadores brilhantes",
+      "HL2MP_BrightModelsHint": "Apenas servidores comunitários: super soldados Combine iluminados uniformemente. Os rebeldes são vermelhos, os Combine são azuis; jogadores livres para todos são brancos.",
+      "HL2MP_Spray": "Imagem em spray",
+      "HL2MP_SprayImport": "Importar imagem",
+      "HL2MP_SprayFormats": "Escolha uma imagem de até 16 MB. Ajustado em 256 × 256. Volte ao servidor após trocar seu spray.",
+      "HL2MP_SprayFiles": "Arquivos de imagem",
+      "HL2MP_SprayImported": "Importado. Aplique as alterações e entre novamente no servidor para usar este spray.",
+      "HL2MP_SprayImportFailed": "Não foi possível importar esta imagem. Verifique seu formato e tamanho e se a pasta mod é gravável.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -26043,7 +26485,24 @@
       "HL2MP_HudLiveUnavailable": "Editarea live este disponibilă doar pe servere găzduite direct din joc.",
       "HL2MP_HudUnsavedPrompt": "Ai modificări HUD nesalvate. Le salvezi înainte de închidere?",
       "HL2MP_HudSaveChanges": "SALVEAZĂ",
-      "HL2MP_HudDiscardChanges": "RENUNȚĂ"
+      "HL2MP_HudDiscardChanges": "RENUNȚĂ",
+      "HL2MP_FootstepsSelf": "Pașii tăi",
+      "HL2MP_FootstepsTeammates": "Pașii coechipierului",
+      "HL2MP_FootstepsEnemies": "Pași inamicului",
+      "HL2MP_FootstepsModel": "Model implicit",
+      "HL2MP_FootstepsPolice": "Poliție",
+      "HL2MP_FootstepsRebel": "Rebel",
+      "HL2MP_FootstepsMaterial": "Material de suprafață",
+      "HL2MP_FootstepsHint": "Anulările coechipierilor și inamicului necesită modele luminoase (fila Joc) și funcționează numai pe serverele comunității.",
+      "HL2MP_BrightModelsOption": "Modele de playere luminoase",
+      "HL2MP_BrightModelsHint": "Numai servere comunitare: soldați super Combine iluminați uniform. Rebelii sunt roșii, Combinați sunt albaștri; jucătorii liberi pentru toți sunt albi.",
+      "HL2MP_Spray": "Imagine pulverizată",
+      "HL2MP_SprayImport": "Import imagine",
+      "HL2MP_SprayFormats": "Alegeți o imagine de până la 16 MB. Montat la 256 × 256. Reajungeți la server după ce vă schimbați spray-ul.",
+      "HL2MP_SprayFiles": "Fișiere imagine",
+      "HL2MP_SprayImported": "Importat. Aplicați modificările, apoi conectați-vă din nou la server pentru a utiliza acest spray.",
+      "HL2MP_SprayImportFailed": "Nu s-a putut importa această imagine. Verificați formatul și dimensiunea acestuia și dacă folderul mod poate fi scris.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -27008,7 +27467,24 @@
       "HL2MP_HudLiveUnavailable": "Редактирование в игре доступно только при подключении к серверу, запущенному из игры.",
       "HL2MP_HudUnsavedPrompt": "Есть несохранённые изменения HUD. Сохранить их перед закрытием?",
       "HL2MP_HudSaveChanges": "СОХРАНИТЬ",
-      "HL2MP_HudDiscardChanges": "ОТБРОСИТЬ"
+      "HL2MP_HudDiscardChanges": "ОТБРОСИТЬ",
+      "HL2MP_FootstepsSelf": "Твои шаги",
+      "HL2MP_FootstepsTeammates": "Шаги товарища по команде",
+      "HL2MP_FootstepsEnemies": "Шаги врага",
+      "HL2MP_FootstepsModel": "Модель по умолчанию",
+      "HL2MP_FootstepsPolice": "Полиция",
+      "HL2MP_FootstepsRebel": "Бунтарь",
+      "HL2MP_FootstepsMaterial": "Материал поверхности",
+      "HL2MP_FootstepsHint": "Для переопределения товарищей по команде и врагов требуются яркие модели (вкладка «Игра») и они работают только на серверах сообщества.",
+      "HL2MP_BrightModelsOption": "Яркие модели игроков",
+      "HL2MP_BrightModelsHint": "Только на серверах сообщества: равномерно освещенные суперсолдаты Альянса. Повстанцы — красные, Альянс — синие; игроки, играющие бесплатно для всех, — белые.",
+      "HL2MP_Spray": "Изображение распыления",
+      "HL2MP_SprayImport": "Импорт изображения",
+      "HL2MP_SprayFormats": "Выберите изображение размером до 16 МБ. Подогнано под размер 256 × 256. Подключитесь к серверу после смены спрея.",
+      "HL2MP_SprayFiles": "Файлы изображений",
+      "HL2MP_SprayImported": "Импортировано. Примените изменения, затем снова подключитесь к серверу, чтобы использовать этот спрей.",
+      "HL2MP_SprayImportFailed": "Не удалось импортировать это изображение. Проверьте его формат и размер, а также наличие возможности записи в папку мода.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -27973,7 +28449,24 @@
       "HL2MP_HudLiveUnavailable": "仅在连接到从游戏内创建的服务器时才能实时编辑。",
       "HL2MP_HudUnsavedPrompt": "HUD有未保存的更改。关闭前是否保存？",
       "HL2MP_HudSaveChanges": "保存",
-      "HL2MP_HudDiscardChanges": "放弃"
+      "HL2MP_HudDiscardChanges": "放弃",
+      "HL2MP_FootstepsSelf": "你的脚步声",
+      "HL2MP_FootstepsTeammates": "队友脚步声",
+      "HL2MP_FootstepsEnemies": "敌人的脚步声",
+      "HL2MP_FootstepsModel": "型号默认",
+      "HL2MP_FootstepsPolice": "警察",
+      "HL2MP_FootstepsRebel": "叛逆者",
+      "HL2MP_FootstepsMaterial": "表面材质",
+      "HL2MP_FootstepsHint": "队友和敌人覆盖需要明亮的模型（“游戏”选项卡）并且仅适用于社区服务器。",
+      "HL2MP_BrightModelsOption": "明亮的玩家模型",
+      "HL2MP_BrightModelsHint": "仅限社区服务器：均匀照亮的超级联合士兵。叛军为红色，联合军为蓝色；自由参加的所有玩家都是白人。",
+      "HL2MP_Spray": "喷雾图像",
+      "HL2MP_SprayImport": "导入图像",
+      "HL2MP_SprayFormats": "选择最大 16 MB 的图像。安装至 256 × 256。更换喷雾后重新加入服务器。",
+      "HL2MP_SprayFiles": "图像文件",
+      "HL2MP_SprayImported": "进口。应用更改，然后重新加入服务器以使用此喷雾。",
+      "HL2MP_SprayImportFailed": "无法导入该图像。检查其格式和大小，以及 mod 文件夹是否可写。",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -28938,7 +29431,24 @@
       "HL2MP_HudLiveUnavailable": "La edición en vivo solo está disponible en servidores alojados desde el juego.",
       "HL2MP_HudUnsavedPrompt": "Hay cambios del HUD sin guardar. ¿Quieres guardarlos antes de cerrar?",
       "HL2MP_HudSaveChanges": "GUARDAR",
-      "HL2MP_HudDiscardChanges": "DESCARTAR"
+      "HL2MP_HudDiscardChanges": "DESCARTAR",
+      "HL2MP_FootstepsSelf": "Tus pasos",
+      "HL2MP_FootstepsTeammates": "Pasos de compañeros de equipo",
+      "HL2MP_FootstepsEnemies": "Pasos enemigos",
+      "HL2MP_FootstepsModel": "Modelo predeterminado",
+      "HL2MP_FootstepsPolice": "Policía",
+      "HL2MP_FootstepsRebel": "Rebelde",
+      "HL2MP_FootstepsMaterial": "Material de la superficie",
+      "HL2MP_FootstepsHint": "Las anulaciones de compañeros de equipo y enemigos requieren modelos brillantes (pestaña Juego) y solo funcionan en servidores comunitarios.",
+      "HL2MP_BrightModelsOption": "Modelos de reproductores brillantes",
+      "HL2MP_BrightModelsHint": "Solo servidores comunitarios: súper soldados Combine iluminados uniformemente. Los rebeldes son rojos, los combinados son azules; Los jugadores de todos contra todos son blancos.",
+      "HL2MP_Spray": "Imagen pulverizada",
+      "HL2MP_SprayImport": "Importar imagen",
+      "HL2MP_SprayFormats": "Elija una imagen de hasta 16 MB. Ajustado a 256 × 256. Vuelva a unirse al servidor después de cambiar su spray.",
+      "HL2MP_SprayFiles": "Archivos de imagen",
+      "HL2MP_SprayImported": "Importado. Aplique los cambios y luego vuelva a unirse al servidor para usar este spray.",
+      "HL2MP_SprayImportFailed": "No se pudo importar esta imagen. Verifique su formato y tamaño, y que se pueda escribir en la carpeta mod.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -29903,7 +30413,24 @@
       "HL2MP_HudLiveUnavailable": "Liveredigering är endast tillgänglig på servrar som startas inifrån spelet.",
       "HL2MP_HudUnsavedPrompt": "Du har osparade HUD-ändringar. Vill du spara dem innan du stänger?",
       "HL2MP_HudSaveChanges": "SPARA",
-      "HL2MP_HudDiscardChanges": "KASTA"
+      "HL2MP_HudDiscardChanges": "KASTA",
+      "HL2MP_FootstepsSelf": "Dina fotspår",
+      "HL2MP_FootstepsTeammates": "Lagkamrats fotspår",
+      "HL2MP_FootstepsEnemies": "Fiendens fotspår",
+      "HL2MP_FootstepsModel": "Modell standard",
+      "HL2MP_FootstepsPolice": "Polis",
+      "HL2MP_FootstepsRebel": "Rebell",
+      "HL2MP_FootstepsMaterial": "Ytmaterial",
+      "HL2MP_FootstepsHint": "Lagkamrater och fiendens åsidosättanden kräver ljusa modeller (fliken Spel) och fungerar bara på communityservrar.",
+      "HL2MP_BrightModelsOption": "Ljusa spelarmodeller",
+      "HL2MP_BrightModelsHint": "Endast gemenskapsservrar: jämnt upplysta superkombinationssoldater. Rebeller är röda, Combine är blå; gratis-för-alla-spelare är vita.",
+      "HL2MP_Spray": "Spraybild",
+      "HL2MP_SprayImport": "Importera bild",
+      "HL2MP_SprayFormats": "Välj en bild upp till 16 MB. Passad till 256 × 256. Gå med i servern igen efter att du har bytt spray.",
+      "HL2MP_SprayFiles": "Bildfiler",
+      "HL2MP_SprayImported": "Importerad. Tillämpa ändringarna och anslut sedan till servern igen för att använda denna spray.",
+      "HL2MP_SprayImportFailed": "Det gick inte att importera den här bilden. Kontrollera dess format och storlek och att mod-mappen är skrivbar.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -30868,7 +31395,24 @@
       "HL2MP_HudLiveUnavailable": "僅在連線至從遊戲內建立的伺服器時才能即時編輯。",
       "HL2MP_HudUnsavedPrompt": "HUD有尚未儲存的變更。關閉前是否儲存？",
       "HL2MP_HudSaveChanges": "儲存",
-      "HL2MP_HudDiscardChanges": "捨棄"
+      "HL2MP_HudDiscardChanges": "捨棄",
+      "HL2MP_FootstepsSelf": "你的腳步聲",
+      "HL2MP_FootstepsTeammates": "隊友腳步聲",
+      "HL2MP_FootstepsEnemies": "敵人的腳步聲",
+      "HL2MP_FootstepsModel": "型號默認",
+      "HL2MP_FootstepsPolice": "警察",
+      "HL2MP_FootstepsRebel": "叛逆者",
+      "HL2MP_FootstepsMaterial": "表面材質",
+      "HL2MP_FootstepsHint": "隊友和敵人覆蓋需要明亮的模型（「遊戲」標籤）並且僅適用於社群伺服器。",
+      "HL2MP_BrightModelsOption": "明亮的玩家模型",
+      "HL2MP_BrightModelsHint": "僅限社群伺服器：均勻照亮的超級聯合士兵。叛軍為紅色，聯合軍為藍色；自由參加的所有玩家都是白人。",
+      "HL2MP_Spray": "噴霧影像",
+      "HL2MP_SprayImport": "導入影像",
+      "HL2MP_SprayFormats": "選擇最大 16 MB 的影像。安裝至 256 × 256。更換噴霧後重新加入伺服器。",
+      "HL2MP_SprayFiles": "影像文件",
+      "HL2MP_SprayImported": "進口。應用更改，然後重新加入伺服器以使用此噴霧。",
+      "HL2MP_SprayImportFailed": "無法匯入該影像。檢查其格式和大小，以及 mod 資料夾是否可寫入。",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -31833,7 +32377,24 @@
       "HL2MP_HudLiveUnavailable": "การแก้ไขแบบสดใช้ได้เฉพาะเมื่อเชื่อมต่อกับเซิร์ฟเวอร์ที่โฮสต์จากในเกมเท่านั้น",
       "HL2MP_HudUnsavedPrompt": "มีการเปลี่ยนแปลง HUD ที่ยังไม่ได้บันทึก ต้องการบันทึกก่อนปิดหรือไม่?",
       "HL2MP_HudSaveChanges": "บันทึก",
-      "HL2MP_HudDiscardChanges": "ละทิ้ง"
+      "HL2MP_HudDiscardChanges": "ละทิ้ง",
+      "HL2MP_FootstepsSelf": "รอยเท้าของคุณ",
+      "HL2MP_FootstepsTeammates": "เสียงฝีเท้าเพื่อนร่วมทีม",
+      "HL2MP_FootstepsEnemies": "เสียงฝีเท้าของศัตรู",
+      "HL2MP_FootstepsModel": "ค่าเริ่มต้นของโมเดล",
+      "HL2MP_FootstepsPolice": "ตำรวจ",
+      "HL2MP_FootstepsRebel": "กบฏ",
+      "HL2MP_FootstepsMaterial": "วัสดุพื้นผิว",
+      "HL2MP_FootstepsHint": "การแทนที่เพื่อนร่วมทีมและศัตรูต้องใช้โมเดลที่สดใส (แท็บเกม) และใช้งานได้บนเซิร์ฟเวอร์ชุมชนเท่านั้น",
+      "HL2MP_BrightModelsOption": "เครื่องเล่นรุ่นไบรท์",
+      "HL2MP_BrightModelsHint": "เซิร์ฟเวอร์ชุมชนเท่านั้น: ทหารรวมซุปเปอร์ที่ส่องสว่างเท่ากัน กลุ่มกบฏเป็นสีแดง กลุ่มคอมไบน์เป็นสีน้ำเงิน ผู้เล่นฟรีสำหรับทุกคนจะเป็นสีขาว",
+      "HL2MP_Spray": "ภาพสเปรย์",
+      "HL2MP_SprayImport": "นำเข้ารูปภาพ",
+      "HL2MP_SprayFormats": "เลือกรูปภาพขนาดสูงสุด 16 MB ติดตั้งได้ขนาด 256 × 256 เข้าร่วมเซิร์ฟเวอร์อีกครั้งหลังจากเปลี่ยนสเปรย์",
+      "HL2MP_SprayFiles": "ไฟล์ภาพ",
+      "HL2MP_SprayImported": "นำเข้าแล้ว ใช้การเปลี่ยนแปลง จากนั้นเข้าร่วมเซิร์ฟเวอร์อีกครั้งเพื่อใช้สเปรย์นี้",
+      "HL2MP_SprayImportFailed": "ไม่สามารถนำเข้ารูปภาพนี้ได้ ตรวจสอบรูปแบบและขนาด และโฟลเดอร์ mod นั้นสามารถเขียนได้",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -32798,7 +33359,24 @@
       "HL2MP_HudLiveUnavailable": "Canlı düzenleme yalnızca oyun içinden açılan bir sunucuya bağlıyken kullanılabilir.",
       "HL2MP_HudUnsavedPrompt": "Kaydedilmemiş HUD değişiklikleri var. Kapatmadan önce kaydedilsin mi?",
       "HL2MP_HudSaveChanges": "KAYDET",
-      "HL2MP_HudDiscardChanges": "DEĞİŞİKLİKLERİ AT"
+      "HL2MP_HudDiscardChanges": "DEĞİŞİKLİKLERİ AT",
+      "HL2MP_FootstepsSelf": "Ayak izleriniz",
+      "HL2MP_FootstepsTeammates": "Takım arkadaşının ayak sesleri",
+      "HL2MP_FootstepsEnemies": "Düşmanın ayak sesleri",
+      "HL2MP_FootstepsModel": "Model varsayılanı",
+      "HL2MP_FootstepsPolice": "Polis",
+      "HL2MP_FootstepsRebel": "Asi",
+      "HL2MP_FootstepsMaterial": "Yüzey malzemesi",
+      "HL2MP_FootstepsHint": "Takım arkadaşı ve düşman geçersiz kılmaları parlak modeller gerektirir (Oyun sekmesi) ve yalnızca topluluk sunucularında çalışır.",
+      "HL2MP_BrightModelsOption": "Parlak oynatıcı modelleri",
+      "HL2MP_BrightModelsHint": "Yalnızca topluluk sunucuları: eşit şekilde aydınlatılmış süper Kombine askerler. Asiler kırmızı, Combinelar mavi; herkese açık oyuncular beyazdır.",
+      "HL2MP_Spray": "Sprey görüntüsü",
+      "HL2MP_SprayImport": "Görüntüyü içe aktar",
+      "HL2MP_SprayFormats": "16 MB'a kadar bir görüntü seçin. 256×256'ya uygundur. Spreyinizi değiştirdikten sonra tekrar sunucuya katılın.",
+      "HL2MP_SprayFiles": "Görüntü dosyaları",
+      "HL2MP_SprayImported": "İçe aktarıldı. Değişiklikleri uygulayın ve bu spreyi kullanmak için sunucuya yeniden katılın.",
+      "HL2MP_SprayImportFailed": "Bu görüntü içe aktarılamadı. Formatını, boyutunu ve mod klasörünün yazılabilir olup olmadığını kontrol edin.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -33763,7 +34341,24 @@
       "HL2MP_HudLiveUnavailable": "Редагування у грі доступне лише на сервері, запущеному безпосередньо з гри.",
       "HL2MP_HudUnsavedPrompt": "Є незбережені зміни HUD. Зберегти їх перед закриттям?",
       "HL2MP_HudSaveChanges": "ЗБЕРЕГТИ",
-      "HL2MP_HudDiscardChanges": "ВІДКИНУТИ"
+      "HL2MP_HudDiscardChanges": "ВІДКИНУТИ",
+      "HL2MP_FootstepsSelf": "Твої кроки",
+      "HL2MP_FootstepsTeammates": "Кроки товариша по команді",
+      "HL2MP_FootstepsEnemies": "Ворожі кроки",
+      "HL2MP_FootstepsModel": "Стандартна модель",
+      "HL2MP_FootstepsPolice": "Поліція",
+      "HL2MP_FootstepsRebel": "Бунтар",
+      "HL2MP_FootstepsMaterial": "Матеріал поверхні",
+      "HL2MP_FootstepsHint": "Перевизначення товаришів по команді та ворогів потребують яскравих моделей (вкладка «Гра») і працюють лише на серверах спільноти.",
+      "HL2MP_BrightModelsOption": "Яскраві моделі гравців",
+      "HL2MP_BrightModelsHint": "Лише для серверів спільноти: рівномірно освітлені суперкомбінатні солдати. Повстанці червоні, Комбінат сині; вільні для всіх гравці білі.",
+      "HL2MP_Spray": "Розпилене зображення",
+      "HL2MP_SprayImport": "Імпорт зображення",
+      "HL2MP_SprayFormats": "Виберіть зображення до 16 Мб. Встановлено на 256 × 256. Знову приєднайтеся до сервера після зміни спрею.",
+      "HL2MP_SprayFiles": "Файли зображень",
+      "HL2MP_SprayImported": "Імпортовано. Застосуйте зміни, а потім знову приєднайтеся до сервера, щоб використовувати цей спрей.",
+      "HL2MP_SprayImportFailed": "Не вдалося імпортувати це зображення. Перевірте його формат і розмір, а також чи доступна для запису папка mod.",
+      "HL2MP_FootstepsCombine": "Combine"
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -34728,7 +35323,24 @@
       "HL2MP_HudLiveUnavailable": "Chỉ có thể chỉnh sửa trực tiếp khi kết nối với máy chủ được tạo từ trong trò chơi.",
       "HL2MP_HudUnsavedPrompt": "Có thay đổi HUD chưa được lưu. Lưu trước khi đóng?",
       "HL2MP_HudSaveChanges": "LƯU",
-      "HL2MP_HudDiscardChanges": "LOẠI BỎ"
+      "HL2MP_HudDiscardChanges": "LOẠI BỎ",
+      "HL2MP_FootstepsSelf": "Bước chân của em",
+      "HL2MP_FootstepsTeammates": "Bước chân đồng đội",
+      "HL2MP_FootstepsEnemies": "Bước chân kẻ thù",
+      "HL2MP_FootstepsModel": "Mặc định mẫu",
+      "HL2MP_FootstepsPolice": "Cảnh sát",
+      "HL2MP_FootstepsRebel": "Nổi loạn",
+      "HL2MP_FootstepsMaterial": "Vật liệu bề mặt",
+      "HL2MP_FootstepsHint": "Ghi đè đồng đội và kẻ thù yêu cầu mô hình sáng sủa (tab Trò chơi) và chỉ hoạt động trên máy chủ cộng đồng.",
+      "HL2MP_BrightModelsOption": "Các mẫu máy nghe nhạc sáng",
+      "HL2MP_BrightModelsHint": "Chỉ dành cho máy chủ cộng đồng: các chiến binh Combine siêu sáng đồng đều. Phiến quân màu đỏ, Kết hợp màu xanh; người chơi miễn phí cho tất cả đều là người da trắng.",
+      "HL2MP_Spray": "Hình ảnh phun",
+      "HL2MP_SprayImport": "Nhập hình ảnh",
+      "HL2MP_SprayFormats": "Chọn hình ảnh có dung lượng tối đa 16 MB. Được trang bị ở kích thước 256 × 256. Tham gia lại máy chủ sau khi thay đổi kiểu phun của bạn.",
+      "HL2MP_SprayFiles": "Tệp hình ảnh",
+      "HL2MP_SprayImported": "Đã nhập khẩu. Áp dụng các thay đổi, sau đó tham gia lại máy chủ để sử dụng bình xịt này.",
+      "HL2MP_SprayImportFailed": "Không thể nhập hình ảnh này. Kiểm tra định dạng và kích thước của nó và xem thư mục mod có thể ghi được không.",
+      "HL2MP_FootstepsCombine": "Combine"
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

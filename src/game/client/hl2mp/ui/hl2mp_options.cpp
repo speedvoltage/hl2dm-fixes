@@ -5,6 +5,7 @@
 #include "hl2mp_options.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_playermodels.h"
+#include "hl2mp_sprays.h"
 #include "matsys_controls/mdlpanel.h"
 #include "animation.h"
 #include "IGameUIFuncs.h"
@@ -22,12 +23,16 @@
 namespace
 {
 enum Page { DISPLAY, ADVANCED, AUDIO, GAME, MOUSE, BINDINGS, MULTIPLAYER };
-enum Kind { CHOICE, SLIDER, TEXT, RESOLUTION, WINDOW_MODE };
+enum Kind { CHOICE, SLIDER, TEXT, RESOLUTION, WINDOW_MODE, SPRAY };
 struct SettingDef
 {
     Page page; Kind kind; const char *label, *cvar, *choices; float low, high, step;
 };
 static const SettingDef s_Settings[] = {
+    { AUDIO, CHOICE, "#HL2MP_FootstepsSelf", "cl_footsteps_self", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
+    { AUDIO, CHOICE, "#HL2MP_FootstepsTeammates", "cl_footsteps_teammates", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
+    { AUDIO, CHOICE, "#HL2MP_FootstepsEnemies", "cl_footsteps_enemies", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_BrightModelsOption", "cl_bright_player_models", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_VoteSounds", "cl_vote_sounds", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_VoteAnimations", "cl_vote_animations", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { DISPLAY, RESOLUTION, "#HL2MP_UI_d4055fafa379", "", "", 0, 0, 0 },
@@ -75,6 +80,7 @@ static const SettingDef s_Settings[] = {
     { MULTIPLAYER, TEXT, "#HL2MP_UI_2c885aae8c11", "cl_player_name", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "#HL2MP_UI_bea1ab02338b", "cl_playermodel", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "#HL2MP_UI_88982a293a87", "cl_defaultweapon", "#HL2MP_UI_0a3cd20ffde0=weapon_physcannon|#HL2MP_UI_a1c6c25aa56c=weapon_pistol|#HL2MP_UI_3dba79845196=weapon_smg1|#HL2MP_UI_efd31cc3da3f=weapon_frag|#HL2MP_UI_2fe1555090e1=weapon_crowbar|#HL2MP_UI_25abc6029146=weapon_stunstick", 0, 0, 0 },
+    { MULTIPLAYER, SPRAY, "#HL2MP_Spray", "cl_logofile", "", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "#HL2MP_UI_6973064b1e2d", "cl_downloadfilter", "#HL2MP_UI_00ff6750e125=all|#HL2MP_UI_62f137e4275f=nosounds|#HL2MP_UI_3676cce01a6f=mapsonly|#HL2MP_UI_c627c09c14e5=none", 0, 0, 0 },
     { MULTIPLAYER, CHOICE, "#HL2MP_UI_c92f116269de", "cl_allowupload", "#HL2MP_UI_23794d91c53a=0|#HL2MP_UI_f91711645937=1", 0, 0, 0 },
 };
@@ -135,7 +141,9 @@ public:
     CSettingRow( vgui::Panel *parent, int index, const Setting &value ) : BaseClass( parent, "Setting" ), m_Index( index ), m_Combo( NULL ), m_Slider( NULL ), m_Text( NULL ), m_Amount( NULL ), m_Scale( 1 ), m_InitialSlider( 0 ), m_InitialValue( value.draft ), m_Highlighted( false ), m_Available( value.available )
     {
         SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label ); m_Label->SetWrap( true );
-        if ( def.kind == SLIDER )
+        m_Spray = NULL;
+        if ( def.kind == SPRAY ) m_Spray = new CHL2MPSprayPicker(this, value.draft.String());
+        else if ( def.kind == SLIDER )
         {
             m_Slider = new CHL2MPSettingsSlider( this ); m_Slider->SetRange( int( def.low / def.step + 0.5f ), int( def.high / def.step + 0.5f ) );
             m_Slider->SetValue( int( atof( value.draft.String() ) / def.step + 0.5f ), false ); m_InitialSlider = m_Slider->GetValue();
@@ -197,10 +205,12 @@ public:
         }
     }
     int Index() const { return m_Index; }
-    void CloseDropdown() { if ( m_Combo ) m_Combo->HideMenu(); }
-    bool DropdownOpen() const { return m_Combo && m_Combo->GetMenu()->IsVisible(); }
+    void CloseDropdown() { if ( m_Combo ) m_Combo->HideMenu(); if (m_Spray) m_Spray->CloseDropdown(); }
+    bool DropdownOpen() const { return (m_Combo && m_Combo->GetMenu()->IsVisible()) || (m_Spray && m_Spray->DropdownOpen()); }
+    void EnableChoice(bool enabled) { if (m_Combo) m_Combo->SetEnabled(m_Available && enabled); m_Label->SetAlpha(enabled ? 255 : 110); }
     CUtlString Value()
     {
+        if (m_Spray) return m_Spray->Value();
         if ( m_Combo )
         {
             KeyValues *data = m_Combo->GetActiveItemUserData(); const char *value = data ? data->GetString( "value" ) : m_InitialValue.String();
@@ -215,7 +225,8 @@ public:
     }
     void Style( float scale, vgui::HFont font, vgui::HFont small )
     {
-        m_Scale = scale; SetTall( int( 52 * scale ) ); m_Label->SetFont( font );
+        m_Scale = scale; SetTall( int( (m_Spray ? 196 : 52) * scale ) ); m_Label->SetFont( font );
+        if (m_Spray) m_Spray->Style(scale, small);
         m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
         if ( m_Text ) { m_Text->SetFont( font ); m_Text->SetBgColor( Color( 24, 31, 34, 160 ) ); m_Text->SetFgColor( Color( 236, 237, 230, 255 ) ); m_Text->SetBorder( NULL ); }
@@ -225,6 +236,12 @@ public:
     void PerformLayout() OVERRIDE
     {
         BaseClass::PerformLayout(); const int w = GetWide(), h = GetTall(), valueW = int( w * .43f ), left = w - valueW - int( 12 * m_Scale );
+        if (m_Spray)
+        {
+            m_Label->SetBounds(int(8*m_Scale), 0, w-int(24*m_Scale), int(40*m_Scale));
+            m_Spray->SetBounds(int(8*m_Scale), int(44*m_Scale), w-int(24*m_Scale), h-int(52*m_Scale));
+            return;
+        }
         m_Label->SetBounds( int( 8 * m_Scale ), 0, left - int( 16 * m_Scale ), h );
         m_Label->GetTextImage()->SetSize( m_Label->GetWide(), h );
         m_Label->GetTextImage()->RecalculateNewLinePositions();
@@ -260,6 +277,7 @@ private:
     int m_Index; CHL2MPDropdown *m_Combo; CHL2MPSettingsSlider *m_Slider; vgui::TextEntry *m_Text;
     vgui::Label *m_Label, *m_Amount; float m_Scale; int m_InitialSlider; CUtlString m_InitialValue;
     bool m_Highlighted, m_Available;
+    CHL2MPSprayPicker *m_Spray;
 };
 
 class CBindingRow : public vgui::EditablePanel
@@ -518,7 +536,7 @@ void CHL2MPOptions::PerformLayout()
     m_PreviewTitle->SetFont( m_Font ); m_PreviewTitle->SetFgColor( Color( 238, 231, 213, 255 ) ); m_PreviewTitle->SetBounds( margin, int( 198 * s ) + previewH, previewW, int( 28 * s ) );
     m_PreviewBody->SetFont( m_SmallFont ); m_PreviewBody->SetFgColor( Color( 161, 178, 184, 255 ) ); m_PreviewBody->SetBounds( margin, int( 228 * s ) + previewH, previewW, int( 30 * s ) );
     m_Hint->SetFont( m_SmallFont ); m_Hint->SetFgColor( Color( 161, 178, 184, 255 ) ); m_Hint->SetBounds( listX + 8, h - int( 120 * s ), listW - 16, int( 40 * s ) );
-    m_Hint->SetText( m_Page == DISPLAY ? "#HL2MP_UI_e9808de2e7db" : m_Page == ADVANCED ? "#HL2MP_UI_cd58f604c67e" : m_Page == BINDINGS ? "#HL2MP_UI_766afd9b32b4" : m_Page == MULTIPLAYER ? "#HL2MP_UI_fec06a334932" : "#HL2MP_UI_16a1cb4185e4" );
+    m_Hint->SetText( m_Page == AUDIO ? "#HL2MP_FootstepsHint" : m_Page == GAME ? "#HL2MP_BrightModelsHint" : m_Page == DISPLAY ? "#HL2MP_UI_e9808de2e7db" : m_Page == ADVANCED ? "#HL2MP_UI_cd58f604c67e" : m_Page == BINDINGS ? "#HL2MP_UI_766afd9b32b4" : m_Page == MULTIPLAYER ? "#HL2MP_UI_fec06a334932" : "#HL2MP_UI_16a1cb4185e4" );
     const int footerY = h - int( 61 * s ), buttonW = int( 210 * s );
     CHL2MPSettingsButton *footer[] = { m_Reset, m_Discard, m_Apply };
     for ( int i = 0; i < 3; ++i ) { footer[i]->SetFont( m_SmallFont ); footer[i]->SetBounds( w - margin - ( 3 - i ) * buttonW, footerY, buttonW - int( 8 * s ), int( 38 * s ) ); }
@@ -576,6 +594,10 @@ void CHL2MPOptions::Apply()
 }
 void CHL2MPOptions::Commit()
 {
+    for (int i=0; i<ARRAYSIZE(s_Settings); ++i)
+        if (s_Settings[i].kind==SPRAY && m_Settings[i].draft!=m_Settings[i].original &&
+            !HL2MPSprays_Apply(m_Settings[i].draft.String()))
+        { m_Status->SetText("#HL2MP_SprayImportFailed"); return; }
     for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i )
     {
         if ( !s_Settings[i].cvar[0] || !m_Settings[i].available || SameValue( m_Settings[i].original.String(), m_Settings[i].draft.String(), s_Settings[i].kind != TEXT ) ) continue;
@@ -686,6 +708,17 @@ void CHL2MPOptions::OnTick()
     if ( !IsVisible() ) return;
     int w, h; vgui::surface()->GetScreenSize( w, h ); if ( w != m_Width || h != m_Height ) InvalidateLayout( true );
     const bool dirty = Dirty();
+    if (m_Page == AUDIO)
+    {
+        bool bright = false;
+        for (int i=0; i<ARRAYSIZE(s_Settings); ++i)
+            if (!Q_strcmp(s_Settings[i].cvar,"cl_bright_player_models")) bright = atoi(m_Settings[i].draft.String()) != 0;
+        FOR_EACH_VEC(m_Rows, i)
+        {
+            const char *cvar = s_Settings[m_Rows[i]->Index()].cvar;
+            if (!Q_strcmp(cvar,"cl_footsteps_teammates") || !Q_strcmp(cvar,"cl_footsteps_enemies")) m_Rows[i]->EnableChoice(bright);
+        }
+    }
     if ( m_Page == MULTIPLAYER )
     {
         FOR_EACH_VEC( m_Rows, row ) if ( !Q_strcmp( s_Settings[m_Rows[row]->Index()].cvar, "cl_playermodel" ) )

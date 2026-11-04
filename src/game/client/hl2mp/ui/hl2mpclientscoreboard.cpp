@@ -117,19 +117,29 @@ void CHL2MPClientScoreBoardDialog::OnCommand( const char *command )
 void CHL2MPClientScoreBoardDialog::Paint()
 {
     BaseClass::Paint();
-    // Red speaker/chat glyphs are drawn separately from names and team colors.
+    // A reserved column after the name keeps mute indicators clear of text.
     for ( int i = 1; i <= gpGlobals->maxClients; ++i )
     {
         int flags = HL2MPLocalMuteFlags( i ), row = FindItemIDForPlayerIndex( i ); if ( !flags || row < 0 ) continue;
-        int x, y, w, h; if ( !m_pPlayerList->GetItemBounds( row, x, y, w, h ) ) continue;
+        const int section=m_pPlayerList->GetItemSection(row);
+        int column=m_pPlayerList->GetColumnIndexByName(section,"mute");
+        int x, y, w, h; if ( column<0 || !m_pPlayerList->GetCellBounds( row, column, x, y, w, h ) ) continue;
         int listX, listY; m_pPlayerList->GetPos( listX, listY );
-        y += listY + h / 2; x = listX - 13;
+        y += listY + h / 2; x += listX + 8;
         if ( y < listY || y >= listY + m_pPlayerList->GetTall() ) continue;
         surface()->DrawSetColor( Color( 245, 70, 65, 255 ) );
         if ( flags & HL2MP_MUTE_VOICE )
         { surface()->DrawFilledRect( x - 6, y - 3, x - 2, y + 4 ); surface()->DrawLine( x - 2, y - 3, x + 3, y - 7 ); surface()->DrawLine( x + 3, y - 7, x + 3, y + 7 ); surface()->DrawLine( x + 3, y + 7, x - 2, y + 3 ); surface()->DrawLine( x - 7, y + 7, x + 6, y - 7 ); }
         if ( flags & HL2MP_MUTE_CHAT )
-        { surface()->DrawOutlinedRect( x - 6, y + 9, x + 5, y + 16 ); surface()->DrawLine( x - 7, y + 16, x + 6, y + 8 ); }
+        {
+            const HFont font=scheme()->GetIScheme(GetScheme())->GetFont("DefaultSmall",true);
+            int tw,th; surface()->GetTextSize(font,L"ABC",tw,th);
+            const int tx=x+12,ty=y-th/2;
+            surface()->DrawSetTextFont(font); surface()->DrawSetTextColor(Color(245,70,65,255));
+            surface()->DrawSetTextPos(tx,ty); surface()->DrawPrintText(L"ABC",3);
+            surface()->DrawLine(tx-1,ty+th-2,tx+tw+1,ty+1);
+            surface()->DrawLine(tx-1,ty+th-1,tx+tw+1,ty+2);
+        }
     }
 }
 
@@ -727,6 +737,7 @@ void CHL2MPClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
 	if ( teamType == TYPE_SPECTATORS )
 	{
 		m_pPlayerList->AddColumnToSection( sectionID, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_NAME_WIDTH ) );
+		m_pPlayerList->AddColumnToSection( sectionID, "mute", "", 0, scheme()->GetProportionalScaledValueEx(GetScheme(),48) );
 		m_pPlayerList->SetSectionFgColor( sectionID, m_spectatorTextColor );
 		m_pPlayerList->SetSectionDividerColor( sectionID, m_dividerColor );
 		m_pPlayerList->SetSectionAlwaysVisible( sectionID, false );
@@ -739,6 +750,7 @@ void CHL2MPClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
 	}
 
 	m_pPlayerList->AddColumnToSection( sectionID, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_NAME_WIDTH ) );
+	m_pPlayerList->AddColumnToSection( sectionID, "mute", "", 0, scheme()->GetProportionalScaledValueEx(GetScheme(),48) );
 	m_pPlayerList->AddColumnToSection( sectionID, "frags", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_SCORE_WIDTH ) );
 	m_pPlayerList->AddColumnToSection( sectionID, "deaths", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_DEATH_WIDTH ) );
 	m_pPlayerList->AddColumnToSection( sectionID, "ping", "", SectionedListPanel::COLUMN_CENTER, scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH ) );
@@ -956,6 +968,7 @@ void CHL2MPClientScoreBoardDialog::UpdateMatchInfo()
 
 void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 {
+	const int muteWide=scheme()->GetProportionalScaledValueEx(GetScheme(),48);
 	const int scoreWide = scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_SCORE_WIDTH );
 	const int deathWide = scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_DEATH_WIDTH );
 	const int pingWide = scheme()->GetProportionalScaledValueEx( GetScheme(), SCOREBOARD_PING_WIDTH );
@@ -963,7 +976,7 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 	ScrollBar *scrollBar = m_pPlayerList->GetScrollBar();
 	const int scrollWide = scrollBar && scrollBar->IsVisible() ? scrollBar->GetWide() : 0;
 	const int columnAreaWide = MAX( 0, listWide - 10 - scrollWide );
-	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 180 ), columnAreaWide - avatarWide - scoreWide - deathWide - pingWide );
+	const int nameWide = MAX( scheme()->GetProportionalScaledValueEx( GetScheme(), 132 ), columnAreaWide - avatarWide - muteWide - scoreWide - deathWide - pingWide );
 	int timeTextWide, timeTextTall;
 	surface()->GetTextSize( m_pPlayerList->GetHeaderFont(), L"00:00:00", timeTextWide, timeTextTall );
 	const wchar_t *timeText = m_pPlayerList->GetColumnTextBySection( SCORESECTION_HEADER, 1 );
@@ -973,7 +986,7 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 		surface()->GetTextSize( m_pPlayerList->GetHeaderFont(), timeText, currentTimeWide, currentTimeTall );
 		timeTextWide = MAX( timeTextWide, currentTimeWide );
 	}
-	const int identityWide = avatarWide + nameWide;
+	const int identityWide = avatarWide + nameWide + muteWide;
 	const int timeWide = MIN( identityWide, timeTextWide + scheme()->GetProportionalScaledValueEx( GetScheme(), 12 ) );
 	const int infoWide = MIN( identityWide - timeWide, MAX( 0, columnAreaWide / 2 - timeWide / 2 ) );
 	const int timePadWide = identityWide - infoWide - timeWide;
@@ -1000,11 +1013,13 @@ void CHL2MPClientScoreBoardDialog::UpdateColumnWidths( int listWide )
 			m_pPlayerList->SetColumnWidthBySection( sectionID, "avatar", avatarWide );
 		}
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "name", nameWide );
+		m_pPlayerList->SetColumnWidthBySection( sectionID, "mute", muteWide );
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "frags", scoreWide );
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "deaths", deathWide );
 		m_pPlayerList->SetColumnWidthBySection( sectionID, "ping", pingWide );
 	}
 
-	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "name", columnAreaWide );
+	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "name", columnAreaWide-muteWide );
+	m_pPlayerList->SetColumnWidthBySection( SCORESECTION_SPECTATOR, "mute", muteWide );
 	m_pPlayerList->InvalidateLayout();
 }

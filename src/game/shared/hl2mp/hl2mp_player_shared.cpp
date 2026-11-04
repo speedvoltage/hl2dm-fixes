@@ -17,8 +17,29 @@
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
+#include "hl2mp_footsteps.h"
+#include "hl2mp_gamerules.h"
+#include "physics_shared.h"
 
 extern ConVar sv_footsteps;
+
+#ifdef CLIENT_DLL
+ConVar cl_footsteps_self( "cl_footsteps_self", "0", FCVAR_ARCHIVE, "Own footsteps: 0 model, 1 Combine, 2 police, 3 rebel, 4 surface material.", true, 0, true, 4 );
+ConVar cl_footsteps_teammates( "cl_footsteps_teammates", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Teammate footsteps; requires bright models on community servers.", true, 0, true, 4 );
+ConVar cl_footsteps_enemies( "cl_footsteps_enemies", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Enemy footsteps; requires bright models on community servers.", true, 0, true, 4 );
+#else
+void CHL2MP_Player::UpdateFootstepPreferences()
+{
+	m_iTeammateFootsteps=HL2MPFootstepStyleValue(atoi(engine->GetClientConVarValue(entindex(),"cl_footsteps_teammates")));
+	m_iEnemyFootsteps=HL2MPFootstepStyleValue(atoi(engine->GetClientConVarValue(entindex(),"cl_footsteps_enemies")));
+	m_bBrightModelPreference=atoi(engine->GetClientConVarValue(entindex(),"cl_bright_player_models"))!=0;
+}
+int CHL2MP_Player::FootstepStyleFor( const CHL2MP_Player *source ) const
+{
+	const bool ally=HL2MPRules()->IsTeamplay() && GetTeamNumber()>=TEAM_COMBINE && GetTeamNumber()==source->GetTeamNumber();
+	return HL2MPRemoteFootstepStyle(HL2MPRules()->IsCommunityServer(),m_bBrightModelPreference,ally,m_iTeammateFootsteps,m_iEnemyFootsteps);
+}
+#endif
 
 const char *g_ppszPlayerSoundPrefixNames[PLAYER_SOUNDS_MAX] =
 {
@@ -46,6 +67,14 @@ void CHL2MP_Player::PrecacheFootStepSounds( void )
 
 		Q_snprintf( szFootStepName, sizeof( szFootStepName ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[i] );
 		PrecacheScriptSound( szFootStepName );
+	}
+	// The movement helper is created on the first movement command, after precache.
+	IPhysicsSurfaceProps *surfaces=physprops;
+	for ( int surface=0; surface<surfaces->SurfacePropCount(); ++surface )
+	{
+		const surfacedata_t *data=surfaces->GetSurfaceData(surface);
+		if ( data->sounds.stepleft ) PrecacheScriptSound(surfaces->GetString(data->sounds.stepleft));
+		if ( data->sounds.stepright ) PrecacheScriptSound(surfaces->GetString(data->sounds.stepright));
 	}
 }
 
@@ -87,38 +116,40 @@ void CHL2MP_Player::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, f
 
 	m_Local.m_nStepside = !m_Local.m_nStepside;
 
-	char szStepSound[128];
-
-	if ( m_Local.m_nStepside )
+	CRecipientFilter banks[4];
+#ifdef CLIENT_DLL
+	banks[HL2MPFootstepBank(cl_footsteps_self.GetInt(),m_iPlayerSoundType)].AddRecipientsByPAS(vecOrigin);
+#else
+	CRecipientFilter audible; audible.AddRecipientsByPAS(vecOrigin); audible.RemoveRecipient(this);
+	for ( int i=0; i<audible.GetRecipientCount(); ++i )
 	{
-		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepLeft", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
+		CHL2MP_Player *listener=ToHL2MPPlayer(UTIL_PlayerByIndex(audible.GetRecipientIndex(i)));
+		if ( listener ) banks[HL2MPFootstepBank(listener->FootstepStyleFor(this),m_iPlayerSoundType)].AddRecipient(listener);
 	}
-	else
-	{
-		Q_snprintf( szStepSound, sizeof( szStepSound ), "%s.RunFootstepRight", g_ppszPlayerSoundPrefixNames[m_iPlayerSoundType] );
-	}
-
-	CSoundParameters params;
-	if ( GetParametersForSound( szStepSound, params, NULL ) == false )
-		return;
-
-	CRecipientFilter filter;
-	filter.AddRecipientsByPAS( vecOrigin );
-
-#ifndef CLIENT_DLL
-	filter.RemoveRecipient( this );
 #endif
-
-	EmitSound_t ep;
-	ep.m_nChannel = CHAN_BODY;
-	ep.m_pSoundName = params.soundname;
-	ep.m_flVolume = fvol;
-	ep.m_SoundLevel = params.soundlevel;
-	ep.m_nFlags = 0;
-	ep.m_nPitch = params.pitch;
-	ep.m_pOrigin = &vecOrigin;
-
-	EmitSound( filter, entindex(), ep );
+	for ( int bank=0; bank<4; ++bank )
+	{
+		if ( !banks[bank].GetRecipientCount() ) continue;
+		char modelSound[128]; const char *sound=NULL;
+		if ( bank==3 )
+		{
+			if ( !psurface ) continue;
+			const unsigned short index=m_Local.m_nStepside?psurface->sounds.stepleft:psurface->sounds.stepright;
+			if ( !index ) continue;
+			sound=physprops->GetString(index);
+		}
+		else
+		{
+			Q_snprintf(modelSound,sizeof(modelSound),"%s.RunFootstep%s",g_ppszPlayerSoundPrefixNames[bank],m_Local.m_nStepside?"Left":"Right");
+			sound=modelSound;
+		}
+		CSoundParameters params;
+		if ( !GetParametersForSound(sound,params,NULL) ) continue;
+		EmitSound_t ep;
+		ep.m_nChannel=CHAN_BODY; ep.m_pSoundName=params.soundname; ep.m_flVolume=fvol;
+		ep.m_SoundLevel=params.soundlevel; ep.m_nFlags=0; ep.m_nPitch=params.pitch; ep.m_pOrigin=&vecOrigin;
+		EmitSound(banks[bank],entindex(),ep);
+	}
 }
 
 

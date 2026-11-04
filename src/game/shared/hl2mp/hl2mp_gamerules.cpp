@@ -802,6 +802,7 @@ void CHL2MPRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		return;
 
 	pHL2Player->UpdateDisplayName();
+	pHL2Player->UpdateFootstepPreferences();
 
 	const char *pCurrentModel = modelinfo->GetModelName( pPlayer->GetModel() );
 	const char *szModelName = engine->GetClientConVarValue( engine->IndexOfEdict( pPlayer->edict() ), "cl_playermodel" );

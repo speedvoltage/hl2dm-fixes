@@ -135,6 +135,8 @@ const char *g_ppszRandomCombineModels[] =
 
 CHL2MP_Player::CHL2MP_Player() : m_PlayerAnimState( this )
 {
+	m_iTeammateFootsteps = m_iEnemyFootsteps = 0;
+	m_bBrightModelPreference = false;
 	m_bIntegrityVerified = false;
 	m_flNextNameChangeTime = 0;
 	m_bPendingNameChange = false;

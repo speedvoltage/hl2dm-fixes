@@ -84,7 +84,11 @@ public:
 	void FlashlightTurnOn( void );
 	void FlashlightTurnOff( void );
 	void	PrecacheFootStepSounds( void );
+	void UpdateFootstepPreferences();
+	int FootstepStyleFor( const CHL2MP_Player *source ) const;
 	bool	ValidatePlayerModel( const char *pModel );
+	int m_iTeammateFootsteps, m_iEnemyFootsteps;
+	bool m_bBrightModelPreference;
 
 	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles.Get(); }
 

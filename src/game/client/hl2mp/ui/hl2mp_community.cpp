@@ -11,12 +11,13 @@
 #include "vgui_controls/TextEntry.h"
 #include "tier0/memdbgon.h"
 
-ConVar cl_bright_player_models( "cl_bright_player_models", "0", FCVAR_ARCHIVE, "Evenly light textured player models on community servers." );
+ConVar cl_bright_player_models( "cl_bright_player_models", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Use evenly lit, team-colored super Combine player models on community servers." );
 
 bool HL2MPCommunity_Available()
 {
     return engine->IsInGame() && !engine->IsLevelMainMenuBackground() && HL2MPRules() && HL2MPRules()->IsCommunityServer();
 }
+bool HL2MPBrightModels_Active() { return cl_bright_player_models.GetBool() && HL2MPCommunity_Available(); }
 
 namespace
 {
