@@ -19,6 +19,7 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "hl2mp_footsteps.h"
 #include "hl2mp_gamerules.h"
+#include "hl2mp_brightmodels.h"
 #include "physics_shared.h"
 
 extern ConVar sv_footsteps;
@@ -37,7 +38,7 @@ void CHL2MP_Player::UpdateFootstepPreferences()
 int CHL2MP_Player::FootstepStyleFor( const CHL2MP_Player *source ) const
 {
 	const bool ally=HL2MPRules()->IsTeamplay() && GetTeamNumber()>=TEAM_COMBINE && GetTeamNumber()==source->GetTeamNumber();
-	return HL2MPRemoteFootstepStyle(HL2MPRules()->IsCommunityServer(),m_bBrightModelPreference,ally,m_iTeammateFootsteps,m_iEnemyFootsteps);
+	return HL2MPRemoteFootstepStyle(HL2MPRules()->IsCommunityServer() && sv_bright_models.GetBool(),m_bBrightModelPreference,ally,m_iTeammateFootsteps,m_iEnemyFootsteps);
 }
 #endif
 

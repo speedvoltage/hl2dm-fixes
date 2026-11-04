@@ -3,6 +3,7 @@
 #include "hl2mp_hud_customization.h"
 #include "cdll_client_int.h"
 #include "hl2mp_options.h"
+#include "hl2mp_community.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_colorpicker.h"
 #include "hl2mp_hitmarker_style.h"
@@ -33,7 +34,7 @@ struct SettingDef
 };
 static const SettingDef s_Settings[] = {
     { GAME, CHOICE, "#HL2MP_Hitmarkers", "cl_hitmarkers", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
-    { GAME, CHOICE, "#HL2MP_HitmarkerFont", "cl_hitmarker_font", "Half-Life 2=0|GorDIN=1|GorDIN Bold=2|Tahoma=3", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_HitmarkerFont", "cl_hitmarker_font", "Half-Life 2=0|GorDIN=1|GorDIN Bold=2|Tahoma=3|TF2=4|TF2 Build=5|TF2 Secondary=6|TF2 Professor=7", 0, 0, 0 },
     { GAME, COLOR, "#HL2MP_HitmarkerColor", "cl_hitmarker_color", "", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_FootstepsSelf", "cl_footsteps_self", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
     { AUDIO, CHOICE, "#HL2MP_FootstepsTeammates", "cl_footsteps_teammates", "#HL2MP_FootstepsModel=0|#HL2MP_FootstepsCombine=1|#HL2MP_FootstepsPolice=2|#HL2MP_FootstepsRebel=3|#HL2MP_FootstepsMaterial=4", 0, 0, 0 },
@@ -144,20 +145,31 @@ class CInfoButton : public vgui::Button
 {
     DECLARE_CLASS_SIMPLE(CInfoButton,vgui::Button);
 public:
-    CInfoButton(vgui::Panel *parent) : BaseClass(parent,"HitmarkerInfo","i")
+    CInfoButton(vgui::Panel *parent,const char *hint) : BaseClass(parent,"SettingInfo","i"), m_Hint(hint),m_Warning(false)
     {
         SetPaintBackgroundEnabled(false); SetPaintBorderEnabled(false);
         SetContentAlignment(vgui::Label::a_center);SetTextInset(0,0);
         GetTooltip()->SetEnabled(false);
-        m_Tip = new vgui::Label(this,"HitmarkerHint","#HL2MP_HitmarkerHint");
+        m_Tip = new vgui::Label(this,"SettingHint",hint);
         m_Tip->MakePopup(false,true);m_Tip->SetMouseInputEnabled(false);m_Tip->SetKeyBoardInputEnabled(false);
         m_Tip->SetWrap(true);m_Tip->SetContentAlignment(vgui::Label::a_northwest);m_Tip->SetTextInset(12,10);m_Tip->SetVisible(false);
     }
     void SetFont(vgui::HFont font) OVERRIDE { BaseClass::SetFont(font);m_Tip->SetFont(font); }
+    void SetWarning(bool warning)
+    {
+        if(m_Warning==warning)return;
+        m_Warning=warning;SetText(warning ? "!" : "i");
+        m_Tip->SetText(warning ? "#HL2MP_ServerVisualDisabled" : m_Hint);Repaint();
+    }
     void Paint() OVERRIDE
     {
-        BaseClass::Paint(); vgui::surface()->DrawSetColor(HL2MPServerTheme::Orange());
-        vgui::surface()->DrawOutlinedCircle(GetWide()/2,GetTall()/2,MIN(GetWide(),GetTall())/2-2,32);
+        BaseClass::Paint(); vgui::surface()->DrawSetColor(m_Warning ? Color(255,107,97,255) : HL2MPServerTheme::Orange());
+        if(m_Warning)
+        {
+            const int mid=GetWide()/2,bottom=GetTall()-3;
+            vgui::surface()->DrawLine(mid,2,2,bottom);vgui::surface()->DrawLine(2,bottom,GetWide()-3,bottom);vgui::surface()->DrawLine(GetWide()-3,bottom,mid,2);
+        }
+        else vgui::surface()->DrawOutlinedCircle(GetWide()/2,GetTall()/2,MIN(GetWide(),GetTall())/2-2,32);
     }
     void OnThink() OVERRIDE
     {
@@ -173,6 +185,7 @@ public:
     void DoClick() OVERRIDE { RequestFocus(); }
 private:
     vgui::Label *m_Tip;
+    const char *m_Hint;bool m_Warning;
 };
 
 class CHitmarkerPreview : public vgui::Panel
@@ -183,8 +196,7 @@ public:
     { SetMouseInputEnabled(false); SetKeyBoardInputEnabled(false); }
     void Style(int choice,int height,Color color)
     {
-        if(!m_Font)m_Font=vgui::surface()->CreateFont();
-        if(m_Choice!=choice || m_Height!=height) { m_Choice=choice;m_Height=height;HL2MPHitmarkerFont(m_Font,choice,height); }
+        if(m_Choice!=choice || m_Height!=height) { m_Choice=choice;m_Height=height;m_Font=HL2MPGetHitmarkerFont(choice,height); }
         m_Color=color; Repaint();
     }
     void PaintBackground() OVERRIDE { HL2MPServerTheme::Rounded(0,0,GetWide(),GetTall(),Color(20,23,25,220),6); }
@@ -210,7 +222,10 @@ public:
     {
         SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label ); m_Label->SetWrap( true );
         m_Spray = NULL; m_Color = NULL; m_Preview = NULL; m_Info = NULL; m_PreviewLabel = NULL;
-        if (!Q_strcmp(def.cvar,"cl_hitmarkers")) m_Info = new CInfoButton(this);
+        m_Warning=NULL;m_ServerBlocked=false;
+        if (!Q_strcmp(def.cvar,"cl_hitmarkers")) m_Info = new CInfoButton(this,"#HL2MP_HitmarkerHint");
+        if (!Q_strcmp(def.cvar,"cl_bright_player_models")) m_Info = new CInfoButton(this,"#HL2MP_BrightModelsInfo");
+        if(m_Info) { m_Warning=Label(this,"#HL2MP_ServerVisualDisabled");m_Warning->SetWrap(true);m_Warning->SetVisible(false); }
         if (def.kind == COLOR)
         {
             m_Color = new CHL2MPColorPicker(this,"Color"); m_Color->SetRGB(value.draft.String());
@@ -282,6 +297,7 @@ public:
     void CloseDropdown() { if ( m_Combo ) m_Combo->HideMenu(); if (m_Spray) m_Spray->CloseDropdown(); }
     bool DropdownOpen() const { return (m_Combo && m_Combo->GetMenu()->IsVisible()) || (m_Spray && m_Spray->DropdownOpen()); }
     void EnableChoice(bool enabled) { if (m_Combo) m_Combo->SetEnabled(m_Available && enabled); m_Label->SetAlpha(enabled ? 255 : 110); }
+    void FocusChoice() { if(m_Combo)m_Combo->RequestFocus(); }
     CUtlString Value()
     {
         if (m_Color) return m_Color->Value();
@@ -303,6 +319,7 @@ public:
         m_Scale = scale; SetTall( int( (m_Color ? 238 : m_Spray ? 196 : 52) * scale ) ); m_Label->SetFont( font );
         if(m_Color) { m_Color->Style(small);m_PreviewLabel->SetFont(small);m_PreviewLabel->SetFgColor(HL2MPServerTheme::Muted()); }
         if(m_Info) m_Info->SetFont(small);
+        if(m_Warning) { m_Warning->SetFont(small);m_Warning->SetFgColor(Color(255,150,140,255)); }
         if (m_Spray) m_Spray->Style(scale, small);
         m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
@@ -312,7 +329,22 @@ public:
     }
     void PerformLayout() OVERRIDE
     {
-        BaseClass::PerformLayout(); const int w = GetWide(), h = GetTall(), valueW = int( w * .43f ), left = w - valueW - int( 12 * m_Scale );
+        BaseClass::PerformLayout(); const int w = GetWide(), h = m_Info ? int(52*m_Scale) : GetTall(), valueW = int( w * .43f ), left = w - valueW - int( 12 * m_Scale );
+        if(m_Warning)
+        {
+            const int pad=int(12*m_Scale);int th=0,tw=0;
+            m_Warning->SetBounds(pad,h,w-pad*2,int(100*m_Scale));
+            m_Warning->GetTextImage()->SetSize(w-pad*2,int(100*m_Scale));m_Warning->GetTextImage()->RecalculateNewLinePositions();
+            m_Warning->GetTextImage()->GetContentSize(tw,th);m_Warning->SetTall(th);m_Warning->InvalidateLayout(true);
+            const int tall=h+(m_ServerBlocked ? th+pad : 0);
+            if(tall!=GetTall())
+            {
+                SetTall(tall);
+                // AddItem reparents rows to the list's embedded scrolling panel.
+                for(vgui::Panel *parent=GetParent();parent;parent=parent->GetParent())
+                    if(dynamic_cast<vgui::PanelListPanel *>(parent)) { parent->InvalidateLayout();break; }
+            }
+        }
         if(m_Color)
         {
             const int pad=int(12*m_Scale), split=w/2;
@@ -345,6 +377,15 @@ public:
     void OnThink() OVERRIDE
     {
         BaseClass::OnThink();
+        if(m_Info)
+        {
+            const bool blocked=engine->IsInGame() && !engine->IsLevelMainMenuBackground() &&
+                (!Q_strcmp(s_Settings[m_Index].cvar,"cl_hitmarkers") ? !sv_hitmarkers.GetBool() : !HL2MPBrightModels_Allowed());
+            if(blocked!=m_ServerBlocked)
+            {
+                m_ServerBlocked=blocked;m_Info->SetWarning(blocked);m_Warning->SetVisible(blocked);InvalidateLayout(true);Repaint();
+            }
+        }
         const bool highlighted = m_Available && ( HL2MPControlHighlighted( this ) || DropdownOpen() );
         if ( highlighted != m_Highlighted )
         {
@@ -360,6 +401,11 @@ public:
     void PaintBackground() OVERRIDE
     {
         HL2MPPaintSettingRow( this, m_Highlighted, m_Scale );
+        if(m_ServerBlocked)
+        {
+            vgui::surface()->DrawSetColor(Color(135,30,25,m_Highlighted ? 115 : 70));vgui::surface()->DrawFilledRect(0,0,GetWide(),GetTall());
+            vgui::surface()->DrawSetColor(Color(255,107,97,255));vgui::surface()->DrawFilledRect(0,0,MAX(2,int(2*m_Scale)),GetTall());
+        }
     }
     void PreviewFont(int choice) { if(m_Preview)m_Preview->Style(choice,MAX(12,int(21*m_Scale)),m_Color->GetColor()); }
 private:
@@ -368,6 +414,7 @@ private:
     bool m_Highlighted, m_Available;
     CHL2MPSprayPicker *m_Spray;
     CHL2MPColorPicker *m_Color; CHitmarkerPreview *m_Preview; CInfoButton *m_Info; vgui::Label *m_PreviewLabel;
+    vgui::Label *m_Warning;bool m_ServerBlocked;
 };
 
 class CBindingRow : public vgui::EditablePanel
@@ -484,7 +531,7 @@ public:
     int CurrentPage() const { return m_Page; }
 private:
     void ReadCurrent(); void ReadRows(); void BuildRows(); void LayoutRows(); void Apply(); void Commit(); void Close(); void Confirm( int type ); void RevertDisplay();
-    void ResetPage(); void CloseDropdowns();
+    void ResetPage(); void CloseDropdowns();bool HitmarkerDetails() const;
     const char *KeyName( int action, int slot ); int KeyCode( int action, int slot );
     MESSAGE_FUNC_INT( OnCaptureKey, "CaptureKey", code );
     Setting m_Settings[ARRAYSIZE( s_Settings )];
@@ -496,6 +543,7 @@ private:
     COptionsOverlay *m_Overlay; vgui::HFont m_Font, m_SmallFont, m_TitleFont, m_BrandFont;
     Page m_Page; float m_Scale; int m_Width, m_Height, m_Confirmation, m_CaptureAction, m_CaptureSlot;
     int m_OldWidth, m_OldHeight, m_OldWindowed; double m_DisplayDeadline, m_FontRefreshAt; bool m_CloseAfterApply;
+    bool m_HitmarkerDetails=true;
 };
 static CHL2MPOptions *s_Options = NULL;
 
@@ -568,15 +616,22 @@ const char *CHL2MPOptions::KeyName( int action, int slot )
 {
     int code = KeyCode( action, slot ); return code ? HL2MPKeyName( inputsystem->ButtonCodeToString( ButtonCode_t( code ) ) ) : "#HL2MP_UI_d16f3e00e8e4";
 }
+bool CHL2MPOptions::HitmarkerDetails() const
+{
+    for(int i=0;i<ARRAYSIZE(s_Settings);++i) if(!Q_strcmp(s_Settings[i].cvar,"cl_hitmarkers")) return atoi(m_Settings[i].draft.String())!=0;
+    return false;
+}
 void CHL2MPOptions::BuildRows()
 {
     CloseDropdowns(); m_List->DeleteAllItems(); m_Rows.Purge(); m_KeyRows.Purge();
+    m_HitmarkerDetails=HitmarkerDetails();
     if ( m_Page == BINDINGS )
     {
         for ( int i = 0; i < ARRAYSIZE( s_Bindings ); ++i ) { CBindingRow *row = new CBindingRow( m_List, this, i ); m_KeyRows.AddToTail( row ); m_List->AddItem( NULL, row ); }
     }
     else for ( int i = 0; i < ARRAYSIZE( s_Settings ); ++i ) if ( s_Settings[i].page == m_Page )
     {
+        if(!m_HitmarkerDetails && (!Q_strcmp(s_Settings[i].cvar,"cl_hitmarker_font") || !Q_strcmp(s_Settings[i].cvar,"cl_hitmarker_color")))continue;
         CSettingRow *row = new CSettingRow( m_List, i, m_Settings[i] ); m_Rows.AddToTail( row ); m_List->AddItem( NULL, row );
     }
     m_List->MoveScrollBarToTop(); InvalidateLayout( true ); LayoutRows();
@@ -800,6 +855,9 @@ void CHL2MPOptions::OnTick()
     const bool dirty = Dirty();
     if(m_Page == GAME)
     {
+        // Dirty() captured every visible row above. Rebuilding only changes
+        // visibility; hidden font/color drafts remain part of Apply/Discard.
+        if(m_HitmarkerDetails!=HitmarkerDetails()) { BuildRows();if(m_Rows.Count())m_Rows[0]->FocusChoice(); }
         int font=0; for(int i=0;i<ARRAYSIZE(s_Settings);++i) if(!Q_strcmp(s_Settings[i].cvar,"cl_hitmarker_font")) font=atoi(m_Settings[i].draft.String());
         FOR_EACH_VEC(m_Rows,i) m_Rows[i]->PreviewFont(font);
     }
@@ -811,7 +869,7 @@ void CHL2MPOptions::OnTick()
         FOR_EACH_VEC(m_Rows, i)
         {
             const char *cvar = s_Settings[m_Rows[i]->Index()].cvar;
-            if (!Q_strcmp(cvar,"cl_footsteps_teammates") || !Q_strcmp(cvar,"cl_footsteps_enemies")) m_Rows[i]->EnableChoice(bright);
+            if (!Q_strcmp(cvar,"cl_footsteps_teammates") || !Q_strcmp(cvar,"cl_footsteps_enemies")) m_Rows[i]->EnableChoice(bright && (!engine->IsInGame() || HL2MPBrightModels_Allowed()));
         }
     }
     if ( m_Page == MULTIPLAYER )

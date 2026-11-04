@@ -3,6 +3,7 @@
 #include "c_playerresource.h"
 #include "hl2mp_community.h"
 #include "hl2mp_gamerules.h"
+#include "hl2mp_brightmodels.h"
 #include "hl2mp_menucontrols.h"
 #include "hl2mp_colorpicker.h"
 #include "usermessages.h"
@@ -18,7 +19,8 @@ bool HL2MPCommunity_Available()
 {
     return engine->IsInGame() && !engine->IsLevelMainMenuBackground() && HL2MPRules() && HL2MPRules()->IsCommunityServer();
 }
-bool HL2MPBrightModels_Active() { return cl_bright_player_models.GetBool() && HL2MPCommunity_Available(); }
+bool HL2MPBrightModels_Allowed() { return HL2MPCommunity_Available() && sv_bright_models.GetBool(); }
+bool HL2MPBrightModels_Active() { return cl_bright_player_models.GetBool() && HL2MPBrightModels_Allowed(); }
 
 namespace
 {

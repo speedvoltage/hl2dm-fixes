@@ -1,0 +1,19 @@
+TF2, TF2 Build, TF2 Secondary and TF2 Professor
+
+Original fonts: Andrea Wicklund / Valve Corporation.
+Extended character sets: jakadak, TF2-extended-fonts.
+Source: https://github.com/jakadak/TF2-extended-fonts
+
+Upstream copyright notice:
+"TF2 fonts and fonts project fall under Andrea Wicklund/Valve corporation
+copyright and can by used for any non-comorcial use."
+
+Upstream permits use of TF2.ttf, TF2build.ttf, TF2professor.ttf,
+TF2secondary.ttf, Ocra.ttf and Blocks.ttf. Only the four TF2 typefaces
+are included here, unchanged. This mod is distributed non-commercially.
+
+Upstream Git blob IDs for the included files:
+TF2.ttf          ee947047f0d85698aff56ec26a0e386501f63596
+TF2Build.ttf     939263ccd99d7f9aa50195956f975353058eaa12
+TF2Secondary.ttf 03340e5fc00cb852fd2d959c4dfb0ce97a6e4320
+TF2Professor.ttf fc98f6be3c4a74410ad1ced423d9bb000fca699a

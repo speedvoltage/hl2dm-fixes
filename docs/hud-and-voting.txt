@@ -40,13 +40,22 @@ sound/animation options control this feedback.
 HPH (https://gamebanana.com/mods/345189) was used as a design reference only.
 
 Damage numbers
-Options > Game offers hitmarkers on/off, four fonts and a color palette with hex
+Options > Game offers hitmarkers on/off, eight fonts and a color palette with hex
 input. One animated preview shows the draft font and color together. Apply saves;
 Discard restores the previous settings. The circled information button explains
 the server restriction and works with mouse hover or keyboard focus.
 cl_hitmarkers controls the local preference. sv_hitmarkers remains authoritative.
-cl_hitmarker_font: 0 = Half-Life 2, 1 = GorDIN, 2 = GorDIN Bold, 3 = Tahoma.
+Turning hitmarkers off hides the font/color controls without resetting their
+pending values. Turning them on again restores those drafts. Apply includes the
+hidden values; leaving Options uses the usual save/discard confirmation.
+cl_hitmarker_font: 0 = Half-Life 2, 1 = GorDIN, 2 = GorDIN Bold, 3 = Tahoma,
+4 = TF2, 5 = TF2 Build, 6 = TF2 Secondary, 7 = TF2 Professor. TF2 font files
+and their attribution are included in resource/fonts; no system install is needed.
 cl_hitmarker_color: RGB string, default "255 0 0".
+Hitmarkers and bright models have information icons. While a connected server
+disallows either feature, its row has a red tint, warning triangle and wrapped
+explanation. The local preference stays editable but cannot override the server.
+The warning updates when server policy changes and clears on disconnect.
 
 Community server controls
 Apply Changes beside Game mode switches DM/TDM without loading the map again.
@@ -59,6 +68,9 @@ sv_bright_models_dm_color "0 255 0"
 sv_bright_models_rebels_color "255 0 0"
 sv_bright_models_combine_color "50 150 255"
 Only clients opting into bright models on community servers use these colors.
+sv_bright_models 0 disables bright models on the server; the default is 1.
+This also disables the teammate/enemy footstep overrides tied to bright models.
+Matchmaking continues to disallow bright models regardless of this cvar.
 Create Server bots now leave their initial observer state and spawn in DM.
 Maps still need navigation meshes for bots to navigate normally.
 

@@ -6,12 +6,38 @@
 #include "hl2mp_hitmarker_style.h"
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
+#include "tier1/utlstring.h"
+#ifdef _WIN32
+#include <windows.h>
+#undef CreateFont
+#pragma comment(lib,"gdi32.lib")
+#endif
 
 #include "tier0/memdbgon.h"
 
 static ConVar cl_hitmarkers( "cl_hitmarkers", "1", FCVAR_ARCHIVE, "Show damage numbers when hitting enemy players, if allowed by the server." );
 extern ConVar sv_hitmarkers;
-ConVar cl_hitmarker_font("cl_hitmarker_font","0",FCVAR_ARCHIVE,"Damage number font: 0 classic, 1 GorDIN, 2 GorDIN Bold, 3 Tahoma.",true,0,true,3);
+
+bool HL2MPHitmarkerRegisterFont(const char *face,const char *path)
+{
+    if(vgui::surface()->AddCustomFontFile(face,path))return true;
+#ifdef _WIN32
+    // Some SDK Windows runtimes reject dynamic font-file registration. Keep
+    // these fonts private to the game; they are never installed system-wide.
+    struct PrivateFonts
+    {
+        CUtlVector<CUtlString> paths;
+        ~PrivateFonts() { FOR_EACH_VEC(paths,i) RemoveFontResourceExA(paths[i].String(),FR_PRIVATE,NULL); }
+    };
+    static PrivateFonts fonts;
+    FOR_EACH_VEC(fonts.paths,i) if(!Q_stricmp(fonts.paths[i].String(),path))return true;
+    if(!AddFontResourceExA(path,FR_PRIVATE,NULL))return false;
+    fonts.paths.AddToTail(CUtlString(path));return true;
+#else
+    return false;
+#endif
+}
+ConVar cl_hitmarker_font("cl_hitmarker_font","0",FCVAR_ARCHIVE,"Damage number font: 0 classic, 1 GorDIN, 2 GorDIN Bold, 3 Tahoma, 4 TF2, 5 TF2 Build, 6 TF2 Secondary, 7 TF2 Professor.",true,0,true,HL2MP_HITMARKER_FONTS-1);
 ConVar cl_hitmarker_color("cl_hitmarker_color","255 0 0",FCVAR_ARCHIVE,"Damage number color as red green blue (0-255).");
 
 class CHudHitMarkers : public CHudElement, public vgui::Panel
@@ -101,11 +127,8 @@ void CHudHitMarkers::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetPaintBorderEnabled( false );
 	SetBounds( 0, 0, ScreenWidth(), ScreenHeight() );
 
-	if ( !m_hFont )
-		m_hFont = vgui::surface()->CreateFont();
-
 	m_FontChoice = cl_hitmarker_font.GetInt();
-	HL2MPHitmarkerFont(m_hFont,m_FontChoice,MAX(12,YRES(14)));
+	m_hFont=HL2MPGetHitmarkerFont(m_FontChoice,MAX(12,YRES(14)));
 }
 
 void CHudHitMarkers::MsgFunc_DamageHit( bf_read &msg )
@@ -139,7 +162,7 @@ void CHudHitMarkers::Paint()
 	if (m_FontChoice != cl_hitmarker_font.GetInt())
 	{
 		m_FontChoice = cl_hitmarker_font.GetInt();
-		HL2MPHitmarkerFont(m_hFont,m_FontChoice,MAX(12,YRES(14)));
+		m_hFont=HL2MPGetHitmarkerFont(m_FontChoice,MAX(12,YRES(14)));
 	}
 	const Color color = HL2MPHitmarkerColor(cl_hitmarker_color.GetString());
 	vgui::surface()->DrawSetTextFont( m_hFont );

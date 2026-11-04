@@ -4,6 +4,7 @@
 #include "tier1/convar.h"
 
 extern ConVar sv_bright_models_dm_color;
+extern ConVar sv_bright_models;
 extern ConVar sv_bright_models_rebels_color;
 extern ConVar sv_bright_models_combine_color;
 

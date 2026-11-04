@@ -5927,6 +5927,18 @@
       "contexts": [
         "Damage number options and community server colors/mode controls."
       ]
+    },
+    "HL2MP_BrightModelsInfo": {
+      "english": "Bright models use the server's team colors and work only on community servers that allow them.",
+      "contexts": [
+        "Options server policy indicators."
+      ]
+    },
+    "HL2MP_ServerVisualDisabled": {
+      "english": "Disabled by this server. Your preference is kept, but cannot override server rules.",
+      "contexts": [
+        "Options server policy indicators."
+      ]
     }
   },
   "languages": {
@@ -6918,7 +6930,9 @@
       "HL2MP_HitmarkerPreview": "معاينة مباشرة",
       "HL2MP_BrightColors": "ألوان نماذج اللاعبين الساطعة",
       "HL2MP_ModeChangeConfirm": "هل تريد تغيير نمط اللعب وإعادة بدء الجولة؟ ستُصفّر النتائج والمؤقت، وسيعود اللاعبون للظهور، وستتوازن الفرق عند تفعيل قتال الموت الجماعي. ستبقى الخريطة محمّلة.",
-      "HL2MP_ModeChanged": "تم تغيير نمط اللعب. أُعيد بدء الجولة."
+      "HL2MP_ModeChanged": "تم تغيير نمط اللعب. أُعيد بدء الجولة.",
+      "HL2MP_BrightModelsInfo": "تستخدم النماذج الساطعة ألوان الفرق التي يحددها الخادم، وتعمل فقط على خوادم المجتمع التي تسمح بها.",
+      "HL2MP_ServerVisualDisabled": "عطّل هذا الخادم هذه الميزة. يُحتفظ بتفضيلك، لكنه لا يستطيع تجاوز قواعد الخادم."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -7908,7 +7922,9 @@
       "HL2MP_HitmarkerPreview": "Prévia ao vivo",
       "HL2MP_BrightColors": "Cores dos jogadores iluminados",
       "HL2MP_ModeChangeConfirm": "Mudar o modo e reiniciar a rodada? As pontuações e o tempo serão zerados, os jogadores reaparecerão e as equipes serão equilibradas ao ativar mata-mata em equipe. O mapa continua carregado.",
-      "HL2MP_ModeChanged": "Modo de jogo alterado. A rodada foi reiniciada."
+      "HL2MP_ModeChanged": "Modo de jogo alterado. A rodada foi reiniciada.",
+      "HL2MP_BrightModelsInfo": "Os modelos brilhantes usam as cores de equipe do servidor e só funcionam em servidores da comunidade que os permitem.",
+      "HL2MP_ServerVisualDisabled": "Desativado por este servidor. Sua preferência é mantida, mas não pode substituir as regras do servidor."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -8898,7 +8914,9 @@
       "HL2MP_HitmarkerPreview": "Преглед на живо",
       "HL2MP_BrightColors": "Цветове на ярките модели",
       "HL2MP_ModeChangeConfirm": "Да се смени ли режимът и да се рестартира рундът? Точките и времето ще се нулират, играчите ще се преродят, а отборите ще се балансират при включване на отборен deathmatch. Картата остава заредена.",
-      "HL2MP_ModeChanged": "Режимът е сменен. Рундът е рестартиран."
+      "HL2MP_ModeChanged": "Режимът е сменен. Рундът е рестартиран.",
+      "HL2MP_BrightModelsInfo": "Ярките модели използват отборните цветове на сървъра и работят само на общностни сървъри, които ги разрешават.",
+      "HL2MP_ServerVisualDisabled": "Изключено от този сървър. Предпочитанието ви се запазва, но не може да отменя правилата на сървъра."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -9888,7 +9906,9 @@
       "HL2MP_HitmarkerPreview": "Živý náhled",
       "HL2MP_BrightColors": "Barvy jasných modelů hráčů",
       "HL2MP_ModeChangeConfirm": "Změnit režim a restartovat kolo? Skóre a čas se vynulují, hráči se znovu objeví a týmy se vyrovnají při zapnutí týmového deathmatche. Mapa zůstane načtená.",
-      "HL2MP_ModeChanged": "Herní režim změněn. Kolo bylo restartováno."
+      "HL2MP_ModeChanged": "Herní režim změněn. Kolo bylo restartováno.",
+      "HL2MP_BrightModelsInfo": "Jasné modely používají týmové barvy serveru a fungují pouze na komunitních serverech, které je povolují.",
+      "HL2MP_ServerVisualDisabled": "Tento server funkci zakázal. Vaše předvolba zůstává zachována, ale nemůže přepsat pravidla serveru."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -10878,7 +10898,9 @@
       "HL2MP_HitmarkerPreview": "Liveforhåndsvisning",
       "HL2MP_BrightColors": "Farver på lyse spillermodeller",
       "HL2MP_ModeChangeConfirm": "Skift spiltype og genstart runden? Point og tid nulstilles, spillere genopstår, og holdene balanceres, når hold-deathmatch aktiveres. Banen forbliver indlæst.",
-      "HL2MP_ModeChanged": "Spiltypen er ændret. Runden er genstartet."
+      "HL2MP_ModeChanged": "Spiltypen er ændret. Runden er genstartet.",
+      "HL2MP_BrightModelsInfo": "Lyse modeller bruger serverens holdfarver og virker kun på fællesskabsservere, der tillader dem.",
+      "HL2MP_ServerVisualDisabled": "Deaktiveret af denne server. Dit valg bevares, men kan ikke tilsidesætte serverens regler."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -11868,7 +11890,9 @@
       "HL2MP_HitmarkerPreview": "Livevoorbeeld",
       "HL2MP_BrightColors": "Kleuren van heldere spelers",
       "HL2MP_ModeChangeConfirm": "Spelmodus wijzigen en de ronde herstarten? Scores en tijd worden gereset, spelers verschijnen opnieuw en teams worden gebalanceerd bij het inschakelen van team-deathmatch. De map blijft geladen.",
-      "HL2MP_ModeChanged": "Spelmodus gewijzigd. De ronde is opnieuw gestart."
+      "HL2MP_ModeChanged": "Spelmodus gewijzigd. De ronde is opnieuw gestart.",
+      "HL2MP_BrightModelsInfo": "Heldere modellen gebruiken de teamkleuren van de server en werken alleen op communityservers die ze toestaan.",
+      "HL2MP_ServerVisualDisabled": "Uitgeschakeld door deze server. Je voorkeur blijft bewaard, maar kan de serverregels niet wijzigen."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -12858,7 +12882,9 @@
       "HL2MP_HitmarkerPreview": "Reaaliaikainen esikatselu",
       "HL2MP_BrightColors": "Kirkkaiden pelaajamallien värit",
       "HL2MP_ModeChangeConfirm": "Vaihda pelitilaa ja aloita kierros uudelleen? Pisteet ja aika nollataan, pelaajat syntyvät uudelleen ja joukkueet tasataan, kun joukkue-deathmatch otetaan käyttöön. Karttaa ei ladata uudelleen.",
-      "HL2MP_ModeChanged": "Pelitila vaihdettu. Kierros alkoi uudelleen."
+      "HL2MP_ModeChanged": "Pelitila vaihdettu. Kierros alkoi uudelleen.",
+      "HL2MP_BrightModelsInfo": "Kirkkaat mallit käyttävät palvelimen joukkuevärejä ja toimivat vain yhteisöpalvelimilla, jotka sallivat ne.",
+      "HL2MP_ServerVisualDisabled": "Tämä palvelin on poistanut toiminnon käytöstä. Valintasi säilyy, mutta ei voi ohittaa palvelimen sääntöjä."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -13848,7 +13874,9 @@
       "HL2MP_HitmarkerPreview": "Aperçu en direct",
       "HL2MP_BrightColors": "Couleurs des joueurs lumineux",
       "HL2MP_ModeChangeConfirm": "Changer de mode et recommencer la manche ? Les scores et le chronomètre seront réinitialisés, les joueurs réapparaîtront et les équipes seront équilibrées en combat à mort par équipe. La carte reste chargée.",
-      "HL2MP_ModeChanged": "Mode de jeu modifié. La manche a recommencé."
+      "HL2MP_ModeChanged": "Mode de jeu modifié. La manche a recommencé.",
+      "HL2MP_BrightModelsInfo": "Les modèles lumineux utilisent les couleurs d'équipe du serveur et fonctionnent uniquement sur les serveurs communautaires qui les autorisent.",
+      "HL2MP_ServerVisualDisabled": "Désactivé par ce serveur. Votre préférence est conservée, mais ne peut pas remplacer les règles du serveur."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -14838,7 +14866,9 @@
       "HL2MP_HitmarkerPreview": "Live-Vorschau",
       "HL2MP_BrightColors": "Farben heller Spielermodelle",
       "HL2MP_ModeChangeConfirm": "Spielmodus ändern und Runde neu starten? Punkte und Zeit werden zurückgesetzt, Spieler erscheinen neu und die Teams werden beim Aktivieren von Team-Deathmatch ausgeglichen. Die Karte bleibt geladen.",
-      "HL2MP_ModeChanged": "Spielmodus geändert. Die Runde wurde neu gestartet."
+      "HL2MP_ModeChanged": "Spielmodus geändert. Die Runde wurde neu gestartet.",
+      "HL2MP_BrightModelsInfo": "Helle Modelle verwenden die Teamfarben des Servers und funktionieren nur auf Communityservern, die sie erlauben.",
+      "HL2MP_ServerVisualDisabled": "Von diesem Server deaktiviert. Deine Einstellung bleibt erhalten, kann die Serverregeln aber nicht außer Kraft setzen."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -15828,7 +15858,9 @@
       "HL2MP_HitmarkerPreview": "Ζωντανή προεπισκόπηση",
       "HL2MP_BrightColors": "Χρώματα φωτεινών παικτών",
       "HL2MP_ModeChangeConfirm": "Αλλαγή λειτουργίας και επανεκκίνηση του γύρου; Οι βαθμολογίες και ο χρόνος θα μηδενιστούν, οι παίκτες θα επανεμφανιστούν και οι ομάδες θα εξισορροπηθούν με την ενεργοποίηση του ομαδικού deathmatch. Ο χάρτης παραμένει φορτωμένος.",
-      "HL2MP_ModeChanged": "Η λειτουργία παιχνιδιού άλλαξε. Ο γύρος επανεκκινήθηκε."
+      "HL2MP_ModeChanged": "Η λειτουργία παιχνιδιού άλλαξε. Ο γύρος επανεκκινήθηκε.",
+      "HL2MP_BrightModelsInfo": "Τα φωτεινά μοντέλα χρησιμοποιούν τα χρώματα ομάδων του διακομιστή και λειτουργούν μόνο σε διακομιστές κοινότητας που τα επιτρέπουν.",
+      "HL2MP_ServerVisualDisabled": "Απενεργοποιήθηκε από αυτόν τον διακομιστή. Η προτίμησή σας διατηρείται, αλλά δεν μπορεί να παρακάμψει τους κανόνες του διακομιστή."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -16818,7 +16850,9 @@
       "HL2MP_HitmarkerPreview": "Élő előnézet",
       "HL2MP_BrightColors": "Világos játékosmodellek színei",
       "HL2MP_ModeChangeConfirm": "Játékmódváltás és a kör újraindítása? A pontszámok és az idő nullázódnak, a játékosok újraélednek, és a csapatok kiegyenlítődnek a csapatos deathmatch bekapcsolásakor. A pálya betöltve marad.",
-      "HL2MP_ModeChanged": "A játékmód megváltozott. A kör újraindult."
+      "HL2MP_ModeChanged": "A játékmód megváltozott. A kör újraindult.",
+      "HL2MP_BrightModelsInfo": "A világos modellek a szerver csapatszíneit használják, és csak az azokat engedélyező közösségi szervereken működnek.",
+      "HL2MP_ServerVisualDisabled": "Ez a szerver letiltotta a funkciót. A beállításod megmarad, de nem írhatja felül a szerver szabályait."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -17808,7 +17842,9 @@
       "HL2MP_HitmarkerPreview": "Pratinjau langsung",
       "HL2MP_BrightColors": "Warna model pemain terang",
       "HL2MP_ModeChangeConfirm": "Ubah mode dan mulai ulang ronde? Skor dan waktu akan direset, pemain akan muncul kembali, dan tim akan diseimbangkan saat deathmatch tim diaktifkan. Peta tetap dimuat.",
-      "HL2MP_ModeChanged": "Mode permainan diubah. Ronde telah dimulai ulang."
+      "HL2MP_ModeChanged": "Mode permainan diubah. Ronde telah dimulai ulang.",
+      "HL2MP_BrightModelsInfo": "Model terang menggunakan warna tim server dan hanya berfungsi di server komunitas yang mengizinkannya.",
+      "HL2MP_ServerVisualDisabled": "Dinonaktifkan oleh server ini. Preferensi Anda tetap disimpan, tetapi tidak dapat mengesampingkan aturan server."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -18798,7 +18834,9 @@
       "HL2MP_HitmarkerPreview": "Anteprima dal vivo",
       "HL2MP_BrightColors": "Colori dei giocatori luminosi",
       "HL2MP_ModeChangeConfirm": "Cambiare modalità e riavviare il round? Punteggi e timer verranno azzerati, i giocatori rinasceranno e le squadre verranno bilanciate attivando il deathmatch a squadre. La mappa resta caricata.",
-      "HL2MP_ModeChanged": "Modalità di gioco cambiata. Il round è stato riavviato."
+      "HL2MP_ModeChanged": "Modalità di gioco cambiata. Il round è stato riavviato.",
+      "HL2MP_BrightModelsInfo": "I modelli luminosi usano i colori delle squadre del server e funzionano solo sui server della comunità che li consentono.",
+      "HL2MP_ServerVisualDisabled": "Disattivato da questo server. La tua preferenza viene mantenuta, ma non può prevalere sulle regole del server."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -19788,7 +19826,9 @@
       "HL2MP_HitmarkerPreview": "ライブプレビュー",
       "HL2MP_BrightColors": "明るいプレイヤーモデルの色",
       "HL2MP_ModeChangeConfirm": "ゲームモードを変更してラウンドを再開しますか？スコアとタイマーがリセットされ、プレイヤーがリスポーンします。チームデスマッチを有効にするとチーム人数が均等化されます。マップは読み込まれたままです。",
-      "HL2MP_ModeChanged": "ゲームモードが変更されました。ラウンドを再開しました。"
+      "HL2MP_ModeChanged": "ゲームモードが変更されました。ラウンドを再開しました。",
+      "HL2MP_BrightModelsInfo": "明るいモデルにはサーバーのチームカラーが使われ、使用を許可しているコミュニティサーバーでのみ機能します。",
+      "HL2MP_ServerVisualDisabled": "このサーバーでは無効です。設定は保持されますが、サーバーのルールを上書きすることはできません。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -20778,7 +20818,9 @@
       "HL2MP_HitmarkerPreview": "실시간 미리 보기",
       "HL2MP_BrightColors": "밝은 플레이어 모델 색상",
       "HL2MP_ModeChangeConfirm": "게임 모드를 변경하고 라운드를 다시 시작할까요? 점수와 시간이 초기화되고 플레이어가 부활하며 팀 데스매치를 활성화하면 팀 인원이 균등하게 배정됩니다. 맵은 로드된 상태로 유지됩니다.",
-      "HL2MP_ModeChanged": "게임 모드가 변경되었습니다. 라운드를 다시 시작했습니다."
+      "HL2MP_ModeChanged": "게임 모드가 변경되었습니다. 라운드를 다시 시작했습니다.",
+      "HL2MP_BrightModelsInfo": "밝은 모델은 서버의 팀 색상을 사용하며, 이를 허용하는 커뮤니티 서버에서만 작동합니다.",
+      "HL2MP_ServerVisualDisabled": "이 서버에서 비활성화되었습니다. 설정은 유지되지만 서버 규칙을 무시할 수는 없습니다."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -21768,7 +21810,9 @@
       "HL2MP_HitmarkerPreview": "Vista previa en directo",
       "HL2MP_BrightColors": "Colores de jugadores brillantes",
       "HL2MP_ModeChangeConfirm": "¿Cambiar de modo y reiniciar la ronda? Se reiniciarán las puntuaciones y el tiempo, los jugadores reaparecerán y se equilibrarán los equipos al activar el combate a muerte por equipos. El mapa seguirá cargado.",
-      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda."
+      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda.",
+      "HL2MP_BrightModelsInfo": "Los modelos brillantes usan los colores de equipo del servidor y solo funcionan en servidores de la comunidad que los permitan.",
+      "HL2MP_ServerVisualDisabled": "Desactivado por este servidor. Se conserva tu preferencia, pero no puede anular las reglas del servidor."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -22758,7 +22802,9 @@
       "HL2MP_HitmarkerPreview": "Pratonton langsung",
       "HL2MP_BrightColors": "Warna model pemain terang",
       "HL2MP_ModeChangeConfirm": "Tukar mod dan mulakan semula pusingan? Skor dan masa akan ditetapkan semula, pemain akan muncul semula, dan pasukan akan diseimbangkan apabila deathmatch berpasukan diaktifkan. Peta kekal dimuatkan.",
-      "HL2MP_ModeChanged": "Mod permainan ditukar. Pusingan dimulakan semula."
+      "HL2MP_ModeChanged": "Mod permainan ditukar. Pusingan dimulakan semula.",
+      "HL2MP_BrightModelsInfo": "Model cerah menggunakan warna pasukan pelayan dan hanya berfungsi pada pelayan komuniti yang membenarkannya.",
+      "HL2MP_ServerVisualDisabled": "Dinyahdayakan oleh pelayan ini. Pilihan anda dikekalkan, tetapi tidak boleh mengatasi peraturan pelayan."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -23748,7 +23794,9 @@
       "HL2MP_HitmarkerPreview": "Direkte forhåndsvisning",
       "HL2MP_BrightColors": "Farger på lyse spillermodeller",
       "HL2MP_ModeChangeConfirm": "Endre spillmodus og starte runden på nytt? Poeng og tid nullstilles, spillere gjenoppstår, og lagene balanseres når lag-deathmatch aktiveres. Kartet forblir lastet.",
-      "HL2MP_ModeChanged": "Spillmodus endret. Runden er startet på nytt."
+      "HL2MP_ModeChanged": "Spillmodus endret. Runden er startet på nytt.",
+      "HL2MP_BrightModelsInfo": "Lyse modeller bruker serverens lagfarger og fungerer bare på fellesskapsservere som tillater dem.",
+      "HL2MP_ServerVisualDisabled": "Deaktivert av denne serveren. Valget ditt beholdes, men kan ikke overstyre serverens regler."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -24738,7 +24786,9 @@
       "HL2MP_HitmarkerPreview": "Podgląd na żywo",
       "HL2MP_BrightColors": "Kolory jasnych modeli graczy",
       "HL2MP_ModeChangeConfirm": "Zmienić tryb i rozpocząć rundę od nowa? Wyniki i czas zostaną wyzerowane, gracze się odrodzą, a drużyny zostaną wyrównane przy włączaniu drużynowego deathmatchu. Mapa pozostaje wczytana.",
-      "HL2MP_ModeChanged": "Zmieniono tryb gry. Runda rozpoczęła się od nowa."
+      "HL2MP_ModeChanged": "Zmieniono tryb gry. Runda rozpoczęła się od nowa.",
+      "HL2MP_BrightModelsInfo": "Jasne modele używają kolorów drużyn serwera i działają tylko na serwerach społeczności, które na nie zezwalają.",
+      "HL2MP_ServerVisualDisabled": "Wyłączone przez ten serwer. Twoje ustawienie zostaje zachowane, ale nie może zastąpić zasad serwera."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -25728,7 +25778,9 @@
       "HL2MP_HitmarkerPreview": "Pré-visualização em direto",
       "HL2MP_BrightColors": "Cores dos jogadores iluminados",
       "HL2MP_ModeChangeConfirm": "Alterar o modo e reiniciar a ronda? As pontuações e o tempo serão repostos, os jogadores reaparecerão e as equipas serão equilibradas ao ativar deathmatch por equipas. O mapa continua carregado.",
-      "HL2MP_ModeChanged": "Modo de jogo alterado. A ronda foi reiniciada."
+      "HL2MP_ModeChanged": "Modo de jogo alterado. A ronda foi reiniciada.",
+      "HL2MP_BrightModelsInfo": "Os modelos luminosos usam as cores das equipas do servidor e só funcionam em servidores da comunidade que os permitem.",
+      "HL2MP_ServerVisualDisabled": "Desativado por este servidor. A tua preferência é mantida, mas não pode substituir as regras do servidor."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -26718,7 +26770,9 @@
       "HL2MP_HitmarkerPreview": "Previzualizare în timp real",
       "HL2MP_BrightColors": "Culorile modelelor luminoase",
       "HL2MP_ModeChangeConfirm": "Schimbi modul și repornești runda? Scorurile și timpul vor fi resetate, jucătorii vor reapărea, iar echipele vor fi echilibrate la activarea deathmatchului pe echipe. Harta rămâne încărcată.",
-      "HL2MP_ModeChanged": "Modul de joc a fost schimbat. Runda a fost repornită."
+      "HL2MP_ModeChanged": "Modul de joc a fost schimbat. Runda a fost repornită.",
+      "HL2MP_BrightModelsInfo": "Modelele luminoase folosesc culorile echipelor de pe server și funcționează doar pe serverele comunității care le permit.",
+      "HL2MP_ServerVisualDisabled": "Dezactivat de acest server. Preferința ta este păstrată, dar nu poate înlocui regulile serverului."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -27708,7 +27762,9 @@
       "HL2MP_HitmarkerPreview": "Предпросмотр",
       "HL2MP_BrightColors": "Цвета ярких моделей игроков",
       "HL2MP_ModeChangeConfirm": "Сменить режим и перезапустить раунд? Счёт и таймер будут сброшены, игроки возродятся, а при включении командного боя насмерть составы команд будут сбалансированы. Карта останется загруженной.",
-      "HL2MP_ModeChanged": "Режим игры изменён. Раунд перезапущен."
+      "HL2MP_ModeChanged": "Режим игры изменён. Раунд перезапущен.",
+      "HL2MP_BrightModelsInfo": "Яркие модели используют цвета команд сервера и работают только на серверах сообщества, где они разрешены.",
+      "HL2MP_ServerVisualDisabled": "Отключено этим сервером. Ваше предпочтение сохраняется, но не может отменить правила сервера."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -28698,7 +28754,9 @@
       "HL2MP_HitmarkerPreview": "实时预览",
       "HL2MP_BrightColors": "高亮玩家模型颜色",
       "HL2MP_ModeChangeConfirm": "更改游戏模式并重新开始本回合？分数和计时器将重置，玩家将重生，启用团队死亡竞赛时将平衡队伍人数。地图保持加载状态。",
-      "HL2MP_ModeChanged": "游戏模式已更改。本回合已重新开始。"
+      "HL2MP_ModeChanged": "游戏模式已更改。本回合已重新开始。",
+      "HL2MP_BrightModelsInfo": "高亮模型使用服务器设置的队伍颜色，仅在允许此功能的社区服务器上生效。",
+      "HL2MP_ServerVisualDisabled": "此服务器已禁用该功能。你的偏好设置会保留，但无法覆盖服务器规则。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -29688,7 +29746,9 @@
       "HL2MP_HitmarkerPreview": "Vista previa en directo",
       "HL2MP_BrightColors": "Colores de jugadores brillantes",
       "HL2MP_ModeChangeConfirm": "¿Cambiar de modo y reiniciar la ronda? Se reiniciarán las puntuaciones y el tiempo, los jugadores reaparecerán y se equilibrarán los equipos al activar el combate a muerte por equipos. El mapa seguirá cargado.",
-      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda."
+      "HL2MP_ModeChanged": "Modo de juego cambiado. Se ha reiniciado la ronda.",
+      "HL2MP_BrightModelsInfo": "Los modelos brillantes usan los colores de equipo del servidor y solo funcionan en servidores de la comunidad que los permitan.",
+      "HL2MP_ServerVisualDisabled": "Desactivado por este servidor. Se conserva tu preferencia, pero no puede anular las reglas del servidor."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -30678,7 +30738,9 @@
       "HL2MP_HitmarkerPreview": "Liveförhandsvisning",
       "HL2MP_BrightColors": "Färger på ljusa spelarmodeller",
       "HL2MP_ModeChangeConfirm": "Ändra spelläge och starta om rundan? Poäng och tid nollställs, spelare återuppstår och lagen balanseras när lag-deathmatch aktiveras. Kartan förblir laddad.",
-      "HL2MP_ModeChanged": "Spelläget har ändrats. Rundan har startats om."
+      "HL2MP_ModeChanged": "Spelläget har ändrats. Rundan har startats om.",
+      "HL2MP_BrightModelsInfo": "Ljusa modeller använder serverns lagfärger och fungerar bara på communityservrar som tillåter dem.",
+      "HL2MP_ServerVisualDisabled": "Inaktiverat av denna server. Ditt val sparas, men kan inte åsidosätta serverns regler."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -31668,7 +31730,9 @@
       "HL2MP_HitmarkerPreview": "即時預覽",
       "HL2MP_BrightColors": "明亮玩家模型顏色",
       "HL2MP_ModeChangeConfirm": "變更遊戲模式並重新開始本回合？分數和計時器將重設，玩家將重生，啟用團隊死亡競賽時將平衡隊伍人數。地圖保持載入狀態。",
-      "HL2MP_ModeChanged": "遊戲模式已變更。本回合已重新開始。"
+      "HL2MP_ModeChanged": "遊戲模式已變更。本回合已重新開始。",
+      "HL2MP_BrightModelsInfo": "高亮模型使用伺服器設定的隊伍顏色，僅在允許此功能的社群伺服器上生效。",
+      "HL2MP_ServerVisualDisabled": "此伺服器已停用此功能。你的偏好設定會保留，但無法覆寫伺服器規則。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -32658,7 +32722,9 @@
       "HL2MP_HitmarkerPreview": "ตัวอย่างแบบสด",
       "HL2MP_BrightColors": "สีโมเดลผู้เล่นแบบสว่าง",
       "HL2MP_ModeChangeConfirm": "เปลี่ยนโหมดและเริ่มรอบใหม่หรือไม่? คะแนนและเวลาจะถูกรีเซ็ต ผู้เล่นจะเกิดใหม่ และทีมจะถูกจัดให้สมดุลเมื่อเปิดโหมดทีมเดธแมตช์ แผนที่ยังคงโหลดอยู่",
-      "HL2MP_ModeChanged": "เปลี่ยนโหมดเกมแล้ว เริ่มรอบใหม่แล้ว"
+      "HL2MP_ModeChanged": "เปลี่ยนโหมดเกมแล้ว เริ่มรอบใหม่แล้ว",
+      "HL2MP_BrightModelsInfo": "โมเดลสว่างใช้สีทีมที่เซิร์ฟเวอร์กำหนด และทำงานเฉพาะบนเซิร์ฟเวอร์ชุมชนที่อนุญาตเท่านั้น",
+      "HL2MP_ServerVisualDisabled": "เซิร์ฟเวอร์นี้ปิดใช้งานฟีเจอร์นี้ การตั้งค่าของคุณยังคงอยู่ แต่ไม่สามารถใช้แทนกฎของเซิร์ฟเวอร์ได้"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -33648,7 +33714,9 @@
       "HL2MP_HitmarkerPreview": "Canlı önizleme",
       "HL2MP_BrightColors": "Parlak oyuncu modeli renkleri",
       "HL2MP_ModeChangeConfirm": "Oyun modu değiştirilip tur yeniden başlatılsın mı? Skorlar ve süre sıfırlanır, oyuncular yeniden doğar ve takım ölüm maçı etkinleştirilirken takımlar dengelenir. Harita yüklü kalır.",
-      "HL2MP_ModeChanged": "Oyun modu değiştirildi. Tur yeniden başlatıldı."
+      "HL2MP_ModeChanged": "Oyun modu değiştirildi. Tur yeniden başlatıldı.",
+      "HL2MP_BrightModelsInfo": "Parlak modeller sunucunun takım renklerini kullanır ve yalnızca bunlara izin veren topluluk sunucularında çalışır.",
+      "HL2MP_ServerVisualDisabled": "Bu sunucu tarafından devre dışı bırakıldı. Tercihiniz korunur ancak sunucu kurallarını geçersiz kılamaz."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -34638,7 +34706,9 @@
       "HL2MP_HitmarkerPreview": "Попередній перегляд",
       "HL2MP_BrightColors": "Кольори яскравих моделей гравців",
       "HL2MP_ModeChangeConfirm": "Змінити режим і перезапустити раунд? Рахунок і таймер буде скинуто, гравці відродяться, а при ввімкненні командного бою на смерть команди буде збалансовано. Мапа залишиться завантаженою.",
-      "HL2MP_ModeChanged": "Режим гри змінено. Раунд перезапущено."
+      "HL2MP_ModeChanged": "Режим гри змінено. Раунд перезапущено.",
+      "HL2MP_BrightModelsInfo": "Яскраві моделі використовують кольори команд сервера й працюють лише на серверах спільноти, де їх дозволено.",
+      "HL2MP_ServerVisualDisabled": "Вимкнено цим сервером. Ваше налаштування зберігається, але не може скасувати правила сервера."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -35628,7 +35698,9 @@
       "HL2MP_HitmarkerPreview": "Xem trước trực tiếp",
       "HL2MP_BrightColors": "Màu mô hình người chơi sáng",
       "HL2MP_ModeChangeConfirm": "Đổi chế độ và bắt đầu lại vòng đấu? Điểm và thời gian sẽ được đặt lại, người chơi sẽ hồi sinh và các đội được cân bằng khi bật đấu đội. Bản đồ vẫn được tải sẵn.",
-      "HL2MP_ModeChanged": "Đã đổi chế độ chơi. Vòng đấu đã bắt đầu lại."
+      "HL2MP_ModeChanged": "Đã đổi chế độ chơi. Vòng đấu đã bắt đầu lại.",
+      "HL2MP_BrightModelsInfo": "Mô hình sáng dùng màu đội của máy chủ và chỉ hoạt động trên máy chủ cộng đồng cho phép tính năng này.",
+      "HL2MP_ServerVisualDisabled": "Máy chủ này đã tắt tính năng. Tùy chọn của bạn được giữ lại nhưng không thể ghi đè quy tắc máy chủ."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

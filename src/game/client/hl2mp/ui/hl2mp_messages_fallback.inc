@@ -1011,4 +1011,6 @@ static const Message s_Messages[] = {
     { "HL2MP_BrightColors", "Bright player colors", NULL },
     { "HL2MP_ModeChangeConfirm", "Change the game mode and restart this round? Scores and the timer will reset, players will respawn, and teams will be balanced when enabling team deathmatch. The map stays loaded.", NULL },
     { "HL2MP_ModeChanged", "Game mode changed. The round has restarted.", NULL },
+    { "HL2MP_BrightModelsInfo", "Bright models use the server's team colors and work only on community servers that allow them.", NULL },
+    { "HL2MP_ServerVisualDisabled", "Disabled by this server. Your preference is kept, but cannot override server rules.", NULL },
 };
