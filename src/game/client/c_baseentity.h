@@ -486,6 +486,8 @@ public:
 	string_t						GetModelName( void ) const;
 
 	int								GetModelIndex( void ) const;
+	// A cosmetic client override may differ from the server's networked model.
+	virtual int						GetRenderModelIndex( void ) { return GetModelIndex(); }
 	void							SetModelIndex( int index );
 	virtual int						CalcOverrideModelIndex() { return -1; }
 

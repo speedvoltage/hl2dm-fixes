@@ -63,6 +63,7 @@ public:
 	
 	virtual int DrawModel( int flags );
 	void ValidateModelIndex() OVERRIDE;
+	int GetRenderModelIndex() OVERRIDE;
 	void GetColorModulation( float *color ) OVERRIDE;
 	virtual void AddEntity( void );
 	virtual void BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed ) OVERRIDE;

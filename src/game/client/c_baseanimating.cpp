@@ -4990,9 +4990,9 @@ void C_BaseAnimating::OnDataChanged( DataUpdateType_t updateType )
 
 	bool modelchanged = false;
 
-	// UNDONE: The base class does this as well.  So this is kind of ugly
-	// but getting a model by index is pretty cheap...
-	const model_t *pModel = modelinfo->GetModel( GetModelIndex() );
+	// Compare against the intended rendered model. Comparing a cosmetic override
+	// with the server model would reset movement interpolation on every packet.
+	const model_t *pModel = modelinfo->GetModel( GetRenderModelIndex() );
 	
 	if ( pModel != GetModel() )
 	{

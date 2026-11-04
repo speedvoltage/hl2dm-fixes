@@ -5837,10 +5837,10 @@ void C_BaseEntity::OnPostRestoreData()
 	// If our model index has changed, then make sure it's reflected in our model pointer.
 	// (Mostly superseded by new modelindex delta check in RestoreData, but I'm leaving it
 	// because it might be band-aiding any other missed calls to SetModelByIndex --henryg)
-	if ( GetModel() != modelinfo->GetModel( GetModelIndex() ) )
+	if ( GetModel() != modelinfo->GetModel( GetRenderModelIndex() ) )
 	{
 		MDLCACHE_CRITICAL_SECTION();
-		SetModelByIndex( GetModelIndex() );
+		ValidateModelIndex();
 	}
 }
 

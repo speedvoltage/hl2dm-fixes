@@ -346,7 +346,7 @@ void C_HL2MP_Player::ClientThink( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_HL2MP_Player::ValidateModelIndex()
+int C_HL2MP_Player::GetRenderModelIndex()
 {
 	int index = GetModelIndex();
 	if ( HL2MPBrightModels_Active() && IsAlive() )
@@ -354,9 +354,14 @@ void C_HL2MP_Player::ValidateModelIndex()
 		const int brightIndex = modelinfo->GetModelIndex( "models/combine_super_soldier.mdl" );
 		if ( brightIndex > 0 ) index = brightIndex;
 	}
-	// Change the rendered model without replacing the server's model index.
-	// Disabling the preference and subsequent network updates restore correctly.
-	SetModelPointer( modelinfo->GetModel(index) );
+	return index;
+}
+
+void C_HL2MP_Player::ValidateModelIndex()
+{
+	// Rendering and model-change detection must resolve the same override without
+	// replacing the networked model index (also used by prediction and ragdolls).
+	SetModelPointer( modelinfo->GetModel( GetRenderModelIndex() ) );
 }
 
 void C_HL2MP_Player::GetColorModulation( float *color )
