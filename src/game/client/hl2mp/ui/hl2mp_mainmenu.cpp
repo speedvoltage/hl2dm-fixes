@@ -393,7 +393,7 @@ void CHL2MPMainMenu::PerformLayout()
     for ( int i = 0; i < ARRAYSIZE( navOrder ); ++i )
     {
         int id = navOrder[i]; m_Buttons[id]->SetBounds( left - int( 14 * s ), navY, MIN( mainW, int( 460 * s ) ), int( 46 * s ) );
-        if ( id == HOST ? !m_InGameLayout : id == COMMUNITY ? HL2MPCommunity_Available() : ( id != RESUME && id != DISCONNECT ) || m_InGameLayout ) navY += int( 45 * s );
+        if ( id == COMMUNITY ? HL2MPCommunity_Available() : ( id != RESUME && id != DISCONNECT ) || m_InGameLayout ) navY += int( 45 * s );
     }
     m_Buttons[BACK]->SetBounds( left - int( 14 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
     if ( m_PlayPage ) m_Buttons[RESUME]->SetBounds( left + mainW - int( 190 * s ), int( 120 * s ), int( 190 * s ), int( 34 * s ) );
@@ -537,7 +537,7 @@ void CHL2MPMainMenu::OnTick()
     }
     for ( int i = PLAY; i <= QUIT; ++i ) m_Buttons[i]->SetVisible( !m_PlayPage && ( ( i != RESUME && i != DISCONNECT ) || inGame ) );
     m_Buttons[RESUME]->SetVisible( inGame );
-    m_Buttons[HOST]->SetVisible( !m_PlayPage && !inGame ); m_Buttons[HOST]->SetEnabled( !coordinator.Busy() );
+    m_Buttons[HOST]->SetVisible( !m_PlayPage ); m_Buttons[HOST]->SetEnabled( !coordinator.Busy() );
     m_Buttons[COMMUNITY]->SetVisible( !m_PlayPage && HL2MPCommunity_Available() );
     m_Buttons[BACK]->SetVisible( m_PlayPage );
     m_Subtitle->SetVisible( !m_PlayPage ); m_Tag->SetVisible( !m_PlayPage ); m_PlayHeading->SetVisible( m_PlayPage );
@@ -606,7 +606,7 @@ void CHL2MPMainMenu::OnTick()
 
 void CHL2MPMainMenu::OnCommand( const char *command )
 {
-    if ( !Q_strcmp( command, "Quit" ) ) HL2MPDialogs_ShowQuit( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() );
+    if ( !Q_strcmp( command, "Quit" ) ) HL2MPDialogs_ShowQuit( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() || m_Host->IsVisible() );
     else if ( !Q_strcmp( command, "play" ) ) SetPlayPage( true );
     else if ( !Q_strcmp( command, "back" ) ) SetPlayPage( false );
     else if ( !Q_strcmp( command, "disconnect" ) )
@@ -656,7 +656,7 @@ void CHL2MPMainMenu::OnCommand( const char *command )
 void CHL2MPMainMenu::OnThink()
 {
     BaseClass::OnThink();
-    HL2MPDialogs_Update( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() );
+    HL2MPDialogs_Update( m_GameUI, m_Options->IsVisible() || m_Community->IsVisible() || m_Host->IsVisible() );
     // GameUI's native menu is itself a popup, so our override must remain a
     // popup for keyboard focus. Keep the console above it when a menu click
     // raises this fullscreen panel; otherwise only console child widgets show.

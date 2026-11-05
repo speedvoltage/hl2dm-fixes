@@ -6053,6 +6053,62 @@
       "contexts": [
         "Combat feedback and optional per-round scoreboard statistics."
       ]
+    },
+    "HL2MP_EnableCheats": {
+      "english": "Enable cheats",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_PausableGame": {
+      "english": "Pausable game",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_Footsteps": {
+      "english": "Footsteps",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_ServerPermissions": {
+      "english": "SERVER PERMISSIONS",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_HostDisconnectConfirm": {
+      "english": "Leave the current server and start your own server?",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_FootstepsServerHint": {
+      "english": "Footsteps play only if the server allows them.",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
+    },
+    "HL2MP_FootstepsServerDisabled": {
+      "english": "Footsteps are disabled by this server. Your preference is kept.",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_host.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_community.cpp",
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp"
+      ]
     }
   },
   "languages": {
@@ -7065,7 +7121,14 @@
       "HL2MP_AllowHitmarkers": "مؤشرات الإصابة (أرقام الضرر)",
       "HL2MP_AllowHitSounds": "أصوات الإصابة",
       "HL2MP_HitSoundsHint": "يتطلب إذن الخادم. تُشغّل الأصوات فقط عند إلحاق ضرر بالعدو يؤكده الخادم.",
-      "HL2MP_FootstepsRequirement": "يتطلب تفعيل النماذج الساطعة في خيارات اللعبة وسماح هذا الخادم بها."
+      "HL2MP_FootstepsRequirement": "يتطلب تفعيل النماذج الساطعة في خيارات اللعبة وسماح هذا الخادم بها.",
+      "HL2MP_EnableCheats": "تفعيل الغش",
+      "HL2MP_PausableGame": "السماح بإيقاف اللعب مؤقتًا",
+      "HL2MP_Footsteps": "أصوات الخطوات",
+      "HL2MP_ServerPermissions": "أذونات الخادم",
+      "HL2MP_HostDisconnectConfirm": "هل تريد مغادرة الخادم الحالي وبدء خادمك الخاص؟",
+      "HL2MP_FootstepsServerHint": "تُسمع الخطوات فقط إذا سمح بها الخادم.",
+      "HL2MP_FootstepsServerDisabled": "عطّل هذا الخادم أصوات الخطوات. يُحتفظ بتفضيلك."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -8076,7 +8139,14 @@
       "HL2MP_AllowHitmarkers": "Indicadores de acerto (dano)",
       "HL2MP_AllowHitSounds": "Sons de acerto",
       "HL2MP_HitSoundsHint": "Requer permissão do servidor. Só emite som por dano a inimigos confirmado pelo servidor.",
-      "HL2MP_FootstepsRequirement": "Requer modelos brilhantes ativados nas opções de jogo e permitidos por este servidor."
+      "HL2MP_FootstepsRequirement": "Requer modelos brilhantes ativados nas opções de jogo e permitidos por este servidor.",
+      "HL2MP_EnableCheats": "Ativar trapaças",
+      "HL2MP_PausableGame": "Permitir pausar o jogo",
+      "HL2MP_Footsteps": "Passos",
+      "HL2MP_ServerPermissions": "PERMISSÕES DO SERVIDOR",
+      "HL2MP_HostDisconnectConfirm": "Sair do servidor atual e iniciar seu próprio servidor?",
+      "HL2MP_FootstepsServerHint": "Os passos só são reproduzidos se o servidor permitir.",
+      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. Sua preferência é mantida."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -9087,7 +9157,14 @@
       "HL2MP_AllowHitmarkers": "Индикатори за попадение (щети)",
       "HL2MP_AllowHitSounds": "Звуци при попадение",
       "HL2MP_HitSoundsHint": "Изисква разрешение от сървъра. Звук се възпроизвежда само за щети по врагове, потвърдени от сървъра.",
-      "HL2MP_FootstepsRequirement": "Изисква ярки модели в настройките на играта и разрешение от този сървър."
+      "HL2MP_FootstepsRequirement": "Изисква ярки модели в настройките на играта и разрешение от този сървър.",
+      "HL2MP_EnableCheats": "Разрешаване на чийтове",
+      "HL2MP_PausableGame": "Разрешаване на пауза",
+      "HL2MP_Footsteps": "Стъпки",
+      "HL2MP_ServerPermissions": "РАЗРЕШЕНИЯ НА СЪРВЪРА",
+      "HL2MP_HostDisconnectConfirm": "Напускане на текущия сървър и стартиране на собствен сървър?",
+      "HL2MP_FootstepsServerHint": "Стъпките се чуват само ако сървърът ги разрешава.",
+      "HL2MP_FootstepsServerDisabled": "Стъпките са изключени от този сървър. Предпочитанието ви се запазва."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -10098,7 +10175,14 @@
       "HL2MP_AllowHitmarkers": "Ukazatele zásahů (poškození)",
       "HL2MP_AllowHitSounds": "Zvuky zásahů",
       "HL2MP_HitSoundsHint": "Vyžaduje povolení serveru. Zvuky označují pouze poškození nepřátel potvrzené serverem.",
-      "HL2MP_FootstepsRequirement": "Vyžaduje jasné modely v nastavení hry a povolení tohoto serveru."
+      "HL2MP_FootstepsRequirement": "Vyžaduje jasné modely v nastavení hry a povolení tohoto serveru.",
+      "HL2MP_EnableCheats": "Povolit cheaty",
+      "HL2MP_PausableGame": "Povolit pozastavení hry",
+      "HL2MP_Footsteps": "Kroky",
+      "HL2MP_ServerPermissions": "OPRÁVNĚNÍ SERVERU",
+      "HL2MP_HostDisconnectConfirm": "Opustit současný server a spustit vlastní?",
+      "HL2MP_FootstepsServerHint": "Kroky se přehrávají pouze tehdy, pokud je server povoluje.",
+      "HL2MP_FootstepsServerDisabled": "Zvuky kroků jsou na tomto serveru vypnuté. Vaše nastavení zůstává zachováno."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -11109,7 +11193,14 @@
       "HL2MP_AllowHitmarkers": "Træfmarkører (skadetal)",
       "HL2MP_AllowHitSounds": "Træflyde",
       "HL2MP_HitSoundsHint": "Kræver serverens tilladelse. Lyde afspilles kun ved skade på fjender, som serveren har bekræftet.",
-      "HL2MP_FootstepsRequirement": "Kræver lyse modeller aktiveret i spilindstillingerne og tilladt af denne server."
+      "HL2MP_FootstepsRequirement": "Kræver lyse modeller aktiveret i spilindstillingerne og tilladt af denne server.",
+      "HL2MP_EnableCheats": "Aktivér snydekoder",
+      "HL2MP_PausableGame": "Tillad pause",
+      "HL2MP_Footsteps": "Fodtrin",
+      "HL2MP_ServerPermissions": "SERVERTILLADELSER",
+      "HL2MP_HostDisconnectConfirm": "Forlad den aktuelle server og start din egen?",
+      "HL2MP_FootstepsServerHint": "Fodtrin afspilles kun, hvis serveren tillader det.",
+      "HL2MP_FootstepsServerDisabled": "Fodtrin er slået fra på denne server. Dit valg bevares."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -12120,7 +12211,14 @@
       "HL2MP_AllowHitmarkers": "Treffermarkeringen (schade)",
       "HL2MP_AllowHitSounds": "Treffergeluiden",
       "HL2MP_HitSoundsHint": "Vereist toestemming van de server. Geluiden klinken alleen bij door de server bevestigde schade aan vijanden.",
-      "HL2MP_FootstepsRequirement": "Vereist heldere modellen in de spelopties en toestemming van deze server."
+      "HL2MP_FootstepsRequirement": "Vereist heldere modellen in de spelopties en toestemming van deze server.",
+      "HL2MP_EnableCheats": "Cheats inschakelen",
+      "HL2MP_PausableGame": "Pauzeren toestaan",
+      "HL2MP_Footsteps": "Voetstappen",
+      "HL2MP_ServerPermissions": "SERVERTOESTEMMINGEN",
+      "HL2MP_HostDisconnectConfirm": "De huidige server verlaten en je eigen server starten?",
+      "HL2MP_FootstepsServerHint": "Voetstappen worden alleen afgespeeld als de server dit toestaat.",
+      "HL2MP_FootstepsServerDisabled": "Voetstappen zijn uitgeschakeld door deze server. Je voorkeur blijft bewaard."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -13131,7 +13229,14 @@
       "HL2MP_AllowHitmarkers": "Osumailmaisimet (vahinkoluvut)",
       "HL2MP_AllowHitSounds": "Osumien äänet",
       "HL2MP_HitSoundsHint": "Vaatii palvelimen luvan. Ääni kuuluu vain palvelimen vahvistamasta viholliselle aiheutetusta vahingosta.",
-      "HL2MP_FootstepsRequirement": "Vaatii kirkkaat mallit peliasetuksista ja tämän palvelimen luvan."
+      "HL2MP_FootstepsRequirement": "Vaatii kirkkaat mallit peliasetuksista ja tämän palvelimen luvan.",
+      "HL2MP_EnableCheats": "Salli huijauskoodit",
+      "HL2MP_PausableGame": "Salli pelin tauottaminen",
+      "HL2MP_Footsteps": "Askeläänet",
+      "HL2MP_ServerPermissions": "PALVELIMEN KÄYTTÖOIKEUDET",
+      "HL2MP_HostDisconnectConfirm": "Poistutaanko nykyiseltä palvelimelta ja käynnistetäänkö oma palvelin?",
+      "HL2MP_FootstepsServerHint": "Askeläänet toistetaan vain, jos palvelin sallii ne.",
+      "HL2MP_FootstepsServerDisabled": "Palvelin on poistanut askeläänet käytöstä. Valintasi säilytetään."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -14142,7 +14247,14 @@
       "HL2MP_AllowHitmarkers": "Indicateurs de dégâts",
       "HL2MP_AllowHitSounds": "Sons de touche",
       "HL2MP_HitSoundsHint": "Nécessite l'autorisation du serveur. Les sons signalent uniquement les dégâts ennemis confirmés par le serveur.",
-      "HL2MP_FootstepsRequirement": "Nécessite les modèles lumineux dans les options de jeu et leur autorisation par le serveur."
+      "HL2MP_FootstepsRequirement": "Nécessite les modèles lumineux dans les options de jeu et leur autorisation par le serveur.",
+      "HL2MP_EnableCheats": "Activer les codes de triche",
+      "HL2MP_PausableGame": "Autoriser la pause",
+      "HL2MP_Footsteps": "Bruits de pas",
+      "HL2MP_ServerPermissions": "AUTORISATIONS DU SERVEUR",
+      "HL2MP_HostDisconnectConfirm": "Quitter le serveur actuel et lancer votre propre serveur ?",
+      "HL2MP_FootstepsServerHint": "Les bruits de pas sont joués uniquement si le serveur les autorise.",
+      "HL2MP_FootstepsServerDisabled": "Les bruits de pas sont désactivés par ce serveur. Votre préférence est conservée."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -15153,7 +15265,14 @@
       "HL2MP_AllowHitmarkers": "Trefferanzeigen (Schadenszahlen)",
       "HL2MP_AllowHitSounds": "Treffersounds",
       "HL2MP_HitSoundsHint": "Erfordert die Erlaubnis des Servers. Töne bestätigen nur vom Server bestätigten Schaden an Gegnern.",
-      "HL2MP_FootstepsRequirement": "Erfordert helle Modelle in den Spieloptionen und die Erlaubnis dieses Servers."
+      "HL2MP_FootstepsRequirement": "Erfordert helle Modelle in den Spieloptionen und die Erlaubnis dieses Servers.",
+      "HL2MP_EnableCheats": "Cheats aktivieren",
+      "HL2MP_PausableGame": "Pausieren erlauben",
+      "HL2MP_Footsteps": "Schrittgeräusche",
+      "HL2MP_ServerPermissions": "SERVERBERECHTIGUNGEN",
+      "HL2MP_HostDisconnectConfirm": "Den aktuellen Server verlassen und einen eigenen Server starten?",
+      "HL2MP_FootstepsServerHint": "Schrittgeräusche werden nur abgespielt, wenn der Server sie erlaubt.",
+      "HL2MP_FootstepsServerDisabled": "Schrittgeräusche sind auf diesem Server deaktiviert. Deine Einstellung bleibt erhalten."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -16164,7 +16283,14 @@
       "HL2MP_AllowHitmarkers": "Ενδείξεις χτυπημάτων (ζημιά)",
       "HL2MP_AllowHitSounds": "Ήχοι επιτυχημένων χτυπημάτων",
       "HL2MP_HitSoundsHint": "Απαιτεί άδεια του διακομιστή. Οι ήχοι ακούγονται μόνο για ζημιά σε εχθρούς που επιβεβαιώνει ο διακομιστής.",
-      "HL2MP_FootstepsRequirement": "Απαιτεί ενεργά φωτεινά μοντέλα στις επιλογές παιχνιδιού και άδεια από αυτόν τον διακομιστή."
+      "HL2MP_FootstepsRequirement": "Απαιτεί ενεργά φωτεινά μοντέλα στις επιλογές παιχνιδιού και άδεια από αυτόν τον διακομιστή.",
+      "HL2MP_EnableCheats": "Ενεργοποίηση cheats",
+      "HL2MP_PausableGame": "Να επιτρέπεται η παύση",
+      "HL2MP_Footsteps": "Βήματα",
+      "HL2MP_ServerPermissions": "ΔΙΚΑΙΩΜΑΤΑ ΔΙΑΚΟΜΙΣΤΗ",
+      "HL2MP_HostDisconnectConfirm": "Να αποχωρήσετε από τον τρέχοντα διακομιστή και να ξεκινήσετε δικό σας;",
+      "HL2MP_FootstepsServerHint": "Τα βήματα ακούγονται μόνο αν τα επιτρέπει ο διακομιστής.",
+      "HL2MP_FootstepsServerDisabled": "Τα βήματα είναι απενεργοποιημένα από αυτόν τον διακομιστή. Η προτίμησή σας διατηρείται."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -17175,7 +17301,14 @@
       "HL2MP_AllowHitmarkers": "Találatjelzők (sebzésszámok)",
       "HL2MP_AllowHitSounds": "Találati hangok",
       "HL2MP_HitSoundsHint": "A szerver engedélye szükséges. Hang csak a szerver által megerősített ellenséges sebzéskor szól.",
-      "HL2MP_FootstepsRequirement": "Világos modellek szükségesek a játékbeállításokban, valamint a szerver engedélye."
+      "HL2MP_FootstepsRequirement": "Világos modellek szükségesek a játékbeállításokban, valamint a szerver engedélye.",
+      "HL2MP_EnableCheats": "Csalások engedélyezése",
+      "HL2MP_PausableGame": "Szüneteltetés engedélyezése",
+      "HL2MP_Footsteps": "Lépéshangok",
+      "HL2MP_ServerPermissions": "SZERVERENGEDÉLYEK",
+      "HL2MP_HostDisconnectConfirm": "Kilépsz a jelenlegi szerverről, és elindítod a sajátodat?",
+      "HL2MP_FootstepsServerHint": "A lépéshangok csak akkor hallhatók, ha a szerver engedélyezi őket.",
+      "HL2MP_FootstepsServerDisabled": "A szerver letiltotta a lépéshangokat. A beállításod megmarad."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -18186,7 +18319,14 @@
       "HL2MP_AllowHitmarkers": "Penanda hit (angka kerusakan)",
       "HL2MP_AllowHitSounds": "Suara kena sasaran",
       "HL2MP_HitSoundsHint": "Memerlukan izin server. Suara hanya diputar untuk kerusakan pada musuh yang dikonfirmasi server.",
-      "HL2MP_FootstepsRequirement": "Memerlukan model terang aktif di opsi Game dan diizinkan oleh server ini."
+      "HL2MP_FootstepsRequirement": "Memerlukan model terang aktif di opsi Game dan diizinkan oleh server ini.",
+      "HL2MP_EnableCheats": "Aktifkan cheat",
+      "HL2MP_PausableGame": "Izinkan jeda permainan",
+      "HL2MP_Footsteps": "Suara langkah",
+      "HL2MP_ServerPermissions": "IZIN SERVER",
+      "HL2MP_HostDisconnectConfirm": "Keluar dari server saat ini dan mulai server sendiri?",
+      "HL2MP_FootstepsServerHint": "Suara langkah hanya diputar jika diizinkan oleh server.",
+      "HL2MP_FootstepsServerDisabled": "Suara langkah dinonaktifkan oleh server ini. Preferensi Anda tetap disimpan."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -19197,7 +19337,14 @@
       "HL2MP_AllowHitmarkers": "Indicatori di colpo (danni)",
       "HL2MP_AllowHitSounds": "Suoni dei colpi a segno",
       "HL2MP_HitSoundsHint": "Richiede il permesso del server. I suoni indicano solo danni ai nemici confermati dal server.",
-      "HL2MP_FootstepsRequirement": "Richiede modelli luminosi attivi nelle opzioni di gioco e consentiti da questo server."
+      "HL2MP_FootstepsRequirement": "Richiede modelli luminosi attivi nelle opzioni di gioco e consentiti da questo server.",
+      "HL2MP_EnableCheats": "Abilita trucchi",
+      "HL2MP_PausableGame": "Consenti la pausa",
+      "HL2MP_Footsteps": "Passi",
+      "HL2MP_ServerPermissions": "AUTORIZZAZIONI DEL SERVER",
+      "HL2MP_HostDisconnectConfirm": "Uscire dal server attuale e avviare il proprio server?",
+      "HL2MP_FootstepsServerHint": "I passi vengono riprodotti solo se il server li consente.",
+      "HL2MP_FootstepsServerDisabled": "I passi sono disattivati da questo server. La tua preferenza viene mantenuta."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -20208,7 +20355,14 @@
       "HL2MP_AllowHitmarkers": "ヒットマーカー（ダメージ数値）",
       "HL2MP_AllowHitSounds": "ヒット音",
       "HL2MP_HitSoundsHint": "サーバーの許可が必要です。サーバーが確認した敵へのダメージに対してのみ音が鳴ります。",
-      "HL2MP_FootstepsRequirement": "ゲーム設定で明るいモデルを有効にし、このサーバーで許可されている必要があります。"
+      "HL2MP_FootstepsRequirement": "ゲーム設定で明るいモデルを有効にし、このサーバーで許可されている必要があります。",
+      "HL2MP_EnableCheats": "チートを有効にする",
+      "HL2MP_PausableGame": "一時停止を許可",
+      "HL2MP_Footsteps": "足音",
+      "HL2MP_ServerPermissions": "サーバーの許可設定",
+      "HL2MP_HostDisconnectConfirm": "現在のサーバーを退出して自分のサーバーを開始しますか？",
+      "HL2MP_FootstepsServerHint": "足音はサーバーで許可されている場合のみ再生されます。",
+      "HL2MP_FootstepsServerDisabled": "このサーバーでは足音が無効になっています。個人設定は保持されます。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -21219,7 +21373,14 @@
       "HL2MP_AllowHitmarkers": "명중 표시 (피해량 숫자)",
       "HL2MP_AllowHitSounds": "명중 효과음",
       "HL2MP_HitSoundsHint": "서버의 허용이 필요합니다. 서버가 확인한 적 피해에 대해서만 소리가 재생됩니다.",
-      "HL2MP_FootstepsRequirement": "게임 옵션에서 밝은 모델을 켜고 이 서버에서 허용해야 합니다."
+      "HL2MP_FootstepsRequirement": "게임 옵션에서 밝은 모델을 켜고 이 서버에서 허용해야 합니다.",
+      "HL2MP_EnableCheats": "치트 활성화",
+      "HL2MP_PausableGame": "게임 일시 정지 허용",
+      "HL2MP_Footsteps": "발소리",
+      "HL2MP_ServerPermissions": "서버 허용 설정",
+      "HL2MP_HostDisconnectConfirm": "현재 서버에서 나가서 자신의 서버를 시작하시겠습니까?",
+      "HL2MP_FootstepsServerHint": "발소리는 서버에서 허용한 경우에만 재생됩니다.",
+      "HL2MP_FootstepsServerDisabled": "이 서버에서는 발소리가 비활성화되어 있습니다. 개인 설정은 유지됩니다."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -22230,7 +22391,14 @@
       "HL2MP_AllowHitmarkers": "Indicadores de impacto (daño)",
       "HL2MP_AllowHitSounds": "Sonidos de impacto",
       "HL2MP_HitSoundsHint": "Requiere permiso del servidor. Solo suena al infligir daño a enemigos confirmado por el servidor.",
-      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor."
+      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor.",
+      "HL2MP_EnableCheats": "Activar trucos",
+      "HL2MP_PausableGame": "Permitir pausar la partida",
+      "HL2MP_Footsteps": "Pasos",
+      "HL2MP_ServerPermissions": "PERMISOS DEL SERVIDOR",
+      "HL2MP_HostDisconnectConfirm": "¿Salir del servidor actual e iniciar tu propio servidor?",
+      "HL2MP_FootstepsServerHint": "Los pasos solo se reproducen si el servidor los permite.",
+      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -23241,7 +23409,14 @@
       "HL2MP_AllowHitmarkers": "Penanda kena (angka kerosakan)",
       "HL2MP_AllowHitSounds": "Bunyi kena sasaran",
       "HL2MP_HitSoundsHint": "Memerlukan kebenaran pelayan. Bunyi hanya dimainkan untuk kerosakan pada musuh yang disahkan pelayan.",
-      "HL2MP_FootstepsRequirement": "Memerlukan model cerah diaktifkan dalam pilihan Permainan dan dibenarkan oleh pelayan ini."
+      "HL2MP_FootstepsRequirement": "Memerlukan model cerah diaktifkan dalam pilihan Permainan dan dibenarkan oleh pelayan ini.",
+      "HL2MP_EnableCheats": "Dayakan cheat",
+      "HL2MP_PausableGame": "Benarkan jeda permainan",
+      "HL2MP_Footsteps": "Bunyi langkah",
+      "HL2MP_ServerPermissions": "KEBENARAN PELAYAN",
+      "HL2MP_HostDisconnectConfirm": "Keluar daripada pelayan semasa dan mulakan pelayan sendiri?",
+      "HL2MP_FootstepsServerHint": "Bunyi langkah dimainkan hanya jika dibenarkan oleh pelayan.",
+      "HL2MP_FootstepsServerDisabled": "Bunyi langkah dinyahdayakan oleh pelayan ini. Pilihan anda dikekalkan."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -24252,7 +24427,14 @@
       "HL2MP_AllowHitmarkers": "Treffmarkører (skadetall)",
       "HL2MP_AllowHitSounds": "Trefflyder",
       "HL2MP_HitSoundsHint": "Krever serverens tillatelse. Lyder spilles bare ved skade på fiender som serveren har bekreftet.",
-      "HL2MP_FootstepsRequirement": "Krever lyse modeller aktivert i spillinnstillingene og tillatt av denne serveren."
+      "HL2MP_FootstepsRequirement": "Krever lyse modeller aktivert i spillinnstillingene og tillatt av denne serveren.",
+      "HL2MP_EnableCheats": "Aktiver juksekoder",
+      "HL2MP_PausableGame": "Tillat pause",
+      "HL2MP_Footsteps": "Fottrinn",
+      "HL2MP_ServerPermissions": "SERVERTILLATELSER",
+      "HL2MP_HostDisconnectConfirm": "Forlate den nåværende serveren og starte din egen?",
+      "HL2MP_FootstepsServerHint": "Fottrinn spilles bare av hvis serveren tillater det.",
+      "HL2MP_FootstepsServerDisabled": "Fottrinn er deaktivert på denne serveren. Valget ditt beholdes."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -25263,7 +25445,14 @@
       "HL2MP_AllowHitmarkers": "Znaczniki trafień (obrażenia)",
       "HL2MP_AllowHitSounds": "Dźwięki trafień",
       "HL2MP_HitSoundsHint": "Wymaga zgody serwera. Dźwięk sygnalizuje tylko potwierdzone przez serwer obrażenia wrogów.",
-      "HL2MP_FootstepsRequirement": "Wymaga jasnych modeli w opcjach gry i zgody tego serwera."
+      "HL2MP_FootstepsRequirement": "Wymaga jasnych modeli w opcjach gry i zgody tego serwera.",
+      "HL2MP_EnableCheats": "Włącz kody",
+      "HL2MP_PausableGame": "Zezwól na pauzę",
+      "HL2MP_Footsteps": "Odgłosy kroków",
+      "HL2MP_ServerPermissions": "UPRAWNIENIA SERWERA",
+      "HL2MP_HostDisconnectConfirm": "Opuścić bieżący serwer i uruchomić własny?",
+      "HL2MP_FootstepsServerHint": "Odgłosy kroków są odtwarzane tylko wtedy, gdy serwer na nie pozwala.",
+      "HL2MP_FootstepsServerDisabled": "Ten serwer wyłączył odgłosy kroków. Twoje ustawienie zostaje zachowane."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -26274,7 +26463,14 @@
       "HL2MP_AllowHitmarkers": "Indicadores de acerto (dano)",
       "HL2MP_AllowHitSounds": "Sons de acerto",
       "HL2MP_HitSoundsHint": "Requer permissão do servidor. Só emite som por dano a inimigos confirmado pelo servidor.",
-      "HL2MP_FootstepsRequirement": "Requer modelos luminosos ativados nas opções de jogo e permitidos por este servidor."
+      "HL2MP_FootstepsRequirement": "Requer modelos luminosos ativados nas opções de jogo e permitidos por este servidor.",
+      "HL2MP_EnableCheats": "Ativar batotas",
+      "HL2MP_PausableGame": "Permitir pausar o jogo",
+      "HL2MP_Footsteps": "Passos",
+      "HL2MP_ServerPermissions": "PERMISSÕES DO SERVIDOR",
+      "HL2MP_HostDisconnectConfirm": "Sair do servidor atual e iniciar o teu próprio servidor?",
+      "HL2MP_FootstepsServerHint": "Os passos só são reproduzidos se o servidor os permitir.",
+      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. A tua preferência é mantida."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -27285,7 +27481,14 @@
       "HL2MP_AllowHitmarkers": "Indicatori de lovire (daune)",
       "HL2MP_AllowHitSounds": "Sunete de lovire",
       "HL2MP_HitSoundsHint": "Necesită permisiunea serverului. Sunetele indică doar daunele asupra inamicilor confirmate de server.",
-      "HL2MP_FootstepsRequirement": "Necesită modele luminoase activate în opțiunile jocului și permise de acest server."
+      "HL2MP_FootstepsRequirement": "Necesită modele luminoase activate în opțiunile jocului și permise de acest server.",
+      "HL2MP_EnableCheats": "Activează trucurile",
+      "HL2MP_PausableGame": "Permite pauza",
+      "HL2MP_Footsteps": "Pași",
+      "HL2MP_ServerPermissions": "PERMISIUNI SERVER",
+      "HL2MP_HostDisconnectConfirm": "Părăsești serverul curent și pornești propriul server?",
+      "HL2MP_FootstepsServerHint": "Pașii se aud numai dacă serverul îi permite.",
+      "HL2MP_FootstepsServerDisabled": "Pașii sunt dezactivați de acest server. Preferința ta este păstrată."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -28296,7 +28499,14 @@
       "HL2MP_AllowHitmarkers": "Индикаторы попаданий (числа урона)",
       "HL2MP_AllowHitSounds": "Звуки попаданий",
       "HL2MP_HitSoundsHint": "Требуется разрешение сервера. Звук воспроизводится только при подтверждённом сервером уроне врагу.",
-      "HL2MP_FootstepsRequirement": "Нужны яркие модели в настройках игры и разрешение этого сервера."
+      "HL2MP_FootstepsRequirement": "Нужны яркие модели в настройках игры и разрешение этого сервера.",
+      "HL2MP_EnableCheats": "Разрешить читы",
+      "HL2MP_PausableGame": "Разрешить паузу",
+      "HL2MP_Footsteps": "Звуки шагов",
+      "HL2MP_ServerPermissions": "РАЗРЕШЕНИЯ СЕРВЕРА",
+      "HL2MP_HostDisconnectConfirm": "Покинуть текущий сервер и запустить свой?",
+      "HL2MP_FootstepsServerHint": "Звуки шагов воспроизводятся, только если сервер их разрешает.",
+      "HL2MP_FootstepsServerDisabled": "Звуки шагов отключены на этом сервере. Ваши настройки сохранены."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -29307,7 +29517,14 @@
       "HL2MP_AllowHitmarkers": "命中提示（伤害数字）",
       "HL2MP_AllowHitSounds": "命中音效",
       "HL2MP_HitSoundsHint": "需要服务器允许。仅在服务器确认对敌人造成伤害时播放声音。",
-      "HL2MP_FootstepsRequirement": "需要在游戏选项中启用高亮模型，并获得此服务器的允许。"
+      "HL2MP_FootstepsRequirement": "需要在游戏选项中启用高亮模型，并获得此服务器的允许。",
+      "HL2MP_EnableCheats": "启用作弊",
+      "HL2MP_PausableGame": "允许暂停游戏",
+      "HL2MP_Footsteps": "脚步声",
+      "HL2MP_ServerPermissions": "服务器权限",
+      "HL2MP_HostDisconnectConfirm": "离开当前服务器并启动自己的服务器？",
+      "HL2MP_FootstepsServerHint": "只有服务器允许时才会播放脚步声。",
+      "HL2MP_FootstepsServerDisabled": "此服务器已禁用脚步声。您的个人偏好设置会保留。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -30318,7 +30535,14 @@
       "HL2MP_AllowHitmarkers": "Indicadores de impacto (daño)",
       "HL2MP_AllowHitSounds": "Sonidos de impacto",
       "HL2MP_HitSoundsHint": "Requiere permiso del servidor. Solo suena al infligir daño a enemigos confirmado por el servidor.",
-      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor."
+      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor.",
+      "HL2MP_EnableCheats": "Activar trucos",
+      "HL2MP_PausableGame": "Permitir pausar la partida",
+      "HL2MP_Footsteps": "Pasos",
+      "HL2MP_ServerPermissions": "PERMISOS DEL SERVIDOR",
+      "HL2MP_HostDisconnectConfirm": "¿Salir del servidor actual e iniciar tu propio servidor?",
+      "HL2MP_FootstepsServerHint": "Los pasos solo se reproducen si el servidor los permite.",
+      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -31329,7 +31553,14 @@
       "HL2MP_AllowHitmarkers": "Träffmarkörer (skadetal)",
       "HL2MP_AllowHitSounds": "Träffljud",
       "HL2MP_HitSoundsHint": "Kräver serverns tillstånd. Ljud spelas bara för skada på fiender som servern har bekräftat.",
-      "HL2MP_FootstepsRequirement": "Kräver ljusa modeller aktiverade i spelinställningarna och tillåtna av denna server."
+      "HL2MP_FootstepsRequirement": "Kräver ljusa modeller aktiverade i spelinställningarna och tillåtna av denna server.",
+      "HL2MP_EnableCheats": "Aktivera fusk",
+      "HL2MP_PausableGame": "Tillåt paus",
+      "HL2MP_Footsteps": "Fotsteg",
+      "HL2MP_ServerPermissions": "SERVERBEHÖRIGHETER",
+      "HL2MP_HostDisconnectConfirm": "Lämna den nuvarande servern och starta en egen?",
+      "HL2MP_FootstepsServerHint": "Fotsteg spelas bara upp om servern tillåter det.",
+      "HL2MP_FootstepsServerDisabled": "Fotsteg är inaktiverade på den här servern. Ditt val sparas."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -32340,7 +32571,14 @@
       "HL2MP_AllowHitmarkers": "命中提示（傷害數字）",
       "HL2MP_AllowHitSounds": "命中音效",
       "HL2MP_HitSoundsHint": "需要伺服器允許。僅在伺服器確認對敵人造成傷害時播放聲音。",
-      "HL2MP_FootstepsRequirement": "需要在遊戲選項中啟用高亮模型，並獲得此伺服器的允許。"
+      "HL2MP_FootstepsRequirement": "需要在遊戲選項中啟用高亮模型，並獲得此伺服器的允許。",
+      "HL2MP_EnableCheats": "啟用作弊",
+      "HL2MP_PausableGame": "允許暫停遊戲",
+      "HL2MP_Footsteps": "腳步聲",
+      "HL2MP_ServerPermissions": "伺服器權限",
+      "HL2MP_HostDisconnectConfirm": "離開目前的伺服器並啟動自己的伺服器？",
+      "HL2MP_FootstepsServerHint": "只有伺服器允許時才會播放腳步聲。",
+      "HL2MP_FootstepsServerDisabled": "此伺服器已停用腳步聲。您的個人偏好設定會保留。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -33351,7 +33589,14 @@
       "HL2MP_AllowHitmarkers": "ตัวบอกการยิงโดน (ตัวเลขความเสียหาย)",
       "HL2MP_AllowHitSounds": "เสียงเมื่อยิงโดน",
       "HL2MP_HitSoundsHint": "ต้องได้รับอนุญาตจากเซิร์ฟเวอร์ เสียงจะดังเมื่อเซิร์ฟเวอร์ยืนยันความเสียหายต่อศัตรูเท่านั้น",
-      "HL2MP_FootstepsRequirement": "ต้องเปิดโมเดลสว่างในตัวเลือกเกมและเซิร์ฟเวอร์นี้ต้องอนุญาต"
+      "HL2MP_FootstepsRequirement": "ต้องเปิดโมเดลสว่างในตัวเลือกเกมและเซิร์ฟเวอร์นี้ต้องอนุญาต",
+      "HL2MP_EnableCheats": "เปิดใช้สูตรโกง",
+      "HL2MP_PausableGame": "อนุญาตให้หยุดเกมชั่วคราว",
+      "HL2MP_Footsteps": "เสียงฝีเท้า",
+      "HL2MP_ServerPermissions": "สิทธิ์ของเซิร์ฟเวอร์",
+      "HL2MP_HostDisconnectConfirm": "ออกจากเซิร์ฟเวอร์ปัจจุบันและเริ่มเซิร์ฟเวอร์ของคุณเองหรือไม่?",
+      "HL2MP_FootstepsServerHint": "เสียงฝีเท้าจะเล่นเมื่อเซิร์ฟเวอร์อนุญาตเท่านั้น",
+      "HL2MP_FootstepsServerDisabled": "เซิร์ฟเวอร์นี้ปิดเสียงฝีเท้าไว้ การตั้งค่าของคุณยังคงถูกเก็บไว้"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -34362,7 +34607,14 @@
       "HL2MP_AllowHitmarkers": "Vuruş göstergeleri (hasar sayıları)",
       "HL2MP_AllowHitSounds": "İsabet sesleri",
       "HL2MP_HitSoundsHint": "Sunucu izni gerektirir. Sesler yalnızca sunucunun onayladığı düşman hasarında çalar.",
-      "HL2MP_FootstepsRequirement": "Oyun seçeneklerinde parlak modellerin açık olması ve bu sunucunun izin vermesi gerekir."
+      "HL2MP_FootstepsRequirement": "Oyun seçeneklerinde parlak modellerin açık olması ve bu sunucunun izin vermesi gerekir.",
+      "HL2MP_EnableCheats": "Hileleri etkinleştir",
+      "HL2MP_PausableGame": "Duraklatmaya izin ver",
+      "HL2MP_Footsteps": "Ayak sesleri",
+      "HL2MP_ServerPermissions": "SUNUCU İZİNLERİ",
+      "HL2MP_HostDisconnectConfirm": "Mevcut sunucudan ayrılıp kendi sunucunuzu başlatmak istiyor musunuz?",
+      "HL2MP_FootstepsServerHint": "Ayak sesleri yalnızca sunucu izin verirse çalınır.",
+      "HL2MP_FootstepsServerDisabled": "Bu sunucuda ayak sesleri devre dışı. Tercihiniz korunur."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -35373,7 +35625,14 @@
       "HL2MP_AllowHitmarkers": "Індикатори влучань (числа шкоди)",
       "HL2MP_AllowHitSounds": "Звуки влучань",
       "HL2MP_HitSoundsHint": "Потрібен дозвіл сервера. Звук лунає лише за підтвердженої сервером шкоди ворогу.",
-      "HL2MP_FootstepsRequirement": "Потрібні яскраві моделі в налаштуваннях гри та дозвіл цього сервера."
+      "HL2MP_FootstepsRequirement": "Потрібні яскраві моделі в налаштуваннях гри та дозвіл цього сервера.",
+      "HL2MP_EnableCheats": "Дозволити чити",
+      "HL2MP_PausableGame": "Дозволити паузу",
+      "HL2MP_Footsteps": "Звуки кроків",
+      "HL2MP_ServerPermissions": "ДОЗВОЛИ СЕРВЕРА",
+      "HL2MP_HostDisconnectConfirm": "Залишити поточний сервер і запустити власний?",
+      "HL2MP_FootstepsServerHint": "Звуки кроків відтворюються, лише якщо сервер їх дозволяє.",
+      "HL2MP_FootstepsServerDisabled": "Звуки кроків вимкнено на цьому сервері. Ваші налаштування збережено."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -36384,7 +36643,14 @@
       "HL2MP_AllowHitmarkers": "Chỉ báo trúng đích (số sát thương)",
       "HL2MP_AllowHitSounds": "Âm thanh trúng đích",
       "HL2MP_HitSoundsHint": "Cần máy chủ cho phép. Âm thanh chỉ phát khi máy chủ xác nhận sát thương gây lên kẻ địch.",
-      "HL2MP_FootstepsRequirement": "Cần bật mô hình sáng trong tùy chọn Trò chơi và được máy chủ này cho phép."
+      "HL2MP_FootstepsRequirement": "Cần bật mô hình sáng trong tùy chọn Trò chơi và được máy chủ này cho phép.",
+      "HL2MP_EnableCheats": "Bật mã gian lận",
+      "HL2MP_PausableGame": "Cho phép tạm dừng",
+      "HL2MP_Footsteps": "Tiếng bước chân",
+      "HL2MP_ServerPermissions": "QUYỀN CỦA MÁY CHỦ",
+      "HL2MP_HostDisconnectConfirm": "Rời máy chủ hiện tại và khởi chạy máy chủ riêng của bạn?",
+      "HL2MP_FootstepsServerHint": "Tiếng bước chân chỉ phát khi máy chủ cho phép.",
+      "HL2MP_FootstepsServerDisabled": "Máy chủ này đã tắt tiếng bước chân. Tùy chọn của bạn vẫn được giữ lại."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

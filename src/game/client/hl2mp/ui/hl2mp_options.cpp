@@ -8,7 +8,7 @@
 #include "hl2mp_colorpicker.h"
 #include "hl2mp_hitmarker_style.h"
 #include "hl2mp_hitsounds.h"
-extern ConVar sv_hitsounds;
+extern ConVar sv_hitsounds, sv_footsteps;
 #include "vgui_controls/Tooltip.h"
 #include "hl2mp_playermodels.h"
 #include "hl2mp_sprays.h"
@@ -160,11 +160,10 @@ public:
         m_Tip->SetWrap(true);m_Tip->SetContentAlignment(vgui::Label::a_northwest);m_Tip->SetTextInset(12,10);m_Tip->SetVisible(false);
     }
     void SetFont(vgui::HFont font) OVERRIDE { BaseClass::SetFont(font);m_Tip->SetFont(font); }
-    void SetWarning(bool warning)
+    void SetWarning(bool warning,const char *warningText="#HL2MP_ServerVisualDisabled")
     {
-        if(m_Warning==warning)return;
         m_Warning=warning;SetText(warning ? "" : "i");
-        m_Tip->SetText(warning ? "#HL2MP_ServerVisualDisabled" : m_Hint);Repaint();
+        m_Tip->SetText(warning ? warningText : m_Hint);Repaint();
     }
     void Paint() OVERRIDE
     {
@@ -232,9 +231,11 @@ public:
     {
         SetPaintBackgroundEnabled( true ); const SettingDef &def = s_Settings[index]; m_Label = Label( this, def.label ); m_Label->SetWrap( true );
         m_Spray = NULL; m_Color = NULL; m_Preview = NULL; m_Info = NULL; m_PreviewLabel = NULL;
-        m_Warning=NULL;m_ServerBlocked=false;m_ChoiceBlocked=false;m_Audition=NULL;
+        m_Warning=NULL;m_ServerBlocked=false;m_ChoiceBlocked=false;m_FootstepsBlocked=false;m_Audition=NULL;
         m_RemoteFootsteps=!Q_strcmp(def.cvar,"cl_footsteps_teammates") || !Q_strcmp(def.cvar,"cl_footsteps_enemies");
+        m_Footsteps=m_RemoteFootsteps || !Q_strcmp(def.cvar,"cl_footsteps_self");
         if(m_RemoteFootsteps)m_Info=new CInfoButton(this,"#HL2MP_FootstepsRequirement");
+        else if(m_Footsteps)m_Info=new CInfoButton(this,"#HL2MP_FootstepsServerHint");
         if(!Q_strcmp(def.cvar,"cl_hitsounds"))m_Info=new CInfoButton(this,"#HL2MP_HitSoundsHint");
         if(!Q_strcmp(def.cvar,"cl_hitsound"))
         {
@@ -417,11 +418,15 @@ public:
         BaseClass::OnThink();
         if(m_Info)
         {
-            const bool blocked=engine->IsInGame() && !engine->IsLevelMainMenuBackground() &&
-                (!Q_strcmp(s_Settings[m_Index].cvar,"cl_hitmarkers") ? !sv_hitmarkers.GetBool() : !Q_strcmp(s_Settings[m_Index].cvar,"cl_hitsounds") ? !sv_hitsounds.GetBool() : !HL2MPBrightModels_Allowed());
-            if(blocked!=m_ServerBlocked)
+            const bool connected=engine->IsInGame() && !engine->IsLevelMainMenuBackground();
+            const bool footstepsBlocked=connected && m_Footsteps && !sv_footsteps.GetBool();
+            const bool blocked=footstepsBlocked || (connected &&
+                (!Q_strcmp(s_Settings[m_Index].cvar,"cl_hitmarkers") ? !sv_hitmarkers.GetBool() :
+                 !Q_strcmp(s_Settings[m_Index].cvar,"cl_hitsounds") ? !sv_hitsounds.GetBool() :
+                 (!m_Footsteps || m_RemoteFootsteps) && !HL2MPBrightModels_Allowed()));
+            if(blocked!=m_ServerBlocked || footstepsBlocked!=m_FootstepsBlocked)
             {
-                m_ServerBlocked=blocked;RefreshWarning();
+                m_ServerBlocked=blocked;m_FootstepsBlocked=footstepsBlocked;RefreshWarning();
             }
         }
         const bool highlighted = m_Available && ( HL2MPControlHighlighted( this ) || DropdownOpen() );
@@ -449,8 +454,9 @@ public:
 private:
     void RefreshWarning()
     {
-        m_Info->SetWarning(m_ServerBlocked);
-        m_Warning->SetText(m_RemoteFootsteps && !m_ServerBlocked ? "#HL2MP_FootstepsRequirement" : "#HL2MP_ServerVisualDisabled");
+        const char *warning=m_FootstepsBlocked ? "#HL2MP_FootstepsServerDisabled" : "#HL2MP_ServerVisualDisabled";
+        m_Info->SetWarning(m_ServerBlocked,warning);
+        m_Warning->SetText(m_RemoteFootsteps && !m_ServerBlocked ? "#HL2MP_FootstepsRequirement" : warning);
         m_Warning->SetFgColor(m_ServerBlocked ? Color(255,150,140,255) : HL2MPServerTheme::Muted());
         m_Warning->SetVisible(m_ServerBlocked || m_ChoiceBlocked);
         InvalidateLayout(true);Repaint();
@@ -460,7 +466,7 @@ private:
     bool m_Highlighted, m_Available;
     CHL2MPSprayPicker *m_Spray;
     CHL2MPColorPicker *m_Color; CHitmarkerPreview *m_Preview; CInfoButton *m_Info; vgui::Label *m_PreviewLabel;
-    vgui::Label *m_Warning;bool m_ServerBlocked,m_ChoiceBlocked,m_RemoteFootsteps;CHL2MPSettingsButton *m_Audition;
+    vgui::Label *m_Warning;bool m_ServerBlocked,m_ChoiceBlocked,m_RemoteFootsteps,m_Footsteps,m_FootstepsBlocked;CHL2MPSettingsButton *m_Audition;
 };
 
 class CBindingRow : public vgui::EditablePanel
@@ -925,7 +931,7 @@ void CHL2MPOptions::OnTick()
         FOR_EACH_VEC(m_Rows, i)
         {
             const char *cvar = s_Settings[m_Rows[i]->Index()].cvar;
-            if (!Q_strcmp(cvar,"cl_footsteps_teammates") || !Q_strcmp(cvar,"cl_footsteps_enemies")) m_Rows[i]->EnableChoice(bright && (!engine->IsInGame() || HL2MPBrightModels_Allowed()));
+            if (!Q_strcmp(cvar,"cl_footsteps_teammates") || !Q_strcmp(cvar,"cl_footsteps_enemies")) m_Rows[i]->EnableChoice(bright && (!engine->IsInGame() || (HL2MPBrightModels_Allowed() && sv_footsteps.GetBool())));
         }
     }
     if ( m_Page == MULTIPLAYER )

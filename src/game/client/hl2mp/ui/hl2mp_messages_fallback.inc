@@ -1032,4 +1032,11 @@ static const Message s_Messages[] = {
     { "HL2MP_AllowHitSounds", "Hit sounds", NULL },
     { "HL2MP_HitSoundsHint", "Requires server permission. Sounds play only for enemy damage confirmed by the server.", NULL },
     { "HL2MP_FootstepsRequirement", "Requires bright models enabled in Game options and allowed by this server.", NULL },
+    { "HL2MP_EnableCheats", "Enable cheats", NULL },
+    { "HL2MP_PausableGame", "Pausable game", NULL },
+    { "HL2MP_Footsteps", "Footsteps", NULL },
+    { "HL2MP_ServerPermissions", "SERVER PERMISSIONS", NULL },
+    { "HL2MP_HostDisconnectConfirm", "Leave the current server and start your own server?", NULL },
+    { "HL2MP_FootstepsServerHint", "Footsteps play only if the server allows them.", NULL },
+    { "HL2MP_FootstepsServerDisabled", "Footsteps are disabled by this server. Your preference is kept.", NULL },
 };

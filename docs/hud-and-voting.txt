@@ -60,6 +60,11 @@ explanation. The local preference stays editable but cannot override the server.
 The warning updates when server policy changes and clears on disconnect.
 
 Community server controls
+Create Server and Server Controls have Server and Rules tabs, with two scrollable
+cards per tab. Text wraps and the action buttons remain reachable at small sizes.
+Create Server is also available while connected. Starting asks for confirmation
+before leaving; cancellation keeps the current game and its server settings.
+After confirmation, the old connection closes before the new server rules apply.
 Apply Changes beside Game mode switches DM/TDM without loading the map again.
 It restarts the round: scores and timer reset, all active players respawn, and
 entering TDM balances the teams. Spectators stay spectators. Console changes to
@@ -72,20 +77,26 @@ sv_bright_models_combine_color "50 150 255"
 Only clients opting into bright models on community servers use these colors.
 sv_bright_models 0 disables bright models on the server; the default is 0.
 The local cl_bright_player_models preference also defaults to 0.
-Server Rules has admin-only checkboxes for bright models, hitmarkers and hit
-sounds. These change sv_bright_models, sv_hitmarkers and sv_hitsounds immediately,
+Server Rules has admin-only checkboxes for bright models, hitmarkers, hit sounds,
+Enable cheats, Pausable game and Footsteps. These change sv_bright_models,
+sv_hitmarkers, sv_hitsounds, sv_cheats, sv_pausable and sv_footsteps immediately,
 without changing any player's personal preference. Console changes are reflected
 in the controls on the next status update.
-Create Server also offers Bright player models, off by default. Launching
-applies that selection to sv_bright_models without changing the host's own
-cl_bright_player_models preference. Turning it off explicitly clears permission
-for the newly created server, even if a previous session allowed bright models.
+Create Server offers the same six permissions. Bright models, hitmarkers, hit
+sounds, cheats and pausing default off; footsteps default on. Launching applies
+every selection without changing the host's personal preferences. An unchecked
+permission is explicitly cleared even if the previous server enabled it.
+sv_pausable allows the engine's player pause command; the existing admin Pause
+and Resume controls remain available independently.
 This also disables the teammate/enemy footstep overrides tied to bright models.
 Audio options explain the requirement beside disabled teammate/enemy selectors:
 enable bright models in Game options and obtain permission from the server.
 When the server disallows bright models, these rows show the same red warning
 as the bright-model and hit-feedback settings. Turning bright models off locally
 shows a neutral prerequisite instead; the selected footstep sounds are retained.
+When sv_footsteps is off, all three footstep rows instead show a red warning
+explaining that the server disabled footsteps. Preferences remain saved; the
+warning updates live and clears on disconnect or when footsteps are re-enabled.
 Matchmaking continues to disallow bright models regardless of this cvar.
 Create Server bots now leave their initial observer state and spawn in DM.
 Maps still need navigation meshes for bots to navigate normally.

@@ -103,6 +103,7 @@ void State( CBasePlayer *player, const char *status )
     WRITE_BYTE(sv_bright_models.GetBool()); WRITE_BYTE(sv_hitmarkers.GetBool()); WRITE_BYTE(sv_hitsounds.GetBool());
     for (int i=0; i<3; ++i) { Color color = HL2MPBrightColor(i); WRITE_BYTE(color.r()); WRITE_BYTE(color.g()); WRITE_BYTE(color.b()); }
     WRITE_STRING( map ); WRITE_STRING( next ); WRITE_STRING( text );
+    WRITE_BYTE(ConVarRef("sv_cheats").GetBool());WRITE_BYTE(ConVarRef("sv_pausable").GetBool());WRITE_BYTE(ConVarRef("sv_footsteps").GetBool());
     MessageEnd();
 }
 
@@ -191,6 +192,14 @@ void HL2MPCommunityRequest( CBasePlayer *player, KeyValues *request )
         if (!Integer(request,"rule",0,2,rule) || !Integer(request,"enabled",0,1,enabled)) return;
         ConVar *vars[] = { &sv_bright_models, &sv_hitmarkers, &sv_hitsounds };
         vars[rule]->SetValue(enabled); State(player,""); return;
+    }
+    if(!Q_strcmp(action,"server_rule"))
+    {
+        int rule,enabled;
+        if(!Integer(request,"rule",0,2,rule) || !Integer(request,"enabled",0,1,enabled))return;
+        // Never accept arbitrary cvar names or commands from the client.
+        const char *vars[]={"sv_cheats","sv_pausable","sv_footsteps"};
+        ConVarRef(vars[rule]).SetValue(enabled);State(player,"");return;
     }
     if ( !Q_strcmp(action, "bright_colors") )
     {
