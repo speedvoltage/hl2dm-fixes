@@ -1,0 +1,110 @@
+Source SDK PR #2171: selected fixes
+=================================
+Upstream author: azzyr
+PR: https://github.com/ValveSoftware/source-sdk-2013/pull/2171
+Reviewed head: 1fcfe5b449af631bd438ffbdf66acc1848471d2f
+Integrated locally: 2026-11-05
+
+Selected changes:
+- hl2mp_bot.cpp and hl2mp_bot_manager.cpp: inclusive RandomInt upper bounds
+  must be model count minus one, for DM and both TDM model lists.
+- imageutils.cpp: decode 1/4-bit BMP pixels through their palette and avoid
+  writing a second pixel past an odd-width 4-bit row.
+- Client/server baseflex.h: pair new[] with delete[] for flex mappings.
+- AI_ResponseSystem.cpp: initialize a copied Rule's context before SetContext
+  releases the previous value.
+- utlstring.cpp: use memmove for overlapping left-trim operations.
+- BuildGroup.cpp: copy resource names before freeing stored names during reload;
+  retain our existing path-ID alias guard.
+- viewrender.cpp: pass the default visibility leaf (-1) as the second skybox
+  BuildWorldRenderLists argument, and the cache flag as the third.
+
+Additional BMP correction found during validation:
+The original GetDIBits call fails on indexed images with ERROR_INVALID_PARAMETER
+on Windows. LoadImage creates a DIB section, so retrieve its palette using
+GetDIBColorTable while it is selected into a temporary DC, then restore the
+previous object. Initialize the entire palette buffer and release the bitmap
+on the affected error paths. This also repairs 8-bit BMP imports.
+API reference: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getdibcolortable
+
+Regression runner (after the normal Windows build):
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/test-sdk-runtime-fixes.ps1
+
+It compiles the actual imageutils.cpp and links the built SDK libraries. Tests
+compare all decoded pixels for 35 BMPs (1/4/8/24/32-bit, widths 1/2/3/7/8/9/17),
+including custom palettes, row padding, orientation and alpha, plus both
+CUtlString::TrimLeft overloads and empty/whitespace/overlapping cases.
+
+
+Source SDK bot fixes
+================================================
+Integrated locally: 2026-11-05
+
+#1372: [HL2MP] Fix bots rapidly switching to and from gravity gun
+https://github.com/ValveSoftware/source-sdk-2013/pull/1372
+Reviewed head: a251d39c208feacd359f07d9975dfb21220d2a5e
+
+#1375: [HL2MP] Bots respect crouch nav areas
+https://github.com/ValveSoftware/source-sdk-2013/pull/1375
+Reviewed head: 8089fe2cde8165988b265af25effdde959db1158
+
+#1377: [HL2MP] Fix bots climbing on top of props they're trying to pick up
+https://github.com/ValveSoftware/source-sdk-2013/pull/1377
+Reviewed head: 5bc40846f32579de08061275c527002018fc17c2
+
+#1371: [HL2MP] Finish bot health charger support
+https://github.com/ValveSoftware/source-sdk-2013/pull/1371
+Reviewed head: 1d1880791633ca302dbb53ebd27da92b7a20681b
+
+#1172: [TF2][HL2MP] Fixed bot_kick not working on TF2 or HL2 MP when using nav_generate.
+https://github.com/ValveSoftware/source-sdk-2013/pull/1172
+Reviewed head: ae37b184b13d25e9d51f358150651b1ec2dfeaa3
+
+#1270: [ALL] Fix major oversight with nav area visibility check in IVision::IsAbleToSee
+https://github.com/ValveSoftware/source-sdk-2013/pull/1270
+Reviewed head: 918f057c107ad22d8f1bfc3eb553cf6ada0b0eed
+
+#1370: [HL2MP] Fix bot quota not functioning outside of teamplay
+https://github.com/ValveSoftware/source-sdk-2013/pull/1370
+Reviewed head: 91267423d65864882523b910ce6355c86d96d3f4
+
+Implementation notes:
+- #1372: an already deployed required weapon counts as equipped. Keep real
+  Weapon_Switch failures and null required handles as failures, unlike the
+  unconditional success in the upstream patch. Preserve action-owned push/pop.
+- #1375: respect crouch navigation goals, while preserving crouch jumps.
+  hl2mp_bot_nav_crouch defaults to 1 (cheat protected).
+- #1377: account for prop size, stop path following within pickup distance,
+  maintain aim longer, and abandon a stalled pickup after three seconds.
+- #1371: find the correct health entity classes, reject depleted chargers,
+  navigate in front of chargers, and use normal player input while aiming.
+  Fix the critical-health comparison and release Use on interruption/exit.
+  Retain our already corrected health-debug cvar. Add a missing nav-area null
+  guard and a deleted cached target guard. Use ForceDropOfCarriedPhysObjects
+  for both gravity-gun and hand-carried props before charging.
+  hl2mp_bot_health_charger_weave defaults to 1; affects Expert bots only
+  (cheat protected).
+- #1172: call the correct game-specific kick command before nav generation.
+- #1270: only use nav visibility to reject a target when both actors still
+  overlap their cached areas and are within 100 vertical units of them.
+  Preserve range, fog, field-of-view and actual line-of-sight checks.
+- #1370: already implemented by our DM-aware quota and pool logic; retained.
+
+Validation:
+- Windows Release win64 and Linux Release x86_64 builds.
+- Native listen-server bot healed from 20 to 70 via a 50-point wall charger,
+  then left when the charger emptied. A fresh bot with a player_pickup
+  (+USE-carried can) dropped it and healed successfully as well.
+- Prop test: bot selected the gravity gun, stopped before an oil drum,
+  acquired it after about 0.5 seconds and kept the weapon/held prop stable.
+- Marking the test mesh as crouch produced duck=true / 28-unit eye offset;
+  disabling hl2mp_bot_nav_crouch produced duck=false / 64-unit eye offset.
+  Reloaded the original test mesh after the temporary attribute changes.
+- nav_generate removed the connected bot using the HL2MP command.
+- Stale-nav visibility was reviewed in code; it
+  still need broader live coverage, especially with custom maps and latency.
+
+The local installation had no loose .nav files. A temporary dm_lockdown.nav
+was generated for these tests and archived under artifacts/bot-fixes-runtime;
+no test navigation mesh is shipped by this change. Bots still require suitable
+navigation meshes for each map. User config.cfg was backed up and restored.

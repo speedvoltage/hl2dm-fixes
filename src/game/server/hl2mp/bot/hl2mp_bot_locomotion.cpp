@@ -8,6 +8,8 @@
 
 extern ConVar falldamage;
 
+ConVar hl2mp_bot_nav_crouch( "hl2mp_bot_nav_crouch", "1", FCVAR_CHEAT );
+
 //-----------------------------------------------------------------------------------------
 void CHL2MPBotLocomotion::Update( void )
 {
@@ -23,6 +25,19 @@ void CHL2MPBotLocomotion::Update( void )
 	if ( IsOnGround() )
 	{
 		me->ReleaseCrouchButton();
+
+		if ( hl2mp_bot_nav_crouch.GetBool() )
+		{
+			const PathFollower *path = me->GetCurrentPath();
+			if ( path && path->GetCurrentGoal() && path->GetCurrentGoal()->area )
+			{
+				if ( path->GetCurrentGoal()->area->GetAttributes() & NAV_MESH_CROUCH )
+				{
+					// moving through a crouch area
+					me->PressCrouchButton( 0.3f );
+				}
+			}
+		}
 	}
 	else
 	{
@@ -45,7 +60,7 @@ float CHL2MPBotLocomotion::GetDeathDropHeight( void ) const
 {
 	CHL2MPBot* me = ( CHL2MPBot* )GetBot()->GetEntity();
 
-	// misyl: Fall damage only deals 10 health otherwise. 
+	// misyl: Fall damage only deals 10 health otherwise.
 	if ( falldamage.GetInt() != 1 )
 	{
 		if ( me->GetHealth() > 10.0f )

@@ -3433,6 +3433,10 @@ void CNavMesh::BeginGeneration( bool incremental )
 			host->ChangeTeam( TEAM_SPECTATOR );
 		}
 	}
+#elif defined( HL2MP )
+	engine->ServerCommand( "hl2mp_bot_kick all\n" );
+#elif defined( TF_DLL )
+	engine->ServerCommand( "tf_bot_kick all\n" );
 #else
 	engine->ServerCommand( "bot_kick\n" );
 #endif

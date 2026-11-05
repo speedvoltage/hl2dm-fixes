@@ -589,11 +589,21 @@ bool IVision::IsAbleToSee( CBaseEntity *subject, FieldOfViewCheckType checkFOV, 
 	CBaseCombatCharacter *combat = subject->MyCombatCharacterPointer();
 	if ( combat )
 	{
+		// The last known area can be stale while an actor is airborne or off
+		// the mesh. Only use its visibility cache while both actors are nearby;
+		// otherwise let the normal line-of-sight trace decide.
+		const float navAreaHeightTolerance = 100.0f;
 		CNavArea *subjectArea = combat->GetLastKnownArea();
-		CNavArea *myArea = GetBot()->GetEntity()->GetLastKnownArea();
-		if ( myArea && subjectArea )
+		const Vector subjectPos = combat->GetAbsOrigin();
+		if ( subjectArea && subjectArea->IsOverlapping( subjectPos ) &&
+			 fabs( subjectPos.z - subjectArea->GetZ( subjectPos ) ) <= navAreaHeightTolerance )
 		{
-			if ( !myArea->IsPotentiallyVisible( subjectArea ) )
+			CBaseCombatCharacter *botEnt = GetBot()->GetEntity();
+			CNavArea *myArea = botEnt->GetLastKnownArea();
+			const Vector myPos = botEnt->GetAbsOrigin();
+			if ( myArea && myArea->IsOverlapping( myPos ) &&
+				 fabs( myPos.z - myArea->GetZ( myPos ) ) <= navAreaHeightTolerance &&
+				 !myArea->IsPotentiallyVisible( subjectArea ) )
 			{
 				// subject is not potentially visible, skip the expensive raycast
 				return false;

@@ -742,16 +742,31 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 		return NULL;
 	}
 
-	memset(bitmapInfo, 0, sizeof(BITMAPINFO));
+	memset(bitmapInfo, 0, sizeof(BITMAPINFO) + (bUseColorTable ? (size_t(1) << bitmap.bmBitsPixel) * sizeof(RGBQUAD) : 0));
 	bitmapInfo->bmiHeader.biSize = sizeof(bitmapInfo->bmiHeader);
 	if (bUseColorTable)
 	{
-		bitmapInfo->bmiHeader.biBitCount = bitmap.bmBitsPixel; // need to specify the bits per pixel so GDI will generate a color table for us.
+		bitmapInfo->bmiHeader.biBitCount = bitmap.bmBitsPixel;
 	}
 
 	HDC dc = CreateCompatibleDC(NULL);
 
-	int retcode = GetDIBits(dc, hBitmap, 0, bitmap.bmHeight, NULL, bitmapInfo, DIB_RGB_COLORS);
+	int retcode = 0;
+	if (bUseColorTable)
+	{
+		// LoadImage created a DIB section. Read its actual palette; requesting
+		// a format from GetDIBits with only biBitCount set fails on Windows.
+		HGDIOBJ previousBitmap = SelectObject(dc, hBitmap);
+		if (previousBitmap && previousBitmap != HGDI_ERROR)
+		{
+			retcode = GetDIBColorTable(dc, 0, 1 << bitmap.bmBitsPixel, bitmapInfo->bmiColors);
+			SelectObject(dc, previousBitmap);
+		}
+	}
+	else
+	{
+		retcode = GetDIBits(dc, hBitmap, 0, bitmap.bmHeight, NULL, bitmapInfo, DIB_RGB_COLORS);
+	}
 
 	DeleteDC(dc);
 
@@ -759,6 +774,7 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 	{
 		// error getting the bitmap info for some reason.
 		free(bitmapInfo);
+		DeleteObject(hBitmap);
 		errcode = CE_SOURCE_FILE_BMP_FORMAT_NOT_SUPPORTED;
 		return NULL;
 	}
@@ -770,6 +786,7 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 	if (buf == NULL)
 	{
 		free(bitmapInfo);
+		DeleteObject(hBitmap);
 		errcode = CE_MEMORY_ERROR;
 		return NULL;
 	}
@@ -863,13 +880,13 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 				RGBQUAD *rgbQuad = &(bitmapInfo->bmiColors[colorTableEntry]);
 
 				// copy the pixel's color values to the destination buffer.
-				pDest[0] = pSrc[2]; // R
-				pDest[1] = pSrc[1]; // G
-				pDest[2] = pSrc[0]; // B
+				pDest[0] = rgbQuad->rgbRed; // R
+				pDest[1] = rgbQuad->rgbGreen; // G
+				pDest[2] = rgbQuad->rgbBlue; // B
 				pDest[3] = 0xff; // A
 
 				// make sure we haven't reached the end of the row.
-				if ((x + 1) > bitmap.bmWidth)
+				if ((x + 1) >= bitmap.bmWidth)
 				{
 					break;
 				}
@@ -883,9 +900,9 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 				rgbQuad = &(bitmapInfo->bmiColors[colorTableEntry]);
 
 				// copy the pixel's color values to the destination buffer.
-				pDest[0] = pSrc[2]; // R
-				pDest[1] = pSrc[1]; // G
-				pDest[2] = pSrc[0]; // B
+				pDest[0] = rgbQuad->rgbRed; // R
+				pDest[1] = rgbQuad->rgbGreen; // G
+				pDest[2] = rgbQuad->rgbBlue; // B
 				pDest[3] = 0xff; // A
 
 				++pSrc;
@@ -926,9 +943,9 @@ unsigned char *ImgUtl_ReadBMPAsRGBA( const char *bmpPath, int &width, int &heigh
 					}
 
 					// copy this pixel's color values into the destination buffer.
-					pDest[0] = pSrc[2]; // R
-					pDest[1] = pSrc[1]; // G
-					pDest[2] = pSrc[0]; // B
+					pDest[0] = rgbQuad->rgbRed; // R
+					pDest[1] = rgbQuad->rgbGreen; // G
+					pDest[2] = rgbQuad->rgbBlue; // B
 					pDest[3] = 0xff; // A
 					pDest += 4;
 
