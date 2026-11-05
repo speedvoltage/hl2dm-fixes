@@ -1,0 +1,545 @@
+HL2DM MATCHMAKING - ACHIEVEMENT PROPOSALS
+Draft for review - 5 November 2026
+
+118 active candidates, with proposal IDs 092 and 094 withdrawn after review.
+This is a selection pool, not a commitment to ship every candidate. I would start with
+roughly 50-60, favoring varied challenges over multiple tiers of the same counter.
+Names, targets and difficulty estimates are provisional and should be playtested.
+No achievement code, Steam definitions or menu changes are included in this draft.
+Implementation is deferred until the mod has its own Steam AppID and the required
+matchmaking support. The list remains design work only until then.
+
+READING THE LIST
+Each entry has a stable proposal ID, title, difficulty and unlock condition.
+Very easy / Easy / Medium / Hard / Very hard describe expected execution difficulty.
+Milestone describes accumulated progress; a large counter is not necessarily hard.
+A trailing [T] flags extra tracking or attribution that needs implementation and
+validation beyond ordinary kill/round events. Unmarked entries still need the
+achievement framework; they are not already implemented.
+
+PROPOSED SHARED RULES
+- Unless stated otherwise, kill means a credited kill against a human opponent.
+  Teammates, bots, suicides and world deaths do not advance combat achievements.
+- One life ends on death, switching teams, entering spectator, disconnecting or
+  round restart. Timed multikills require distinct victims during that life.
+- An airborne kill follows the existing killfeed wings rule. Swimming does not
+  count. Headshot kills follow the existing killfeed headshot rule.
+- Weapon names mean their normal attack unless an alternate attack is named.
+  SLAM satchels and tripmines, SMG grenades and AR2 orbs are named explicitly.
+- Distances are server world units, measured between player origins at the kill
+  unless an entry specifies launch positions. They are tuning values, not meters.
+- Qualifying matches should include normal matchmaking and community DM/TDM.
+  Suggested minimums for match/win awards: four active humans in FFA or TDM,
+  with at least two per team in TDM; two humans in the designated Duel mode.
+  Join before halfway, play at least half the round, and remain through its end.
+  A tied result is not a win; admin restarts and aborted rounds are not finishes.
+- Cheat-enabled play and developer previews do not unlock gameplay achievements.
+  Decide the eligible community-server settings before implementation; physics,
+  damage and instant-respawn changes can trivialize some challenges.
+- Progress never requires enabling bright models, hitmarkers or hit sounds.
+  No rewards for calling kick votes, reporting, muting or changing server rules.
+- Any cumulative target below spans qualifying sessions unless stated otherwise.
+
+
+01. FIRST STEPS - VERY EASY TO EASY
+=================================
+
+001 | Welcome to the Resistance | Very easy
+      Finish your first qualifying match.
+
+002 | First Contact | Very easy
+      Earn your first enemy kill.
+
+003 | Getting Acquainted | Easy
+      Earn 10 enemy kills.
+
+004 | New Faces | Easy
+      Kill five different opponents across your matches.
+
+005 | Your Name at the Top | Easy
+      Win your first Free-for-All Deathmatch match.
+
+006 | Better Together | Easy
+      Win your first Team Deathmatch match.
+
+007 | Change of Scenery | Easy
+      Finish qualifying matches on three different maps.
+
+008 | Stay a While | Easy
+      Earn two enemy kills in one life.
+
+009 | Mind Your Head | Easy
+      Earn your first headshot kill.
+
+010 | Off the Ground | Easy
+      Earn your first airborne kill.
+
+011 | Standard Issue | Very easy
+      Earn your first pistol kill.
+
+012 | Six Reasons | Easy
+      Earn your first .357 revolver kill.
+
+013 | Short Burst | Very easy
+      Earn your first SMG primary-fire kill.
+
+014 | Combine Hardware | Easy
+      Earn your first AR2 primary-fire kill.
+
+015 | Personal Space | Easy
+      Earn your first shotgun kill.
+
+016 | One Bolt | Easy
+      Earn your first crossbow kill.
+
+017 | Guided Introduction | Easy
+      Earn your first RPG kill.
+
+018 | Please Hold | Easy
+      Earn your first fragmentation-grenade kill.
+
+019 | Everything Is Ammunition | Easy
+      Kill an enemy with a physics prop launched using the gravity gun.
+
+020 | Hands-On Approach | Easy
+      Earn your first crowbar or stunstick kill.
+
+
+02. WEAPON FAMILIARITY - EASY TO MEDIUM
+======================================
+
+021 | Conduct Yourself | Easy
+      Earn five stunstick kills.
+
+022 | Crowbar Etiquette | Easy
+      Earn 10 crowbar kills.
+
+023 | Sidearm Service | Milestone
+      Earn 25 pistol kills.
+
+024 | Heavy Conversation | Milestone
+      Earn 25 .357 revolver kills.
+
+025 | Controlled Bursts | Milestone
+      Earn 50 SMG primary-fire kills.
+
+026 | Pulse Check | Milestone
+      Earn 50 AR2 primary-fire kills.
+
+027 | Room Clearance | Milestone
+      Earn 50 shotgun kills.
+
+028 | Bolt Collection | Milestone
+      Earn 25 crossbow kills.
+
+029 | Guidance Counselor | Milestone
+      Earn 25 RPG kills.
+
+030 | Delivery Service | Milestone
+      Earn 25 fragmentation-grenade kills.
+
+031 | Remote Working | Medium
+      Earn 10 kills with remotely detonated SLAM satchels.
+
+032 | Watch Your Step | Medium
+      Earn 10 kills with SLAM tripmines.
+
+033 | Under-Barrel Business | Medium
+      Earn 10 kills with the SMG grenade launcher.
+
+034 | Unstable Matter | Medium
+      Earn 10 kills with AR2 energy orbs.
+
+035 | Small Caliber, Big Idea | Medium
+      Earn five pistol headshot kills.
+
+036 | Cranial Adjustment | Medium
+      Earn five .357 revolver headshot kills.
+
+037 | Three Ways Out | Medium
+      Kill enemies with three different weapon classes in one life.
+
+038 | Close the Door | Medium
+      Earn three shotgun kills in one life.
+
+039 | Last in the Magazine | Medium [T]
+      Kill an enemy with the last pistol bullet in your current magazine.
+
+040 | No Time to Zoom | Medium [T]
+      Kill an enemy with a crossbow bolt fired while you were not zoomed in.
+
+
+03. PHYSICS AND EXPLOSIVES - MEDIUM TO HARD
+==========================================
+
+041 | Applied Physics | Milestone
+      Earn 25 gravity-gun physics-prop kills.
+
+042 | Furniture Specialist | Milestone
+      Earn 100 gravity-gun physics-prop kills.
+
+043 | Mixed Materials | Medium [T]
+      Get prop kills using three different prop models in a single match.
+
+044 | Reliable Equipment | Hard [T]
+      Kill three different enemies with the same physical prop in one life.
+
+045 | Long-Distance Hauling | Hard [T]
+      Get a prop kill at least 1,024 units from your position when you launched it.
+
+046 | Counteroffer | Hard [T]
+      Punt an enemy-launched moving prop and kill that enemy with it within five
+      seconds of the punt. The prop must not touch the ground before the kill.
+
+047 | Caught and Returned | Hard [T]
+      Catch an enemy-launched airborne prop, then launch it back and kill its
+      previous owner within five seconds. Require a real catch, not a pickup
+      after the prop has come to rest.
+
+048 | Contents Under Pressure | Medium [T]
+      Kill an enemy by causing an explosive physics barrel to detonate.
+
+049 | Shared Delivery | Hard [T]
+      Kill two enemies with one explosive-barrel detonation.
+
+050 | One Object, Two Problems | Hard [T]
+      Kill two enemies with one uninterrupted launch of a non-explosive prop.
+
+051 | Two for One | Medium [T]
+      Kill two enemies with a single fragmentation grenade.
+
+052 | Secondary Benefits | Hard [T]
+      Kill two enemies with one SMG grenade.
+
+053 | Blast Radius | Medium [T]
+      Kill two enemies with a single RPG rocket.
+
+054 | Matter Removed | Hard [T]
+      Kill two enemies with the same AR2 energy orb.
+
+055 | Group Collection | Hard [T]
+      Kill two enemies with a single SLAM satchel explosion.
+
+056 | Set and Forget | Medium [T]
+      Get a tripmine kill while holding a weapon other than the SLAM.
+
+057 | Delayed Appointment | Medium [T]
+      Get a satchel kill at least 10 seconds after placing that satchel, without
+      dying between placement and detonation.
+
+058 | Around the Corner | Hard [T]
+      Kill with a guided RPG rocket that travels around solid cover: the victim
+      must be occluded from your launch position but reachable along the actual
+      rocket path. Validate this against ordinary splash-through-doorway kills.
+
+059 | Return Postage | Hard [T]
+      Use the gravity gun to return an enemy's live fragmentation grenade and
+      kill its original thrower with that grenade.
+
+060 | Reassigned Energy | Hard [T]
+      Catch or deflect an enemy's AR2 orb with the gravity gun, then kill its
+      original shooter with that same orb.
+
+
+04. MOVEMENT AND POSITIONING - MEDIUM TO HARD
+============================================
+
+061 | Frequent Flyer | Milestone
+      Earn 25 airborne kills.
+
+062 | Airspace Regular | Milestone
+      Earn 100 airborne kills.
+
+063 | Elevated Thinking | Medium
+      Earn a kill that has both the headshot and airborne killfeed badges.
+
+064 | No Landing Required | Hard [T]
+      Kill two different enemies during one continuous airborne interval.
+
+065 | Airmail | Medium
+      Get a fragmentation-grenade kill while you are airborne at the kill.
+
+066 | Air-to-Ground | Medium
+      Get an RPG kill while you are airborne at the kill.
+
+067 | Jump the Queue | Medium
+      Get a shotgun kill while you are airborne at the kill.
+
+068 | Six Feet Up | Medium
+      Get a .357 revolver kill while you are airborne at the kill.
+
+069 | Grounded | Medium [T]
+      Kill an airborne enemy with the crossbow.
+
+070 | Keep Clear Above | Hard [T]
+      Kill two different airborne enemies in one life.
+
+071 | Midair Meeting | Hard [T]
+      Kill an enemy while both you and the victim are airborne.
+
+072 | Flying Furniture | Hard
+      Get a gravity-gun prop kill while you are airborne at the kill.
+
+073 | Crossing Flight Paths | Hard [T]
+      Get a crossbow kill while both you and the victim are airborne at impact.
+
+074 | Across the Yard | Hard
+      Kill an enemy with the .357 revolver from at least 2,048 units away.
+
+075 | Long Bolt Home | Hard [T]
+      Kill with a crossbow bolt whose impact is at least 2,048 units from its
+      launch position, measured as straight-line distance.
+
+076 | Special Delivery | Hard [T]
+      Kill with a fragmentation grenade whose detonation is at least 1,024 units
+      from its throw position, without anyone else picking up or deflecting it.
+
+077 | Falling With Intent | Hard [T]
+      Earn an airborne kill after descending at least 256 units from the apex
+      of that airborne interval, before landing or entering water.
+
+078 | Upper Management | Medium
+      Kill an enemy at least 512 vertical units below you.
+
+079 | Upward Mobility | Medium
+      Kill an enemy at least 256 vertical units above you.
+
+080 | Three Flights, One Life | Hard
+      Earn three airborne kills in one life; separate jumps are allowed.
+
+
+05. TEAMWORK AND MATCH PLAY - MEDIUM TO HARD
+===========================================
+
+081 | On the Roster | Milestone
+      Finish 10 qualifying Team Deathmatch matches.
+
+082 | Shared Success | Milestone
+      Win five qualifying Team Deathmatch matches.
+
+083 | Independent Operator | Milestone
+      Win 10 qualifying Free-for-All Deathmatch matches.
+
+084 | Both Sides of the City | Milestone
+      Win five TDM matches as a Rebel and five as Combine. Only the team you
+      played for throughout a qualifying match counts.
+
+085 | Everyone Contributes | Medium
+      Win a TDM match in which every active human on your team earned at least
+      one enemy kill. Require at least two qualifying humans on your team.
+
+086 | Pulling Your Weight | Medium
+      Win a TDM match with at least 10 personal enemy kills and fewer personal
+      deaths than enemy kills.
+
+087 | Lead by Example | Hard
+      Win a TDM match with the highest score on your team and at least 10 enemy
+      kills. A tie for the highest team score counts.
+
+088 | Assistive Technology | Medium [T]
+      Earn five assists: deal at least 20 actual health damage to an enemy, then
+      have a teammate kill that enemy within five seconds of your last damage.
+
+089 | Supporting Cast | Milestone [T]
+      Earn 100 assists using the same rule as Assistive Technology.
+
+090 | Immediate Response | Medium [T]
+      Kill an enemy within five seconds after that enemy killed your teammate.
+
+091 | Covering the Losses | Hard [T]
+      Earn two Immediate Response trade kills against different enemies in one
+      life. A single death of a teammate can contribute only one trade kill.
+
+092 | WITHDRAWN
+      Removed after review. ID reserved so later proposal numbers do not change.
+
+093 | Synchronized Pressure | Hard [T]
+      You and a teammate each kill a different enemy within two seconds of one
+      another. Both contributors receive credit, once per pair of kills.
+
+094 | WITHDRAWN
+      Removed after review. ID reserved so later proposal numbers do not change.
+
+095 | Outnumbered, Briefly | Hard [T]
+      Kill two different enemies within five seconds after both dealt damage
+      to you within the previous five seconds. Survive through both kills.
+
+096 | Streak Breaker | Medium [T]
+      Kill an enemy who has earned at least five enemy kills in their current
+      life. This works in DM or TDM.
+
+097 | Winning Contribution | Medium [T]
+      Score the enemy kill that takes your team to the configured TDM frag limit.
+      The match must end from that limit, not a timer or admin command.
+
+098 | Turn the Tide | Hard [T]
+      Win a TDM match after your team trailed by at least 10 frags while you were
+      actively playing for that team. Switching teams invalidates the attempt.
+
+099 | Duel Recovery | Hard [T]
+      Win a qualifying Duel after trailing by at least three frags. Remain in
+      that match from its start through its end.
+
+100 | Versatile Teammate | Hard
+      Win a TDM match while personally earning enemy kills with five different
+      weapon classes during that match.
+
+
+06. MASTERY AND LONG-TERM GOALS - HARD TO VERY HARD
+=================================================
+
+101 | Ten Before the Fall | Hard
+      Earn 10 enemy kills in one life.
+
+102 | Unfinished Business | Very hard
+      Earn 15 enemy kills in one life.
+
+103 | Three in a Hurry | Hard
+      Kill three different enemies within five seconds, without dying.
+
+104 | Ten-Second Sweep | Very hard
+      Kill four different enemies within 10 seconds, without dying.
+
+105 | Walking Arsenal | Hard
+      Kill enemies with five different weapon classes in one life.
+
+106 | Full Inventory | Very hard
+      Earn enemy kills with eight different weapon classes in a single match.
+      Alternate attacks do not count as separate weapon classes.
+
+107 | Six Chambers, Six Answers | Very hard [T]
+      Fire six consecutive .357 bullets in one life, each earning a headshot kill.
+      A miss, a nonlethal hit, a non-headshot kill or another weapon's attack
+      breaks the sequence. Reloading between those shots also breaks it.
+
+108 | Still Standing | Hard [T]
+      Kill two enemies in one life while you have 25 health or less at each kill,
+      without healing between them. An enemy must have reduced you into that
+      health range; self-damage and fall damage cannot start the attempt.
+
+109 | Final Seconds | Very hard [T]
+      Win a timed TDM match after trailing by at least three frags with 10 seconds
+      remaining. You must personally score at least one enemy kill in that window.
+
+110 | Bring a Crowbar | Hard [T]
+      Kill an enemy with the crowbar while that enemy has the RPG equipped.
+      Simplified proposal: check the victim's active weapon at the lethal hit;
+      no recent rocket shot, trajectory or threat calculation is required.
+
+111 | Blunt Argument | Hard
+      Earn five crowbar or stunstick enemy kills in one life. Either or both
+      melee weapons may contribute to the five.
+
+112 | Unscoped Appointment | Very hard [T]
+      Earn three crossbow kills in one life, with each killing bolt fired while
+      not zoomed in.
+
+113 | Two Heads Above | Very hard [T]
+      Earn two headshot kills against different enemies during one continuous
+      airborne interval.
+
+114 | Three Bodies, One Orb | Very hard [T]
+      Kill three different enemies with a single AR2 energy orb.
+
+115 | One Pin, Three Problems | Very hard [T]
+      Kill three different enemies with a single fragmentation grenade.
+
+116 | Follow-Through | Hard [T]
+      Launch a physics prop, switch weapons, and kill a different enemy with that
+      weapon within five seconds after the prop kills its victim. Both kills
+      must belong to the same life; switching back to the gravity gun is allowed
+      only after the second kill.
+
+117 | Collection Complete | Hard
+      Earn at least one kill using each of these eight damage sources in a match:
+      bullet, shotgun pellet, crossbow bolt, rocket, fragmentation grenade,
+      launched physics prop, melee strike and AR2 energy orb.
+      Treat each credited kill as belonging to exactly one of these categories.
+
+118 | City Veteran | Milestone
+      Earn 1,000 enemy kills.
+
+119 | Proven Record | Milestone
+      Win 100 qualifying matches across supported DM, TDM and Duel modes.
+
+120 | Broad Expertise | Milestone
+      Unlock 40 other achievements from the final launch set. Count each once;
+      exclude this achievement and any later seasonal or promotional additions.
+      Retune the target if the final launch set contains fewer than 50 entries.
+
+
+RECOMMENDED SELECTION APPROACH
+==============================
+The list intentionally offers alternatives. I would not ship every first-kill
+award alongside every weapon counter; choose enough to introduce the weapons
+without filling the page with near-identical progress bars.
+
+A possible 60-achievement launch shortlist, using the IDs above:
+001, 002, 005, 006, 007, 008, 009, 010, 019, 020,
+021, 022, 023, 024, 025, 026, 027, 028, 029, 030,
+031, 032, 033, 034, 035, 036, 037, 038, 040, 041,
+043, 044, 048, 051, 053, 054, 059, 060, 061, 063,
+064, 069, 071, 072, 074, 075, 080, 082, 083, 085,
+086, 088, 090, 096, 098, 101, 103, 105, 118, 120.
+
+This shortlist is a design recommendation, not a claim that all its tracking
+already exists. In particular, prop returns and projectile multikills need
+correct ownership histories before they are safe to award.
+
+Candidates to validate especially carefully:
+- 046/047: distinguish an actual interception from picking up a resting prop.
+- 048/049: determine who caused the barrel explosion, including chained barrels.
+- 050-055, 114/115: correlate victims to one specific projectile or prop launch.
+- 058: reserve candidate; reliable around-cover detection is more complex than
+  a simple kill counter and must not depend on the client's camera visibility.
+- 059/060: preserve original ownership after a gravity-gun catch or deflection.
+- 069-073, 077, 113: sample movement state before death changes the victim state.
+- 088-091 and 093: assist, trade and timing histories are new achievement tracking, not a
+  proposal to bring the removed scoreboard statistics or columns back.
+- 107: reserve candidate; ensure the condition is understandable and achievable
+  in normal play, not just arranged farming sessions. Proposal 110 now only needs
+  the victim's active weapon at the lethal hit.
+- 117: establish mutually exclusive damage categories, especially shotgun vs.
+  bullet and explosive barrels vs. direct physics impacts.
+
+No time-limited achievements, consecutive-day logins, mandatory purchases,
+required friend invitations or achievements for losing/dying deliberately.
+Keep achievements cosmetic: no damage, speed, weapon or visibility advantages.
+Do not award achievements for ordinary local menu previews or test self-votes.
+
+
+ACHIEVEMENTS PAGE - PROPOSED DIRECTION
+=====================================
+Reference: the Black Mesa achievements screenshot supplied in this conversation.
+Use its charcoal, orange and white palette within our existing menu theme.
+
+Main-menu entry: ACHIEVEMENTS, opening a dedicated full-page view.
+Top: page title, overall unlocked count (for example 18 / 60) and progress bar.
+Below: search, All / Locked / Unlocked filters, and category selection.
+Sort choices: recommended order, nearest to completion, recently unlocked.
+Main area: two columns of cards when there is enough room; one at narrow sizes.
+Each card: original icon on the left, title, readable description, and current /
+target progress where applicable. Unlocked cards show a completion mark/date;
+locked cards stay readable with quieter icons. Do not rely on color alone.
+Use restrained orange outlines, dark card fills and small rounded corners.
+Select a card for its full condition, eligibility notes and larger artwork.
+Make descriptions wrap and card heights adapt to translated text; no clipped
+requirements or mandatory tiny fonts. Every title and description gets a token.
+Support mouse wheel scrolling, keyboard navigation and Escape/Back consistently.
+Keep the page available while disconnected, with cached progress where supported.
+Progress should not reset because the player changes HUD presets or language.
+Unlock notifications should be brief, with independent animation/sound controls.
+
+Progress ownership and Steam integration still need a separate implementation
+decision. Gameplay conditions should be evaluated from server-observed events;
+a local preview must never be mistaken for an authoritative unlock. Community
+server trust is a separate question: a mod-controlled server is not automatically
+a trusted competitive authority simply because it sends an achievement event.
+
+Reserve namespaced achievement IDs for this mod. Register and publish Steam
+achievements only under our own assigned AppID, not the temporary SDK/HL2DM AppID.
+Any development-only progress should remain separate from final Steam unlocks.
+
+After the mod receives its own AppID and matchmaking support is ready: finalize
+the launch set and conditions, then implement the main-menu entry, page, tracking
+and original icons. Do not implement achievements before that milestone.

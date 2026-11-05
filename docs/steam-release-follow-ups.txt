@@ -2,6 +2,8 @@ When Valve assigns the mod's own Steam AppID:
 - Implement the scoreboard's Report player action and confirm the reporting destination.
 - Keep reports distinct from local chat/voice mutes and server kick votes.
 - Do not route reports through another game's temporary AppID.
+- Revisit docs/achievement-proposals.txt after the required matchmaking support
+  is ready. Achievement implementation is explicitly deferred until our own AppID.
 
 HUD/voting labels introduced in November 2026 are localization-ready.
 New strings without an existing translation use English fallback; their keys

@@ -1,0 +1,456 @@
+HL2DM MATCHMAKING - SKILL GROUPS AND MAP RANKS
+Design proposal for review - 5 November 2026
+
+Scope: names, badge concepts, placement rules and hidden-rating behavior.
+No rank implementation, matchmaking changes or image assets are included yet.
+Achievement implementation is separately deferred until our own Steam AppID and
+the necessary matchmaking support are available.
+
+Approved decisions - 5 November 2026:
+- Use Set A: the 18 skill groups from Recruit through Lambda Prime.
+- Keep Duel and TDM ranks separate on every official competitive map.
+  Each map/track pair has its own placements, hidden rating and activity record.
+The numerical tuning and remaining proposed policies below are still design work.
+
+
+1. THE PLAYER-FACING RULES
+==========================
+Required:
+- Complete 10 competitive matches to receive a skill group. Matches, not wins.
+- Have separate Duel and TDM skill groups for each official competitive map.
+- Retain an active skill group while you have played within the last two months.
+- Keep the underlying numerical rating hidden.
+
+Working interpretation for this draft:
+- The 10 placement matches are required FOR EACH MAP AND TRACK: ten Duel matches
+  on Lockdown unlock its Duel rank; ten TDM matches unlock its separate TDM rank.
+- The two-month activity check also applies TO EACH MAP AND TRACK. A Lockdown
+  Duel match refreshes neither Overwatch Duel nor Lockdown TDM. This remains the
+  proposed interpretation of the activity rule,
+  rather than an additional account-wide requirement.
+- Use two calendar months, not an undocumented 60-day approximation. Compare
+  against the last qualifying match's completion time in UTC. If the expiry
+  month lacks that day, clamp to its last day, retaining the time of day.
+  Example: a match completed 5 November at 20:00 UTC expires 5 January at 20:00 UTC.
+- A win, loss or draw can count toward placement and refresh activity.
+- Joining a queue, spectating, casual play and community/listen-server matches
+  outside official matchmaking do not count toward competitive map ranks.
+- An expired rank becomes INACTIVE, not the lowest skill group. Preserve its
+  hidden rating, previous badge, history and completed placements.
+- Recommended return rule: finish one qualifying competitive match on that map
+  in the inactive track to reactivate its badge. Do not require another 10-match
+  placement sequence.
+  The returning badge may differ after the newly validated result is applied.
+
+Examples:
+  Lockdown Duel: 10 / 10 placements, Vanguard, played yesterday -> active.
+  Lockdown TDM: 6 / 10 placements -> unranked, four matches remaining.
+  Overwatch Duel: previously Sentinel, no match in two months -> inactive.
+  Playing Lockdown Duel leaves the other two records unchanged.
+
+
+2. APPROVED SET A - 18 DISTINCT SKILL GROUPS
+===============================================
+Eighteen gives enough visual progression without making each win a new badge.
+The names below deliberately avoid calling beginners weak, bad or unskilled.
+These are skill groups, not levels awarded simply for time played.
+
+Order | Name            | Original badge concept
+------+-----------------+------------------------------------------------------
+  01  | Recruit         | One inset chevron on a small, open shield.
+  02  | Scout           | Two chevrons with a narrow central sight mark.
+  03  | Pathfinder      | Three chevrons beneath a small directional diamond.
+  04  | Ranger          | Closed shield with a compass-shaped center.
+  05  | Operator        | The shield gains two short side bars.
+  06  | Specialist      | A central hexagon joins the shield and side bars.
+  07  | Veteran         | Wider shield, reinforced rim and one small star.
+  08  | Striker         | A sharp central bolt and two small stars.
+  09  | Vanguard        | Three stars above a forward-facing shield.
+  10  | Warden          | A split defensive crest with broad shoulders.
+  11  | Sentinel        | The crest gains a tall central diamond.
+  12  | Elite Sentinel  | A double diamond and short, symmetrical wings.
+  13  | Champion        | Compact laurel around the central crest.
+  14  | Master          | Laurel, two upper rays and a refined inner shield.
+  15  | Grandmaster     | Completed laurel with a three-ray crown.
+  16  | Ascendant       | An upward energy arc surrounds a faceted core.
+  17  | Paragon         | Symmetric radiating core with a complete outer halo.
+  18  | Lambda Prime    | Original lambda-centered crest with a restrained halo.
+
+Visual families:
+  01-03: brushed steel, simple silhouettes.
+  04-06: cool blue accents and a sturdier frame.
+  07-09: teal accents and stars.
+  10-12: violet accents and stronger central geometry.
+  13-15: amber/gold accents and laurels.
+  16-18: pale metal with orange energy accents and distinctive silhouettes.
+
+The surrounding UI stays charcoal/orange. Badge colors can vary by family,
+but every rank must remain distinguishable in monochrome and at small sizes.
+
+
+3. ALTERNATIVE NAMING SETS - NOT SELECTED
+==========================
+Set A above is approved. These alternatives are retained for reference only;
+they are not additional ladders and should not appear as player-selectable names.
+
+SET B - SIMPLE, REPEATABLE FAMILIES
+For a more immediately legible ladder with fewer unique names to remember:
+
+  01 Recruit I          07 Vanguard I          13 Elite I
+  02 Recruit II         08 Vanguard II         14 Elite II
+  03 Recruit III        09 Vanguard III        15 Elite III
+  04 Operator I         10 Sentinel I          16 Ascendant
+  05 Operator II        11 Sentinel II         17 Paragon
+  06 Operator III       12 Sentinel III        18 Lambda Prime
+
+The first five families share an emblem and gain one, two or three marks.
+The top three have individual emblems. This is the simplest set to recognize
+quickly on a scoreboard, although it has less personality than Set A.
+
+SET C - HALF-LIFE / RESISTANCE THEME
+More closely tied to the game's world; progression is a fictional hierarchy,
+not a claim about an established lore ranking system:
+
+  01 New Arrival        07 Resistance Fighter  13 Resistance Elite
+  02 Citizen            08 Resistance Veteran  14 Lambda Operative
+  03 Volunteer          09 Resistance Vanguard 15 Lambda Veteran
+  04 Runner             10 City Defender      16 Lambda Elite
+  05 Field Scout        11 City Sentinel      17 Lambda Master
+  06 Rebel              12 City Champion      18 Lambda Prime
+
+Use transport/city motifs early, resistance shields in the middle, then
+original lambda crests. Keep the badges faction-neutral in team matches.
+
+SET D - PHYSICS / TECHNOLOGY THEME
+More distinctive and less military. This is an artistic progression, not a
+scientific ordering of the concepts:
+
+  01 Spark              07 Catalyst            13 Resonance
+  02 Charge             08 Reactor             14 Critical Mass
+  03 Current            09 Accelerator         15 Fusion
+  04 Circuit            10 Collider            16 Event Horizon
+  05 Capacitor          11 Plasma              17 Singularity
+  06 Conductor          12 Containment         18 Lambda Prime
+
+Use increasingly elaborate circuits, rings and energy cores. This was an
+alternative to the approved Set A and is not selected for implementation.
+
+The earlier 12-tier fallback is not selected; retain all 18 approved Set A names.
+
+
+4. PLACEMENT AND INACTIVITY FLOW
+================================
+Apply this flow independently to each map's Duel and TDM tracks:
+Unplayed track -> Placement 0 / 10 -> Placement 1 / 10 ... 9 / 10 -> Active rank.
+Active rank -> two calendar months without a qualifying match -> Inactive rank.
+Inactive rank -> one qualifying match -> Active rank, recalculated from rating.
+
+Hidden ratings update during placements, even while the badge is hidden.
+Reveal the initial badge after the tenth completed placement in that map/track
+is validated. Rated abandonment losses do not count as completed placements.
+Ten matches are the reveal requirement, not a promise of statistical certainty.
+Continue adjusting a new player's estimate more quickly for a short period.
+
+Losing placement matches cannot reset the counter. No requirement for ten wins,
+consecutive wins, ten matches in one session, or a daily placement cap.
+Do not wipe partially completed placements after inactivity; retain 6 / 10,
+for example, and use fresh results to refine the old estimate.
+
+A completed match with a brief disconnect/reconnect can still qualify under the
+normal reconnect policy. An abandoning player does not gain placement credit or
+refresh activity by leaving. Their competitive result can still apply a loss;
+rating accountability and placement/activity credit are separate decisions.
+An officially resolved forfeit can count for players who stayed and completed
+the match. An aborted/no-contest match counts for nobody and changes no rating.
+
+Inactivity hides the public badge; it does not subtract rating every day or
+restart the player at the beginner rating. Returning players should be matched
+using their retained estimate, with more caution about its reliability.
+
+If a map leaves the official pool, show its rank under Archived maps. Preserve
+the record and last-played time. On return to the pool, an expired record uses
+the one-match reactivation rule. Do not ask players to maintain an unavailable map.
+Use a stable competitive map ID, so a file rename does not lose everyone's rank.
+Major map redesigns need an explicit migration decision; minor fixes do not
+silently reset placements or create a new ladder.
+
+
+5. HIDDEN RATING - CONCRETE STARTING PROPOSAL
+===========================================
+Recommendation: begin with a server-owned Elo-style model driven by match
+outcome and opponent strength, plus faster updates while a map rating is new.
+Keep it simple enough to simulate and audit before adding individual-performance
+bonuses. This is our proposed model, not a description of CS:GO/CS2 internals.
+
+The current coordinator already has a useful baseline: 1,500 starting rating,
+an Elo expected-result calculation, team-average ratings and a K value of 32.
+It currently stores ratings per mode rather than per map, and returns numerical
+ratings/deltas to clients. Per-map storage and truly hidden ratings therefore
+require deliberate changes later; the existing implementation is not the design
+specified by this document.
+
+Proposed record key: (Steam identity, stable competitive map ID, Duel or TDM).
+Store separately for each key:
+  hidden rating R; rated-result count; completed-placement count; last qualifying completion;
+  current badge; previous badge; placement state; rating-model version;
+  references to the authoritative match-result history.
+
+Seed a brand-new player's map/track rating at 1,500.
+For a player established elsewhere in the SAME track, optionally seed a NEW map from:
+  1,500 + 0.5 * (median established-map rating - 1,500), limited to 1,200-1,800.
+Use only maps in that track with at least 20 qualifying matches and recent activity
+as donors. Do not transfer Duel ratings into TDM or TDM ratings into Duel.
+If no eligible donor exists, use 1,500. Seeding happens once; it grants no badge
+or placement credit and never overwrites an existing map record.
+The 0.5 blend and limits are trial parameters, not evidence-backed final values.
+
+For a duel, use the two players' pre-match Duel ratings on that map.
+For equal-sized teams, use each team's arithmetic mean of pre-match TDM ratings
+on that map.
+This is a baseline approximation; it does not fully model premade coordination
+or a highly uneven team's strengths. Evaluate those effects before launch.
+
+  E = 1 / (1 + 10 ^ ((opponent_rating - own_rating) / 400))
+  S = 1 for a win, 0.5 for a draw, 0 for a loss
+  rating_change = K * (S - E)
+  new_rating = old_rating + rating_change
+
+Trial K values, based on authoritative rated results for this map AND track:
+  Before results 1-10:   K = 64   (initial estimation)
+  Before results 11-20:  K = 48   (early refinement)
+  From result 21 onward: K = 32   (established)
+Normally the first ten results are the ten completed placements. A rated loss
+from abandonment also advances the rated-result count, but not placement credit;
+repeatedly abandoning cannot preserve the faster initial update rate indefinitely.
+
+For a player returning after expiry, temporarily use at least K = 48 for their
+next three rated results; never lower an existing initial K of 64. An abandoned
+return match can consume this faster-update window but cannot reactivate the badge.
+This is a simple adaptation rule, not a calibrated statistical uncertainty model.
+Keep the same rule after a very long absence initially; assess longer rechecking
+windows from actual data rather than resetting experienced players to beginners.
+
+Every teammate uses the same pre-match team expectation and result, with their
+own K based on map experience. Established teammates therefore receive the same
+change, while less-established players move faster. When participants have
+different K values, gains and losses need not sum to zero; monitor rating drift
+and rank distribution during simulation. Do not describe this as zero-sum Elo.
+Retain fractional ratings internally; rounding is not a source of extra points.
+
+Established-player examples (K = 32):
+  Equal opposition:                  win +16, draw 0, loss -16.
+  Opponent/team rated 200 higher:     win about +24.3, loss about -7.7.
+  Opponent/team rated 200 lower:      win about +7.7, loss about -24.3.
+  A draw against stronger opposition can gain rating; against weaker opposition
+  it can lose rating. Explain that principle without exposing the hidden values.
+
+These example numbers belong in the design document, not the player interface.
+Placement and return K values are starting points for testing, not permanent
+promises. Repeated losses to stronger players should not imply they played well;
+they simply provide less surprising evidence than losing to weaker opponents.
+
+
+6. WHAT ABOUT PERSONAL PERFORMANCE?
+===================================
+My recommendation for the initial release: performance means consistently
+achieving better match results than expected against the opposition faced.
+In Duel that already provides a direct measure. In team games it is noisier,
+but rewarding team results keeps winning as the common objective.
+
+Do not initially award extra rating for raw kills, headshot percentage, accuracy,
+damage totals or achievement completion. Those can favor particular weapons,
+encourage farming, and undercount useful team contributions. Do not restore the
+removed scoreboard columns just to support ranking.
+
+There is a genuine limitation: players who always queue in the same team cannot
+be reliably separated using team outcomes alone. Ten placement matches do not
+remove that ambiguity. The first version should acknowledge this limitation.
+
+Possible later refinement, only if validation supports it:
+- Collect server-verified performance features alongside results, with a defined
+  retention policy, and evaluate them against FUTURE wins on held-out matches.
+- Account for map, team size, opponent strength, premade parties and match length.
+- Consider useful contributions and deaths in context, rather than treating a
+  high kill count as proof of skill. Do not count friendly or self-damage.
+- If a contribution adjustment actually improves prediction, start with a small
+  bound, such as at most 10% of the result-based rating change.
+- Keep wins positive and losses negative. No rank farming through high damage
+  while deliberately losing; do not add a constant bonus that creates free rating.
+- Treat 10% as an experimental ceiling, not an approved feature or a complete
+  performance formula. Do not invent weights before representative match data.
+
+Research alternatives: Glicko-2 explicitly models rating uncertainty and its
+growth during inactivity; a team-aware Bayesian model can represent team results
+and individual uncertainty more naturally. These are candidates for comparison,
+not something to bolt onto Elo by mixing incompatible equations. See sources.
+
+
+7. WHEN THE VISIBLE SKILL GROUP CHANGES
+=======================================
+Use hidden rating bands to select the visible badge. Do not assign fixed numbers
+of wins per rank: beating stronger opposition should matter more than farming
+weaker opposition, and a loss can cancel some previous progress.
+
+During placements: update rating silently and show only completed matches / 10.
+After the tenth completed placement in this map/track: reveal the rating's band.
+After later valid results: evaluate promotion/demotion once, at match end.
+No mid-match rank changes based on a kill, death or temporary lead.
+
+Recommended boundary buffer to prevent constant promotion/demotion:
+- If the next band's boundary is B, promote when rating reaches B + 25.
+- If the current band's lower boundary is L, demote below L - 25.
+- Keep the current badge while within this buffer. No arbitrary promotion series
+  or requirement to win a fixed number of matches after crossing the threshold.
+- Apply the rule repeatedly if a large legitimate update crosses several bands;
+  do not trap a clearly misplaced player behind an artificial one-rank limit.
+- Initial placement and reactivation select the rating's band directly, without
+  the buffer. A stale badge should not constrain a fresh reassessment.
+
+Illustration only: if Vanguard begins at 1,600, an established Striker promotes
+at 1,625. That Vanguard falls back to Striker only below 1,575. The numbers are
+illustrative; actual bands and the buffer need calibration together.
+
+Do not finalize an 18-row table of rating thresholds before there is a useful
+test population. Fit trial bands from simulated and closed-test distributions,
+then freeze a versioned set of thresholds for release. Avoid constantly moving
+percentile thresholds that change someone's badge without them playing.
+The top group should be difficult to sustain, but not reserved for exactly a
+fixed number of players. Skill group and a possible future leaderboard position
+are separate concepts.
+
+Show rank-up/down only after the result has been accepted and stored. A pending
+or disputed result shows Processing result, not a guessed badge animation.
+
+
+8. MATCHMAKING AND OFFICIAL MAP POOL
+===================================
+Balance using the hidden rating for the map AND track that will actually be played.
+Do not select a lobby entirely from an unrelated global rank and then pick a
+map where its players have very different skill estimates.
+
+For multi-map searches, consider each mutually selected official map with its
+own rating estimates, then choose a suitable map and balanced lobby together.
+Keep parties together, account for player latency, and widen the search window
+gradually. Avoid unlimited skill gaps merely to force a fast match.
+New and returning players use their estimates with suitable reliability handling;
+never assume Unranked or Inactive means weak opposition.
+
+Casual and community matches do not affect these competitive map ranks, even if
+they use the same BSP. Official matchmaking results must come from the assigned
+server for the assigned roster, map and ruleset, not an arbitrary server cvar.
+
+Approved format split:
+Use two independent rank tracks per official map: Duel and TDM. Completing ten
+placements on a map in one track does not unlock the other track's rank. Results,
+inactivity and reactivation in one track do not change the other.
+For this proposal, eligible TDM team sizes share that map's TDM track; do not add
+separate 2v2, 3v3, 4v4 and 5v5 placement requirements. Which TDM sizes enter the
+official pool remains a matchmaking/ruleset decision to validate before release.
+
+Do not present every installed/custom map as official. The coordinator should
+publish the official pool and its version; examples in this document are not a
+decision to approve Lockdown, Overwatch or Runoff for a particular format.
+
+
+9. PRESENTATION AND ICON ART DIRECTION
+======================================
+Use the clarity of CS:GO/CS2 skill-group badges as a reference, with original
+artwork suited to the mod. Do not copy their rank artwork or pretend we use their
+undisclosed matchmaking algorithm.
+
+Suggested places to show the rank:
+- A Competitive Ranks page with Duel / TDM tabs and one card per official map
+  in the selected track. Both tabs use the same approved Set A badge names.
+- The relevant map's queue card and match acceptance screen.
+- The post-match screen, alongside that map's updated badge.
+- Player profiles and the scoreboard, using the CURRENT map and track's badge.
+
+A map card contains: map image/name, track, badge/name, placement or activity state,
+last competitive match date, and the next action if inactive/unranked.
+Example: OVERWATCH / DUEL / 6 OF 10 PLACEMENT MATCHES COMPLETED.
+Example: LOCKDOWN / TDM / VANGUARD / ACTIVE.
+Example: RUNOFF / DUEL / INACTIVE / COMPLETE ONE DUEL MATCH TO REACTIVATE.
+Show the previous inactive badge muted with an explicit Inactive label. Avoid
+making inactive players look like they have never earned a rank.
+
+No visible Elo number, exact rating delta or numeric progress bar to the next
+group. Hiding those labels is insufficient if the API still returns the numbers;
+send clients only the approved public rank state and placement progress.
+Queue prediction internals and other players' hidden ratings stay server-side.
+
+Badges should work at roughly 24-32 px in compact lists, 64-96 px on map cards
+and 256 px in the detailed view. Master artwork can be larger/vector-based, with
+clean raster exports, transparent backgrounds and consistent visual bounds.
+Use bold silhouettes, restrained gradients and small details only at large sizes.
+Every badge needs shape changes, not just a hue swap. Test at UI scale settings
+and against both dark panels and busy in-game backgrounds.
+
+Use brief promotion animations and a subtle optional sound. Demotion feedback
+should be clear and quiet, without taunting or a loud failure effect. Respect
+reduced-motion/sound preferences. Localize all rank names, state labels and help
+text, with room for longer translations; stable internal IDs never depend on
+the translated name.
+
+
+10. VALIDATION BEFORE RELEASE
+==============================
+Ratings should be auditable, even if players cannot see the numbers.
+Keep an append-only result/rating history and prevent duplicate submissions from
+applying the same match twice. Version the formulas and rank bands so corrections
+can be recomputed rather than patched with unexplained manual points.
+Store the pre-match snapshots used for each calculation; never let result-arrival
+order or a repeated HTTP request change the intended calculation.
+
+Check at least:
+- Exactly ten completed placements reveal the first badge, including draws.
+- Only the played map AND track's rating, placement count and activity are updated.
+- Duel and TDM on the same map have independent 10-match placements and inactivity.
+- Optional new-map seeding uses established maps from the same track only.
+- Calendar-month expiry, short months, UTC boundaries and client clock changes.
+- Inactive return preserves history and reveals a recalculated badge after one
+  valid match. Cancelled matches cannot reactivate it.
+- Promotions/demotions around each boundary do not flicker after every result.
+- Abandonment does not erase a loss or manufacture activity/placement credit.
+- Party boosting, repeated opponent farming and excessive skill gaps are handled
+  without treating every legitimate rematch in a small population as misconduct.
+- Simulated new, returning and rapidly improving players converge reasonably;
+  established players are not needlessly volatile.
+- Match predictions are calibrated across maps, formats and premade sizes, and
+  mixed-K updates do not create unacceptable long-term rating inflation.
+- A later invalidated match can have its effects reversed consistently through
+  the authoritative history, rather than blindly subtracting an old rounded delta.
+- No client, ordinary community admin or local configuration can grant a rank.
+
+
+11. SOURCES AND WHAT IS OUR OWN PROPOSAL
+=======================================
+Current project baseline:
+  services/coordinator/core.py: report_result, _teams and user rating creation.
+  These currently use mode-based ratings, team averages and a K=32 Elo update.
+  Set A and separate Duel/TDM map ranks are approved design choices. The art,
+  K schedule, boundary buffer and return policy remain proposals. None of these
+  new rank features are already present in that code.
+
+[Glicko-2 specification, Mark E. Glickman]
+https://www.glicko.net/glicko/glicko2.pdf
+The specification tracks a rating, rating deviation and volatility, and allows
+uncertainty to grow during periods without games. It also discusses rating
+periods; its suggested batch sizes are not our ten-match placement requirement.
+This supports considering uncertainty-aware models, not claiming that our
+proposed K schedule is mathematically equivalent to Glicko-2.
+
+[TrueSkill ranking system, Microsoft Research]
+https://www.microsoft.com/en-us/research/project/trueskill-ranking-system/
+Describes a team-aware skill/uncertainty model and the difficulty of separating
+individual strengths when players always compete together. It is a reference
+for evaluating alternatives to team-average Elo, not evidence of CS2's algorithm.
+
+[TrueSkill 2 research report, Microsoft Research]
+https://www.microsoft.com/en-us/research/publication/trueskill-2-improved-bayesian-skill-rating-system/
+Explores additional evidence beyond match outcomes. Its findings do not validate
+arbitrary kill/damage weights for this mod; our own match data and independent
+validation would still be needed before adopting performance-based adjustments.
+
+Set A and the separate Duel/TDM tracks are now settled. Remaining review:
+confirm the proposed inactivity/return details and eligible TDM rulesets, then
+simulate rating behavior before finalizing thresholds or producing badges.
