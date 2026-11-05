@@ -209,7 +209,7 @@ public:
         if(m_Choice!=choice || m_Height!=height) { m_Choice=choice;m_Height=height;m_Font=HL2MPGetHitmarkerFont(choice,height); }
         m_Color=color; Repaint();
     }
-    void PaintBackground() OVERRIDE { HL2MPServerTheme::Rounded(0,0,GetWide(),GetTall(),Color(20,23,25,220),6); }
+    void PaintBackground() OVERRIDE { HL2MPServerTheme::Rounded(0,0,GetWide(),GetTall(),Color(24,24,24,235),6); }
     void Paint() OVERRIDE
     {
         if(!m_Font)return;
@@ -263,6 +263,7 @@ public:
         else
         {
             m_Combo = new CHL2MPDropdown( this, "Value" );
+            m_Combo->ServerStyle();
             if ( def.kind == RESOLUTION )
             {
                 CUtlVector<MaterialVideoMode_t> modes;
@@ -359,7 +360,7 @@ public:
         if (m_Spray) m_Spray->Style(scale, small);
         m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
-        if ( m_Text ) { m_Text->SetFont( font ); m_Text->SetBgColor( Color( 24, 31, 34, 160 ) ); m_Text->SetFgColor( Color( 236, 237, 230, 255 ) ); m_Text->SetBorder( NULL ); }
+        if ( m_Text ) { m_Text->SetFont( font ); m_Text->SetBgColor( Color( 29, 29, 29, 255 ) ); m_Text->SetFgColor( HL2MPServerTheme::Text() ); m_Text->SetBorder( NULL ); }
         if ( m_Amount ) { m_Amount->SetFont( small ); m_Amount->SetFgColor( Color( 221, 227, 225, 255 ) ); }
         InvalidateLayout( true );
     }
@@ -523,7 +524,7 @@ public:
     void OnMouseWheeled( int delta ) OVERRIDE { if ( capture ) SendKey( delta > 0 ? MOUSE_WHEEL_UP : MOUSE_WHEEL_DOWN ); }
     void PaintBackground() OVERRIDE
     {
-        vgui::surface()->DrawSetColor( Color( 3, 7, 10, 238 ) ); vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() );
+        vgui::surface()->DrawSetColor( Color( 24, 24, 24, 250 ) ); vgui::surface()->DrawFilledRect( 0, 0, GetWide(), GetTall() );
     }
     vgui::Label *title, *body; CHL2MPSettingsButton *yes, *no, *discard; bool capture;
 };
@@ -539,7 +540,7 @@ public:
     }
     void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
     {
-        BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); SetBackgroundColor( Color( 18, 26, 30, 255 ) );
+        BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); SetBackgroundColor( Color( 24, 24, 24, 255 ) );
     }
     void SelectModel( int index )
     {
@@ -750,10 +751,10 @@ void CHL2MPOptions::PerformLayout()
 void CHL2MPOptions::PaintBackground()
 {
     vgui::ISurface *surface = vgui::surface(); const int w = GetWide(), h = GetTall();
-    surface->DrawSetColor( Color( 21, 30, 35, 232 ) );
+    surface->DrawSetColor( Color( 32, 32, 32, 250 ) );
     surface->DrawFilledRect( 0, 0, w, h );
-    surface->DrawSetColor( Color( 8, 14, 18, 150 ) ); surface->DrawFilledRect( 0, 0, w, int( 68 * m_Scale ) ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h );
-    surface->DrawSetColor( Color( 204, 221, 223, 30 ) ); surface->DrawFilledRect( 0, int( 68 * m_Scale ), w, int( 68 * m_Scale ) + 1 ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h - int( 76 * m_Scale ) + 1 );
+    surface->DrawSetColor( Color( 26, 26, 26, 255 ) ); surface->DrawFilledRect( 0, 0, w, int( 68 * m_Scale ) ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h );
+    surface->DrawSetColor( Color( 220, 220, 220, 30 ) ); surface->DrawFilledRect( 0, int( 68 * m_Scale ), w, int( 68 * m_Scale ) + 1 ); surface->DrawFilledRect( 0, h - int( 76 * m_Scale ), w, h - int( 76 * m_Scale ) + 1 );
 }
 void CHL2MPOptions::Confirm( int type )
 {

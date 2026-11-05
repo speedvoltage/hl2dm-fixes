@@ -76,6 +76,10 @@ Server Rules has admin-only checkboxes for bright models, hitmarkers and hit
 sounds. These change sv_bright_models, sv_hitmarkers and sv_hitsounds immediately,
 without changing any player's personal preference. Console changes are reflected
 in the controls on the next status update.
+Create Server also offers Bright player models, off by default. Launching
+applies that selection to sv_bright_models without changing the host's own
+cl_bright_player_models preference. Turning it off explicitly clears permission
+for the newly created server, even if a previous session allowed bright models.
 This also disables the teammate/enemy footstep overrides tied to bright models.
 Audio options explain the requirement beside disabled teammate/enemy selectors:
 enable bright models in Game options and obtain permission from the server.

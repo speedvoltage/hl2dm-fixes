@@ -46,7 +46,7 @@ private:
     void Close(); void Start();
     enum { NAME, PASSWORD, SLOTS, TIME, FRAGS, GRAVITY, BOTS, ENTRIES };
     enum { MAP, MODE, NETWORK, DIFFICULTY, DROPS };
-    enum { FRIENDLY, STAY, RESPAWN, FALLDAMAGE, CHECKS };
+    enum { FRIENDLY, STAY, RESPAWN, FALLDAMAGE, BRIGHT, CHECKS };
     vgui::Label *m_Title, *m_Description, *m_Status, *m_NetworkHint, *m_BotHint, *m_Section[3], *m_Caption[ENTRIES + DROPS];
     vgui::TextEntry *m_Entry[ENTRIES]; CHL2MPDropdown *m_Drop[DROPS]; vgui::CheckButton *m_Check[CHECKS];
     CHL2MPSettingsButton *m_Back, *m_Start;
@@ -80,9 +80,11 @@ CHostServer::CHostServer( vgui::Panel *parent ) : BaseClass( parent, "CreateServ
     const char *skills[] = { "#HL2MP_UI_27e88b861fa9", "#HL2MP_UI_db2cb3fe28e2", "#HL2MP_UI_0e24076baf99", "#HL2MP_UI_884981556c79" };
     for ( int i = 0; i < 4; ++i ) m_Drop[DIFFICULTY]->AddItem( skills[i], NULL );
     m_Drop[MODE]->SilentActivateItemByRow( 0 ); m_Drop[NETWORK]->SilentActivateItemByRow( 0 ); m_Drop[DIFFICULTY]->SilentActivateItemByRow( 1 );
-    const char *checks[] = { "#HL2MP_UI_d5134a5bdfcc", "#HL2MP_UI_18d384fbe9ba", "#HL2MP_UI_d8205bf54d70", "#HL2MP_UI_a16fd61ee2e6" };
+    const char *checks[] = { "#HL2MP_UI_d5134a5bdfcc", "#HL2MP_UI_18d384fbe9ba", "#HL2MP_UI_d8205bf54d70", "#HL2MP_UI_a16fd61ee2e6", "#HL2MP_AllowBrightModels" };
     for ( int i = 0; i < CHECKS; ++i ) m_Check[i] = new CHL2MPCheckButton( this, checks[i], checks[i] );
     m_Check[RESPAWN]->SetSelected( true );
+    m_Check[BRIGHT]->SetSelected( false );
+    m_Check[BRIGHT]->SetWrap( true );
     m_Back = new CHL2MPSettingsButton( this, "#HL2MP_UI_24c76252a90c", "close" ); m_Start = new CHL2MPSettingsButton( this, "#HL2MP_UI_485ffc6dcae0", "start" );
     m_Back->ServerStyle(); m_Start->ServerStyle( true );
 }
@@ -138,7 +140,13 @@ void CHostServer::PerformLayout()
     auto drop = [&]( int id, int x, int y ) { place( m_Caption[ENTRIES + id], x, y, 348, 24 ); place( m_Drop[id], x, y + 28, 348, 34 ); };
     entry( NAME, 16, 182 ); drop( MAP, 16, 262 ); drop( MODE, 16, 342 ); entry( SLOTS, 16, 422 ); entry( PASSWORD, 16, 502 );
     entry( TIME, 416, 182 ); entry( FRAGS, 416, 262 ); entry( GRAVITY, 416, 342 );
-    for ( int i = 0; i < CHECKS; ++i ) place( m_Check[i], 416, 420 + i * 39, 348, 32 );
+    for ( int i = 0; i < CHECKS; ++i ) place( m_Check[i], 416, 420 + i * 34, 348, i == BRIGHT ? 44 : 32 );
+    // CheckButton retains its text-image height across font/resolution changes.
+    // Measure wrapped text again before Label positions it beside the checkbox.
+    vgui::TextImage *brightText = m_Check[BRIGHT]->GetTextImage();
+    const int brightTextWidth = MAX( 1, m_Check[BRIGHT]->GetWide() - clamp( vgui::surface()->GetFontTall( m_Font ), 18, 30 ) - 10 );
+    brightText->SetSize( brightTextWidth, m_Check[BRIGHT]->GetTall() ); brightText->RecalculateNewLinePositions();
+    int textWide, textTall; brightText->GetContentSize( textWide, textTall ); brightText->SetSize( brightTextWidth, textTall );
     drop( NETWORK, 816, 182 ); place( m_NetworkHint, 816, 250, 348, 72 ); m_NetworkHint->SetFont( m_Small ); m_NetworkHint->SetFgColor( HL2MPServerTheme::Muted() );
     entry( BOTS, 816, 342 ); drop( DIFFICULTY, 816, 422 ); place( m_BotHint, 816, 502, 348, 92 ); m_BotHint->SetFont( m_Small ); m_BotHint->SetFgColor( HL2MPServerTheme::Muted() );
     place( m_Status, 0, 618, 1180, 40 ); m_Status->SetFont( m_Small ); place( m_Back, 0, 669, 160, 36 ); place( m_Start, 916, 665, 264, 42 );
@@ -171,7 +179,7 @@ void CHostServer::Start()
     if ( !name[0] ) { m_Status->SetText( "#HL2MP_UI_ced454c5bc44" ); return; }
     if ( !Number( m_Entry[SLOTS], 2, 32, slots ) || !Number( m_Entry[BOTS], 0, 31, bots ) || bots >= slots ) { m_Status->SetText( "#HL2MP_UI_c0e69bfa44ae" ); return; }
     if ( !Number( m_Entry[TIME], 0, 1440, time ) || !Number( m_Entry[FRAGS], 0, 9999, frags ) || !Number( m_Entry[GRAVITY], 0, 4000, gravity ) ) { m_Status->SetText( "#HL2MP_UI_cbb80014bfee" ); return; }
-    const char *required[] = { "hostname", "sv_password", "mp_teamplay", "mp_timelimit", "mp_fraglimit", "sv_gravity", "sv_lan", "sv_use_steam_networking", "hl2mp_bot_quota", "hl2mp_bot_difficulty" };
+    const char *required[] = { "hostname", "sv_password", "mp_teamplay", "mp_timelimit", "mp_fraglimit", "sv_gravity", "sv_lan", "sv_use_steam_networking", "hl2mp_bot_quota", "hl2mp_bot_difficulty", "sv_bright_models" };
     for ( int i = 0; i < ARRAYSIZE( required ); ++i ) if ( !ConVarRef( required[i], true ).IsValid() ) { m_Status->SetText( "#HL2MP_UI_63f97c4274f7" ); return; }
     // Player-entered names/passwords go directly to cvars, never through the command parser.
     ConVarRef( "hostname" ).SetValue( name ); ConVarRef( "sv_password" ).SetValue( password );
@@ -179,6 +187,8 @@ void CHostServer::Start()
     ConVarRef( "mp_timelimit" ).SetValue( time ); ConVarRef( "mp_fraglimit" ).SetValue( frags ); ConVarRef( "sv_gravity" ).SetValue( gravity );
     ConVarRef( "mp_friendlyfire" ).SetValue( m_Check[FRIENDLY]->IsSelected() ); ConVarRef( "mp_weaponstay" ).SetValue( m_Check[STAY]->IsSelected() );
     ConVarRef( "mp_forcerespawn" ).SetValue( m_Check[RESPAWN]->IsSelected() ); ConVarRef( "mp_falldamage" ).SetValue( m_Check[FALLDAMAGE]->IsSelected() );
+    // This grants server permission; each player's own visual preference remains separate.
+    ConVarRef( "sv_bright_models" ).SetValue( m_Check[BRIGHT]->IsSelected() );
     ConVarRef( "sv_lan" ).SetValue( m_Drop[NETWORK]->GetActiveItem() == 2 ); ConVarRef( "sv_use_steam_networking" ).SetValue( m_Drop[NETWORK]->GetActiveItem() == 0 );
     ConVarRef( "hl2mp_bot_quota_mode" ).SetValue( "normal" ); ConVarRef( "hl2mp_bot_auto_vacate" ).SetValue( 0 );
     ConVarRef( "hl2mp_bot_difficulty" ).SetValue( m_Drop[DIFFICULTY]->GetActiveItem() ); ConVarRef( "hl2mp_bot_quota" ).SetValue( bots );
