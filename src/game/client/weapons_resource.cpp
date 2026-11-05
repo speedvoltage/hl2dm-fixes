@@ -18,6 +18,11 @@
 
 WeaponsResource gWR;
 
+#ifdef HL2MP
+static ConVar cl_hud_show_unowned_ammo( "cl_hud_show_unowned_ammo", "0", FCVAR_ARCHIVE,
+	"Show ammo pickup icons even without a weapon that uses that ammo.", true, 0, true, 1 );
+#endif
+
 void FreeHudTextureList( CUtlDict< CHudTexture *, int >& list );
 
 static CHudTexture *FindHudTextureInDict( CUtlDict< CHudTexture *, int >& list, const char *psz )
@@ -217,7 +222,10 @@ void WeaponsResource::LoadWeaponSprites( WEAPON_FILE_INFO_HANDLE hWeaponFileInfo
 //-----------------------------------------------------------------------------
 CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	if ( iAmmoId < 0 )
+		return NULL;
+
+	C_BasePlayer *player = GetHudPlayer();
 	if ( !player )
 		return NULL;
 
@@ -227,16 +235,33 @@ CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 		if ( !weapon )
 			continue;
 
-		if ( weapon->GetPrimaryAmmoType() == iAmmoId )
+		if ( weapon->GetPrimaryAmmoType() == iAmmoId && weapon->GetWpnData().iconAmmo )
 		{
 			return weapon->GetWpnData().iconAmmo;
 		}
-		else if ( weapon->GetSecondaryAmmoType() == iAmmoId )
+		else if ( weapon->GetSecondaryAmmoType() == iAmmoId && weapon->GetWpnData().iconAmmo2 )
 		{
 			return weapon->GetWpnData().iconAmmo2;
 		}
 	}
 
+	// Ammo can be collected before its weapon, or remain after that weapon is
+	// dropped. Its icon belongs to the weapon definition, not a live entity.
+#ifdef HL2MP
+	if ( !cl_hud_show_unowned_ammo.GetBool() )
+		return NULL;
+#endif
+	for ( int i = 0; i < GetWeaponInfoCount(); ++i )
+	{
+		const WEAPON_FILE_INFO_HANDLE handle = (WEAPON_FILE_INFO_HANDLE)i;
+		FileWeaponInfo_t *info = GetFileWeaponInfoFromHandle( handle );
+		if ( !info->bParsedScript || ( info->iAmmoType != iAmmoId && info->iAmmo2Type != iAmmoId ) )
+			continue;
+		LoadWeaponSprites( handle );
+		CHudTexture *icon = info->iAmmoType == iAmmoId ? info->iconAmmo : info->iconAmmo2;
+		if ( icon )
+			return icon;
+	}
 	return NULL;
 }
 
@@ -245,7 +270,10 @@ CHudTexture *WeaponsResource::GetAmmoIconFromWeapon( int iAmmoId )
 //-----------------------------------------------------------------------------
 const FileWeaponInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	if ( iAmmoId < 0 )
+		return NULL;
+
+	C_BasePlayer *player = GetHudPlayer();
 	if ( !player )
 		return NULL;
 
@@ -265,6 +293,12 @@ const FileWeaponInfo_t *WeaponsResource::GetWeaponFromAmmo( int iAmmoId )
 		}
 	}
 
+	for ( int i = 0; i < GetWeaponInfoCount(); ++i )
+	{
+		const FileWeaponInfo_t *info = GetFileWeaponInfoFromHandle( (WEAPON_FILE_INFO_HANDLE)i );
+		if ( info->bParsedScript && ( info->iAmmoType == iAmmoId || info->iAmmo2Type == iAmmoId ) )
+			return info;
+	}
 	return NULL;
 }
 

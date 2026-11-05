@@ -562,6 +562,9 @@ private:
 
 	// For UI purposes...
 	int				m_iOldAmmo[ MAX_AMMO_TYPES ];
+#ifdef HL2MP
+	bool			m_bAmmoHistoryValid;
+#endif
 
 	C_CommandContext		m_CommandContext;
 

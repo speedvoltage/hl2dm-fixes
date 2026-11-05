@@ -78,6 +78,7 @@ static const SettingDef s_Settings[] = {
     { GAME, CHOICE, "#HL2MP_UI_2ef15ac2866f", "con_enable", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_UI_8b3214b0cef9", "crosshair", "#HL2MP_UI_84dc5c33ad8b=0|#HL2MP_UI_5cea256d1b64=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_HudQuickInfo", "hud_quickinfo", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
+    { GAME, CHOICE, "#HL2MP_ShowUnownedAmmoPickups", "cl_hud_show_unowned_ammo", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_UI_408dcdeb70d1", "hud_fastswitch", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_UI_7c9008467e04", "cl_wpn_sway_enabled", "#HL2MP_UI_38cca6bea010=0|#HL2MP_UI_e8a01133b135=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_UI_7be992fd080d", "cl_autowepswitch", "#HL2MP_UI_23794d91c53a=0|#HL2MP_UI_f91711645937=1", 0, 0, 0 },
@@ -541,6 +542,12 @@ public:
     void ApplySchemeSettings( vgui::IScheme *scheme ) OVERRIDE
     {
         BaseClass::ApplySchemeSettings( scheme ); SetBorder( NULL ); SetBackgroundColor( Color( 24, 24, 24, 255 ) );
+    }
+    void Paint() OVERRIDE
+    {
+        BaseClass::Paint();
+        vgui::surface()->DrawSetColor( HL2MPServerTheme::Orange() );
+        vgui::surface()->DrawOutlinedRect( 0, 0, GetWide(), GetTall() );
     }
     void SelectModel( int index )
     {

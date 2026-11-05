@@ -74,20 +74,6 @@ void CHudHistoryResource::Init( void )
 	Reset();
 }
 
-void CHudHistoryResource::OnThink( void )
-{
-	BaseClass::OnThink();
-
-	C_BasePlayer *pHudPlayer = GetHudPlayer();
-	if ( m_hHistoryPlayer != pHudPlayer )
-	{
-		m_hHistoryPlayer = pHudPlayer;
-		Reset();
-		if ( pHudPlayer )
-			pHudPlayer->ResetHudAmmoHistory();
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -96,6 +82,7 @@ void CHudHistoryResource::Reset( void )
 	m_PickupHistory.RemoveAll();
 	m_iCurrentHistorySlot = 0;
 	m_bDoNotDraw = true;
+	m_bNeedsDraw = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -119,14 +106,16 @@ void CHudHistoryResource::AddToHistory( C_BaseCombatWeapon *weapon )
 	// don't show the same weapon twice
 	for ( int i = 0; i < m_PickupHistory.Count(); i++ )
 	{
-		if ( m_PickupHistory[i].iId == iId )
+		if ( m_PickupHistory[i].type == HISTSLOT_WEAP &&
+			m_PickupHistory[i].m_hWeapon == weapon && m_PickupHistory[i].DisplayTime > gpGlobals->curtime )
 		{
 			// it's already in list
 			return;
 		}
 	}
 	
-	AddIconToHistory( HISTSLOT_WEAP, iId, weapon, 0, NULL );
+	gWR.LoadWeaponSprites( weapon->GetWeaponFileInfoHandle() );
+	AddIconToHistory( HISTSLOT_WEAP, iId, weapon, 0, weapon->GetSpriteInactive() );
 }
 
 //-----------------------------------------------------------------------------
@@ -186,7 +175,7 @@ void CHudHistoryResource::AddToHistory( int iType, const char *szName, int iCoun
 //-----------------------------------------------------------------------------
 // Purpose: adds a history icon
 //-----------------------------------------------------------------------------
-void CHudHistoryResource::AddIconToHistory( int iType, int iId, C_BaseCombatWeapon *weapon, int iCount, CHudTexture *icon )
+void CHudHistoryResource::AddIconToHistory( int iType, int iId, C_BaseCombatWeapon *weapon, int iCount, const CHudTexture *icon )
 {
 	m_bNeedsDraw = true;
 
@@ -321,6 +310,18 @@ void CHudHistoryResource::CheckClearHistory( void )
 //-----------------------------------------------------------------------------
 bool CHudHistoryResource::ShouldDraw( void )
 {
+	// HUD visibility is evaluated even when the history is empty. Waiting for
+	// a visible panel's OnThink would leave pickup reporting without a player
+	// until an unrelated item/"ammo full" message makes the panel visible.
+	C_BasePlayer *pHudPlayer = GetHudPlayer();
+	if ( m_hHistoryPlayer != pHudPlayer )
+	{
+		m_hHistoryPlayer = pHudPlayer;
+		Reset();
+		if ( pHudPlayer )
+			pHudPlayer->ResetHudAmmoHistory();
+	}
+
 #ifdef TF_CLIENT_DLL
 	return false;
 #else
@@ -420,17 +421,19 @@ void CHudHistoryResource::Paint( void )
 			case HISTSLOT_WEAP:
 				{
 					C_BaseCombatWeapon *pWeapon = m_PickupHistory[i].m_hWeapon;
-					if ( !pWeapon )
-						return;
 
-					if ( !pWeapon->HasAmmo() )
+					if ( pWeapon && !pWeapon->HasAmmo() )
 					{
 						// if the weapon doesn't have ammo, display it as red
 						clr = gHUD.m_clrCaution;	
 						clr[3] = MIN( scale, 255 );
 					}
 
-					itemIcon = pWeapon->GetSpriteInactive();
+					// Keep the notification after the entity is removed. A missing
+					// weapon must never prevent later ammo/items from being painted.
+					itemIcon = m_PickupHistory[i].icon;
+					if ( !itemIcon && pWeapon )
+						itemIcon = pWeapon->GetSpriteInactive();
 					bHalfHeight = false;
 				}
 				break;

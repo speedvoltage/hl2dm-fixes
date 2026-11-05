@@ -144,6 +144,11 @@ WEAPON_FILE_INFO_HANDLE GetInvalidWeaponInfoHandle( void )
 	return (WEAPON_FILE_INFO_HANDLE)m_WeaponInfoDatabase.InvalidIndex();
 }
 
+int GetWeaponInfoCount( void )
+{
+	return m_WeaponInfoDatabase.Count();
+}
+
 #if 0
 void ResetFileWeaponInfoDatabase( void )
 {

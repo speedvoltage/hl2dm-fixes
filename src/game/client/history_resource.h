@@ -52,7 +52,7 @@ private:
 		int iId;
 		CHandle< C_BaseCombatWeapon > m_hWeapon;
 
-		CHudTexture *icon;
+		const CHudTexture *icon;
 	};
 
 	CUtlVector<HIST_ITEM> m_PickupHistory;
@@ -66,7 +66,6 @@ public:
 	virtual void Reset( void );
 	virtual bool ShouldDraw( void );
 	virtual void Paint( void );
-	virtual void OnThink( void );
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
@@ -83,7 +82,7 @@ public:
 	
 	void	CheckClearHistory( void );
 	void	SetHistoryGap( int iNewHistoryGap );
-	void	AddIconToHistory( int iType, int iId, C_BaseCombatWeapon *weapon, int iCount, CHudTexture *icon );
+	void	AddIconToHistory( int iType, int iId, C_BaseCombatWeapon *weapon, int iCount, const CHudTexture *icon );
 
 private:
 	// these vars are for hl1-port compatibility

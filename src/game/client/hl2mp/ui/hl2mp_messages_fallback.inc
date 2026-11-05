@@ -1039,4 +1039,5 @@ static const Message s_Messages[] = {
     { "HL2MP_HostDisconnectConfirm", "Leave the current server and start your own server?", NULL },
     { "HL2MP_FootstepsServerHint", "Footsteps play only if the server allows them.", NULL },
     { "HL2MP_FootstepsServerDisabled", "Footsteps are disabled by this server. Your preference is kept.", NULL },
+    { "HL2MP_ShowUnownedAmmoPickups", "Show ammo pickups for unowned weapons", NULL },
 };

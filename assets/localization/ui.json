@@ -6109,6 +6109,12 @@
         "src/game/client/hl2mp/ui/hl2mp_community.cpp",
         "src/game/client/hl2mp/ui/hl2mp_options.cpp"
       ]
+    },
+    "HL2MP_ShowUnownedAmmoPickups": {
+      "english": "Show ammo pickups for unowned weapons",
+      "contexts": [
+        "src/game/client/hl2mp/ui/hl2mp_options.cpp: Game options; optional pickup icons, disabled by default."
+      ]
     }
   },
   "languages": {
@@ -7128,7 +7134,8 @@
       "HL2MP_ServerPermissions": "أذونات الخادم",
       "HL2MP_HostDisconnectConfirm": "هل تريد مغادرة الخادم الحالي وبدء خادمك الخاص؟",
       "HL2MP_FootstepsServerHint": "تُسمع الخطوات فقط إذا سمح بها الخادم.",
-      "HL2MP_FootstepsServerDisabled": "عطّل هذا الخادم أصوات الخطوات. يُحتفظ بتفضيلك."
+      "HL2MP_FootstepsServerDisabled": "عطّل هذا الخادم أصوات الخطوات. يُحتفظ بتفضيلك.",
+      "HL2MP_ShowUnownedAmmoPickups": "إظهار إشعارات التقاط ذخيرة لأسلحة لا تملكها"
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -8146,7 +8153,8 @@
       "HL2MP_ServerPermissions": "PERMISSÕES DO SERVIDOR",
       "HL2MP_HostDisconnectConfirm": "Sair do servidor atual e iniciar seu próprio servidor?",
       "HL2MP_FootstepsServerHint": "Os passos só são reproduzidos se o servidor permitir.",
-      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. Sua preferência é mantida."
+      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. Sua preferência é mantida.",
+      "HL2MP_ShowUnownedAmmoPickups": "Mostrar munição coletada para armas não possuídas"
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -9164,7 +9172,8 @@
       "HL2MP_ServerPermissions": "РАЗРЕШЕНИЯ НА СЪРВЪРА",
       "HL2MP_HostDisconnectConfirm": "Напускане на текущия сървър и стартиране на собствен сървър?",
       "HL2MP_FootstepsServerHint": "Стъпките се чуват само ако сървърът ги разрешава.",
-      "HL2MP_FootstepsServerDisabled": "Стъпките са изключени от този сървър. Предпочитанието ви се запазва."
+      "HL2MP_FootstepsServerDisabled": "Стъпките са изключени от този сървър. Предпочитанието ви се запазва.",
+      "HL2MP_ShowUnownedAmmoPickups": "Показване на взети муниции за оръжия, които нямате"
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -10182,7 +10191,8 @@
       "HL2MP_ServerPermissions": "OPRÁVNĚNÍ SERVERU",
       "HL2MP_HostDisconnectConfirm": "Opustit současný server a spustit vlastní?",
       "HL2MP_FootstepsServerHint": "Kroky se přehrávají pouze tehdy, pokud je server povoluje.",
-      "HL2MP_FootstepsServerDisabled": "Zvuky kroků jsou na tomto serveru vypnuté. Vaše nastavení zůstává zachováno."
+      "HL2MP_FootstepsServerDisabled": "Zvuky kroků jsou na tomto serveru vypnuté. Vaše nastavení zůstává zachováno.",
+      "HL2MP_ShowUnownedAmmoPickups": "Zobrazovat sebranou munici pro nevlastněné zbraně"
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -11200,7 +11210,8 @@
       "HL2MP_ServerPermissions": "SERVERTILLADELSER",
       "HL2MP_HostDisconnectConfirm": "Forlad den aktuelle server og start din egen?",
       "HL2MP_FootstepsServerHint": "Fodtrin afspilles kun, hvis serveren tillader det.",
-      "HL2MP_FootstepsServerDisabled": "Fodtrin er slået fra på denne server. Dit valg bevares."
+      "HL2MP_FootstepsServerDisabled": "Fodtrin er slået fra på denne server. Dit valg bevares.",
+      "HL2MP_ShowUnownedAmmoPickups": "Vis opsamlet ammunition til våben, du ikke har"
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -12218,7 +12229,8 @@
       "HL2MP_ServerPermissions": "SERVERTOESTEMMINGEN",
       "HL2MP_HostDisconnectConfirm": "De huidige server verlaten en je eigen server starten?",
       "HL2MP_FootstepsServerHint": "Voetstappen worden alleen afgespeeld als de server dit toestaat.",
-      "HL2MP_FootstepsServerDisabled": "Voetstappen zijn uitgeschakeld door deze server. Je voorkeur blijft bewaard."
+      "HL2MP_FootstepsServerDisabled": "Voetstappen zijn uitgeschakeld door deze server. Je voorkeur blijft bewaard.",
+      "HL2MP_ShowUnownedAmmoPickups": "Opgepakte munitie tonen voor wapens die je niet hebt"
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -13236,7 +13248,8 @@
       "HL2MP_ServerPermissions": "PALVELIMEN KÄYTTÖOIKEUDET",
       "HL2MP_HostDisconnectConfirm": "Poistutaanko nykyiseltä palvelimelta ja käynnistetäänkö oma palvelin?",
       "HL2MP_FootstepsServerHint": "Askeläänet toistetaan vain, jos palvelin sallii ne.",
-      "HL2MP_FootstepsServerDisabled": "Palvelin on poistanut askeläänet käytöstä. Valintasi säilytetään."
+      "HL2MP_FootstepsServerDisabled": "Palvelin on poistanut askeläänet käytöstä. Valintasi säilytetään.",
+      "HL2MP_ShowUnownedAmmoPickups": "Näytä kerätyt ammukset myös aseille, joita et omista"
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -14254,7 +14267,8 @@
       "HL2MP_ServerPermissions": "AUTORISATIONS DU SERVEUR",
       "HL2MP_HostDisconnectConfirm": "Quitter le serveur actuel et lancer votre propre serveur ?",
       "HL2MP_FootstepsServerHint": "Les bruits de pas sont joués uniquement si le serveur les autorise.",
-      "HL2MP_FootstepsServerDisabled": "Les bruits de pas sont désactivés par ce serveur. Votre préférence est conservée."
+      "HL2MP_FootstepsServerDisabled": "Les bruits de pas sont désactivés par ce serveur. Votre préférence est conservée.",
+      "HL2MP_ShowUnownedAmmoPickups": "Afficher les munitions ramassées pour les armes non possédées"
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -15272,7 +15286,8 @@
       "HL2MP_ServerPermissions": "SERVERBERECHTIGUNGEN",
       "HL2MP_HostDisconnectConfirm": "Den aktuellen Server verlassen und einen eigenen Server starten?",
       "HL2MP_FootstepsServerHint": "Schrittgeräusche werden nur abgespielt, wenn der Server sie erlaubt.",
-      "HL2MP_FootstepsServerDisabled": "Schrittgeräusche sind auf diesem Server deaktiviert. Deine Einstellung bleibt erhalten."
+      "HL2MP_FootstepsServerDisabled": "Schrittgeräusche sind auf diesem Server deaktiviert. Deine Einstellung bleibt erhalten.",
+      "HL2MP_ShowUnownedAmmoPickups": "Aufgesammelte Munition für nicht mitgeführte Waffen anzeigen"
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -16290,7 +16305,8 @@
       "HL2MP_ServerPermissions": "ΔΙΚΑΙΩΜΑΤΑ ΔΙΑΚΟΜΙΣΤΗ",
       "HL2MP_HostDisconnectConfirm": "Να αποχωρήσετε από τον τρέχοντα διακομιστή και να ξεκινήσετε δικό σας;",
       "HL2MP_FootstepsServerHint": "Τα βήματα ακούγονται μόνο αν τα επιτρέπει ο διακομιστής.",
-      "HL2MP_FootstepsServerDisabled": "Τα βήματα είναι απενεργοποιημένα από αυτόν τον διακομιστή. Η προτίμησή σας διατηρείται."
+      "HL2MP_FootstepsServerDisabled": "Τα βήματα είναι απενεργοποιημένα από αυτόν τον διακομιστή. Η προτίμησή σας διατηρείται.",
+      "HL2MP_ShowUnownedAmmoPickups": "Εμφάνιση συλλογής πυρομαχικών για όπλα που δεν έχετε"
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -17308,7 +17324,8 @@
       "HL2MP_ServerPermissions": "SZERVERENGEDÉLYEK",
       "HL2MP_HostDisconnectConfirm": "Kilépsz a jelenlegi szerverről, és elindítod a sajátodat?",
       "HL2MP_FootstepsServerHint": "A lépéshangok csak akkor hallhatók, ha a szerver engedélyezi őket.",
-      "HL2MP_FootstepsServerDisabled": "A szerver letiltotta a lépéshangokat. A beállításod megmarad."
+      "HL2MP_FootstepsServerDisabled": "A szerver letiltotta a lépéshangokat. A beállításod megmarad.",
+      "HL2MP_ShowUnownedAmmoPickups": "Felvett lőszer jelzése nem birtokolt fegyverekhez"
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -18326,7 +18343,8 @@
       "HL2MP_ServerPermissions": "IZIN SERVER",
       "HL2MP_HostDisconnectConfirm": "Keluar dari server saat ini dan mulai server sendiri?",
       "HL2MP_FootstepsServerHint": "Suara langkah hanya diputar jika diizinkan oleh server.",
-      "HL2MP_FootstepsServerDisabled": "Suara langkah dinonaktifkan oleh server ini. Preferensi Anda tetap disimpan."
+      "HL2MP_FootstepsServerDisabled": "Suara langkah dinonaktifkan oleh server ini. Preferensi Anda tetap disimpan.",
+      "HL2MP_ShowUnownedAmmoPickups": "Tampilkan amunisi yang diambil untuk senjata yang belum dimiliki"
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -19344,7 +19362,8 @@
       "HL2MP_ServerPermissions": "AUTORIZZAZIONI DEL SERVER",
       "HL2MP_HostDisconnectConfirm": "Uscire dal server attuale e avviare il proprio server?",
       "HL2MP_FootstepsServerHint": "I passi vengono riprodotti solo se il server li consente.",
-      "HL2MP_FootstepsServerDisabled": "I passi sono disattivati da questo server. La tua preferenza viene mantenuta."
+      "HL2MP_FootstepsServerDisabled": "I passi sono disattivati da questo server. La tua preferenza viene mantenuta.",
+      "HL2MP_ShowUnownedAmmoPickups": "Mostra munizioni raccolte per armi non possedute"
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -20362,7 +20381,8 @@
       "HL2MP_ServerPermissions": "サーバーの許可設定",
       "HL2MP_HostDisconnectConfirm": "現在のサーバーを退出して自分のサーバーを開始しますか？",
       "HL2MP_FootstepsServerHint": "足音はサーバーで許可されている場合のみ再生されます。",
-      "HL2MP_FootstepsServerDisabled": "このサーバーでは足音が無効になっています。個人設定は保持されます。"
+      "HL2MP_FootstepsServerDisabled": "このサーバーでは足音が無効になっています。個人設定は保持されます。",
+      "HL2MP_ShowUnownedAmmoPickups": "未所持の武器の弾薬取得を表示"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -21380,7 +21400,8 @@
       "HL2MP_ServerPermissions": "서버 허용 설정",
       "HL2MP_HostDisconnectConfirm": "현재 서버에서 나가서 자신의 서버를 시작하시겠습니까?",
       "HL2MP_FootstepsServerHint": "발소리는 서버에서 허용한 경우에만 재생됩니다.",
-      "HL2MP_FootstepsServerDisabled": "이 서버에서는 발소리가 비활성화되어 있습니다. 개인 설정은 유지됩니다."
+      "HL2MP_FootstepsServerDisabled": "이 서버에서는 발소리가 비활성화되어 있습니다. 개인 설정은 유지됩니다.",
+      "HL2MP_ShowUnownedAmmoPickups": "보유하지 않은 무기의 탄약 획득 표시"
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -22398,7 +22419,8 @@
       "HL2MP_ServerPermissions": "PERMISOS DEL SERVIDOR",
       "HL2MP_HostDisconnectConfirm": "¿Salir del servidor actual e iniciar tu propio servidor?",
       "HL2MP_FootstepsServerHint": "Los pasos solo se reproducen si el servidor los permite.",
-      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia."
+      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia.",
+      "HL2MP_ShowUnownedAmmoPickups": "Mostrar munición recogida para armas que no tienes"
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -23416,7 +23438,8 @@
       "HL2MP_ServerPermissions": "KEBENARAN PELAYAN",
       "HL2MP_HostDisconnectConfirm": "Keluar daripada pelayan semasa dan mulakan pelayan sendiri?",
       "HL2MP_FootstepsServerHint": "Bunyi langkah dimainkan hanya jika dibenarkan oleh pelayan.",
-      "HL2MP_FootstepsServerDisabled": "Bunyi langkah dinyahdayakan oleh pelayan ini. Pilihan anda dikekalkan."
+      "HL2MP_FootstepsServerDisabled": "Bunyi langkah dinyahdayakan oleh pelayan ini. Pilihan anda dikekalkan.",
+      "HL2MP_ShowUnownedAmmoPickups": "Paparkan peluru yang dikutip untuk senjata yang belum dimiliki"
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -24434,7 +24457,8 @@
       "HL2MP_ServerPermissions": "SERVERTILLATELSER",
       "HL2MP_HostDisconnectConfirm": "Forlate den nåværende serveren og starte din egen?",
       "HL2MP_FootstepsServerHint": "Fottrinn spilles bare av hvis serveren tillater det.",
-      "HL2MP_FootstepsServerDisabled": "Fottrinn er deaktivert på denne serveren. Valget ditt beholdes."
+      "HL2MP_FootstepsServerDisabled": "Fottrinn er deaktivert på denne serveren. Valget ditt beholdes.",
+      "HL2MP_ShowUnownedAmmoPickups": "Vis oppsamlet ammunisjon til våpen du ikke har"
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -25452,7 +25476,8 @@
       "HL2MP_ServerPermissions": "UPRAWNIENIA SERWERA",
       "HL2MP_HostDisconnectConfirm": "Opuścić bieżący serwer i uruchomić własny?",
       "HL2MP_FootstepsServerHint": "Odgłosy kroków są odtwarzane tylko wtedy, gdy serwer na nie pozwala.",
-      "HL2MP_FootstepsServerDisabled": "Ten serwer wyłączył odgłosy kroków. Twoje ustawienie zostaje zachowane."
+      "HL2MP_FootstepsServerDisabled": "Ten serwer wyłączył odgłosy kroków. Twoje ustawienie zostaje zachowane.",
+      "HL2MP_ShowUnownedAmmoPickups": "Pokazuj zebraną amunicję do nieposiadanych broni"
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -26470,7 +26495,8 @@
       "HL2MP_ServerPermissions": "PERMISSÕES DO SERVIDOR",
       "HL2MP_HostDisconnectConfirm": "Sair do servidor atual e iniciar o teu próprio servidor?",
       "HL2MP_FootstepsServerHint": "Os passos só são reproduzidos se o servidor os permitir.",
-      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. A tua preferência é mantida."
+      "HL2MP_FootstepsServerDisabled": "Os passos estão desativados neste servidor. A tua preferência é mantida.",
+      "HL2MP_ShowUnownedAmmoPickups": "Mostrar munições recolhidas para armas que não tens"
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -27488,7 +27514,8 @@
       "HL2MP_ServerPermissions": "PERMISIUNI SERVER",
       "HL2MP_HostDisconnectConfirm": "Părăsești serverul curent și pornești propriul server?",
       "HL2MP_FootstepsServerHint": "Pașii se aud numai dacă serverul îi permite.",
-      "HL2MP_FootstepsServerDisabled": "Pașii sunt dezactivați de acest server. Preferința ta este păstrată."
+      "HL2MP_FootstepsServerDisabled": "Pașii sunt dezactivați de acest server. Preferința ta este păstrată.",
+      "HL2MP_ShowUnownedAmmoPickups": "Arată muniția culeasă pentru arme pe care nu le ai"
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -28506,7 +28533,8 @@
       "HL2MP_ServerPermissions": "РАЗРЕШЕНИЯ СЕРВЕРА",
       "HL2MP_HostDisconnectConfirm": "Покинуть текущий сервер и запустить свой?",
       "HL2MP_FootstepsServerHint": "Звуки шагов воспроизводятся, только если сервер их разрешает.",
-      "HL2MP_FootstepsServerDisabled": "Звуки шагов отключены на этом сервере. Ваши настройки сохранены."
+      "HL2MP_FootstepsServerDisabled": "Звуки шагов отключены на этом сервере. Ваши настройки сохранены.",
+      "HL2MP_ShowUnownedAmmoPickups": "Показывать подбор патронов для оружия, которого нет"
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -29524,7 +29552,8 @@
       "HL2MP_ServerPermissions": "服务器权限",
       "HL2MP_HostDisconnectConfirm": "离开当前服务器并启动自己的服务器？",
       "HL2MP_FootstepsServerHint": "只有服务器允许时才会播放脚步声。",
-      "HL2MP_FootstepsServerDisabled": "此服务器已禁用脚步声。您的个人偏好设置会保留。"
+      "HL2MP_FootstepsServerDisabled": "此服务器已禁用脚步声。您的个人偏好设置会保留。",
+      "HL2MP_ShowUnownedAmmoPickups": "显示未持有武器的弹药拾取提示"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -30542,7 +30571,8 @@
       "HL2MP_ServerPermissions": "PERMISOS DEL SERVIDOR",
       "HL2MP_HostDisconnectConfirm": "¿Salir del servidor actual e iniciar tu propio servidor?",
       "HL2MP_FootstepsServerHint": "Los pasos solo se reproducen si el servidor los permite.",
-      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia."
+      "HL2MP_FootstepsServerDisabled": "Este servidor ha desactivado los pasos. Se conserva tu preferencia.",
+      "HL2MP_ShowUnownedAmmoPickups": "Mostrar munición recogida para armas que no tienes"
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -31560,7 +31590,8 @@
       "HL2MP_ServerPermissions": "SERVERBEHÖRIGHETER",
       "HL2MP_HostDisconnectConfirm": "Lämna den nuvarande servern och starta en egen?",
       "HL2MP_FootstepsServerHint": "Fotsteg spelas bara upp om servern tillåter det.",
-      "HL2MP_FootstepsServerDisabled": "Fotsteg är inaktiverade på den här servern. Ditt val sparas."
+      "HL2MP_FootstepsServerDisabled": "Fotsteg är inaktiverade på den här servern. Ditt val sparas.",
+      "HL2MP_ShowUnownedAmmoPickups": "Visa upplockad ammunition för vapen du inte har"
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -32578,7 +32609,8 @@
       "HL2MP_ServerPermissions": "伺服器權限",
       "HL2MP_HostDisconnectConfirm": "離開目前的伺服器並啟動自己的伺服器？",
       "HL2MP_FootstepsServerHint": "只有伺服器允許時才會播放腳步聲。",
-      "HL2MP_FootstepsServerDisabled": "此伺服器已停用腳步聲。您的個人偏好設定會保留。"
+      "HL2MP_FootstepsServerDisabled": "此伺服器已停用腳步聲。您的個人偏好設定會保留。",
+      "HL2MP_ShowUnownedAmmoPickups": "顯示未持有武器的彈藥拾取提示"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -33596,7 +33628,8 @@
       "HL2MP_ServerPermissions": "สิทธิ์ของเซิร์ฟเวอร์",
       "HL2MP_HostDisconnectConfirm": "ออกจากเซิร์ฟเวอร์ปัจจุบันและเริ่มเซิร์ฟเวอร์ของคุณเองหรือไม่?",
       "HL2MP_FootstepsServerHint": "เสียงฝีเท้าจะเล่นเมื่อเซิร์ฟเวอร์อนุญาตเท่านั้น",
-      "HL2MP_FootstepsServerDisabled": "เซิร์ฟเวอร์นี้ปิดเสียงฝีเท้าไว้ การตั้งค่าของคุณยังคงถูกเก็บไว้"
+      "HL2MP_FootstepsServerDisabled": "เซิร์ฟเวอร์นี้ปิดเสียงฝีเท้าไว้ การตั้งค่าของคุณยังคงถูกเก็บไว้",
+      "HL2MP_ShowUnownedAmmoPickups": "แสดงไอคอนเก็บกระสุนของอาวุธที่ยังไม่มี"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -34614,7 +34647,8 @@
       "HL2MP_ServerPermissions": "SUNUCU İZİNLERİ",
       "HL2MP_HostDisconnectConfirm": "Mevcut sunucudan ayrılıp kendi sunucunuzu başlatmak istiyor musunuz?",
       "HL2MP_FootstepsServerHint": "Ayak sesleri yalnızca sunucu izin verirse çalınır.",
-      "HL2MP_FootstepsServerDisabled": "Bu sunucuda ayak sesleri devre dışı. Tercihiniz korunur."
+      "HL2MP_FootstepsServerDisabled": "Bu sunucuda ayak sesleri devre dışı. Tercihiniz korunur.",
+      "HL2MP_ShowUnownedAmmoPickups": "Sahip olunmayan silahlar için alınan cephaneyi göster"
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -35632,7 +35666,8 @@
       "HL2MP_ServerPermissions": "ДОЗВОЛИ СЕРВЕРА",
       "HL2MP_HostDisconnectConfirm": "Залишити поточний сервер і запустити власний?",
       "HL2MP_FootstepsServerHint": "Звуки кроків відтворюються, лише якщо сервер їх дозволяє.",
-      "HL2MP_FootstepsServerDisabled": "Звуки кроків вимкнено на цьому сервері. Ваші налаштування збережено."
+      "HL2MP_FootstepsServerDisabled": "Звуки кроків вимкнено на цьому сервері. Ваші налаштування збережено.",
+      "HL2MP_ShowUnownedAmmoPickups": "Показувати підбір набоїв для зброї, якої немає"
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -36650,7 +36685,8 @@
       "HL2MP_ServerPermissions": "QUYỀN CỦA MÁY CHỦ",
       "HL2MP_HostDisconnectConfirm": "Rời máy chủ hiện tại và khởi chạy máy chủ riêng của bạn?",
       "HL2MP_FootstepsServerHint": "Tiếng bước chân chỉ phát khi máy chủ cho phép.",
-      "HL2MP_FootstepsServerDisabled": "Máy chủ này đã tắt tiếng bước chân. Tùy chọn của bạn vẫn được giữ lại."
+      "HL2MP_FootstepsServerDisabled": "Máy chủ này đã tắt tiếng bước chân. Tùy chọn của bạn vẫn được giữ lại.",
+      "HL2MP_ShowUnownedAmmoPickups": "Hiển thị đạn nhặt được cho vũ khí chưa sở hữu"
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

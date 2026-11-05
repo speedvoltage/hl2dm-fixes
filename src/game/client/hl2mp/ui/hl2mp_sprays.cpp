@@ -214,4 +214,6 @@ void CHL2MPSprayPicker::Paint()
         vgui::surface()->DrawSetColor(255, 255, 255, 255); vgui::surface()->DrawSetTexture(m_Texture);
         vgui::surface()->DrawTexturedRect(0, 0, size, size);
     }
+    vgui::surface()->DrawSetColor(HL2MPServerTheme::Orange());
+    vgui::surface()->DrawOutlinedRect(0, 0, size, size);
 }

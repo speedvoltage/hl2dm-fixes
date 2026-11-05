@@ -444,6 +444,7 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 {
 #ifdef HL2MP
 	m_iArmorValue = 0;
+	m_bAmmoHistoryValid = false;
 #endif
 
 	AddVar( &m_vecViewOffset, &m_iv_vecViewOffset, LATCH_SIMULATION_VAR );
@@ -828,10 +829,12 @@ void C_BasePlayer::SetVehicleRole( int nRole )
 //-----------------------------------------------------------------------------
 void C_BasePlayer::OnPreDataChanged( DataUpdateType_t updateType )
 {
+#ifndef HL2MP
 	for (int i = 0; i < MAX_AMMO_TYPES; ++i)
 	{
 		m_iOldAmmo[i] = GetAmmoCount(i);
 	}
+#endif
 
 	m_bWasFreezeFraming = (GetObserverMode() == OBS_MODE_FREEZECAM);
 	m_hOldFogController = m_Local.m_PlayerFog.m_hCtrl;
@@ -898,6 +901,28 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 	}
 
 	BaseClass::PostDataUpdate( updateType );
+
+#ifdef HL2MP
+	// OnPreDataChanged/OnDataChanged also run during prediction. In particular,
+	// a prediction pass can replace the old count with the newly received count
+	// before the HUD compares them. Compare server snapshots here instead, and
+	// never treat a prediction correction as an ammo pickup.
+	CHudHistoryResource *pHudHistory = GET_HUDELEMENT( CHudHistoryResource );
+	const bool bReportAmmo = updateType != DATA_UPDATE_CREATED && m_bAmmoHistoryValid &&
+		this == GetHudPlayer() && pHudHistory && pHudHistory->IsTrackingPlayer( this );
+	for ( int i = 0; i < MAX_AMMO_TYPES; ++i )
+	{
+		const int count = GetAmmoCount( i );
+		if ( bReportAmmo && count > m_iOldAmmo[i] )
+		{
+			const FileWeaponInfo_t *pWeaponData = gWR.GetWeaponFromAmmo( i );
+			if ( !pWeaponData || !( pWeaponData->iFlags & ITEM_FLAG_NOAMMOPICKUPS ) )
+				pHudHistory->AddToHistory( HISTSLOT_AMMO, i, count - m_iOldAmmo[i] );
+		}
+		m_iOldAmmo[i] = count;
+	}
+	m_bAmmoHistoryValid = true;
+#endif
 			 
 	// Only care about this for local player
 	if ( IsLocalPlayer() )
@@ -1039,19 +1064,22 @@ void C_BasePlayer::OnRestore()
 		input->GetButtonBits( 0 );
 	}
 
-	// For ammo history icons to current value so they don't flash on level transtions
-	for ( int i = 0; i < MAX_AMMO_TYPES; i++ )
-	{
-		m_iOldAmmo[i] = GetAmmoCount(i);
-	}
+	// Do not show the restored inventory as new pickups.
+	ResetHudAmmoHistory();
 }
 
 void C_BasePlayer::ResetHudAmmoHistory( void )
 {
+#ifdef HL2MP
+	// Following a different player or restoring a level needs a fresh server
+	// baseline, not the possibly predicted ammo currently on the client.
+	m_bAmmoHistoryValid = false;
+#else
 	for ( int i = 0; i < MAX_AMMO_TYPES; ++i )
 	{
 		m_iOldAmmo[i] = GetAmmoCount( i );
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1068,6 +1096,7 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 
 	BaseClass::OnDataChanged( updateType );
 
+#ifndef HL2MP
 	C_BasePlayer *pHudPlayer = GetHudPlayer();
 	CHudHistoryResource *pHudHR = GET_HUDELEMENT( CHudHistoryResource );
 	if ( this == pHudPlayer && pHudHR && pHudHR->IsTrackingPlayer( this ) )
@@ -1088,6 +1117,8 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 			}
 		}
 	}
+
+#endif
 
 	if ( IsLocalPlayer() )
 	{
