@@ -36,7 +36,7 @@ including custom palettes, row padding, orientation and alpha, plus both
 CUtlString::TrimLeft overloads and empty/whitespace/overlapping cases.
 
 
-Source SDK bot fixes
+Source SDK bot fixes and multiplayer melee audio
 ================================================
 Integrated locally: 2026-11-05
 
@@ -68,6 +68,9 @@ Reviewed head: 918f057c107ad22d8f1bfc3eb553cf6ada0b0eed
 https://github.com/ValveSoftware/source-sdk-2013/pull/1370
 Reviewed head: 91267423d65864882523b910ce6355c86d96d3f4
 
+#1499: melee hit/miss sound separation (adapted to HL2MP)
+https://github.com/ValveSoftware/source-sdk-2013/pull/1499
+
 Implementation notes:
 - #1372: an already deployed required weapon counts as equipped. Keep real
   Weapon_Switch failures and null required handles as failures, unlike the
@@ -89,6 +92,15 @@ Implementation notes:
   overlap their cached areas and are within 100 vertical units of them.
   Preserve range, fog, field-of-view and actual line-of-sight checks.
 - #1370: already implemented by our DM-aware quota and pool logic; retained.
+- #1499: change shared CBaseHL2MPBludgeonWeapon, which drives player crowbar
+  and stunstick attacks, rather than the separate single-player base class.
+  Play swing audio only for a dry miss. Every successful hit plays MELEE_HIT,
+  including world surfaces and props, alongside the material effect. This
+  supplies the same fleshy thump on all hits, as requested; do not substitute
+  the metallic MELEE_HIT_WORLD sound for world/prop hits. Use the existing
+  predicted WeaponSound path. Remove the obsolete stunstick-only hit gate.
+  Preserve damage, lag compensation, prediction and our attack cooldown fix.
+  This does not change the optional client hit-sound feature.
 
 Validation:
 - Windows Release win64 and Linux Release x86_64 builds.
@@ -101,7 +113,12 @@ Validation:
   disabling hl2mp_bot_nav_crouch produced duck=false / 64-unit eye offset.
   Reloaded the original test mesh after the temporary attribute changes.
 - nav_generate removed the connected bot using the HL2MP command.
-- Stale-nav visibility was reviewed in code; it
+- Live sound tracing: crowbar dry misses emitted Weapon_Crowbar.Single;
+  floor, metal-barrel and player hits emitted Weapon_Crowbar.Melee_Hit plus
+  tile/metal_barrel/flesh material effects, without Single or Melee_HitWorld.
+  Stunstick hits retain
+  Weapon_StunStick.Melee_Hit. Server damage was still applied to the bot.
+- Water/slime handling and stale-nav visibility were reviewed in code; they
   still need broader live coverage, especially with custom maps and latency.
 
 The local installation had no loose .nav files. A temporary dm_lockdown.nav

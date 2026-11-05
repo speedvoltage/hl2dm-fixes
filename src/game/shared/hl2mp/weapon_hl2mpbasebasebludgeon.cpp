@@ -172,8 +172,9 @@ void CBaseHL2MPBludgeonWeapon::Hit( trace_t &traceHit, Activity nHitActivity )
 		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
 #endif
 
-		if ( this->PlayFleshyHittySoundOnHit() )
-			WeaponSound( MELEE_HIT );
+		// Every successful strike gets the same weighty hit sound, including
+		// walls and props. ImpactEffect adds the material-specific layer.
+		WeaponSound( MELEE_HIT );
 	}
 
 	// Apply an impact effect
@@ -343,8 +344,6 @@ void CBaseHL2MPBludgeonWeapon::Swing( int bIsSecondary )
 		}
 	}
 
-	WeaponSound( SINGLE );
-
 	// -------------------------
 	//	Miss
 	// -------------------------
@@ -355,8 +354,10 @@ void CBaseHL2MPBludgeonWeapon::Swing( int bIsSecondary )
 		// We want to test the first swing again
 		Vector testEnd = swingStart + forward * GetRange();
 		
-		// See if we happened to hit water
-		ImpactWater( swingStart, testEnd );
+		// A dry miss plays the swing. Hits already produce their weapon/material
+		// impact sounds; water supplies its own splash feedback.
+		if ( !ImpactWater( swingStart, testEnd ) )
+			WeaponSound( SINGLE );
 	}
 	else
 	{
