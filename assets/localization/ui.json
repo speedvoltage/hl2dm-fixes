@@ -5964,36 +5964,6 @@
         "Combat feedback and optional per-round scoreboard statistics."
       ]
     },
-    "HL2MP_ScoreAccuracyName": {
-      "english": "Accuracy",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreHeadAccuracyName": {
-      "english": "Headshot accuracy",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreDamage": {
-      "english": "Damage",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreState": {
-      "english": "State",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreDead": {
-      "english": "DEAD",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
     "HL2MP_SoundBell": {
       "english": "Bell",
       "contexts": [
@@ -6080,54 +6050,6 @@
     },
     "HL2MP_FootstepsRequirement": {
       "english": "Requires bright models enabled in Game options and allowed by this server.",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreKDR": {
-      "english": "K/D",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreAccuracy": {
-      "english": "ACC %",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreHeadAccuracy": {
-      "english": "HS %",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreShowKDR": {
-      "english": "Scoreboard: K/D",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreShowAccuracy": {
-      "english": "Scoreboard: Accuracy",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreShowHeadAccuracy": {
-      "english": "Scoreboard: Headshot accuracy",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreShowDamage": {
-      "english": "Scoreboard: Damage",
-      "contexts": [
-        "Combat feedback and optional per-round scoreboard statistics."
-      ]
-    },
-    "HL2MP_ScoreShowDead": {
-      "english": "Scoreboard: DEAD",
       "contexts": [
         "Combat feedback and optional per-round scoreboard statistics."
       ]
@@ -7129,11 +7051,6 @@
       "HL2MP_HitSoundChoice": "صوت الإصابة",
       "HL2MP_HitSoundVolume": "مستوى صوت الإصابة",
       "HL2MP_PreviewSound": "استماع",
-      "HL2MP_ScoreAccuracyName": "الدقة",
-      "HL2MP_ScoreHeadAccuracyName": "دقة إصابات الرأس",
-      "HL2MP_ScoreDamage": "الضرر",
-      "HL2MP_ScoreState": "الحالة",
-      "HL2MP_ScoreDead": "ميت",
       "HL2MP_SoundBell": "جرس",
       "HL2MP_SoundClick": "نقرة",
       "HL2MP_SoundPop": "فرقعة",
@@ -7148,15 +7065,7 @@
       "HL2MP_AllowHitmarkers": "مؤشرات الإصابة (أرقام الضرر)",
       "HL2MP_AllowHitSounds": "أصوات الإصابة",
       "HL2MP_HitSoundsHint": "يتطلب إذن الخادم. تُشغّل الأصوات فقط عند إلحاق ضرر بالعدو يؤكده الخادم.",
-      "HL2MP_FootstepsRequirement": "يتطلب تفعيل النماذج الساطعة في خيارات اللعبة وسماح هذا الخادم بها.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "لوحة النتائج: K/D",
-      "HL2MP_ScoreShowAccuracy": "لوحة النتائج: الدقة",
-      "HL2MP_ScoreShowHeadAccuracy": "لوحة النتائج: دقة إصابات الرأس",
-      "HL2MP_ScoreShowDamage": "لوحة النتائج: الضرر",
-      "HL2MP_ScoreShowDead": "لوحة النتائج: ميت"
+      "HL2MP_FootstepsRequirement": "يتطلب تفعيل النماذج الساطعة في خيارات اللعبة وسماح هذا الخادم بها."
     },
     "brazilian": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -8153,11 +8062,6 @@
       "HL2MP_HitSoundChoice": "Som de acerto",
       "HL2MP_HitSoundVolume": "Volume dos acertos",
       "HL2MP_PreviewSound": "Ouvir",
-      "HL2MP_ScoreAccuracyName": "Precisão",
-      "HL2MP_ScoreHeadAccuracyName": "Precisão na cabeça",
-      "HL2MP_ScoreDamage": "Dano",
-      "HL2MP_ScoreState": "Estado",
-      "HL2MP_ScoreDead": "MORTO",
       "HL2MP_SoundBell": "Sino",
       "HL2MP_SoundClick": "Clique",
       "HL2MP_SoundPop": "Estalo",
@@ -8172,15 +8076,7 @@
       "HL2MP_AllowHitmarkers": "Indicadores de acerto (dano)",
       "HL2MP_AllowHitSounds": "Sons de acerto",
       "HL2MP_HitSoundsHint": "Requer permissão do servidor. Só emite som por dano a inimigos confirmado pelo servidor.",
-      "HL2MP_FootstepsRequirement": "Requer modelos brilhantes ativados nas opções de jogo e permitidos por este servidor.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Placar: K/D",
-      "HL2MP_ScoreShowAccuracy": "Placar: Precisão",
-      "HL2MP_ScoreShowHeadAccuracy": "Placar: Precisão na cabeça",
-      "HL2MP_ScoreShowDamage": "Placar: Dano",
-      "HL2MP_ScoreShowDead": "Placar: MORTO"
+      "HL2MP_FootstepsRequirement": "Requer modelos brilhantes ativados nas opções de jogo e permitidos por este servidor."
     },
     "bulgarian": {
       "HL2MP_UI_d4055fafa379": "Резолюция",
@@ -9177,11 +9073,6 @@
       "HL2MP_HitSoundChoice": "Звук при попадение",
       "HL2MP_HitSoundVolume": "Сила на звука при попадение",
       "HL2MP_PreviewSound": "Прослушване",
-      "HL2MP_ScoreAccuracyName": "Точност",
-      "HL2MP_ScoreHeadAccuracyName": "Точност на попаденията в главата",
-      "HL2MP_ScoreDamage": "Щети",
-      "HL2MP_ScoreState": "Състояние",
-      "HL2MP_ScoreDead": "МЪРТЪВ",
       "HL2MP_SoundBell": "Камбана",
       "HL2MP_SoundClick": "Щракване",
       "HL2MP_SoundPop": "Пукване",
@@ -9196,15 +9087,7 @@
       "HL2MP_AllowHitmarkers": "Индикатори за попадение (щети)",
       "HL2MP_AllowHitSounds": "Звуци при попадение",
       "HL2MP_HitSoundsHint": "Изисква разрешение от сървъра. Звук се възпроизвежда само за щети по врагове, потвърдени от сървъра.",
-      "HL2MP_FootstepsRequirement": "Изисква ярки модели в настройките на играта и разрешение от този сървър.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Табло с резултати: K/D",
-      "HL2MP_ScoreShowAccuracy": "Табло с резултати: Точност",
-      "HL2MP_ScoreShowHeadAccuracy": "Табло с резултати: Точност на попаденията в главата",
-      "HL2MP_ScoreShowDamage": "Табло с резултати: Щети",
-      "HL2MP_ScoreShowDead": "Табло с резултати: МЪРТЪВ"
+      "HL2MP_FootstepsRequirement": "Изисква ярки модели в настройките на играта и разрешение от този сървър."
     },
     "czech": {
       "HL2MP_UI_d4055fafa379": "Rozlišení",
@@ -10201,11 +10084,6 @@
       "HL2MP_HitSoundChoice": "Zvuk zásahu",
       "HL2MP_HitSoundVolume": "Hlasitost zásahů",
       "HL2MP_PreviewSound": "Přehrát",
-      "HL2MP_ScoreAccuracyName": "Přesnost",
-      "HL2MP_ScoreHeadAccuracyName": "Přesnost zásahů hlavy",
-      "HL2MP_ScoreDamage": "Poškození",
-      "HL2MP_ScoreState": "Stav",
-      "HL2MP_ScoreDead": "MRTVÝ",
       "HL2MP_SoundBell": "Zvonek",
       "HL2MP_SoundClick": "Kliknutí",
       "HL2MP_SoundPop": "Lupnutí",
@@ -10220,15 +10098,7 @@
       "HL2MP_AllowHitmarkers": "Ukazatele zásahů (poškození)",
       "HL2MP_AllowHitSounds": "Zvuky zásahů",
       "HL2MP_HitSoundsHint": "Vyžaduje povolení serveru. Zvuky označují pouze poškození nepřátel potvrzené serverem.",
-      "HL2MP_FootstepsRequirement": "Vyžaduje jasné modely v nastavení hry a povolení tohoto serveru.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Srovnávací tabulka: K/D",
-      "HL2MP_ScoreShowAccuracy": "Srovnávací tabulka: Přesnost",
-      "HL2MP_ScoreShowHeadAccuracy": "Srovnávací tabulka: Přesnost zásahů hlavy",
-      "HL2MP_ScoreShowDamage": "Srovnávací tabulka: Poškození",
-      "HL2MP_ScoreShowDead": "Srovnávací tabulka: MRTVÝ"
+      "HL2MP_FootstepsRequirement": "Vyžaduje jasné modely v nastavení hry a povolení tohoto serveru."
     },
     "danish": {
       "HL2MP_UI_d4055fafa379": "Opløsning",
@@ -11225,11 +11095,6 @@
       "HL2MP_HitSoundChoice": "Træflyd",
       "HL2MP_HitSoundVolume": "Lydstyrke for træffere",
       "HL2MP_PreviewSound": "Afspil",
-      "HL2MP_ScoreAccuracyName": "Præcision",
-      "HL2MP_ScoreHeadAccuracyName": "Præcision for hovedtræffere",
-      "HL2MP_ScoreDamage": "Skade",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "DØD",
       "HL2MP_SoundBell": "Klokke",
       "HL2MP_SoundClick": "Klik",
       "HL2MP_SoundPop": "Pop",
@@ -11244,15 +11109,7 @@
       "HL2MP_AllowHitmarkers": "Træfmarkører (skadetal)",
       "HL2MP_AllowHitSounds": "Træflyde",
       "HL2MP_HitSoundsHint": "Kræver serverens tilladelse. Lyde afspilles kun ved skade på fjender, som serveren har bekræftet.",
-      "HL2MP_FootstepsRequirement": "Kræver lyse modeller aktiveret i spilindstillingerne og tilladt af denne server.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Resultattavle: K/D",
-      "HL2MP_ScoreShowAccuracy": "Resultattavle: Præcision",
-      "HL2MP_ScoreShowHeadAccuracy": "Resultattavle: Præcision for hovedtræffere",
-      "HL2MP_ScoreShowDamage": "Resultattavle: Skade",
-      "HL2MP_ScoreShowDead": "Resultattavle: DØD"
+      "HL2MP_FootstepsRequirement": "Kræver lyse modeller aktiveret i spilindstillingerne og tilladt af denne server."
     },
     "dutch": {
       "HL2MP_UI_d4055fafa379": "Resolutie",
@@ -12249,11 +12106,6 @@
       "HL2MP_HitSoundChoice": "Treffergeluid",
       "HL2MP_HitSoundVolume": "Volume van treffers",
       "HL2MP_PreviewSound": "Beluisteren",
-      "HL2MP_ScoreAccuracyName": "Nauwkeurigheid",
-      "HL2MP_ScoreHeadAccuracyName": "Nauwkeurigheid hoofdtreffers",
-      "HL2MP_ScoreDamage": "Schade",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "DOOD",
       "HL2MP_SoundBell": "Bel",
       "HL2MP_SoundClick": "Klik",
       "HL2MP_SoundPop": "Plop",
@@ -12268,15 +12120,7 @@
       "HL2MP_AllowHitmarkers": "Treffermarkeringen (schade)",
       "HL2MP_AllowHitSounds": "Treffergeluiden",
       "HL2MP_HitSoundsHint": "Vereist toestemming van de server. Geluiden klinken alleen bij door de server bevestigde schade aan vijanden.",
-      "HL2MP_FootstepsRequirement": "Vereist heldere modellen in de spelopties en toestemming van deze server.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Scorebord: K/D",
-      "HL2MP_ScoreShowAccuracy": "Scorebord: Nauwkeurigheid",
-      "HL2MP_ScoreShowHeadAccuracy": "Scorebord: Nauwkeurigheid hoofdtreffers",
-      "HL2MP_ScoreShowDamage": "Scorebord: Schade",
-      "HL2MP_ScoreShowDead": "Scorebord: DOOD"
+      "HL2MP_FootstepsRequirement": "Vereist heldere modellen in de spelopties en toestemming van deze server."
     },
     "finnish": {
       "HL2MP_UI_d4055fafa379": "Resoluutio",
@@ -13273,11 +13117,6 @@
       "HL2MP_HitSoundChoice": "Osumaääni",
       "HL2MP_HitSoundVolume": "Osumien äänenvoimakkuus",
       "HL2MP_PreviewSound": "Kuuntele",
-      "HL2MP_ScoreAccuracyName": "Tarkkuus",
-      "HL2MP_ScoreHeadAccuracyName": "Pääosumien tarkkuus",
-      "HL2MP_ScoreDamage": "Vahinko",
-      "HL2MP_ScoreState": "Tila",
-      "HL2MP_ScoreDead": "KUOLLUT",
       "HL2MP_SoundBell": "Kello",
       "HL2MP_SoundClick": "Napsaus",
       "HL2MP_SoundPop": "Poksahdus",
@@ -13292,15 +13131,7 @@
       "HL2MP_AllowHitmarkers": "Osumailmaisimet (vahinkoluvut)",
       "HL2MP_AllowHitSounds": "Osumien äänet",
       "HL2MP_HitSoundsHint": "Vaatii palvelimen luvan. Ääni kuuluu vain palvelimen vahvistamasta viholliselle aiheutetusta vahingosta.",
-      "HL2MP_FootstepsRequirement": "Vaatii kirkkaat mallit peliasetuksista ja tämän palvelimen luvan.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Tulostaulu: K/D",
-      "HL2MP_ScoreShowAccuracy": "Tulostaulu: Tarkkuus",
-      "HL2MP_ScoreShowHeadAccuracy": "Tulostaulu: Pääosumien tarkkuus",
-      "HL2MP_ScoreShowDamage": "Tulostaulu: Vahinko",
-      "HL2MP_ScoreShowDead": "Tulostaulu: KUOLLUT"
+      "HL2MP_FootstepsRequirement": "Vaatii kirkkaat mallit peliasetuksista ja tämän palvelimen luvan."
     },
     "french": {
       "HL2MP_UI_d4055fafa379": "Résolution",
@@ -14297,11 +14128,6 @@
       "HL2MP_HitSoundChoice": "Son de touche",
       "HL2MP_HitSoundVolume": "Volume des sons de touche",
       "HL2MP_PreviewSound": "Écouter",
-      "HL2MP_ScoreAccuracyName": "Précision",
-      "HL2MP_ScoreHeadAccuracyName": "Précision à la tête",
-      "HL2MP_ScoreDamage": "Dégâts",
-      "HL2MP_ScoreState": "État",
-      "HL2MP_ScoreDead": "MORT",
       "HL2MP_SoundBell": "Cloche",
       "HL2MP_SoundClick": "Clic",
       "HL2MP_SoundPop": "Pop",
@@ -14316,15 +14142,7 @@
       "HL2MP_AllowHitmarkers": "Indicateurs de dégâts",
       "HL2MP_AllowHitSounds": "Sons de touche",
       "HL2MP_HitSoundsHint": "Nécessite l'autorisation du serveur. Les sons signalent uniquement les dégâts ennemis confirmés par le serveur.",
-      "HL2MP_FootstepsRequirement": "Nécessite les modèles lumineux dans les options de jeu et leur autorisation par le serveur.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Tableau de bord: K/D",
-      "HL2MP_ScoreShowAccuracy": "Tableau de bord: Précision",
-      "HL2MP_ScoreShowHeadAccuracy": "Tableau de bord: Précision à la tête",
-      "HL2MP_ScoreShowDamage": "Tableau de bord: Dégâts",
-      "HL2MP_ScoreShowDead": "Tableau de bord: MORT"
+      "HL2MP_FootstepsRequirement": "Nécessite les modèles lumineux dans les options de jeu et leur autorisation par le serveur."
     },
     "german": {
       "HL2MP_UI_d4055fafa379": "Auflösung",
@@ -15321,11 +15139,6 @@
       "HL2MP_HitSoundChoice": "Treffersound",
       "HL2MP_HitSoundVolume": "Trefferlautstärke",
       "HL2MP_PreviewSound": "Anhören",
-      "HL2MP_ScoreAccuracyName": "Genauigkeit",
-      "HL2MP_ScoreHeadAccuracyName": "Kopftreffergenauigkeit",
-      "HL2MP_ScoreDamage": "Schaden",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "TOT",
       "HL2MP_SoundBell": "Glocke",
       "HL2MP_SoundClick": "Klick",
       "HL2MP_SoundPop": "Plopp",
@@ -15340,15 +15153,7 @@
       "HL2MP_AllowHitmarkers": "Trefferanzeigen (Schadenszahlen)",
       "HL2MP_AllowHitSounds": "Treffersounds",
       "HL2MP_HitSoundsHint": "Erfordert die Erlaubnis des Servers. Töne bestätigen nur vom Server bestätigten Schaden an Gegnern.",
-      "HL2MP_FootstepsRequirement": "Erfordert helle Modelle in den Spieloptionen und die Erlaubnis dieses Servers.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Anzeigetafel: K/D",
-      "HL2MP_ScoreShowAccuracy": "Anzeigetafel: Genauigkeit",
-      "HL2MP_ScoreShowHeadAccuracy": "Anzeigetafel: Kopftreffergenauigkeit",
-      "HL2MP_ScoreShowDamage": "Anzeigetafel: Schaden",
-      "HL2MP_ScoreShowDead": "Anzeigetafel: TOT"
+      "HL2MP_FootstepsRequirement": "Erfordert helle Modelle in den Spieloptionen und die Erlaubnis dieses Servers."
     },
     "greek": {
       "HL2MP_UI_d4055fafa379": "Ανάλυση",
@@ -16345,11 +16150,6 @@
       "HL2MP_HitSoundChoice": "Ήχος χτυπήματος",
       "HL2MP_HitSoundVolume": "Ένταση ήχου χτυπημάτων",
       "HL2MP_PreviewSound": "Ακρόαση",
-      "HL2MP_ScoreAccuracyName": "Ακρίβεια",
-      "HL2MP_ScoreHeadAccuracyName": "Ακρίβεια χτυπημάτων στο κεφάλι",
-      "HL2MP_ScoreDamage": "Ζημιά",
-      "HL2MP_ScoreState": "Κατάσταση",
-      "HL2MP_ScoreDead": "ΝΕΚΡΟΣ",
       "HL2MP_SoundBell": "Καμπάνα",
       "HL2MP_SoundClick": "Κλικ",
       "HL2MP_SoundPop": "Ποπ",
@@ -16364,15 +16164,7 @@
       "HL2MP_AllowHitmarkers": "Ενδείξεις χτυπημάτων (ζημιά)",
       "HL2MP_AllowHitSounds": "Ήχοι επιτυχημένων χτυπημάτων",
       "HL2MP_HitSoundsHint": "Απαιτεί άδεια του διακομιστή. Οι ήχοι ακούγονται μόνο για ζημιά σε εχθρούς που επιβεβαιώνει ο διακομιστής.",
-      "HL2MP_FootstepsRequirement": "Απαιτεί ενεργά φωτεινά μοντέλα στις επιλογές παιχνιδιού και άδεια από αυτόν τον διακομιστή.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Πίνακας αποτελεσμάτων: K/D",
-      "HL2MP_ScoreShowAccuracy": "Πίνακας αποτελεσμάτων: Ακρίβεια",
-      "HL2MP_ScoreShowHeadAccuracy": "Πίνακας αποτελεσμάτων: Ακρίβεια χτυπημάτων στο κεφάλι",
-      "HL2MP_ScoreShowDamage": "Πίνακας αποτελεσμάτων: Ζημιά",
-      "HL2MP_ScoreShowDead": "Πίνακας αποτελεσμάτων: ΝΕΚΡΟΣ"
+      "HL2MP_FootstepsRequirement": "Απαιτεί ενεργά φωτεινά μοντέλα στις επιλογές παιχνιδιού και άδεια από αυτόν τον διακομιστή."
     },
     "hungarian": {
       "HL2MP_UI_d4055fafa379": "Felbontás",
@@ -17369,11 +17161,6 @@
       "HL2MP_HitSoundChoice": "Találati hang",
       "HL2MP_HitSoundVolume": "Találatok hangereje",
       "HL2MP_PreviewSound": "Meghallgatás",
-      "HL2MP_ScoreAccuracyName": "Pontosság",
-      "HL2MP_ScoreHeadAccuracyName": "Fejtalálati pontosság",
-      "HL2MP_ScoreDamage": "Sebzés",
-      "HL2MP_ScoreState": "Állapot",
-      "HL2MP_ScoreDead": "HALOTT",
       "HL2MP_SoundBell": "Harang",
       "HL2MP_SoundClick": "Kattintás",
       "HL2MP_SoundPop": "Pukkanás",
@@ -17388,15 +17175,7 @@
       "HL2MP_AllowHitmarkers": "Találatjelzők (sebzésszámok)",
       "HL2MP_AllowHitSounds": "Találati hangok",
       "HL2MP_HitSoundsHint": "A szerver engedélye szükséges. Hang csak a szerver által megerősített ellenséges sebzéskor szól.",
-      "HL2MP_FootstepsRequirement": "Világos modellek szükségesek a játékbeállításokban, valamint a szerver engedélye.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Eredménytábla: K/D",
-      "HL2MP_ScoreShowAccuracy": "Eredménytábla: Pontosság",
-      "HL2MP_ScoreShowHeadAccuracy": "Eredménytábla: Fejtalálati pontosság",
-      "HL2MP_ScoreShowDamage": "Eredménytábla: Sebzés",
-      "HL2MP_ScoreShowDead": "Eredménytábla: HALOTT"
+      "HL2MP_FootstepsRequirement": "Világos modellek szükségesek a játékbeállításokban, valamint a szerver engedélye."
     },
     "indonesian": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -18393,11 +18172,6 @@
       "HL2MP_HitSoundChoice": "Suara kena sasaran",
       "HL2MP_HitSoundVolume": "Volume suara kena sasaran",
       "HL2MP_PreviewSound": "Pratinjau",
-      "HL2MP_ScoreAccuracyName": "Akurasi",
-      "HL2MP_ScoreHeadAccuracyName": "Akurasi tembakan kepala",
-      "HL2MP_ScoreDamage": "Kerusakan",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "MATI",
       "HL2MP_SoundBell": "Lonceng",
       "HL2MP_SoundClick": "Klik",
       "HL2MP_SoundPop": "Letupan",
@@ -18412,15 +18186,7 @@
       "HL2MP_AllowHitmarkers": "Penanda hit (angka kerusakan)",
       "HL2MP_AllowHitSounds": "Suara kena sasaran",
       "HL2MP_HitSoundsHint": "Memerlukan izin server. Suara hanya diputar untuk kerusakan pada musuh yang dikonfirmasi server.",
-      "HL2MP_FootstepsRequirement": "Memerlukan model terang aktif di opsi Game dan diizinkan oleh server ini.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Papan Skor: K/D",
-      "HL2MP_ScoreShowAccuracy": "Papan Skor: Akurasi",
-      "HL2MP_ScoreShowHeadAccuracy": "Papan Skor: Akurasi tembakan kepala",
-      "HL2MP_ScoreShowDamage": "Papan Skor: Kerusakan",
-      "HL2MP_ScoreShowDead": "Papan Skor: MATI"
+      "HL2MP_FootstepsRequirement": "Memerlukan model terang aktif di opsi Game dan diizinkan oleh server ini."
     },
     "italian": {
       "HL2MP_UI_d4055fafa379": "Risoluzione",
@@ -19417,11 +19183,6 @@
       "HL2MP_HitSoundChoice": "Suono del colpo a segno",
       "HL2MP_HitSoundVolume": "Volume dei colpi a segno",
       "HL2MP_PreviewSound": "Ascolta",
-      "HL2MP_ScoreAccuracyName": "Precisione",
-      "HL2MP_ScoreHeadAccuracyName": "Precisione alla testa",
-      "HL2MP_ScoreDamage": "Danni",
-      "HL2MP_ScoreState": "Stato",
-      "HL2MP_ScoreDead": "MORTO",
       "HL2MP_SoundBell": "Campana",
       "HL2MP_SoundClick": "Clic",
       "HL2MP_SoundPop": "Pop",
@@ -19436,15 +19197,7 @@
       "HL2MP_AllowHitmarkers": "Indicatori di colpo (danni)",
       "HL2MP_AllowHitSounds": "Suoni dei colpi a segno",
       "HL2MP_HitSoundsHint": "Richiede il permesso del server. I suoni indicano solo danni ai nemici confermati dal server.",
-      "HL2MP_FootstepsRequirement": "Richiede modelli luminosi attivi nelle opzioni di gioco e consentiti da questo server.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Tabellone segnapunti: K/D",
-      "HL2MP_ScoreShowAccuracy": "Tabellone segnapunti: Precisione",
-      "HL2MP_ScoreShowHeadAccuracy": "Tabellone segnapunti: Precisione alla testa",
-      "HL2MP_ScoreShowDamage": "Tabellone segnapunti: Danni",
-      "HL2MP_ScoreShowDead": "Tabellone segnapunti: MORTO"
+      "HL2MP_FootstepsRequirement": "Richiede modelli luminosi attivi nelle opzioni di gioco e consentiti da questo server."
     },
     "japanese": {
       "HL2MP_UI_d4055fafa379": "解像度",
@@ -20441,11 +20194,6 @@
       "HL2MP_HitSoundChoice": "ヒット音の種類",
       "HL2MP_HitSoundVolume": "ヒット音の音量",
       "HL2MP_PreviewSound": "試聴",
-      "HL2MP_ScoreAccuracyName": "命中率",
-      "HL2MP_ScoreHeadAccuracyName": "頭部命中率",
-      "HL2MP_ScoreDamage": "ダメージ",
-      "HL2MP_ScoreState": "状態",
-      "HL2MP_ScoreDead": "死亡",
       "HL2MP_SoundBell": "ベル",
       "HL2MP_SoundClick": "クリック",
       "HL2MP_SoundPop": "ポップ",
@@ -20460,15 +20208,7 @@
       "HL2MP_AllowHitmarkers": "ヒットマーカー（ダメージ数値）",
       "HL2MP_AllowHitSounds": "ヒット音",
       "HL2MP_HitSoundsHint": "サーバーの許可が必要です。サーバーが確認した敵へのダメージに対してのみ音が鳴ります。",
-      "HL2MP_FootstepsRequirement": "ゲーム設定で明るいモデルを有効にし、このサーバーで許可されている必要があります。",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "スコアボード: K/D",
-      "HL2MP_ScoreShowAccuracy": "スコアボード: 命中率",
-      "HL2MP_ScoreShowHeadAccuracy": "スコアボード: 頭部命中率",
-      "HL2MP_ScoreShowDamage": "スコアボード: ダメージ",
-      "HL2MP_ScoreShowDead": "スコアボード: 死亡"
+      "HL2MP_FootstepsRequirement": "ゲーム設定で明るいモデルを有効にし、このサーバーで許可されている必要があります。"
     },
     "koreana": {
       "HL2MP_UI_d4055fafa379": "분해능",
@@ -21465,11 +21205,6 @@
       "HL2MP_HitSoundChoice": "명중 효과음 종류",
       "HL2MP_HitSoundVolume": "명중 효과음 볼륨",
       "HL2MP_PreviewSound": "미리 듣기",
-      "HL2MP_ScoreAccuracyName": "명중률",
-      "HL2MP_ScoreHeadAccuracyName": "머리 명중률",
-      "HL2MP_ScoreDamage": "피해량",
-      "HL2MP_ScoreState": "상태",
-      "HL2MP_ScoreDead": "사망",
       "HL2MP_SoundBell": "종",
       "HL2MP_SoundClick": "클릭",
       "HL2MP_SoundPop": "팝",
@@ -21484,15 +21219,7 @@
       "HL2MP_AllowHitmarkers": "명중 표시 (피해량 숫자)",
       "HL2MP_AllowHitSounds": "명중 효과음",
       "HL2MP_HitSoundsHint": "서버의 허용이 필요합니다. 서버가 확인한 적 피해에 대해서만 소리가 재생됩니다.",
-      "HL2MP_FootstepsRequirement": "게임 옵션에서 밝은 모델을 켜고 이 서버에서 허용해야 합니다.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "스코어보드: K/D",
-      "HL2MP_ScoreShowAccuracy": "스코어보드: 명중률",
-      "HL2MP_ScoreShowHeadAccuracy": "스코어보드: 머리 명중률",
-      "HL2MP_ScoreShowDamage": "스코어보드: 피해량",
-      "HL2MP_ScoreShowDead": "스코어보드: 사망"
+      "HL2MP_FootstepsRequirement": "게임 옵션에서 밝은 모델을 켜고 이 서버에서 허용해야 합니다."
     },
     "latam": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -22489,11 +22216,6 @@
       "HL2MP_HitSoundChoice": "Sonido de impacto",
       "HL2MP_HitSoundVolume": "Volumen de impactos",
       "HL2MP_PreviewSound": "Escuchar",
-      "HL2MP_ScoreAccuracyName": "Precisión",
-      "HL2MP_ScoreHeadAccuracyName": "Precisión en la cabeza",
-      "HL2MP_ScoreDamage": "Daño",
-      "HL2MP_ScoreState": "Estado",
-      "HL2MP_ScoreDead": "MUERTO",
       "HL2MP_SoundBell": "Campana",
       "HL2MP_SoundClick": "Clic",
       "HL2MP_SoundPop": "Pop",
@@ -22508,15 +22230,7 @@
       "HL2MP_AllowHitmarkers": "Indicadores de impacto (daño)",
       "HL2MP_AllowHitSounds": "Sonidos de impacto",
       "HL2MP_HitSoundsHint": "Requiere permiso del servidor. Solo suena al infligir daño a enemigos confirmado por el servidor.",
-      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Marcador: K/D",
-      "HL2MP_ScoreShowAccuracy": "Marcador: Precisión",
-      "HL2MP_ScoreShowHeadAccuracy": "Marcador: Precisión en la cabeza",
-      "HL2MP_ScoreShowDamage": "Marcador: Daño",
-      "HL2MP_ScoreShowDead": "Marcador: MUERTO"
+      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor."
     },
     "malay": {
       "HL2MP_UI_d4055fafa379": "Resolusi",
@@ -23513,11 +23227,6 @@
       "HL2MP_HitSoundChoice": "Bunyi kena sasaran",
       "HL2MP_HitSoundVolume": "Kelantangan bunyi sasaran",
       "HL2MP_PreviewSound": "Pratonton",
-      "HL2MP_ScoreAccuracyName": "Ketepatan",
-      "HL2MP_ScoreHeadAccuracyName": "Ketepatan tembakan kepala",
-      "HL2MP_ScoreDamage": "Kerosakan",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "MATI",
       "HL2MP_SoundBell": "Loceng",
       "HL2MP_SoundClick": "Klik",
       "HL2MP_SoundPop": "Letupan",
@@ -23532,15 +23241,7 @@
       "HL2MP_AllowHitmarkers": "Penanda kena (angka kerosakan)",
       "HL2MP_AllowHitSounds": "Bunyi kena sasaran",
       "HL2MP_HitSoundsHint": "Memerlukan kebenaran pelayan. Bunyi hanya dimainkan untuk kerosakan pada musuh yang disahkan pelayan.",
-      "HL2MP_FootstepsRequirement": "Memerlukan model cerah diaktifkan dalam pilihan Permainan dan dibenarkan oleh pelayan ini.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Papan markah: K/D",
-      "HL2MP_ScoreShowAccuracy": "Papan markah: Ketepatan",
-      "HL2MP_ScoreShowHeadAccuracy": "Papan markah: Ketepatan tembakan kepala",
-      "HL2MP_ScoreShowDamage": "Papan markah: Kerosakan",
-      "HL2MP_ScoreShowDead": "Papan markah: MATI"
+      "HL2MP_FootstepsRequirement": "Memerlukan model cerah diaktifkan dalam pilihan Permainan dan dibenarkan oleh pelayan ini."
     },
     "norwegian": {
       "HL2MP_UI_d4055fafa379": "Oppløsning",
@@ -24537,11 +24238,6 @@
       "HL2MP_HitSoundChoice": "Trefflyd",
       "HL2MP_HitSoundVolume": "Volum for trefflyder",
       "HL2MP_PreviewSound": "Spill av",
-      "HL2MP_ScoreAccuracyName": "Treffsikkerhet",
-      "HL2MP_ScoreHeadAccuracyName": "Treffsikkerhet mot hodet",
-      "HL2MP_ScoreDamage": "Skade",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "DØD",
       "HL2MP_SoundBell": "Bjelle",
       "HL2MP_SoundClick": "Klikk",
       "HL2MP_SoundPop": "Popp",
@@ -24556,15 +24252,7 @@
       "HL2MP_AllowHitmarkers": "Treffmarkører (skadetall)",
       "HL2MP_AllowHitSounds": "Trefflyder",
       "HL2MP_HitSoundsHint": "Krever serverens tillatelse. Lyder spilles bare ved skade på fiender som serveren har bekreftet.",
-      "HL2MP_FootstepsRequirement": "Krever lyse modeller aktivert i spillinnstillingene og tillatt av denne serveren.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Resultattavle: K/D",
-      "HL2MP_ScoreShowAccuracy": "Resultattavle: Treffsikkerhet",
-      "HL2MP_ScoreShowHeadAccuracy": "Resultattavle: Treffsikkerhet mot hodet",
-      "HL2MP_ScoreShowDamage": "Resultattavle: Skade",
-      "HL2MP_ScoreShowDead": "Resultattavle: DØD"
+      "HL2MP_FootstepsRequirement": "Krever lyse modeller aktivert i spillinnstillingene og tillatt av denne serveren."
     },
     "polish": {
       "HL2MP_UI_d4055fafa379": "Rozdzielczość",
@@ -25561,11 +25249,6 @@
       "HL2MP_HitSoundChoice": "Dźwięk trafienia",
       "HL2MP_HitSoundVolume": "Głośność trafień",
       "HL2MP_PreviewSound": "Odsłuchaj",
-      "HL2MP_ScoreAccuracyName": "Celność",
-      "HL2MP_ScoreHeadAccuracyName": "Celność trafień w głowę",
-      "HL2MP_ScoreDamage": "Obrażenia",
-      "HL2MP_ScoreState": "Stan",
-      "HL2MP_ScoreDead": "MARTWY",
       "HL2MP_SoundBell": "Dzwonek",
       "HL2MP_SoundClick": "Klik",
       "HL2MP_SoundPop": "Pyknięcie",
@@ -25580,15 +25263,7 @@
       "HL2MP_AllowHitmarkers": "Znaczniki trafień (obrażenia)",
       "HL2MP_AllowHitSounds": "Dźwięki trafień",
       "HL2MP_HitSoundsHint": "Wymaga zgody serwera. Dźwięk sygnalizuje tylko potwierdzone przez serwer obrażenia wrogów.",
-      "HL2MP_FootstepsRequirement": "Wymaga jasnych modeli w opcjach gry i zgody tego serwera.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Tablica wyników: K/D",
-      "HL2MP_ScoreShowAccuracy": "Tablica wyników: Celność",
-      "HL2MP_ScoreShowHeadAccuracy": "Tablica wyników: Celność trafień w głowę",
-      "HL2MP_ScoreShowDamage": "Tablica wyników: Obrażenia",
-      "HL2MP_ScoreShowDead": "Tablica wyników: MARTWY"
+      "HL2MP_FootstepsRequirement": "Wymaga jasnych modeli w opcjach gry i zgody tego serwera."
     },
     "portuguese": {
       "HL2MP_UI_d4055fafa379": "Resolução",
@@ -26585,11 +26260,6 @@
       "HL2MP_HitSoundChoice": "Som de acerto",
       "HL2MP_HitSoundVolume": "Volume dos acertos",
       "HL2MP_PreviewSound": "Ouvir",
-      "HL2MP_ScoreAccuracyName": "Precisão",
-      "HL2MP_ScoreHeadAccuracyName": "Precisão na cabeça",
-      "HL2MP_ScoreDamage": "Dano",
-      "HL2MP_ScoreState": "Estado",
-      "HL2MP_ScoreDead": "MORTO",
       "HL2MP_SoundBell": "Sino",
       "HL2MP_SoundClick": "Clique",
       "HL2MP_SoundPop": "Estalo",
@@ -26604,15 +26274,7 @@
       "HL2MP_AllowHitmarkers": "Indicadores de acerto (dano)",
       "HL2MP_AllowHitSounds": "Sons de acerto",
       "HL2MP_HitSoundsHint": "Requer permissão do servidor. Só emite som por dano a inimigos confirmado pelo servidor.",
-      "HL2MP_FootstepsRequirement": "Requer modelos luminosos ativados nas opções de jogo e permitidos por este servidor.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Placar: K/D",
-      "HL2MP_ScoreShowAccuracy": "Placar: Precisão",
-      "HL2MP_ScoreShowHeadAccuracy": "Placar: Precisão na cabeça",
-      "HL2MP_ScoreShowDamage": "Placar: Dano",
-      "HL2MP_ScoreShowDead": "Placar: MORTO"
+      "HL2MP_FootstepsRequirement": "Requer modelos luminosos ativados nas opções de jogo e permitidos por este servidor."
     },
     "romanian": {
       "HL2MP_UI_d4055fafa379": "Rezoluție",
@@ -27609,11 +27271,6 @@
       "HL2MP_HitSoundChoice": "Sunet de lovire",
       "HL2MP_HitSoundVolume": "Volumul loviturilor",
       "HL2MP_PreviewSound": "Ascultă",
-      "HL2MP_ScoreAccuracyName": "Precizie",
-      "HL2MP_ScoreHeadAccuracyName": "Precizia loviturilor la cap",
-      "HL2MP_ScoreDamage": "Daune",
-      "HL2MP_ScoreState": "Stare",
-      "HL2MP_ScoreDead": "MORT",
       "HL2MP_SoundBell": "Clopot",
       "HL2MP_SoundClick": "Clic",
       "HL2MP_SoundPop": "Pocnet",
@@ -27628,15 +27285,7 @@
       "HL2MP_AllowHitmarkers": "Indicatori de lovire (daune)",
       "HL2MP_AllowHitSounds": "Sunete de lovire",
       "HL2MP_HitSoundsHint": "Necesită permisiunea serverului. Sunetele indică doar daunele asupra inamicilor confirmate de server.",
-      "HL2MP_FootstepsRequirement": "Necesită modele luminoase activate în opțiunile jocului și permise de acest server.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Tabloul de bord: K/D",
-      "HL2MP_ScoreShowAccuracy": "Tabloul de bord: Precizie",
-      "HL2MP_ScoreShowHeadAccuracy": "Tabloul de bord: Precizia loviturilor la cap",
-      "HL2MP_ScoreShowDamage": "Tabloul de bord: Daune",
-      "HL2MP_ScoreShowDead": "Tabloul de bord: MORT"
+      "HL2MP_FootstepsRequirement": "Necesită modele luminoase activate în opțiunile jocului și permise de acest server."
     },
     "russian": {
       "HL2MP_UI_d4055fafa379": "Разрешение",
@@ -28633,11 +28282,6 @@
       "HL2MP_HitSoundChoice": "Звук попадания",
       "HL2MP_HitSoundVolume": "Громкость попаданий",
       "HL2MP_PreviewSound": "Прослушать",
-      "HL2MP_ScoreAccuracyName": "Точность",
-      "HL2MP_ScoreHeadAccuracyName": "Точность попаданий в голову",
-      "HL2MP_ScoreDamage": "Урон",
-      "HL2MP_ScoreState": "Статус",
-      "HL2MP_ScoreDead": "МЁРТВ",
       "HL2MP_SoundBell": "Колокол",
       "HL2MP_SoundClick": "Щелчок",
       "HL2MP_SoundPop": "Хлопок",
@@ -28652,15 +28296,7 @@
       "HL2MP_AllowHitmarkers": "Индикаторы попаданий (числа урона)",
       "HL2MP_AllowHitSounds": "Звуки попаданий",
       "HL2MP_HitSoundsHint": "Требуется разрешение сервера. Звук воспроизводится только при подтверждённом сервером уроне врагу.",
-      "HL2MP_FootstepsRequirement": "Нужны яркие модели в настройках игры и разрешение этого сервера.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Табло: K/D",
-      "HL2MP_ScoreShowAccuracy": "Табло: Точность",
-      "HL2MP_ScoreShowHeadAccuracy": "Табло: Точность попаданий в голову",
-      "HL2MP_ScoreShowDamage": "Табло: Урон",
-      "HL2MP_ScoreShowDead": "Табло: МЁРТВ"
+      "HL2MP_FootstepsRequirement": "Нужны яркие модели в настройках игры и разрешение этого сервера."
     },
     "schinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -29657,11 +29293,6 @@
       "HL2MP_HitSoundChoice": "命中声音",
       "HL2MP_HitSoundVolume": "命中音量",
       "HL2MP_PreviewSound": "试听",
-      "HL2MP_ScoreAccuracyName": "命中率",
-      "HL2MP_ScoreHeadAccuracyName": "头部命中率",
-      "HL2MP_ScoreDamage": "伤害",
-      "HL2MP_ScoreState": "状态",
-      "HL2MP_ScoreDead": "死亡",
       "HL2MP_SoundBell": "铃声",
       "HL2MP_SoundClick": "点击",
       "HL2MP_SoundPop": "噗声",
@@ -29676,15 +29307,7 @@
       "HL2MP_AllowHitmarkers": "命中提示（伤害数字）",
       "HL2MP_AllowHitSounds": "命中音效",
       "HL2MP_HitSoundsHint": "需要服务器允许。仅在服务器确认对敌人造成伤害时播放声音。",
-      "HL2MP_FootstepsRequirement": "需要在游戏选项中启用高亮模型，并获得此服务器的允许。",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "记分牌: K/D",
-      "HL2MP_ScoreShowAccuracy": "记分牌: 命中率",
-      "HL2MP_ScoreShowHeadAccuracy": "记分牌: 头部命中率",
-      "HL2MP_ScoreShowDamage": "记分牌: 伤害",
-      "HL2MP_ScoreShowDead": "记分牌: 死亡"
+      "HL2MP_FootstepsRequirement": "需要在游戏选项中启用高亮模型，并获得此服务器的允许。"
     },
     "spanish": {
       "HL2MP_UI_d4055fafa379": "Resolución",
@@ -30681,11 +30304,6 @@
       "HL2MP_HitSoundChoice": "Sonido de impacto",
       "HL2MP_HitSoundVolume": "Volumen de impactos",
       "HL2MP_PreviewSound": "Escuchar",
-      "HL2MP_ScoreAccuracyName": "Precisión",
-      "HL2MP_ScoreHeadAccuracyName": "Precisión en la cabeza",
-      "HL2MP_ScoreDamage": "Daño",
-      "HL2MP_ScoreState": "Estado",
-      "HL2MP_ScoreDead": "MUERTO",
       "HL2MP_SoundBell": "Campana",
       "HL2MP_SoundClick": "Clic",
       "HL2MP_SoundPop": "Pop",
@@ -30700,15 +30318,7 @@
       "HL2MP_AllowHitmarkers": "Indicadores de impacto (daño)",
       "HL2MP_AllowHitSounds": "Sonidos de impacto",
       "HL2MP_HitSoundsHint": "Requiere permiso del servidor. Solo suena al infligir daño a enemigos confirmado por el servidor.",
-      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Marcador: K/D",
-      "HL2MP_ScoreShowAccuracy": "Marcador: Precisión",
-      "HL2MP_ScoreShowHeadAccuracy": "Marcador: Precisión en la cabeza",
-      "HL2MP_ScoreShowDamage": "Marcador: Daño",
-      "HL2MP_ScoreShowDead": "Marcador: MUERTO"
+      "HL2MP_FootstepsRequirement": "Requiere modelos brillantes activados en las opciones de juego y permitidos por este servidor."
     },
     "swedish": {
       "HL2MP_UI_d4055fafa379": "Upplösning",
@@ -31705,11 +31315,6 @@
       "HL2MP_HitSoundChoice": "Träffljud",
       "HL2MP_HitSoundVolume": "Volym för träffljud",
       "HL2MP_PreviewSound": "Lyssna",
-      "HL2MP_ScoreAccuracyName": "Träffsäkerhet",
-      "HL2MP_ScoreHeadAccuracyName": "Träffsäkerhet mot huvudet",
-      "HL2MP_ScoreDamage": "Skada",
-      "HL2MP_ScoreState": "Status",
-      "HL2MP_ScoreDead": "DÖD",
       "HL2MP_SoundBell": "Klocka",
       "HL2MP_SoundClick": "Klick",
       "HL2MP_SoundPop": "Popp",
@@ -31724,15 +31329,7 @@
       "HL2MP_AllowHitmarkers": "Träffmarkörer (skadetal)",
       "HL2MP_AllowHitSounds": "Träffljud",
       "HL2MP_HitSoundsHint": "Kräver serverns tillstånd. Ljud spelas bara för skada på fiender som servern har bekräftat.",
-      "HL2MP_FootstepsRequirement": "Kräver ljusa modeller aktiverade i spelinställningarna och tillåtna av denna server.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Resultattavla: K/D",
-      "HL2MP_ScoreShowAccuracy": "Resultattavla: Träffsäkerhet",
-      "HL2MP_ScoreShowHeadAccuracy": "Resultattavla: Träffsäkerhet mot huvudet",
-      "HL2MP_ScoreShowDamage": "Resultattavla: Skada",
-      "HL2MP_ScoreShowDead": "Resultattavla: DÖD"
+      "HL2MP_FootstepsRequirement": "Kräver ljusa modeller aktiverade i spelinställningarna och tillåtna av denna server."
     },
     "tchinese": {
       "HL2MP_UI_d4055fafa379": "分辨率",
@@ -32729,11 +32326,6 @@
       "HL2MP_HitSoundChoice": "命中聲音",
       "HL2MP_HitSoundVolume": "命中音量",
       "HL2MP_PreviewSound": "試聽",
-      "HL2MP_ScoreAccuracyName": "命中率",
-      "HL2MP_ScoreHeadAccuracyName": "頭部命中率",
-      "HL2MP_ScoreDamage": "傷害",
-      "HL2MP_ScoreState": "狀態",
-      "HL2MP_ScoreDead": "死亡",
       "HL2MP_SoundBell": "鈴聲",
       "HL2MP_SoundClick": "點擊",
       "HL2MP_SoundPop": "噗聲",
@@ -32748,15 +32340,7 @@
       "HL2MP_AllowHitmarkers": "命中提示（傷害數字）",
       "HL2MP_AllowHitSounds": "命中音效",
       "HL2MP_HitSoundsHint": "需要伺服器允許。僅在伺服器確認對敵人造成傷害時播放聲音。",
-      "HL2MP_FootstepsRequirement": "需要在遊戲選項中啟用高亮模型，並獲得此伺服器的允許。",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "記分牌: K/D",
-      "HL2MP_ScoreShowAccuracy": "記分牌: 命中率",
-      "HL2MP_ScoreShowHeadAccuracy": "記分牌: 頭部命中率",
-      "HL2MP_ScoreShowDamage": "記分牌: 傷害",
-      "HL2MP_ScoreShowDead": "記分牌: 死亡"
+      "HL2MP_FootstepsRequirement": "需要在遊戲選項中啟用高亮模型，並獲得此伺服器的允許。"
     },
     "thai": {
       "HL2MP_UI_d4055fafa379": "ความละเอียด",
@@ -33753,11 +33337,6 @@
       "HL2MP_HitSoundChoice": "เสียงเมื่อยิงโดน",
       "HL2MP_HitSoundVolume": "ความดังเสียงเมื่อยิงโดน",
       "HL2MP_PreviewSound": "ฟังตัวอย่าง",
-      "HL2MP_ScoreAccuracyName": "ความแม่นยำ",
-      "HL2MP_ScoreHeadAccuracyName": "ความแม่นยำในการยิงศีรษะ",
-      "HL2MP_ScoreDamage": "ความเสียหาย",
-      "HL2MP_ScoreState": "สถานะ",
-      "HL2MP_ScoreDead": "ตาย",
       "HL2MP_SoundBell": "ระฆัง",
       "HL2MP_SoundClick": "คลิก",
       "HL2MP_SoundPop": "ป๊อป",
@@ -33772,15 +33351,7 @@
       "HL2MP_AllowHitmarkers": "ตัวบอกการยิงโดน (ตัวเลขความเสียหาย)",
       "HL2MP_AllowHitSounds": "เสียงเมื่อยิงโดน",
       "HL2MP_HitSoundsHint": "ต้องได้รับอนุญาตจากเซิร์ฟเวอร์ เสียงจะดังเมื่อเซิร์ฟเวอร์ยืนยันความเสียหายต่อศัตรูเท่านั้น",
-      "HL2MP_FootstepsRequirement": "ต้องเปิดโมเดลสว่างในตัวเลือกเกมและเซิร์ฟเวอร์นี้ต้องอนุญาต",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "กระดานคะแนน: K/D",
-      "HL2MP_ScoreShowAccuracy": "กระดานคะแนน: ความแม่นยำ",
-      "HL2MP_ScoreShowHeadAccuracy": "กระดานคะแนน: ความแม่นยำในการยิงศีรษะ",
-      "HL2MP_ScoreShowDamage": "กระดานคะแนน: ความเสียหาย",
-      "HL2MP_ScoreShowDead": "กระดานคะแนน: ตาย"
+      "HL2MP_FootstepsRequirement": "ต้องเปิดโมเดลสว่างในตัวเลือกเกมและเซิร์ฟเวอร์นี้ต้องอนุญาต"
     },
     "turkish": {
       "HL2MP_UI_d4055fafa379": "Çözünürlük",
@@ -34777,11 +34348,6 @@
       "HL2MP_HitSoundChoice": "İsabet sesi",
       "HL2MP_HitSoundVolume": "İsabet sesi düzeyi",
       "HL2MP_PreviewSound": "Dinle",
-      "HL2MP_ScoreAccuracyName": "İsabet oranı",
-      "HL2MP_ScoreHeadAccuracyName": "Kafa isabet oranı",
-      "HL2MP_ScoreDamage": "Hasar",
-      "HL2MP_ScoreState": "Durum",
-      "HL2MP_ScoreDead": "ÖLÜ",
       "HL2MP_SoundBell": "Çan",
       "HL2MP_SoundClick": "Tık",
       "HL2MP_SoundPop": "Pat",
@@ -34796,15 +34362,7 @@
       "HL2MP_AllowHitmarkers": "Vuruş göstergeleri (hasar sayıları)",
       "HL2MP_AllowHitSounds": "İsabet sesleri",
       "HL2MP_HitSoundsHint": "Sunucu izni gerektirir. Sesler yalnızca sunucunun onayladığı düşman hasarında çalar.",
-      "HL2MP_FootstepsRequirement": "Oyun seçeneklerinde parlak modellerin açık olması ve bu sunucunun izin vermesi gerekir.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Puan Tablosu: K/D",
-      "HL2MP_ScoreShowAccuracy": "Puan Tablosu: İsabet oranı",
-      "HL2MP_ScoreShowHeadAccuracy": "Puan Tablosu: Kafa isabet oranı",
-      "HL2MP_ScoreShowDamage": "Puan Tablosu: Hasar",
-      "HL2MP_ScoreShowDead": "Puan Tablosu: ÖLÜ"
+      "HL2MP_FootstepsRequirement": "Oyun seçeneklerinde parlak modellerin açık olması ve bu sunucunun izin vermesi gerekir."
     },
     "ukrainian": {
       "HL2MP_UI_d4055fafa379": "Роздільна здатність",
@@ -35801,11 +35359,6 @@
       "HL2MP_HitSoundChoice": "Звук влучання",
       "HL2MP_HitSoundVolume": "Гучність влучань",
       "HL2MP_PreviewSound": "Прослухати",
-      "HL2MP_ScoreAccuracyName": "Точність",
-      "HL2MP_ScoreHeadAccuracyName": "Точність влучань у голову",
-      "HL2MP_ScoreDamage": "Шкода",
-      "HL2MP_ScoreState": "Стан",
-      "HL2MP_ScoreDead": "МЕРТВИЙ",
       "HL2MP_SoundBell": "Дзвін",
       "HL2MP_SoundClick": "Клацання",
       "HL2MP_SoundPop": "Хлопок",
@@ -35820,15 +35373,7 @@
       "HL2MP_AllowHitmarkers": "Індикатори влучань (числа шкоди)",
       "HL2MP_AllowHitSounds": "Звуки влучань",
       "HL2MP_HitSoundsHint": "Потрібен дозвіл сервера. Звук лунає лише за підтвердженої сервером шкоди ворогу.",
-      "HL2MP_FootstepsRequirement": "Потрібні яскраві моделі в налаштуваннях гри та дозвіл цього сервера.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Табло: K/D",
-      "HL2MP_ScoreShowAccuracy": "Табло: Точність",
-      "HL2MP_ScoreShowHeadAccuracy": "Табло: Точність влучань у голову",
-      "HL2MP_ScoreShowDamage": "Табло: Шкода",
-      "HL2MP_ScoreShowDead": "Табло: МЕРТВИЙ"
+      "HL2MP_FootstepsRequirement": "Потрібні яскраві моделі в налаштуваннях гри та дозвіл цього сервера."
     },
     "vietnamese": {
       "HL2MP_UI_d4055fafa379": "Độ phân giải",
@@ -36825,11 +36370,6 @@
       "HL2MP_HitSoundChoice": "Âm thanh trúng đích",
       "HL2MP_HitSoundVolume": "Âm lượng khi trúng đích",
       "HL2MP_PreviewSound": "Nghe thử",
-      "HL2MP_ScoreAccuracyName": "Độ chính xác",
-      "HL2MP_ScoreHeadAccuracyName": "Độ chính xác trúng đầu",
-      "HL2MP_ScoreDamage": "Sát thương",
-      "HL2MP_ScoreState": "Trạng thái",
-      "HL2MP_ScoreDead": "ĐÃ CHẾT",
       "HL2MP_SoundBell": "Chuông",
       "HL2MP_SoundClick": "Tách",
       "HL2MP_SoundPop": "Bụp",
@@ -36844,15 +36384,7 @@
       "HL2MP_AllowHitmarkers": "Chỉ báo trúng đích (số sát thương)",
       "HL2MP_AllowHitSounds": "Âm thanh trúng đích",
       "HL2MP_HitSoundsHint": "Cần máy chủ cho phép. Âm thanh chỉ phát khi máy chủ xác nhận sát thương gây lên kẻ địch.",
-      "HL2MP_FootstepsRequirement": "Cần bật mô hình sáng trong tùy chọn Trò chơi và được máy chủ này cho phép.",
-      "HL2MP_ScoreKDR": "K/D",
-      "HL2MP_ScoreAccuracy": "ACC %",
-      "HL2MP_ScoreHeadAccuracy": "HS %",
-      "HL2MP_ScoreShowKDR": "Bảng điểm: K/D",
-      "HL2MP_ScoreShowAccuracy": "Bảng điểm: Độ chính xác",
-      "HL2MP_ScoreShowHeadAccuracy": "Bảng điểm: Độ chính xác trúng đầu",
-      "HL2MP_ScoreShowDamage": "Bảng điểm: Sát thương",
-      "HL2MP_ScoreShowDead": "Bảng điểm: ĐÃ CHẾT"
+      "HL2MP_FootstepsRequirement": "Cần bật mô hình sáng trong tùy chọn Trò chơi và được máy chủ này cho phép."
     }
   },
   "translation_status": "Machine-assisted draft; native-speaker review required before release.",

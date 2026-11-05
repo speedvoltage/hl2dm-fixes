@@ -79,6 +79,9 @@ in the controls on the next status update.
 This also disables the teammate/enemy footstep overrides tied to bright models.
 Audio options explain the requirement beside disabled teammate/enemy selectors:
 enable bright models in Game options and obtain permission from the server.
+When the server disallows bright models, these rows show the same red warning
+as the bright-model and hit-feedback settings. Turning bright models off locally
+shows a neutral prerequisite instead; the selected footstep sounds are retained.
 Matchmaking continues to disallow bright models regardless of this cvar.
 Create Server bots now leave their initial observer state and spawn in DM.
 Maps still need navigation meshes for bots to navigate normally.
@@ -121,19 +124,6 @@ Actions include Steam profile, separate chat/voice mutes, mute both and kick vot
 Red speaker/chat icons show local mute state; menu checks show which channel is
 muted. Mutes are session-local, cleared on disconnect and never written to disk.
 Reporting is disabled until the mod receives its own Steam AppID.
-Game options can independently show K/D, accuracy, headshot accuracy, total damage
-and DEAD status. cl_scoreboard_kdr, cl_scoreboard_accuracy,
-cl_scoreboard_headshots, cl_scoreboard_damage and cl_scoreboard_dead default to 0.
-Columns are added only when enabled; the panel expands to fit them.
-The server owns the statistics and distributes them through the player resource.
-Accuracy is enemy bullet/pellet hits divided by bullets/pellets fired; each
-shotgun pellet counts separately. Headshot accuracy is head hits divided by all
-enemy bullet/pellet hits. Projectiles and melee do not enter either percentage.
-K/D uses enemy kills divided by deaths (a zero death count uses denominator 1).
-Damage includes actual enemy health and armor lost, capped to exclude overkill.
-These counters reset with the round, on a new map, or when a player reconnects.
-They are tracked even when columns or hit feedback are disabled. DEAD uses the
-server's alive state, and spectators are not marked dead.
 
 Validation
 tools/test-vote-rules.cpp exercises the production majority, initial ballot,

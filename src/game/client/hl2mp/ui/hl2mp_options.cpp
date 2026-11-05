@@ -74,11 +74,6 @@ static const SettingDef s_Settings[] = {
     { AUDIO, CHOICE, "#HL2MP_UI_9bdbc177e89d", "voice_enable", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { AUDIO, SLIDER, "#HL2MP_UI_36020013a785", "voice_scale", "%", 0, 1, 0.01f },
     { AUDIO, CHOICE, "#HL2MP_UI_b111974dec44", "closecaption", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
-    { GAME, CHOICE, "#HL2MP_ScoreShowKDR", "cl_scoreboard_kdr", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0,0,0 },
-    { GAME, CHOICE, "#HL2MP_ScoreShowAccuracy", "cl_scoreboard_accuracy", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0,0,0 },
-    { GAME, CHOICE, "#HL2MP_ScoreShowHeadAccuracy", "cl_scoreboard_headshots", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0,0,0 },
-    { GAME, CHOICE, "#HL2MP_ScoreShowDamage", "cl_scoreboard_damage", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0,0,0 },
-    { GAME, CHOICE, "#HL2MP_ScoreShowDead", "cl_scoreboard_dead", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0,0,0 },
     { GAME, SLIDER, "#HL2MP_UI_1fab91bbb0d3", "fov_desired", "", 70, 110, 1 },
     { GAME, CHOICE, "#HL2MP_UI_2ef15ac2866f", "con_enable", "#HL2MP_UI_0c7ef33e451e=0|#HL2MP_UI_616f73fbace9=1", 0, 0, 0 },
     { GAME, CHOICE, "#HL2MP_UI_8b3214b0cef9", "crosshair", "#HL2MP_UI_84dc5c33ad8b=0|#HL2MP_UI_5cea256d1b64=1", 0, 0, 0 },
@@ -168,7 +163,7 @@ public:
     void SetWarning(bool warning)
     {
         if(m_Warning==warning)return;
-        m_Warning=warning;SetText(warning ? "!" : "i");
+        m_Warning=warning;SetText(warning ? "" : "i");
         m_Tip->SetText(warning ? "#HL2MP_ServerVisualDisabled" : m_Hint);Repaint();
     }
     void Paint() OVERRIDE
@@ -176,8 +171,13 @@ public:
         BaseClass::Paint(); vgui::surface()->DrawSetColor(m_Warning ? Color(255,107,97,255) : HL2MPServerTheme::Orange());
         if(m_Warning)
         {
-            const int mid=GetWide()/2,bottom=GetTall()-3;
-            vgui::surface()->DrawLine(mid,2,2,bottom);vgui::surface()->DrawLine(2,bottom,GetWide()-3,bottom);vgui::surface()->DrawLine(GetWide()-3,bottom,mid,2);
+            const int mid=GetWide()/2,top=2,bottom=GetTall()-3,half=MIN(mid-2,(GetWide()-1)/2-2);
+            vgui::surface()->DrawLine(mid,top,mid-half,bottom);vgui::surface()->DrawLine(mid-half,bottom,mid+half,bottom);vgui::surface()->DrawLine(mid+half,bottom,mid,top);
+            // Center the mark in the triangle's interior, independently of font bearings/baselines.
+            const int height=bottom-top,stroke=MAX(2,GetWide()/12),left=mid-stroke/2;
+            vgui::surface()->DrawFilledRect(left,top+height*38/100,left+stroke,top+height*67/100);
+            const int dot=top+height*77/100;
+            vgui::surface()->DrawFilledRect(left,dot,left+stroke,dot+stroke);
         }
         else vgui::surface()->DrawOutlinedCircle(GetWide()/2,GetTall()/2,MIN(GetWide(),GetTall())/2-2,32);
     }
@@ -329,8 +329,7 @@ public:
         if(m_Combo)m_Combo->SetEnabled(m_Available && enabled);m_Label->SetAlpha(enabled ? 255 : 110);
         if(m_RemoteFootsteps && m_ChoiceBlocked==enabled)
         {
-            m_ChoiceBlocked=!enabled;m_Warning->SetText("#HL2MP_FootstepsRequirement");
-            m_Warning->SetVisible(!enabled);InvalidateLayout(true);
+            m_ChoiceBlocked=!enabled;RefreshWarning();
         }
     }
     void FocusChoice() { if(m_Combo)m_Combo->RequestFocus(); }
@@ -356,7 +355,7 @@ public:
         if(m_Color) { m_Color->Style(small);m_PreviewLabel->SetFont(small);m_PreviewLabel->SetFgColor(HL2MPServerTheme::Muted()); }
         if(m_Info) m_Info->SetFont(small);
         if(m_Audition)m_Audition->SetFont(small);
-        if(m_Warning) { m_Warning->SetFont(small);m_Warning->SetFgColor(m_RemoteFootsteps ? HL2MPServerTheme::Muted() : Color(255,150,140,255)); }
+        if(m_Warning) { m_Warning->SetFont(small);m_Warning->SetFgColor(m_ServerBlocked ? Color(255,150,140,255) : HL2MPServerTheme::Muted()); }
         if (m_Spray) m_Spray->Style(scale, small);
         m_Label->SetFgColor( m_Highlighted ? Color( 244, 239, 226, 255 ) : Color( 206, 214, 213, 255 ) );
         if ( m_Combo ) m_Combo->Style( small, scale );
@@ -415,13 +414,13 @@ public:
     void OnThink() OVERRIDE
     {
         BaseClass::OnThink();
-        if(m_Info && !m_RemoteFootsteps)
+        if(m_Info)
         {
             const bool blocked=engine->IsInGame() && !engine->IsLevelMainMenuBackground() &&
                 (!Q_strcmp(s_Settings[m_Index].cvar,"cl_hitmarkers") ? !sv_hitmarkers.GetBool() : !Q_strcmp(s_Settings[m_Index].cvar,"cl_hitsounds") ? !sv_hitsounds.GetBool() : !HL2MPBrightModels_Allowed());
             if(blocked!=m_ServerBlocked)
             {
-                m_ServerBlocked=blocked;m_Info->SetWarning(blocked);m_Warning->SetVisible(blocked);InvalidateLayout(true);Repaint();
+                m_ServerBlocked=blocked;RefreshWarning();
             }
         }
         const bool highlighted = m_Available && ( HL2MPControlHighlighted( this ) || DropdownOpen() );
@@ -447,6 +446,20 @@ public:
     }
     void PreviewFont(int choice) { if(m_Preview)m_Preview->Style(choice,MAX(12,int(21*m_Scale)),m_Color->GetColor()); }
 private:
+    void RefreshWarning()
+    {
+        m_Info->SetWarning(m_ServerBlocked);
+        if(m_RemoteFootsteps && m_ServerBlocked)
+        {
+            char text[2048];
+            HL2MPFormatInto(text,sizeof(text),"%s %s",HL2MPText("#HL2MP_ServerVisualDisabled"),HL2MPText("#HL2MP_FootstepsRequirement"));
+            m_Warning->SetText(text);
+        }
+        else m_Warning->SetText(m_RemoteFootsteps ? "#HL2MP_FootstepsRequirement" : "#HL2MP_ServerVisualDisabled");
+        m_Warning->SetFgColor(m_ServerBlocked ? Color(255,150,140,255) : HL2MPServerTheme::Muted());
+        m_Warning->SetVisible(m_ServerBlocked || m_ChoiceBlocked);
+        InvalidateLayout(true);Repaint();
+    }
     int m_Index; CHL2MPDropdown *m_Combo; CHL2MPSettingsSlider *m_Slider; vgui::TextEntry *m_Text;
     vgui::Label *m_Label, *m_Amount; float m_Scale; int m_InitialSlider; CUtlString m_InitialValue;
     bool m_Highlighted, m_Available;

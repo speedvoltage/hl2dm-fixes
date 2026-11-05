@@ -774,11 +774,7 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 	}
 
-	const bool tracking = IsAlive() && !g_fGameOver;
-	if (tracking) m_CombatStats.Fired(MAX(0,modinfo.m_iShots));
-	m_TrackingBullets = tracking;
 	BaseClass::FireBullets( modinfo );
-	m_TrackingBullets = false;
 
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->FinishLagCompensation( this );
@@ -1553,17 +1549,6 @@ void CHL2MP_Player::Event_Killed( const CTakeDamageInfo &info )
 	StopZooming();
 }
 
-void CHL2MP_Player::TraceAttack(const CTakeDamageInfo &info, const Vector &direction, trace_t *trace, CDmgAccumulator *accumulator)
-{
-	CHL2MP_Player *attacker = ToHL2MPPlayer(info.GetAttacker());
-	if (attacker && attacker != this && attacker->m_TrackingBullets && (info.GetDamageType() & DMG_BULLET) &&
-		IsAlive() && m_takedamage == DAMAGE_YES && !(GetFlags() & FL_GODMODE) && info.GetDamage() > 0 &&
-		HL2MPRules() && HL2MPRules()->FPlayerCanTakeDamage(this,attacker,info) &&
-		(!HL2MPRules()->IsTeamplay() || attacker->GetTeamNumber() != GetTeamNumber()))
-		attacker->m_CombatStats.Hit(trace->hitgroup == HITGROUP_HEAD);
-	BaseClass::TraceAttack(info,direction,trace,accumulator);
-}
-
 int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	//return here if the player is in the respawn grace period vs. slams.
@@ -1594,7 +1579,6 @@ int CHL2MP_Player::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if (enemyDamage)
 	{
 		CHL2MP_Player *attacker = ToHL2MPPlayer(hAttacker.Get());
-		if (attacker) attacker->m_CombatStats.Damaged(healthDamage + armorDamage,GetHealth() <= 0);
 		if (!hAttacker->IsFakeClient())
 		{
 			CSingleUserRecipientFilter filter(hAttacker.Get());
@@ -1821,7 +1805,6 @@ CON_COMMAND( timeleft, "prints the time remaining in the match" )
 
 void CHL2MP_Player::Reset()
 {	
-	m_CombatStats = HL2MPCombatStats();
 	m_LastHitSound = -1;
 	ResetDeathCount();
 	ResetFragCount();

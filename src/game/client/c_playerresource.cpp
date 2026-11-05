@@ -20,11 +20,6 @@ const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 #ifdef HL2MP
-	RecvPropArray3(RECVINFO_ARRAY(m_iCombatShots), RecvPropInt(RECVINFO(m_iCombatShots[0]))),
-	RecvPropArray3(RECVINFO_ARRAY(m_iCombatHits), RecvPropInt(RECVINFO(m_iCombatHits[0]))),
-	RecvPropArray3(RECVINFO_ARRAY(m_iCombatHeadHits), RecvPropInt(RECVINFO(m_iCombatHeadHits[0]))),
-	RecvPropArray3(RECVINFO_ARRAY(m_iCombatDamage), RecvPropInt(RECVINFO(m_iCombatDamage[0]))),
-	RecvPropArray3(RECVINFO_ARRAY(m_iCombatKills), RecvPropInt(RECVINFO(m_iCombatKills[0]))),
 	RecvPropArray( RecvPropString( RECVINFO( m_szPlayerNames[0] ) ), m_szPlayerNames ),
 #endif
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),

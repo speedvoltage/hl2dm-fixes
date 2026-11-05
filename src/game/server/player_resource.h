@@ -45,11 +45,6 @@ protected:
 	CNetworkArray( int, m_bValid, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iUserID, MAX_PLAYERS_ARRAY_SAFE );
 #ifdef HL2MP
-	CNetworkArray(int, m_iCombatShots, MAX_PLAYERS_ARRAY_SAFE);
-	CNetworkArray(int, m_iCombatHits, MAX_PLAYERS_ARRAY_SAFE);
-	CNetworkArray(int, m_iCombatHeadHits, MAX_PLAYERS_ARRAY_SAFE);
-	CNetworkArray(int, m_iCombatDamage, MAX_PLAYERS_ARRAY_SAFE);
-	CNetworkArray(int, m_iCombatKills, MAX_PLAYERS_ARRAY_SAFE);
 	char m_szPlayerNames[MAX_PLAYERS_ARRAY_SAFE][MAX_PLAYER_NAME_LENGTH];
 #endif
 		

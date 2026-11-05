@@ -7,9 +7,6 @@
 #include "cbase.h"
 #include "player.h"
 #include "player_resource.h"
-#ifdef HL2MP
-#include "hl2mp/hl2mp_player.h"
-#endif
 #include <coordsize.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -18,11 +15,6 @@
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 #ifdef HL2MP
-	SendPropArray3(SENDINFO_ARRAY3(m_iCombatShots), SendPropInt(SENDINFO_ARRAY(m_iCombatShots), 30, SPROP_UNSIGNED)),
-	SendPropArray3(SENDINFO_ARRAY3(m_iCombatHits), SendPropInt(SENDINFO_ARRAY(m_iCombatHits), 30, SPROP_UNSIGNED)),
-	SendPropArray3(SENDINFO_ARRAY3(m_iCombatHeadHits), SendPropInt(SENDINFO_ARRAY(m_iCombatHeadHits), 30, SPROP_UNSIGNED)),
-	SendPropArray3(SENDINFO_ARRAY3(m_iCombatDamage), SendPropInt(SENDINFO_ARRAY(m_iCombatDamage), 30, SPROP_UNSIGNED)),
-	SendPropArray3(SENDINFO_ARRAY3(m_iCombatKills), SendPropInt(SENDINFO_ARRAY(m_iCombatKills), 30, SPROP_UNSIGNED)),
 	// Fixed buffers are marked dirty explicitly when a name changes.
 	SendPropArray( SendPropString( SENDINFO_NAME( m_szPlayerNames[0], m_szPlayerNames[0] ) ), m_szPlayerNames ),
 #endif
@@ -80,11 +72,6 @@ void CPlayerResource::Spawn( void )
 void CPlayerResource::Init( int iIndex )
 {
 #ifdef HL2MP
-	m_iCombatShots.Set(iIndex,0);
-	m_iCombatHits.Set(iIndex,0);
-	m_iCombatHeadHits.Set(iIndex,0);
-	m_iCombatDamage.Set(iIndex,0);
-	m_iCombatKills.Set(iIndex,0);
 	m_szPlayerNames[iIndex][0] = '\0';
 #endif
 	m_iPing.Set( iIndex, 0 );
@@ -147,12 +134,6 @@ void CPlayerResource::UpdatePlayerData( void )
 void CPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer )
 {
 #ifdef HL2MP
-	CHL2MP_Player *combatPlayer = ToHL2MPPlayer(pPlayer);
-	m_iCombatShots.Set(iIndex,combatPlayer ? combatPlayer->m_CombatStats.shots : 0);
-	m_iCombatHits.Set(iIndex,combatPlayer ? combatPlayer->m_CombatStats.hits : 0);
-	m_iCombatHeadHits.Set(iIndex,combatPlayer ? combatPlayer->m_CombatStats.headHits : 0);
-	m_iCombatDamage.Set(iIndex,combatPlayer ? combatPlayer->m_CombatStats.damage : 0);
-	m_iCombatKills.Set(iIndex,combatPlayer ? combatPlayer->m_CombatStats.kills : 0);
 	if ( Q_strcmp( m_szPlayerNames[iIndex], pPlayer->GetPlayerName() ) )
 	{
 		Q_strncpy( m_szPlayerNames[iIndex], pPlayer->GetPlayerName(), sizeof( m_szPlayerNames[iIndex] ) );
@@ -200,11 +181,6 @@ void CPlayerResource::UpdateDisconnectedPlayer( int iIndex )
 		m_szPlayerNames[iIndex][0] = '\0';
 		NetworkStateChanged();
 	}
-	m_iCombatShots.Set(iIndex,0);
-	m_iCombatHits.Set(iIndex,0);
-	m_iCombatHeadHits.Set(iIndex,0);
-	m_iCombatDamage.Set(iIndex,0);
-	m_iCombatKills.Set(iIndex,0);
 #endif
 	m_bConnected.Set( iIndex, 0 );
 	m_iAccountID.Set( iIndex, 0 );
