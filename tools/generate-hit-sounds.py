@@ -7,6 +7,9 @@ import wave
 
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 44100
+# Match average levels across the choices, leaving at least 1 dB of peak headroom.
+TARGET_RMS = 32767 * 10 ** (-11 / 20)
+PEAK_LIMIT = 32767 * 10 ** (-1 / 20)
 # Bell, click, pop, chime, glass, wood, metal, digital, pulse, pluck; then variants.
 PRESETS = [
     (1150,.14,0),(2200,.055,1),(580,.08,2),(1320,.18,3),
@@ -20,7 +23,8 @@ def samples(frequency, duration, timbre):
     output=[]
     for i in range(int(RATE*duration)):
         t=i/RATE;p=2*math.pi*frequency*t
-        env=min(1,t/.002)*math.exp(-t/(duration/4))
+        # A brief sustain and gentler decay keep confirmation audible under gunfire.
+        env=min(1,t/.002)*math.exp(-max(0,t-.012)/(duration/2))
         env*=min(1,(duration-t)/.006)
         if timbre==0: value=math.sin(p)+.25*math.sin(2.76*p)*math.exp(-t*25)
         elif timbre==1: value=.65*math.sin(p)+.35*rng.uniform(-1,1)*math.exp(-t*100)
@@ -34,7 +38,9 @@ def samples(frequency, duration, timbre):
         else: value=math.sin(p)+.35*math.sin(2*p)*math.exp(-t*35)+.12*math.sin(3*p)
         output.append(value*env)
     peak=max(abs(v) for v in output)
-    return [round(v/peak*18000) for v in output]
+    rms=math.sqrt(sum(v*v for v in output)/len(output))
+    gain=min(PEAK_LIMIT/peak,TARGET_RMS/rms)
+    return [round(v*gain) for v in output]
 
 def main():
     target=ROOT/'game/mod_hl2mp/sound/ui/hitsounds'

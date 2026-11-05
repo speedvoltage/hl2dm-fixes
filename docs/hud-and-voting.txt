@@ -95,6 +95,8 @@ Options > Audio offers enable, sound selection, volume and an audition button.
 There are 16 original synthesized sounds; tools/generate-hit-sounds.py reproduces
 the included mono PCM files. Audition uses the pending sound and volume without
 saving them or requiring server permission. Apply/Discard handles these drafts.
+Sounds use a short sustain and matched average levels (about -11 dBFS RMS,
+with at least 1 dB peak headroom) so full volume is audible during combat.
 cl_hitsounds and sv_hitsounds both default to 0. cl_hitsound selects 0-15;
 cl_hitsound_volume defaults to 0.5. The server sends confirmation only to the
 attacker after actual enemy health/armor damage. Friendly fire, self-damage and
