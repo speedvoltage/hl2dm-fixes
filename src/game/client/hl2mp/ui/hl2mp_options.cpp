@@ -450,13 +450,7 @@ private:
     void RefreshWarning()
     {
         m_Info->SetWarning(m_ServerBlocked);
-        if(m_RemoteFootsteps && m_ServerBlocked)
-        {
-            char text[2048];
-            HL2MPFormatInto(text,sizeof(text),"%s %s",HL2MPText("#HL2MP_ServerVisualDisabled"),HL2MPText("#HL2MP_FootstepsRequirement"));
-            m_Warning->SetText(text);
-        }
-        else m_Warning->SetText(m_RemoteFootsteps ? "#HL2MP_FootstepsRequirement" : "#HL2MP_ServerVisualDisabled");
+        m_Warning->SetText(m_RemoteFootsteps && !m_ServerBlocked ? "#HL2MP_FootstepsRequirement" : "#HL2MP_ServerVisualDisabled");
         m_Warning->SetFgColor(m_ServerBlocked ? Color(255,150,140,255) : HL2MPServerTheme::Muted());
         m_Warning->SetVisible(m_ServerBlocked || m_ChoiceBlocked);
         InvalidateLayout(true);Repaint();
